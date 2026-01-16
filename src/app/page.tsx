@@ -1,9 +1,16 @@
+'use client';
+
+import { useEffect } from 'react';
+
 export default function Home() {
+  useEffect(() => {
+    window.location.href = '/consulta';  // rota nova
+  }, []);
+
   return (
     <div style={{ padding: '50px', textAlign: 'center', background: '#2D1810', color: 'white', minHeight: '100vh' }}>
-      <h1>Bem-vindo ao Programa de Fidelidade O Rei do Cupim!</h1>
-      <p>A tela de consulta está em: <a href="/consulta" style={{ color: '#E63946' }}>/consulta</a></p>
-      <p>Se você chegou aqui, o loop de redirect foi quebrado temporariamente.</p>
+      <h1>Redirecionando para a consulta...</h1>
+      <p>Se não redirecionar automaticamente em 2 segundos, <a href="/consulta" style={{ color: '#E63946' }}>clique aqui</a>.</p>
     </div>
   );
 }

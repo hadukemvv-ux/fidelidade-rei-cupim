@@ -52,13 +52,13 @@ setLoading(false);  }  function handleKeyDown(e: React.KeyboardEvent<HTMLInputEl
       : resultado?.nivel === 'Prata'
       ? 'bg-white/10 text-white border-white/20'
       : 'bg-[#E63946]/15 text-[#ffd7d7] border-[#E63946]/30';  return (
-    <main className="min-h-screen bg-[#2D1810] text-white">
+    <main className="min-h-screen bg-[#2D1810] text-white overflow-hidden">
       {/* Fundo com “glow” quente */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-32 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-[#E63946]/25 blur-3xl" />
-        <div className="absolute top-40 right-[-120px] h-72 w-72 rounded-full bg-[#F4A261]/20 blur-3xl" />
-        <div className="absolute bottom-[-160px] left-[-120px] h-80 w-80 rounded-full bg-black/30 blur-3xl" />
-      </div>  <div className="relative mx-auto flex min-h-screen w-full max-w-xl flex-col px-4 py-10">
+      <div className="fixed inset-0 pointer-events-none">
+  <div className="absolute -top-20 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#E63946]/25 blur-3xl" />
+  <div className="absolute top-20 right-[-80px] h-64 w-64 rounded-full bg-[#F4A261]/20 blur-3xl" />
+  <div className="absolute bottom-[-120px] left-[-80px] h-64 w-64 rounded-full bg-black/30 blur-3xl" />
+</div>  <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-3 py-8 md:px-4 md:py-10">
     {/* Header */}
     <header className="flex flex-col items-center text-center">
       <div className="relative h-14 w-14 overflow-hidden rounded-xl bg-black/20 ring-1 ring-white/10">

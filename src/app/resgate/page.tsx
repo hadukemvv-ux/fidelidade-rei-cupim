@@ -15,6 +15,7 @@ export default function Resgate() {
   const [erro, setErro] = useState<string | null>(null);
   const [cupom, setCupom] = useState<string | null>(null);
 
+  // Função para consultar os benefícios
   async function buscar() {
     const tel = telefone.replace(/\D/g, '').trim();
 
@@ -56,12 +57,54 @@ export default function Resgate() {
     setLoading(false);
   }
 
+  // Função para lidar com tecla Enter
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter') {
       buscar();
     }
   }
 
+  // Função para resgatar (chama a API /api/resgate)
+  async function resgatar(tipo: 'pontos' | 'cashback' | 'frete', valorDesconto: number) {
+    if (!resultado) {
+      setErro('Consulte o telefone primeiro.');
+      return;
+    }
+
+    setLoading(true);
+    setErro(null);
+    setCupom(null);
+
+    try {
+      const response = await fetch('/api/resgate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telefone: telefone.replace(/\D/g, '').trim(),
+          tipo,
+          valorDesconto,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErro(data.error || 'Erro ao resgatar.');
+        setLoading(false);
+        return;
+      }
+
+      setCupom(data.codigo);
+      setResultado(data.atualizado);
+    } catch (e) {
+      console.error(e);
+      setErro('Erro de conexão. Tente novamente.');
+    }
+
+    setLoading(false);
+  }
+
+  // Badge de cor por nível
   const nivelBadge =
     resultado?.nivel === 'Ouro'
       ? 'bg-[#F4A261]/20 text-[#F4A261] border-[#F4A261]/40'
@@ -136,7 +179,7 @@ export default function Resgate() {
           )}
         </section>
 
-        {/* Resultado e botões de resgate */}
+        {/* Resultado e opções de resgate */}
         {resultado && (
           <section className="mt-6 rounded-2xl bg-white/5 p-5 shadow-xl ring-1 ring-white/10 backdrop-blur">
             <div className="flex items-start justify-between gap-3">
@@ -175,33 +218,109 @@ export default function Resgate() {
               </p>
             </div>
 
-            {/* Botões de resgate */}
-            <div className="mt-6 space-y-4">
-              <button
-                onClick={() => alert('Resgate de pontos em desenvolvimento!')}
-                disabled={loading || resultado.pontos === 0}
-                className="w-full rounded-xl bg-[#E63946] py-3 font-semibold text-white shadow-lg shadow-[#E63946]/20 transition hover:bg-[#ff3f4f] disabled:opacity-60"
-              >
-                Resgatar Pontos (ex.: desconto de R$5)
-              </button>
+            {/* Opções de resgate */}
+            <div className="mt-6 space-y-6">
+              {/* Opção 1: Taxa de Entrega Grátis (em primeiro lugar) */}
+              <div className="bg-white/5 p-5 rounded-2xl shadow-xl ring-1 ring-white/10 backdrop-blur">
+                <h3 className="text-xl font-bold mb-4 text-center">Taxa de Entrega Grátis</h3>
+                <p className="text-sm text-white/70 text-center mb-4">
+                  Resgate frete grátis na próxima compra
+                </p>
 
-              <button
-                onClick={() => alert('Resgate de cashback em desenvolvimento!')}
-                disabled={loading || resultado.cashback === 0}
-                className="w-full rounded-xl bg-[#E63946] py-3 font-semibold text-white shadow-lg shadow-[#E63946]/20 transition hover:bg-[#ff3f4f] disabled:opacity-60"
-              >
-                Resgatar Cashback (ex.: usar na compra)
-              </button>
+                <button
+                  onClick={() => resgatar('frete', 0)}
+                  disabled={loading || resultado.pontos < 300}
+                  className="w-full rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                >
+                  300 pontos → Taxa de entrega grátis
+                </button>
+              </div>
 
-              <p className="text-xs text-white/60 text-center">
-                Tickets: Sorteio automático dia 15. Boa sorte!
-              </p>
+              {/* Opção 2: Resgate com Pontos */}
+              <div className="bg-white/5 p-5 rounded-2xl shadow-xl ring-1 ring-white/10 backdrop-blur">
+                <h3 className="text-xl font-bold mb-4 text-center">Resgate com Pontos</h3>
+                <p className="text-sm text-white/70 text-center mb-4">
+                  Escolha o desconto que deseja
+                </p>
+
+                <div className="grid grid-cols-1 gap-3">
+                  <button
+                    onClick={() => resgatar('pontos', 5)}
+                    disabled={loading || resultado.pontos < 100}
+                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                  >
+                    R$ 5 de desconto (100 pontos)
+                  </button>
+
+                  <button
+                    onClick={() => resgatar('pontos', 10)}
+                    disabled={loading || resultado.pontos < 200}
+                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                  >
+                    R$ 10 de desconto (200 pontos)
+                  </button>
+
+                  <button
+                    onClick={() => resgatar('pontos', 15)}
+                    disabled={loading || resultado.pontos < 300}
+                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                  >
+                    R$ 15 de desconto (300 pontos)
+                  </button>
+
+                  <button
+                    onClick={() => resgatar('pontos', 25)}
+                    disabled={loading || resultado.pontos < 500}
+                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                  >
+                    R$ 25 de desconto (500 pontos)
+                  </button>
+
+                  <button
+                    onClick={() => resgatar('pontos', 50)}
+                    disabled={loading || resultado.pontos < 1000}
+                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                  >
+                    R$ 50 de desconto (1.000 pontos)
+                  </button>
+
+                  <button
+                    onClick={() => resgatar('pontos', 100)}
+                    disabled={loading || resultado.pontos < 2000}
+                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                  >
+                    R$ 100 de desconto (2.000 pontos)
+                  </button>
+                </div>
+              </div>
+
+              {/* Opção 3: Resgate com Cashback */}
+              <div className="bg-white/5 p-5 rounded-2xl shadow-xl ring-1 ring-white/10 backdrop-blur">
+                <h3 className="text-xl font-bold mb-4 text-center">Resgate com Cashback</h3>
+                <p className="text-sm text-white/70 text-center mb-4">
+                  Use metade do cashback disponível
+                </p>
+
+                <button
+                  onClick={() => resgatar('cashback', resultado.cashback / 2)}
+                  disabled={loading || resultado.cashback <= 0}
+                  className="w-full rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                >
+                  Resgatar R$ {resultado.cashback > 0 ? (resultado.cashback / 2).toFixed(2) : '0,00'} (metade disponível)
+                </button>
+              </div>
             </div>
 
             {cupom && (
-              <div className="mt-4 rounded-xl border border-[#F4A261]/30 bg-[#F4A261]/10 p-3">
-                <p className="text-sm text-[#F4A261] text-center">
-                  Cupom gerado: <strong>{cupom}</strong>. Mostre no caixa!
+              <div className="mt-6 rounded-2xl border border-[#F4A261]/30 bg-[#F4A261]/10 p-5 text-center">
+                <p className="text-lg font-bold text-[#F4A261]">
+                  Cupom gerado com sucesso!
+                </p>
+                <p className="text-2xl font-extrabold mt-2 text-[#F4A261]">
+                  {cupom}
+                </p>
+                <p className="text-sm text-white/80 mt-2">
+                  Mostre este código no caixa para aplicar o desconto.
                 </p>
               </div>
             )}

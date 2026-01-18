@@ -98,14 +98,15 @@ export default function Resgate() {
       setCupom(data.codigo);
       setResultado(data.atualizado);
 
-      // Rola para o topo e faz o cupom piscar
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-
-      const cupomElement = document.getElementById('cupom-box');
-      if (cupomElement) {
-        cupomElement.classList.add('animate-pulse');
-        setTimeout(() => cupomElement.classList.remove('animate-pulse'), 3000);
-      }
+      // Rola até o cupom e centraliza na tela
+setTimeout(() => {
+  const cupomElement = document.getElementById('cupom-box');
+  if (cupomElement) {
+    cupomElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    cupomElement.classList.add('animate-pulse');
+    setTimeout(() => cupomElement.classList.remove('animate-pulse'), 3000); // pisca por 3 segundos
+  }
+}, 100); // pequeno delay pra o DOM atualizar
     } catch (e) {
       console.error(e);
       setErro('Erro de conexão. Tente novamente.');

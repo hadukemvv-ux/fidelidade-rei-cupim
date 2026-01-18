@@ -96,6 +96,15 @@ export default function Resgate() {
 
       setCupom(data.codigo);
       setResultado(data.atualizado);
+      // Rola para o topo da página
+window.scrollTo({ top: 0, behavior: 'smooth' });
+
+// Opcional: faz o cupom piscar (se quiser)
+const cupomElement = document.getElementById('cupom-box');
+if (cupomElement) {
+  cupomElement.classList.add('animate-pulse');
+  setTimeout(() => cupomElement.classList.remove('animate-pulse'), 3000); // pisca por 3 segundos
+}
     } catch (e) {
       console.error(e);
       setErro('Erro de conexão. Tente novamente.');
@@ -186,18 +195,19 @@ export default function Resgate() {
           )}
         </section>
 {cupom && (
-      <div className="mt-6 rounded-2xl border border-[#F4A261]/30 bg-[#F4A261]/10 p-5 text-center">
-        <p className="text-lg font-bold text-[#F4A261]">
-          Cupom gerado com sucesso!
-        </p>
-        <p className="text-2xl font-extrabold mt-2 text-[#F4A261]">
-          {cupom}
-        </p>
-        <p className="text-sm text-white/80 mt-2">
-          Mostre este código no caixa para aplicar o desconto.
-        </p>
-      </div>
-    )}
+  <div id="cupom-box" className="mt-6 rounded-2xl border-2 border-[#F4A261] bg-[#F4A261]/20 p-6 text-center shadow-2xl animate-pulse">
+    <p className="text-2xl font-bold text-[#F4A261] mb-2">Cupom gerado com sucesso!</p>
+    <p className="text-4xl font-extrabold text-[#F4A261] tracking-wider mb-4">
+      {cupom}
+    </p>
+    <p className="text-lg text-white/90">
+      Mostre este código ou QR Code no caixa para aplicar o desconto.
+    </p>
+    <p className="text-sm text-white/70 mt-4">
+      O benefício já foi reduzido do seu saldo.
+    </p>
+  </div>
+)}
         {/* Resultado e opções de resgate */}
         {resultado && (
   <section className="mt-6 rounded-2xl bg-white/5 p-5 shadow-xl ring-1 ring-white/10 backdrop-blur">

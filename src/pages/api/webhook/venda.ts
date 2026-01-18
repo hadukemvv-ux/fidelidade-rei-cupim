@@ -114,7 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const multiplicador = MULTIPLICADOR_POR_NIVEL[nivelAtual] ?? 1.0;
 
   // Pontos: 10 por R$1 × multiplicador
-  const pontosGanhos = Math.floor(valor * BASE_PONTOS_POR_REAL * multiplicador);
+  const pontosGanhos = Math.floor(valor * 2.5 * multiplicador);
 
   // Tickets: 1 por R$1 × multiplicador (arredonda para baixo)
   const ticketsGanhos = Math.floor(valor * BASE_TICKETS_POR_REAL * multiplicador);

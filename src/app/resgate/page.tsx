@@ -16,6 +16,7 @@ export default function Resgate() {
   const [erro, setErro] = useState<string | null>(null);
   const [cupom, setCupom] = useState<string | null>(null);
 
+  // Função para consultar os benefícios
   async function buscar() {
     const tel = telefone.replace(/\D/g, '').trim();
 
@@ -57,12 +58,14 @@ export default function Resgate() {
     setLoading(false);
   }
 
+  // Função para lidar com tecla Enter
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter') {
       buscar();
     }
   }
 
+  // Função para resgatar (chama a API /api/resgate)
   async function resgatar(tipo: 'pontos' | 'cashback' | 'frete', valorDesconto: number) {
     if (!resultado) {
       setErro('Consulte o telefone primeiro.');
@@ -111,6 +114,7 @@ export default function Resgate() {
     setLoading(false);
   }
 
+  // Badge de cor por nível
   const nivelBadge =
     resultado?.nivel === 'Ouro'
       ? 'bg-[#F4A261]/20 text-[#F4A261] border-[#F4A261]/40'
@@ -231,27 +235,27 @@ export default function Resgate() {
             </div>
 
             <div className="mt-4 space-y-3">
-  <div className="flex items-center justify-between border-b border-white/10 pb-3">
-    <span className="text-white/70">Pontos acumulados</span>
-    <span className="text-xl font-bold">
-      {(resultado?.pontos || 0).toLocaleString('pt-BR')}
-    </span>
-  </div>
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <span className="text-white/70">Pontos acumulados</span>
+                <span className="text-xl font-bold">
+                  {(resultado.pontos || 0).toLocaleString('pt-BR')}
+                </span>
+              </div>
 
-  <div className="flex items-center justify-between border-b border-white/10 pb-3">
-    <span className="text-white/70">Cashback disponível</span>
-    <span className="text-xl font-bold text-[#7CFFB2]">
-      R$ {(resultado?.cashback || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-    </span>
-  </div>
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <span className="text-white/70">Cashback disponível</span>
+                <span className="text-xl font-bold text-[#7CFFB2]">
+                  R$ {(resultado.cashback || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
 
-  <div className="flex items-center justify-between">
-    <span className="text-white/70">Tickets de sorteio</span>
-    <span className="text-xl font-bold">
-      {(resultado?.tickets || 0).toLocaleString('pt-BR')}
-    </span>
-  </div>
-</div>
+              <div className="flex items-center justify-between">
+                <span className="text-white/70">Tickets de sorteio</span>
+                <span className="text-xl font-bold">
+                  {(resultado.tickets || 0).toLocaleString('pt-BR')}
+                </span>
+              </div>
+            </div>
 
             <div className="mt-5 rounded-xl border border-white/10 bg-black/20 p-3">
               <p className="text-xs text-white/60">

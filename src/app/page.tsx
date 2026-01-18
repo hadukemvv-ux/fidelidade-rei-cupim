@@ -4,13 +4,12 @@ import { useEffect } from 'react';
 
 export default function Home() {
   useEffect(() => {
-    window.location.href = '/consulta';  // rota nova
+    window.location.href = '/resgate';
   }, []);
 
   return (
-    <div style={{ padding: '50px', textAlign: 'center', background: '#2D1810', color: 'white', minHeight: '100vh' }}>
-      <h1>Redirecionando para a consulta...</h1>
-      <p>Se não redirecionar automaticamente em 2 segundos, <a href="/consulta" style={{ color: '#E63946' }}>clique aqui</a>.</p>
+    <div className="min-h-screen bg-[#2D1810] text-white flex items-center justify-center">
+      <p className="text-2xl">Redirecionando para resgate...</p>
     </div>
   );
 }

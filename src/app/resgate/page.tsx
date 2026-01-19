@@ -104,7 +104,7 @@ setTimeout(() => {
   if (cupomElement) {
     cupomElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     cupomElement.classList.add('animate-pulse');
-    setTimeout(() => cupomElement.classList.remove('animate-pulse'), 3000); // pisca por 3 segundos
+    setTimeout(() => cupomElement.classList.remove('animate-pulse'), 3000);
   }
 }, 100); // pequeno delay pra o DOM atualizar
     } catch (e) {

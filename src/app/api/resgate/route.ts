@@ -10,8 +10,8 @@ export async function POST(request: NextRequest) {
     const { telefone, tipo, valorDesconto } = await request.json();
 
     if (!telefone || !tipo || valorDesconto === undefined) {
-  return NextResponse.json({ error: 'Telefone, tipo e valor de desconto obrigatórios' }, { status: 400 });
-}
+      return NextResponse.json({ error: 'Telefone, tipo e valor de desconto obrigatórios' }, { status: 400 });
+    }
 
     const tel = telefone.replace(/\D/g, '').trim();
 
@@ -25,8 +25,9 @@ export async function POST(request: NextRequest) {
     let cashbackAtual = cashbackRes.data?.saldo || 0;
 
     let pontosGastos = 0;
+
     if (tipo === 'pontos') {
-      pontosGastos = valorDesconto * 20;  // R$ 1 desconto = 20 pontos (ajuste se quiser)
+      pontosGastos = valorDesconto * 20; // 20 pontos por R$ 1 de desconto (ajuste se quiser mudar a conversão)
       if (pontosAtuais < pontosGastos) {
         return NextResponse.json({ error: 'Pontos insuficientes' }, { status: 400 });
       }
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
       cashbackAtual -= valorDesconto;
       await supabase.from('cashback').update({ saldo: cashbackAtual }).eq('telefone', tel);
     } else if (tipo === 'frete') {
-      pontosGastos = 300;  // 300 pontos para frete grátis
+      pontosGastos = 300; // 300 pontos para frete grátis
       if (pontosAtuais < pontosGastos) {
         return NextResponse.json({ error: 'Pontos insuficientes para frete grátis' }, { status: 400 });
       }
@@ -47,8 +48,17 @@ export async function POST(request: NextRequest) {
       await supabase.from('pontos').update({ total: pontosAtuais }).eq('telefone', tel);
     }
 
-    // Gera código único e seguro (prefixo + aleatório longo)
+    // Gera código único
     const codigo = `RESGATE-${tipo.toUpperCase()}-${Math.random().toString(36).substring(2, 12).toUpperCase()}`;
+
+    // Salva o cupom na tabela de cupons resgatados
+    await supabase.from('cupons_resgatados').insert({
+      codigo,
+      telefone: tel,
+      tipo,
+      valorDesconto,
+      usado: false,
+    });
 
     // Retorna o código e valores atualizados
     return NextResponse.json({

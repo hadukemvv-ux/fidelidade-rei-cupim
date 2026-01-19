@@ -14,16 +14,17 @@ export async function POST(request: NextRequest) {
     }
 
     const tel = telefone.replace(/\D/g, '').trim();
+    const codigoLimpo = cupom.trim().toUpperCase();
 
-    // Busca o cupom no banco (tabela 'cupons_resgatados' ou similar - vamos criar essa tabela depois)
-    const { data: cupomData, error } = await supabase
-      .from('cupons_resgatados') // Nome da tabela que vamos criar
+    // Busca o cupom
+    const { data: cupomData, error: buscaError } = await supabase
+      .from('cupons_resgatados')
       .select('*')
-      .eq('codigo', cupom.trim().toUpperCase())
+      .eq('codigo', codigoLimpo)
       .eq('telefone', tel)
       .single();
 
-    if (error || !cupomData) {
+    if (buscaError || !cupomData) {
       return NextResponse.json({ error: 'Cupom inválido ou não encontrado para este telefone' }, { status: 400 });
     }
 
@@ -43,8 +44,8 @@ export async function POST(request: NextRequest) {
       valorDesconto: cupomData.valorDesconto,
       mensagem: 'Cupom válido! Aplique o desconto correspondente no pedido.'
     });
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Erro interno na validação' }, { status: 500 });
   }
 }

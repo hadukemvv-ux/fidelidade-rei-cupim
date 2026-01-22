@@ -8,22 +8,20 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Token de segurança para o cron (evita que qualquer um execute)
+// Token de segurança para o cron
 const CRON_SECRET = process.env.CRON_SECRET || process.env.SAIPOS_SECRET || null;
 
 // ==============================================
-// REGRAS DE EXPIRAÇÃO POR NÍVEL
+// REGRAS DE EXPIRAÇÃO (FIXAS PARA TODOS)
 // ==============================================
-const REGRAS_EXPIRACAO: Record<string, { dias50: number; dias100: number }> = {
-  Bronze: { dias50: 15, dias100: 30 },
-  Prata: { dias50: 20, dias100: 45 },
-  Ouro: { dias50: 30, dias100: 60 },
-};
+const DIAS_PERDA_50 = 30;   // perde 50% + desce 1 nível
+const DIAS_PERDA_100 = 60;  // perde 100% + volta pro Bronze
 
-// Calcula o nível baseado nos pontos
+// Calcula o nível baseado nos pontos atuais
 function calcularNivel(totalPontos: number): string {
-  if (totalPontos >= 5001) return 'Ouro';
-  if (totalPontos >= 2001) return 'Prata';
+  if (totalPontos >= 4300) return 'Rei do Cupim';
+  if (totalPontos >= 1200) return 'Ouro';
+  if (totalPontos >= 250) return 'Prata';
   return 'Bronze';
 }
 
@@ -89,18 +87,25 @@ export async function GET(request: NextRequest) {
 
         // Calcular dias sem compra
         const dias = diasSemCompra(ultima_compra);
-        const regra = REGRAS_EXPIRACAO[nivelAtual] || REGRAS_EXPIRACAO['Bronze'];
 
         let percentualReducao = 0;
         let motivo = '';
+        let novoNivel = nivelAtual;
 
-        // Verificar qual regra aplicar
-        if (dias >= regra.dias100) {
+        // Aplicar regras de inatividade
+        if (dias >= DIAS_PERDA_100) {
           percentualReducao = 100;
-          motivo = `${dias} dias sem compra (>= ${regra.dias100} dias = perde 100%)`;
-        } else if (dias >= regra.dias50) {
+          motivo = `${dias} dias sem compra (>= ${DIAS_PERDA_100} = perde 100% e volta pro Bronze)`;
+          novoNivel = 'Bronze';
+        } else if (dias >= DIAS_PERDA_50) {
           percentualReducao = 50;
-          motivo = `${dias} dias sem compra (>= ${regra.dias50} dias = perde 50%)`;
+          motivo = `${dias} dias sem compra (>= ${DIAS_PERDA_50} = perde 50% e desce 1 nível)`;
+
+          // Desce explicitamente 1 nível
+          if (nivelAtual === 'Rei do Cupim') novoNivel = 'Ouro';
+          else if (nivelAtual === 'Ouro') novoNivel = 'Prata';
+          else if (nivelAtual === 'Prata') novoNivel = 'Bronze';
+          // Bronze não desce mais
         }
 
         // Se não precisa reduzir, pula
@@ -109,11 +114,16 @@ export async function GET(request: NextRequest) {
         }
 
         // Calcular novos valores
-        const fator = percentualReducao === 100 ? 0 : 0.5;
-        const novosPontos = Math.floor(pontosAtuais * fator);
-        const novoCashback = parseFloat((cashbackAtual * fator).toFixed(2));
-        const novosTickets = Math.floor(ticketsAtuais * fator);
-        const novoNivel = calcularNivel(novosPontos);
+        const fator = percentualReducao / 100;
+        const novosPontos = Math.floor(pontosAtuais * (1 - fator));
+        const novoCashback = parseFloat((cashbackAtual * (1 - fator)).toFixed(2));
+        const novosTickets = Math.floor(ticketsAtuais * (1 - fator));
+
+        // Segurança extra: se novos pontos não suportam o nível atual, força downgrade
+        const nivelAposReducao = calcularNivel(novosPontos);
+        if (calcularNivel(pontosAtuais) !== nivelAposReducao && novoNivel !== 'Bronze') {
+          novoNivel = nivelAposReducao;
+        }
 
         // Atualizar no banco
         await Promise.all([

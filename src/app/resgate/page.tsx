@@ -15,6 +15,8 @@ export default function Resgate() {
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [cupom, setCupom] = useState<string | null>(null);
+  const [showMorePontos, setShowMorePontos] = useState(false);
+const [showMoreCashback, setShowMoreCashback] = useState(false);
 
   // Função para consultar os benefícios
   async function buscar() {
@@ -114,14 +116,50 @@ setTimeout(() => {
 
     setLoading(false);
   }
+// Função para calcular progresso e próximo nível
+function getProgressInfo(pontos: number) {
+  const thresholds = [
+    { nivel: 'Prata', pontosNecessarios: 250 },
+    { nivel: 'Ouro', pontosNecessarios: 1200 },
+    { nivel: 'Rei do Cupim', pontosNecessarios: 4300 },
+  ];
 
+  let proximoNivel = 'Rei do Cupim';
+  let pontosProximo = 4300;
+  let progresso = 100; // já é Rei
+
+  for (const thresh of thresholds) {
+    if (pontos < thresh.pontosNecessarios) {
+      proximoNivel = thresh.nivel;
+      pontosProximo = thresh.pontosNecessarios;
+      progresso = Math.min(100, Math.floor((pontos / thresh.pontosNecessarios) * 100));
+      break;
+    }
+  }
+
+  const faltam = Math.max(0, pontosProximo - pontos);
+
+  return {
+    progresso,
+    proximoNivel,
+    pontosProximo,
+    faltam,
+    isRei: pontos >= 4300,
+  };
+}
   // Badge de cor por nível
-  const nivelBadge =
-    resultado?.nivel === 'Ouro'
-      ? 'bg-[#F4A261]/20 text-[#F4A261] border-[#F4A261]/40'
-      : resultado?.nivel === 'Prata'
-      ? 'bg-white/10 text-white border-white/20'
-      : 'bg-[#E63946]/15 text-[#ffd7d7] border-[#E63946]/30';
+  const nivelBadge = () => {
+  if (resultado?.nivel === 'Rei do Cupim') {
+    return 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black border-[#FFD700]/70 shadow-xl shadow-[#FFD700]/40 font-bold';
+  }
+  if (resultado?.nivel === 'Ouro') {
+    return 'bg-[#F4A261]/20 text-[#F4A261] border-[#F4A261]/40';
+  }
+  if (resultado?.nivel === 'Prata') {
+    return 'bg-white/10 text-white border-white/20';
+  }
+  return 'bg-[#E63946]/15 text-[#ffd7d7] border-[#E63946]/30'; // Bronze
+};
 
   return (
     <main className="min-h-screen bg-[#2D1810] text-white overflow-hidden">
@@ -257,7 +295,47 @@ setTimeout(() => {
                 </span>
               </div>
             </div>
+{/* Barra de Progresso para Próximo Nível */}
+<div className="mt-6 bg-black/30 p-4 rounded-xl border border-white/10">
+  {(() => {
+    const info = getProgressInfo(resultado.pontos);
 
+    if (info.isRei) {
+      return (
+        <div className="text-center">
+          <p className="text-lg font-bold text-[#FFD700] flex items-center justify-center gap-2">
+            Você é o Rei do Cupim! 👑
+          </p>
+          <p className="text-sm text-white/70 mt-1">
+            Parabéns! Benefícios exclusivos ativados.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <p className="text-sm text-white/80 mb-2">
+          Progresso para {info.proximoNivel}:
+        </p>
+        <div className="relative h-5 bg-white/10 rounded-full overflow-hidden">
+          <div
+            className="absolute h-full bg-gradient-to-r from-[#E63946] to-[#F4A261] transition-all duration-700 ease-out"
+            style={{ width: `${info.progresso}%` }}
+          />
+        </div>
+        <div className="flex justify-between mt-2 text-xs text-white/70">
+          <span>{resultado.pontos.toLocaleString('pt-BR')} pts</span>
+          <span>
+            {info.faltam > 0
+              ? `Faltam ${info.faltam.toLocaleString('pt-BR')} pts`
+              : 'Próximo nível alcançado!'}
+          </span>
+        </div>
+      </>
+    );
+  })()}
+</div>
             <div className="mt-5 rounded-xl border border-white/10 bg-black/20 p-3">
               <p className="text-xs text-white/60">
                 Resgate seus benefícios abaixo. Sorteios mensais todo dia 15.
@@ -290,54 +368,67 @@ setTimeout(() => {
                 </p>
 
                 <div className="grid grid-cols-1 gap-3">
-                  <button
-                    onClick={() => resgatar('pontos', 5)}
-                    disabled={loading || resultado.pontos < 100}
-                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-                  >
-                    R$ 5 de desconto (100 pontos)
-                  </button>
+  <button
+    onClick={() => resgatar('pontos', 5)}
+    disabled={loading || resultado.pontos < 100}
+    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+  >
+    R$ 5 de desconto (100 pontos)
+  </button>
 
-                  <button
-                    onClick={() => resgatar('pontos', 10)}
-                    disabled={loading || resultado.pontos < 200}
-                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-                  >
-                    R$ 10 de desconto (200 pontos)
-                  </button>
+  <button
+    onClick={() => resgatar('pontos', 10)}
+    disabled={loading || resultado.pontos < 200}
+    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+  >
+    R$ 10 de desconto (200 pontos)
+  </button>
 
-                  <button
-                    onClick={() => resgatar('pontos', 15)}
-                    disabled={loading || resultado.pontos < 300}
-                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-                  >
-                    R$ 15 de desconto (300 pontos)
-                  </button>
+  <button
+    onClick={() => resgatar('pontos', 15)}
+    disabled={loading || resultado.pontos < 300}
+    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+  >
+    R$ 15 de desconto (300 pontos)
+  </button>
 
-                  <button
-                    onClick={() => resgatar('pontos', 25)}
-                    disabled={loading || resultado.pontos < 500}
-                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-                  >
-                    R$ 25 de desconto (500 pontos)
-                  </button>
+  {showMorePontos && (
+    <>
+      <button
+        onClick={() => resgatar('pontos', 25)}
+        disabled={loading || resultado.pontos < 500}
+        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+      >
+        R$ 25 de desconto (500 pontos)
+      </button>
 
-                  <button
-                    onClick={() => resgatar('pontos', 50)}
-                    disabled={loading || resultado.pontos < 1000}
-                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-                  >
-                    R$ 50 de desconto (1.000 pontos)
-                  </button>
+      <button
+        onClick={() => resgatar('pontos', 50)}
+        disabled={loading || resultado.pontos < 1000}
+        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+      >
+        R$ 50 de desconto (1.000 pontos)
+      </button>
 
-                  <button
-                    onClick={() => resgatar('pontos', 100)}
-                    disabled={loading || resultado.pontos < 2000}
-                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-                  >
-                    R$ 100 de desconto (2.000 pontos)
-                  </button>
-                </div>
+      <button
+        onClick={() => resgatar('pontos', 100)}
+        disabled={loading || resultado.pontos < 2000}
+        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+      >
+        R$ 100 de desconto (2.000 pontos)
+      </button>
+    </>
+  )}
+</div>
+
+{!showMorePontos && (
+  <button
+    onClick={() => setShowMorePontos(true)}
+    className="mt-4 w-full rounded-xl border border-[#F4A261]/50 bg-transparent py-3 text-[#F4A261] font-semibold transition hover:bg-[#F4A261]/10"
+  >
+    Ver mais opções ▼
+  </button>
+)}
               </div>
 
               {/* Opção 3: Resgate com Cashback */}
@@ -348,30 +439,59 @@ setTimeout(() => {
                 </p>
 
                 <div className="grid grid-cols-1 gap-3">
-                  <button
-                    onClick={() => resgatar('cashback', 5)}
-                    disabled={loading || resultado.cashback < 5}
-                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-                  >
-                    R$ 5 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
-                  </button>
+  <button
+    onClick={() => resgatar('cashback', 5)}
+    disabled={loading || resultado.cashback < 5}
+    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+  >
+    R$ 5 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
+  </button>
 
-                  <button
-                    onClick={() => resgatar('cashback', 10)}
-                    disabled={loading || resultado.cashback < 10}
-                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-                  >
-                    R$ 10 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
-                  </button>
+  <button
+    onClick={() => resgatar('cashback', 10)}
+    disabled={loading || resultado.cashback < 10}
+    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+  >
+    R$ 10 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
+  </button>
 
-                  <button
-                    onClick={() => resgatar('cashback', 15)}
-                    disabled={loading || resultado.cashback < 15}
-                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-                  >
-                    R$ 15 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
-                  </button>
-                </div>
+  <button
+    onClick={() => resgatar('cashback', 15)}
+    disabled={loading || resultado.cashback < 15}
+    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+  >
+    R$ 15 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
+  </button>
+
+  {showMoreCashback && (
+    <>
+      <button
+        onClick={() => resgatar('cashback', 25)}
+        disabled={loading || resultado.cashback < 25}
+        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+      >
+        R$ 25 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
+      </button>
+
+      <button
+        onClick={() => resgatar('cashback', 50)}
+        disabled={loading || resultado.cashback < 50}
+        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+      >
+        R$ 50 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
+      </button>
+    </>
+  )}
+</div>
+
+{!showMoreCashback && (
+  <button
+    onClick={() => setShowMoreCashback(true)}
+    className="mt-4 w-full rounded-xl border border-[#F4A261]/50 bg-transparent py-3 text-[#F4A261] font-semibold transition hover:bg-[#F4A261]/10"
+  >
+    Ver mais opções ▼
+  </button>
+)}
               </div>
             </div>
           </section>

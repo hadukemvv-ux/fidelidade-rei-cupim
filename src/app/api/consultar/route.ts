@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Config Supabase (mantido igual)
+// Config Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Telefone deve ter pelo menos 10 dígitos.' }, { status: 400 });
     }
 
-    // Busca nas tabelas (mantido igual)
+    // Busca nas tabelas - agora inclui pontos_qualificaveis
     const [resPontos, resCashback, resTickets] = await Promise.all([
       supabase.from('pontos').select('nivel, total, pontos_qualificaveis').eq('telefone', telefone).maybeSingle(),
       supabase.from('cashback').select('saldo').eq('telefone', telefone).maybeSingle(),
@@ -52,15 +52,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Telefone não encontrado.' }, { status: 404 });
     }
 
-    // ALTERAÇÃO PRINCIPAL: usa pontos_qualificaveis para calcular nível (não diminui nunca)
+    // ALTERAÇÃO: usa pontos_qualificaveis para calcular nível (não diminui com resgate ou perda parcial)
     const pontosQualificaveis = resPontos.data?.pontos_qualificaveis ?? resPontos.data?.total ?? 0;
     const nivelCalculado = calcularNivel(pontosQualificaveis);
 
-    // Retorna os dados atualizados
+    // Retorna os dados
     return NextResponse.json({
       telefone,
-      nivel: nivelCalculado,  // agora usa o valor congelado
-      pontos: resPontos.data?.total ?? 0,           // saldo atual (pode ter diminuído)
+      nivel: nivelCalculado,  // nível congelado
+      pontos: resPontos.data?.total ?? 0,  // saldo atual (pode ter diminuído)
       cashback: resCashback.data?.saldo ?? 0,
       tickets: resTickets.data?.quantidade ?? 0,
     });

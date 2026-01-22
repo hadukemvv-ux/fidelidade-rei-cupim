@@ -90,13 +90,13 @@ export async function GET(request: NextRequest) {
 
         let percentualReducao = 0;
         let motivo = '';
-        let novoNivel = nivelAtual;
+        let novoNivel = nivelAtual; // ALTERAÇÃO: começa com o nível atual
 
         // Aplicar regras de inatividade
         if (dias >= DIAS_PERDA_100) {
           percentualReducao = 100;
           motivo = `${dias} dias sem compra (>= ${DIAS_PERDA_100} = perde 100% e volta pro Bronze)`;
-          novoNivel = 'Bronze';
+          novoNivel = 'Bronze'; // só aqui força Bronze
         } else if (dias >= DIAS_PERDA_50) {
           percentualReducao = 50;
           motivo = `${dias} dias sem compra (>= ${DIAS_PERDA_50} = perde 50% e desce 1 nível)`;
@@ -113,24 +113,22 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        // Calcular novos valores
+        // Calcular novos valores (só reduz saldos)
         const fator = percentualReducao / 100;
         const novosPontos = Math.floor(pontosAtuais * (1 - fator));
         const novoCashback = parseFloat((cashbackAtual * (1 - fator)).toFixed(2));
         const novosTickets = Math.floor(ticketsAtuais * (1 - fator));
 
-        // Segurança extra: se novos pontos não suportam o nível atual, força downgrade
-        const nivelAposReducao = calcularNivel(novosPontos);
-        if (calcularNivel(pontosAtuais) !== nivelAposReducao && novoNivel !== 'Bronze') {
-          novoNivel = nivelAposReducao;
-        }
+        // ALTERAÇÃO IMPORTANTE: NÃO recalcula nível com base nos novosPontos
+        // Mantém o novoNivel que foi decidido acima (ou o atual se não houve perda)
+        // Removido o bloco de "Segurança extra" que forçava downgrade
 
         // Atualizar no banco
         await Promise.all([
           supabase.from('pontos').upsert({
             telefone,
             total: novosPontos,
-            nivel: novoNivel,
+            nivel: novoNivel,  // mantém o nível ajustado só por regra explícita
             atualizado_em: new Date().toISOString(),
           }),
           supabase.from('cashback').upsert({

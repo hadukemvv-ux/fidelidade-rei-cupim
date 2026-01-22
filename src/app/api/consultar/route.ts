@@ -6,7 +6,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Função auxiliar para calcular o nível baseado nos pontos totais
+// Função auxiliar para calcular o nível baseado nos pontos qualificáveis
 function calcularNivel(pontos: number): string {
   if (pontos >= 4300) {
     return 'Rei do Cupim';
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     // Busca nas tabelas (mantido igual)
     const [resPontos, resCashback, resTickets] = await Promise.all([
-      supabase.from('pontos').select('nivel,total').eq('telefone', telefone).maybeSingle(),
+      supabase.from('pontos').select('nivel, total, pontos_qualificaveis').eq('telefone', telefone).maybeSingle(),
       supabase.from('cashback').select('saldo').eq('telefone', telefone).maybeSingle(),
       supabase.from('tickets').select('quantidade').eq('telefone', telefone).maybeSingle(),
     ]);
@@ -52,17 +52,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Telefone não encontrado.' }, { status: 404 });
     }
 
-    // Pega os pontos totais (do campo 'total' na tabela pontos)
-    const pontosTotais = resPontos.data?.total ?? 0;
-
-    // Calcula o nível CORRETAMENTE baseado nos novos critérios
-    const nivelCalculado = calcularNivel(pontosTotais);
+    // ALTERAÇÃO PRINCIPAL: usa pontos_qualificaveis para calcular nível (não diminui nunca)
+    const pontosQualificaveis = resPontos.data?.pontos_qualificaveis ?? resPontos.data?.total ?? 0;
+    const nivelCalculado = calcularNivel(pontosQualificaveis);
 
     // Retorna os dados atualizados
     return NextResponse.json({
       telefone,
-      nivel: nivelCalculado,  // ← agora usa o cálculo novo
-      pontos: pontosTotais,
+      nivel: nivelCalculado,  // agora usa o valor congelado
+      pontos: resPontos.data?.total ?? 0,           // saldo atual (pode ter diminuído)
       cashback: resCashback.data?.saldo ?? 0,
       tickets: resTickets.data?.quantidade ?? 0,
     });

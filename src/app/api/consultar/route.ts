@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Telefone deve ter pelo menos 10 dígitos.' }, { status: 400 });
     }
 
-    // Busca nas tabelas - agora inclui pontos_qualificaveis
+    // Busca nas tabelas - já inclui pontos_qualificaveis
     const [resPontos, resCashback, resTickets] = await Promise.all([
       supabase.from('pontos').select('nivel, total, pontos_qualificaveis').eq('telefone', telefone).maybeSingle(),
       supabase.from('cashback').select('saldo').eq('telefone', telefone).maybeSingle(),
@@ -52,17 +52,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Telefone não encontrado.' }, { status: 404 });
     }
 
-    // ALTERAÇÃO: usa pontos_qualificaveis para calcular nível (não diminui com resgate ou perda parcial)
+    // Usa pontos_qualificaveis para calcular nível (já está correto)
     const pontosQualificaveis = resPontos.data?.pontos_qualificaveis ?? resPontos.data?.total ?? 0;
     const nivelCalculado = calcularNivel(pontosQualificaveis);
 
-    // Retorna os dados
+    // Retorna os dados → ADICIONAMOS AQUI O CAMPO pontos_qualificaveis
     return NextResponse.json({
       telefone,
-      nivel: nivelCalculado,  // nível congelado
-      pontos: resPontos.data?.total ?? 0,  // saldo atual (pode ter diminuído)
+      nivel: nivelCalculado,
+      pontos: resPontos.data?.total ?? 0,
       cashback: resCashback.data?.saldo ?? 0,
       tickets: resTickets.data?.quantidade ?? 0,
+      pontos_qualificaveis: pontosQualificaveis,   // ← ESTA É A LINHA NOVA QUE FALTAVA
     });
 
   } catch (error) {

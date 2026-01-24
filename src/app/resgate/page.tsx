@@ -16,7 +16,7 @@ export default function Resgate() {
   const [erro, setErro] = useState<string | null>(null);
   const [cupom, setCupom] = useState<string | null>(null);
   const [showMorePontos, setShowMorePontos] = useState(false);
-const [showMoreCashback, setShowMoreCashback] = useState(false);
+  const [showMoreCashback, setShowMoreCashback] = useState(false);
 
   // Função para consultar os benefícios
   async function buscar() {
@@ -39,7 +39,7 @@ const [showMoreCashback, setShowMoreCashback] = useState(false);
     try {
       const response = await fetch(`/api/consultar?telefone=${tel}`);
       const data = await response.json();
-
+console.log('Dados da API para este telefone:', data);
       if (!response.ok) {
         setErro(data?.error || 'Erro ao consultar.');
         setLoading(false);
@@ -67,7 +67,7 @@ const [showMoreCashback, setShowMoreCashback] = useState(false);
     }
   }
 
-  // Função para resgatar (chama a API /api/resgate)
+  // Função para resgatar
   async function resgatar(tipo: 'pontos' | 'cashback' | 'frete', valorDesconto: number) {
     if (!resultado) {
       setErro('Consulte o telefone primeiro.');
@@ -90,7 +90,7 @@ const [showMoreCashback, setShowMoreCashback] = useState(false);
       });
 
       const data = await response.json();
-
+console.log('O que chegou da API:', data);
       if (!response.ok) {
         setErro(data.error || 'Erro ao resgatar.');
         setLoading(false);
@@ -100,15 +100,14 @@ const [showMoreCashback, setShowMoreCashback] = useState(false);
       setCupom(data.codigo);
       setResultado(data.atualizado);
 
-      // Rola até o cupom e centraliza na tela
-setTimeout(() => {
-  const cupomElement = document.getElementById('cupom-box');
-  if (cupomElement) {
-    cupomElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    cupomElement.classList.add('animate-pulse');
-    setTimeout(() => cupomElement.classList.remove('animate-pulse'), 3000);
-  }
-}, 100); // pequeno delay pra o DOM atualizar
+      setTimeout(() => {
+        const cupomElement = document.getElementById('cupom-box');
+        if (cupomElement) {
+          cupomElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          cupomElement.classList.add('animate-pulse');
+          setTimeout(() => cupomElement.classList.remove('animate-pulse'), 3000);
+        }
+      }, 100);
     } catch (e) {
       console.error(e);
       setErro('Erro de conexão. Tente novamente.');
@@ -116,50 +115,88 @@ setTimeout(() => {
 
     setLoading(false);
   }
-// Função para calcular progresso e próximo nível
-function getProgressInfo(pontos: number) {
-  const thresholds = [
-    { nivel: 'Prata', pontosNecessarios: 250 },
-    { nivel: 'Ouro', pontosNecessarios: 1200 },
-    { nivel: 'Rei do Cupim', pontosNecessarios: 4300 },
-  ];
 
-  let proximoNivel = 'Rei do Cupim';
-  let pontosProximo = 4300;
-  let progresso = 100; // já é Rei
+  // Função corrigida: agora usa o nível atual + pontos
+  function getProgressInfo(nivel: string, pontos: number) {
+    const niveis = [
+      { nome: 'Prata',       proximo: 'Ouro',          threshold: 250   },
+      { nome: 'Ouro',        proximo: 'Rei do Cupim',  threshold: 1200  },
+      { nome: 'Rei do Cupim', proximo: null,           threshold: 4300  },
+    ];
 
-  for (const thresh of thresholds) {
-    if (pontos < thresh.pontosNecessarios) {
-      proximoNivel = thresh.nivel;
-      pontosProximo = thresh.pontosNecessarios;
-      progresso = Math.min(100, Math.floor((pontos / thresh.pontosNecessarios) * 100));
-      break;
+    const nivelAtual = niveis.find(n => n.nome === nivel) || niveis[0];
+
+    if (!nivelAtual.proximo) {
+      // Já é Rei do Cupim
+      return {
+        progresso: 100,
+        proximoNivel: null,
+        pontosProximo: null,
+        faltam: 0,
+        isRei: true,
+      };
     }
+
+    // Pontos mínimos para entrar no nível atual
+    const pontosMinimosNivel = 
+      nivel === 'Prata' ? 0 :
+      nivel === 'Ouro'  ? 250 : 1200;
+
+    const pontosNoNivel = Math.max(0, pontos - pontosMinimosNivel);
+    const pontosNecessariosNesteNivel = nivelAtual.threshold - pontosMinimosNivel;
+
+    const progresso = Math.min(
+      100,
+      Math.floor((pontosNoNivel / pontosNecessariosNesteNivel) * 100) || 0
+    );
+
+    return {
+      progresso,
+      proximoNivel: nivelAtual.proximo,
+      pontosProximo: nivelAtual.threshold,
+      faltam: Math.max(0, nivelAtual.threshold - pontos),
+      isRei: false,
+    };
   }
 
-  const faltam = Math.max(0, pontosProximo - pontos);
+  // Função de inatividade (mantida como estava)
+  function getInatividadeInfo(ultimaAtividade: string | null) {
+    const diasPassados = 10; // ← placeholder, substitua depois pela lógica real
 
-  return {
-    progresso,
-    proximoNivel,
-    pontosProximo,
-    faltam,
-    isRei: pontos >= 4300,
-  };
-}
-  // Badge de cor por nível
+    let mensagem = '';
+    let cor = 'text-white/70';
+
+    if (diasPassados >= 60) {
+      mensagem = "Oi sumido! Vamos começar de novo? Seu próximo churrasco tá te esperando 🔥";
+      cor = 'text-[#E63946]/80';
+    } else if (diasPassados >= 30) {
+      mensagem = "Seus benefícios foram reduzidos em 50%. Sua boca sente saudade do nosso sabor! Volta pra gente 🍖";
+      cor = 'text-[#F4A261]/80';
+    } else if (30 - diasPassados <= 15) {
+      const diasRestantes = 30 - diasPassados;
+      mensagem = `Faltam ${diasRestantes} dias pra manter 100% dos seus benefícios. Que tal uma cupimzinha em breve? 👑`;
+      cor = 'text-[#F4A261]';
+    } else {
+      mensagem = "Seu paladar merece nosso cupim e seu bolso as oportunidades! Volte logo pra continuar aproveitando 🔥";
+      cor = 'text-white/70';
+    }
+
+    return { mensagem, cor };
+  }
+
+  // Badge de nível (mantido)
   const nivelBadge = () => {
-  if (resultado?.nivel === 'Rei do Cupim') {
-    return 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black border-[#FFD700]/70 shadow-xl shadow-[#FFD700]/40 font-bold';
-  }
-  if (resultado?.nivel === 'Ouro') {
-    return 'bg-[#F4A261]/20 text-[#F4A261] border-[#F4A261]/40';
-  }
-  if (resultado?.nivel === 'Prata') {
-    return 'bg-white/10 text-white border-white/20';
-  }
-  return 'bg-[#E63946]/15 text-[#ffd7d7] border-[#E63946]/30'; // Bronze
-};
+    if (resultado?.nivel === 'Rei do Cupim') {
+      return 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black border-[#FFD700]/70 shadow-xl shadow-[#FFD700]/40 font-bold';
+    }
+    if (resultado?.nivel === 'Ouro') {
+      return 'bg-[#F4A261]/20 text-[#F4A261] border-[#F4A261]/40';
+    }
+    if (resultado?.nivel === 'Prata') {
+      return 'bg-white/10 text-white border-white/20';
+    }
+    return 'bg-[#E63946]/15 text-[#ffd7d7] border-[#E63946]/30'; // Bronze ou default
+  };
 
   return (
     <main className="min-h-screen bg-[#2D1810] text-white overflow-hidden">
@@ -208,9 +245,7 @@ function getProgressInfo(pontos: number) {
               value={telefone}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, '');
-                if (value.length <= 11) {
-                  setTelefone(value);
-                }
+                if (value.length <= 11) setTelefone(value);
               }}
               onKeyDown={handleKeyDown}
             />
@@ -235,7 +270,7 @@ function getProgressInfo(pontos: number) {
           )}
         </section>
 
-        {/* Cupom gerado (no topo, bem visível) */}
+        {/* Cupom gerado */}
         {cupom && (
           <div id="cupom-box" className="mt-6 rounded-2xl border-2 border-[#F4A261] bg-[#F4A261]/20 p-6 text-center shadow-2xl animate-pulse">
             <p className="text-2xl font-bold text-[#F4A261] mb-2">Cupom gerado com sucesso!</p>
@@ -243,15 +278,14 @@ function getProgressInfo(pontos: number) {
               {cupom}
             </p>
 
-            {/* QR Code */}
             <div className="my-6 flex justify-center">
               <QRCodeSVG
-  value={`https://fidelidade-cupim.vercel.app/validar?cupom=${cupom}&telefone=${telefone.replace(/\D/g, '')}`}
-  size={200}
-  bgColor="#2D1810"
-  fgColor="#F4A261"
-  level="H"
-/>
+                value={`https://fidelidade-cupim.vercel.app/validar?cupom=${cupom}&telefone=${telefone.replace(/\D/g, '')}`}
+                size={200}
+                bgColor="#2D1810"
+                fgColor="#F4A261"
+                level="H"
+              />
             </div>
 
             <p className="text-lg text-white/90">
@@ -268,7 +302,7 @@ function getProgressInfo(pontos: number) {
           <section className="mt-6 rounded-2xl bg-white/5 p-5 shadow-xl ring-1 ring-white/10 backdrop-blur">
             <div className="flex items-start justify-between gap-3">
               <h2 className="text-lg font-semibold">Resumo</h2>
-              <span className={`rounded-full border px-3 py-1 text-xs ${nivelBadge}`}>
+              <span className={`rounded-full border px-3 py-1 text-xs ${nivelBadge()}`}>
                 {resultado.nivel}
               </span>
             </div>
@@ -277,65 +311,79 @@ function getProgressInfo(pontos: number) {
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <span className="text-white/70">Pontos acumulados</span>
                 <span className="text-xl font-bold">
-                  {(resultado.pontos || 0).toLocaleString('pt-BR')}
+                  {resultado.pontos.toLocaleString('pt-BR')}
                 </span>
               </div>
 
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <span className="text-white/70">Cashback disponível</span>
                 <span className="text-xl font-bold text-[#7CFFB2]">
-                  R$ {(resultado.cashback || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {resultado.cashback.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
 
               <div className="flex items-center justify-between">
                 <span className="text-white/70">Tickets de sorteio</span>
                 <span className="text-xl font-bold">
-                  {(resultado.tickets || 0).toLocaleString('pt-BR')}
+                  {resultado.tickets.toLocaleString('pt-BR')}
                 </span>
               </div>
             </div>
-{/* Barra de Progresso para Próximo Nível */}
+
+            {/* Área de progresso + inatividade */}
 <div className="mt-6 bg-black/30 p-4 rounded-xl border border-white/10">
   {(() => {
-    const info = getProgressInfo(resultado.pontos);
+    const progressInfo = getProgressInfo(resultado.nivel, resultado.pontos);
+    const inatividadeInfo = getInatividadeInfo(null);
 
-    if (info.isRei) {
+    if (progressInfo.isRei) {
+      // Apenas para Rei do Cupim: sem barra, só mensagem de conquista
       return (
-        <div className="text-center">
+        <div className="text-center space-y-4">
           <p className="text-lg font-bold text-[#FFD700] flex items-center justify-center gap-2">
             Você é o Rei do Cupim! 👑
           </p>
-          <p className="text-sm text-white/70 mt-1">
-            Parabéns! Benefícios exclusivos ativados.
+          <p className="text-sm text-white/80">
+            Nível máximo alcançado. Parabéns pelos benefícios exclusivos!
+          </p>
+          <p className={`text-sm ${inatividadeInfo.cor}`}>
+            {inatividadeInfo.mensagem}
           </p>
         </div>
       );
     }
 
+    // Para Prata e Ouro: mostra a barra de progresso normalmente
     return (
-      <>
-        <p className="text-sm text-white/80 mb-2">
-          Progresso para {info.proximoNivel}:
+      <div className="space-y-4">
+        <div>
+          <p className="text-sm text-white/80 mb-2">
+            Progresso para <strong className="text-[#F4A261]">{progressInfo.proximoNivel}</strong>:
+          </p>
+          <div className="relative h-5 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="absolute h-full bg-gradient-to-r from-[#E63946] to-[#F4A261] transition-all duration-700 ease-out"
+              style={{ width: `${progressInfo.progresso}%` }}
+            />
+          </div>
+          <div className="flex justify-between mt-2 text-xs text-white/70">
+            <span>{resultado.pontos.toLocaleString('pt-BR')} pts</span>
+            <span>
+              {progressInfo.faltam > 0
+                ? `Faltam ${progressInfo.faltam.toLocaleString('pt-BR')} pts`
+                : 'Próximo nível alcançado!'}
+            </span>
+          </div>
+        </div>
+
+        <p className={`text-sm text-center ${inatividadeInfo.cor}`}>
+          {inatividadeInfo.mensagem}
         </p>
-        <div className="relative h-5 bg-white/10 rounded-full overflow-hidden">
-          <div
-            className="absolute h-full bg-gradient-to-r from-[#E63946] to-[#F4A261] transition-all duration-700 ease-out"
-            style={{ width: `${info.progresso}%` }}
-          />
-        </div>
-        <div className="flex justify-between mt-2 text-xs text-white/70">
-          <span>{resultado.pontos.toLocaleString('pt-BR')} pts</span>
-          <span>
-            {info.faltam > 0
-              ? `Faltam ${info.faltam.toLocaleString('pt-BR')} pts`
-              : 'Próximo nível alcançado!'}
-          </span>
-        </div>
-      </>
+      </div>
     );
   })()}
 </div>
+
             <div className="mt-5 rounded-xl border border-white/10 bg-black/20 p-3">
               <p className="text-xs text-white/60">
                 Resgate seus benefícios abaixo. Sorteios mensais todo dia 15.
@@ -344,13 +392,12 @@ function getProgressInfo(pontos: number) {
 
             {/* Opções de resgate */}
             <div className="mt-6 space-y-6">
-              {/* Opção 1: Taxa de Entrega Grátis (em primeiro) */}
+              {/* Taxa de Entrega Grátis */}
               <div className="bg-white/5 p-5 rounded-2xl shadow-xl ring-1 ring-white/10 backdrop-blur">
                 <h3 className="text-xl font-bold mb-4 text-center">Taxa de Entrega Grátis</h3>
                 <p className="text-sm text-white/70 text-center mb-4">
                   Resgate frete grátis na próxima compra
                 </p>
-
                 <button
                   onClick={() => resgatar('frete', 0)}
                   disabled={loading || resultado.pontos < 300}
@@ -360,7 +407,7 @@ function getProgressInfo(pontos: number) {
                 </button>
               </div>
 
-              {/* Opção 2: Resgate com Pontos */}
+              {/* Resgate com Pontos */}
               <div className="bg-white/5 p-5 rounded-2xl shadow-xl ring-1 ring-white/10 backdrop-blur">
                 <h3 className="text-xl font-bold mb-4 text-center">Resgate com Pontos</h3>
                 <p className="text-sm text-white/70 text-center mb-4">
@@ -368,70 +415,70 @@ function getProgressInfo(pontos: number) {
                 </p>
 
                 <div className="grid grid-cols-1 gap-3">
-  <button
-    onClick={() => resgatar('pontos', 5)}
-    disabled={loading || resultado.pontos < 100}
-    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-  >
-    R$ 5 de desconto (100 pontos)
-  </button>
+                  <button
+                    onClick={() => resgatar('pontos', 5)}
+                    disabled={loading || resultado.pontos < 100}
+                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                  >
+                    R$ 5 de desconto (100 pontos)
+                  </button>
 
-  <button
-    onClick={() => resgatar('pontos', 10)}
-    disabled={loading || resultado.pontos < 200}
-    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-  >
-    R$ 10 de desconto (200 pontos)
-  </button>
+                  <button
+                    onClick={() => resgatar('pontos', 10)}
+                    disabled={loading || resultado.pontos < 200}
+                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                  >
+                    R$ 10 de desconto (200 pontos)
+                  </button>
 
-  <button
-    onClick={() => resgatar('pontos', 15)}
-    disabled={loading || resultado.pontos < 300}
-    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-  >
-    R$ 15 de desconto (300 pontos)
-  </button>
+                  <button
+                    onClick={() => resgatar('pontos', 15)}
+                    disabled={loading || resultado.pontos < 300}
+                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                  >
+                    R$ 15 de desconto (300 pontos)
+                  </button>
 
-  {showMorePontos && (
-    <>
-      <button
-        onClick={() => resgatar('pontos', 25)}
-        disabled={loading || resultado.pontos < 500}
-        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-      >
-        R$ 25 de desconto (500 pontos)
-      </button>
+                  {showMorePontos && (
+                    <>
+                      <button
+                        onClick={() => resgatar('pontos', 25)}
+                        disabled={loading || resultado.pontos < 500}
+                        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                      >
+                        R$ 25 de desconto (500 pontos)
+                      </button>
 
-      <button
-        onClick={() => resgatar('pontos', 50)}
-        disabled={loading || resultado.pontos < 1000}
-        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-      >
-        R$ 50 de desconto (1.000 pontos)
-      </button>
+                      <button
+                        onClick={() => resgatar('pontos', 50)}
+                        disabled={loading || resultado.pontos < 1000}
+                        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                      >
+                        R$ 50 de desconto (1.000 pontos)
+                      </button>
 
-      <button
-        onClick={() => resgatar('pontos', 100)}
-        disabled={loading || resultado.pontos < 2000}
-        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-      >
-        R$ 100 de desconto (2.000 pontos)
-      </button>
-    </>
-  )}
-</div>
+                      <button
+                        onClick={() => resgatar('pontos', 100)}
+                        disabled={loading || resultado.pontos < 2000}
+                        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                      >
+                        R$ 100 de desconto (2.000 pontos)
+                      </button>
+                    </>
+                  )}
+                </div>
 
-{!showMorePontos && (
-  <button
-    onClick={() => setShowMorePontos(true)}
-    className="mt-4 w-full rounded-xl border border-[#F4A261]/50 bg-transparent py-3 text-[#F4A261] font-semibold transition hover:bg-[#F4A261]/10"
-  >
-    Ver mais opções ▼
-  </button>
-)}
+                {!showMorePontos && (
+                  <button
+                    onClick={() => setShowMorePontos(true)}
+                    className="mt-4 w-full rounded-xl border border-[#F4A261]/50 bg-transparent py-3 text-[#F4A261] font-semibold transition hover:bg-[#F4A261]/10"
+                  >
+                    Ver mais opções ▼
+                  </button>
+                )}
               </div>
 
-              {/* Opção 3: Resgate com Cashback */}
+              {/* Resgate com Cashback */}
               <div className="bg-white/5 p-5 rounded-2xl shadow-xl ring-1 ring-white/10 backdrop-blur">
                 <h3 className="text-xl font-bold mb-4 text-center">Resgate com Cashback</h3>
                 <p className="text-sm text-white/70 text-center mb-4">
@@ -439,59 +486,59 @@ function getProgressInfo(pontos: number) {
                 </p>
 
                 <div className="grid grid-cols-1 gap-3">
-  <button
-    onClick={() => resgatar('cashback', 5)}
-    disabled={loading || resultado.cashback < 5}
-    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-  >
-    R$ 5 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
-  </button>
+                  <button
+                    onClick={() => resgatar('cashback', 5)}
+                    disabled={loading || resultado.cashback < 5}
+                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                  >
+                    R$ 5 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
+                  </button>
 
-  <button
-    onClick={() => resgatar('cashback', 10)}
-    disabled={loading || resultado.cashback < 10}
-    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-  >
-    R$ 10 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
-  </button>
+                  <button
+                    onClick={() => resgatar('cashback', 10)}
+                    disabled={loading || resultado.cashback < 10}
+                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                  >
+                    R$ 10 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
+                  </button>
 
-  <button
-    onClick={() => resgatar('cashback', 15)}
-    disabled={loading || resultado.cashback < 15}
-    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-  >
-    R$ 15 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
-  </button>
+                  <button
+                    onClick={() => resgatar('cashback', 15)}
+                    disabled={loading || resultado.cashback < 15}
+                    className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                  >
+                    R$ 15 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
+                  </button>
 
-  {showMoreCashback && (
-    <>
-      <button
-        onClick={() => resgatar('cashback', 25)}
-        disabled={loading || resultado.cashback < 25}
-        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-      >
-        R$ 25 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
-      </button>
+                  {showMoreCashback && (
+                    <>
+                      <button
+                        onClick={() => resgatar('cashback', 25)}
+                        disabled={loading || resultado.cashback < 25}
+                        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                      >
+                        R$ 25 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
+                      </button>
 
-      <button
-        onClick={() => resgatar('cashback', 50)}
-        disabled={loading || resultado.cashback < 50}
-        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
-      >
-        R$ 50 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
-      </button>
-    </>
-  )}
-</div>
+                      <button
+                        onClick={() => resgatar('cashback', 50)}
+                        disabled={loading || resultado.cashback < 50}
+                        className="rounded-xl bg-[#E63946] py-3 text-white font-semibold transition hover:bg-[#ff3f4f] disabled:opacity-60"
+                      >
+                        R$ 50 de cashback (disponível: R$ {resultado.cashback.toFixed(2)})
+                      </button>
+                    </>
+                  )}
+                </div>
 
-{!showMoreCashback && (
-  <button
-    onClick={() => setShowMoreCashback(true)}
-    className="mt-4 w-full rounded-xl border border-[#F4A261]/50 bg-transparent py-3 text-[#F4A261] font-semibold transition hover:bg-[#F4A261]/10"
-  >
-    Ver mais opções ▼
-  </button>
-)}
+                {!showMoreCashback && (
+                  <button
+                    onClick={() => setShowMoreCashback(true)}
+                    className="mt-4 w-full rounded-xl border border-[#F4A261]/50 bg-transparent py-3 text-[#F4A261] font-semibold transition hover:bg-[#F4A261]/10"
+                  >
+                    Ver mais opções ▼
+                  </button>
+                )}
               </div>
             </div>
           </section>

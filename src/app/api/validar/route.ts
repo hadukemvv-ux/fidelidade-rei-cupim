@@ -12,27 +12,37 @@ export async function POST(req: Request) {
 
     if (!cupom) return NextResponse.json({ ok: false, error: 'Cupom não informado.' }, { status: 400 });
 
-    // ✅ CORREÇÃO 1: Normaliza o código (remove espaços e força maiúsculas)
     const codigoLimpo = String(cupom).trim().toUpperCase();
 
     console.log(`🔍 Tentando validar: ${codigoLimpo} (Ação: ${acao})`);
 
-    // Buscar o cupom
-    // ✅ CORREÇÃO 2: Usa maybeSingle() para evitar erro se não encontrar
+    // ✅ CORREÇÃO: Removemos o JOIN quebrado (.select('*, produtos_resgate(nome)'))
+    // Buscamos apenas os dados do resgate primeiro
     const { data: resgate, error } = await supabaseAdmin
       .from('resgates')
-      .select('*, produtos_resgate(nome)') 
+      .select('*')
       .eq('codigo', codigoLimpo)
       .maybeSingle();
 
     if (error) {
-      console.error('❌ Erro Supabase:', error);
+      console.error('❌ Erro Supabase (Busca Resgate):', error);
       return NextResponse.json({ ok: false, error: 'Erro interno ao consultar banco.' }, { status: 500 });
     }
 
     if (!resgate) {
       console.warn(`⚠️ Cupom ${codigoLimpo} não encontrado.`);
       return NextResponse.json({ ok: false, error: 'Cupom NÃO ENCONTRADO. Verifique o código.' }, { status: 404 });
+    }
+
+    // ✅ CORREÇÃO: Buscamos o nome do produto MANUALMENTE se houver produto_id
+    let nomeProduto = null;
+    if (resgate.produto_id) {
+      const { data: prod } = await supabaseAdmin
+        .from('produtos_resgate')
+        .select('nome')
+        .eq('id', resgate.produto_id)
+        .maybeSingle();
+      if (prod) nomeProduto = prod.nome;
     }
 
     // Se for apenas consulta (verificar status)
@@ -51,7 +61,8 @@ export async function POST(req: Request) {
       if (resgate.tipo === 'frete') descricao = 'Entrega Grátis';
       else if (resgate.tipo === 'pontos') descricao = `Desconto de R$ ${Number(resgate.valor).toFixed(2)}`;
       else if (resgate.tipo === 'cashback') descricao = `Uso de Cashback: R$ ${Number(resgate.valor).toFixed(2)}`;
-      else if (resgate.tipo === 'produto') descricao = `Produto: ${resgate.produtos_resgate?.nome || 'Item do Cardápio'}`;
+      // Usa o nome buscado manualmente ou um fallback
+      else if (resgate.tipo === 'produto') descricao = `Produto: ${nomeProduto || 'Item do Cardápio'}`;
 
       return NextResponse.json({ 
         ok: true, 

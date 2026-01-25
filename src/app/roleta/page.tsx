@@ -3,11 +3,11 @@ import { useState, useRef, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 
 // --- CONFIGURAÇÃO VISUAL DA RODA ---
-const FATIA_PS5 = 5; // Graus (pequeno)
+const FATIA_PS5 = 5; 
 const RESTANTE = 360 - FATIA_PS5;
 const FATIA_NORMAL = RESTANTE / 7; 
 
-// Itens visuais
+// Itens visuais da roleta
 const ITENS_RODA = [
   { id: 'ps5', nome: 'PLAYSTATION!!!', emoji: '🎮', cor: '#2563eb', inicio: 0, fim: FATIA_PS5, textoBranco: true },
   { id: 'saideira', nome: 'A Saideira', emoji: '🍺', cor: '#f59e0b', inicio: FATIA_PS5, fim: FATIA_PS5 + FATIA_NORMAL, textoBranco: false },
@@ -29,15 +29,31 @@ export default function RoletaPage() {
   const [resultado, setResultado] = useState<any>(null);
   const rodaRef = useRef<HTMLDivElement>(null);
 
-  // Gradiente dinâmico para a roda
+  // Gradiente dinâmico
   const backgroundGradient = useMemo(() => {
     return `conic-gradient(${ITENS_RODA.map(item => `${item.cor} ${item.inicio}deg ${item.fim}deg`).join(', ')})`;
   }, []);
 
+  // FUNÇÃO NOVA: FORMATAÇÃO DE TELEFONE
+  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não é número
+    if (value.length > 11) value = value.slice(0, 11); // Trava em 11 números
+
+    // Aplica a máscara visual (XX) XXXXX-XXXX
+    if (value.length > 2) {
+      value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+    }
+    if (value.length > 9) {
+      value = `${value.slice(0, 10)}-${value.slice(10)}`;
+    }
+    
+    setTelefone(value);
+  };
+
   // 1. Valida Senha do Garçom
   function validarSenha() {
     if (['1111', '2222', '3333'].includes(senhaGarcom)) {
-      setFase('cliente'); // Passa para pedir telefone
+      setFase('cliente'); 
     } else {
       alert('Senha incorreta!');
     }
@@ -45,10 +61,11 @@ export default function RoletaPage() {
 
   // 2. Valida Telefone e Libera Roleta
   function validarTelefone() {
-    if (telefone.length >= 8) {
-      setFase('roleta'); // Tudo pronto!
+    const telLimpo = telefone.replace(/\D/g, '');
+    if (telLimpo.length === 11) { // Exige exatamente 11 dígitos
+      setFase('roleta');
     } else {
-      alert('Digite um telefone válido para receber os pontos!');
+      alert('Digite um telefone válido com DDD (11 números)!');
     }
   }
 
@@ -63,8 +80,7 @@ export default function RoletaPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-            // Mandamos o telefone como ID temporário se não tiver ID real
-            cliente_id: telefone, 
+            cliente_id: telefone.replace(/\D/g, ''), // Manda só os números pro backend
             senha_garcom: senhaGarcom 
         })
       });
@@ -72,10 +88,8 @@ export default function RoletaPage() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
-      // Encontra onde parar a roda
       let itemVisual = ITENS_RODA.find(i => data.premio.nome.includes(i.nome) || i.nome.includes(data.premio.nome));
       
-      // Fallbacks para garantir que nunca quebre
       if (!itemVisual) {
          if (data.premio.tipo === 'pontos') itemVisual = ITENS_RODA.find(i => i.id === 'pontos');
          else if (data.premio.tipo === 'nada') itemVisual = ITENS_RODA.find(i => i.id === 'nada1');
@@ -84,7 +98,6 @@ export default function RoletaPage() {
 
       if (!itemVisual) throw new Error('Erro ao visualizar prêmio');
 
-      // Cálculo da Rotação (Parar no meio da fatia)
       const centroFatia = itemVisual.inicio + ((itemVisual.fim - itemVisual.inicio) / 2);
       const voltas = 5 * 360; 
       const ruido = (Math.random() * (FATIA_NORMAL * 0.4)) - (FATIA_NORMAL * 0.2); 
@@ -104,27 +117,34 @@ export default function RoletaPage() {
       }, 5000);
 
     } catch (error: any) {
-      alert(error.message || 'Erro ao girar.');
+      console.error(error);
+      alert(error.message || 'Erro ao girar a roleta. Tente novamente.');
       setGirando(false);
     }
   }
 
-  // --- RENDERS DAS TELAS ---
+  // --- RENDERIZAÇÃO DAS TELAS ---
 
   // TELA 1: GARÇOM
   if (fase === 'garcom') {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
-        <h1 className="text-2xl text-[#c5a059] font-black mb-4 uppercase">Área do Garçom</h1>
-        <p className="text-gray-400 mb-6">Digite a senha para liberar a sorte:</p>
-        <input 
-            type="tel" maxLength={4}
-            value={senhaGarcom} onChange={(e) => setSenhaGarcom(e.target.value)}
-            className="bg-gray-800 text-white text-3xl text-center p-4 rounded-xl border border-[#c5a059] w-48 tracking-[8px] mb-6 outline-none"
-        />
-        <button onClick={validarSenha} className="bg-[#c5a059] text-black font-bold py-3 px-8 rounded-full">
-            LIBERAR
-        </button>
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center font-sans">
+        <div className="bg-gray-900 border border-[#c5a059] p-8 rounded-2xl w-full max-w-sm shadow-2xl">
+            <h1 className="text-2xl text-[#c5a059] font-black mb-4 uppercase tracking-wider">Área do Garçom</h1>
+            <p className="text-gray-400 mb-6 text-sm">Digite a senha da mesa para liberar a sorte:</p>
+            <input 
+                type="tel" maxLength={4}
+                value={senhaGarcom} onChange={(e) => setSenhaGarcom(e.target.value)}
+                className="bg-black text-white text-3xl text-center p-4 rounded-xl border border-gray-700 focus:border-[#c5a059] w-full tracking-[10px] mb-6 outline-none transition-colors"
+                placeholder="****"
+            />
+            <button 
+                onClick={validarSenha} 
+                className="w-full bg-[#c5a059] text-black font-bold py-4 rounded-xl hover:bg-[#b08d45] transition-colors uppercase tracking-widest"
+            >
+                LIBERAR AVAL
+            </button>
+        </div>
       </div>
     );
   }
@@ -132,26 +152,34 @@ export default function RoletaPage() {
   // TELA 2: CLIENTE (TELEFONE)
   if (fase === 'cliente') {
     return (
-      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6 text-center">
-        <h1 className="text-2xl text-white font-bold mb-4">Quase lá! 🎲</h1>
-        <p className="text-gray-400 mb-6">Informe seu WhatsApp para receber os prêmios:</p>
-        <input 
-            type="tel"
-            placeholder="(11) 99999-9999"
-            value={telefone} onChange={(e) => setTelefone(e.target.value)}
-            className="bg-white text-black text-xl text-center p-4 rounded-xl w-full max-w-xs mb-6"
-        />
-        <button onClick={validarTelefone} className="bg-green-500 text-white font-bold py-3 px-8 rounded-full shadow-lg">
-            IR PARA ROLETA
-        </button>
+      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6 text-center font-sans">
+        <div className="max-w-sm w-full">
+            <h1 className="text-3xl text-white font-bold mb-2">Quase lá! 🎲</h1>
+            <p className="text-gray-400 mb-8">Informe seu WhatsApp para validarmos seu prêmio se você ganhar:</p>
+            
+            <input 
+                type="tel"
+                placeholder="(11) 99999-9999"
+                value={telefone}
+                onChange={handleTelefoneChange} // <--- AQUI ESTÁ A MÁGICA
+                className="bg-white text-black text-2xl text-center p-4 rounded-xl w-full mb-6 border-4 border-transparent focus:border-[#c5a059] outline-none shadow-lg font-bold"
+            />
+            
+            <button 
+                onClick={validarTelefone} 
+                className="w-full bg-green-500 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-green-600 transition-colors uppercase tracking-wide"
+            >
+                IR PARA ROLETA
+            </button>
+        </div>
       </div>
     );
   }
 
-  // TELA 3: A ROLETA (Visual Novo com Lógica Nova)
+  // TELA 3: A ROLETA
   return (
     <div className="min-h-screen bg-[#1a1a1a] flex flex-col items-center justify-center p-4 overflow-hidden font-sans">
-      <h1 className="text-3xl md:text-5xl font-black text-[#c5a059] mb-8 text-center uppercase tracking-wider drop-shadow-lg">
+      <h1 className="text-3xl md:text-5xl font-black text-[#c5a059] mb-8 text-center uppercase tracking-wider drop-shadow-lg animate-fade-in-down">
         🎰 Roleta do Rei 🎰
       </h1>
 

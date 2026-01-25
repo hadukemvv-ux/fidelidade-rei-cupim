@@ -9,7 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.90.1",
+    "@supabase/supabase-js": "^2.91.1",
+    "google-spreadsheet": "^5.0.2",
     "jsqr": "^1.4.0",
     "next": "16.1.2",
     "qrcode.react": "^4.2.0",

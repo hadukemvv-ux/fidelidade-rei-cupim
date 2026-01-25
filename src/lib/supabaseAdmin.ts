@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
-// URL do seu projeto Supabase (mesmo que está no .env.local)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// Chave de serviço – tem permissão total (NUNCA exposta ao cliente)
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+if (!supabaseUrl) throw new Error('NEXT_PUBLIC_SUPABASE_URL ausente no .env.local');
+if (!serviceRoleKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY ausente no .env.local');
 
-// Cliente usado apenas nas rotas API (executado no servidor)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+export const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+  auth: { persistSession: false },
+});

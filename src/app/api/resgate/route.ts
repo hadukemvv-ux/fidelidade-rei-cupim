@@ -1,75 +1,192 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import crypto from 'crypto';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// --- FUNÇÕES AUXILIARES ---
 
-export async function POST(request: NextRequest) {
+function onlyDigits(value: string) {
+  return value.replace(/\D/g, '');
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function gerarCodigoCupom() {
+  return 'CUP' + Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+// --- LÓGICA DE NÍVEIS (Baseada em Gasto ACUMULADO / LIFETIME) ---
+function calcularNivel(gastoTotal: number) {
+  // A lógica agora olha para o histórico total do cliente (XP)
+  
+  // Rei do Cupim: Acima de R$ 700 acumulados na vida
+  if (gastoTotal >= 700) {
+    return { atual: 'REI_DO_CUPIM', proximo: 'MÁXIMO', min: 700, max: 700, multiplicador: 14 };
+  }
+  // Ouro: R$ 400 - 699
+  if (gastoTotal >= 400) {
+    return { atual: 'OURO', proximo: 'REI_DO_CUPIM', min: 400, max: 700, multiplicador: 8 };
+  }
+  // Prata: R$ 200 - 399
+  if (gastoTotal >= 200) {
+    return { atual: 'PRATA', proximo: 'OURO', min: 200, max: 400, multiplicador: 4 };
+  }
+  
+  // Bronze: R$ 0 - 199
+  return { atual: 'BRONZE', proximo: 'PRATA', min: 0, max: 200, multiplicador: 2 };
+}
+
+// Garante que o cliente tenha linhas em todas as tabelas de saldo
+async function garantirSaldos(telefone: string) {
+  // Coluna 'gasto_mensal_atual' agora representa o GASTO TOTAL ACUMULADO
+  const { data: p } = await supabaseAdmin.from('pontos').select('telefone').eq('telefone', telefone).maybeSingle();
+  if (!p) await supabaseAdmin.from('pontos').insert({ telefone, total: 0, nivel: 'BRONZE', gasto_mensal_atual: 0, atualizado_em: nowIso() });
+
+  const { data: c } = await supabaseAdmin.from('cashback').select('telefone').eq('telefone', telefone).maybeSingle();
+  if (!c) await supabaseAdmin.from('cashback').insert({ telefone, saldo: 0, atualizado_em: nowIso() });
+
+  const { data: t } = await supabaseAdmin.from('tickets').select('telefone').eq('telefone', telefone).maybeSingle();
+  if (!t) await supabaseAdmin.from('tickets').insert({ telefone, quantidade: 0, atualizado_em: nowIso() });
+}
+
+async function buscarSnapshot(telefone: string) {
+  const { data: cliente } = await supabaseAdmin.from('clientes').select('nome, ultima_compra').eq('telefone', telefone).single();
+  if (!cliente) throw new Error('Cliente não encontrado.');
+
+  await garantirSaldos(telefone);
+
+  // Seleciona os dados. 'gasto_mensal_atual' é usado como TOTAL ACUMULADO.
+  const { data: pts } = await supabaseAdmin.from('pontos').select('telefone, total, nivel, gasto_mensal_atual, atualizado_em').eq('telefone', telefone).single();
+  const { data: cb } = await supabaseAdmin.from('cashback').select('*').eq('telefone', telefone).single();
+  const { data: tk } = await supabaseAdmin.from('tickets').select('*').eq('telefone', telefone).single();
+
+  const gastoAtual = Number(pts.gasto_mensal_atual || 0);
+  const nivelInfo = calcularNivel(gastoAtual);
+
+  // Calcula progresso da barra
+  let progresso = 0;
+  let pontosParaProximo = 0; 
+  
+  if (nivelInfo.atual !== 'REI_DO_CUPIM') {
+    const span = Math.max(1, nivelInfo.max - nivelInfo.min);
+    const percorridos = Math.max(0, gastoAtual - nivelInfo.min);
+    progresso = Math.min(100, Math.floor((percorridos / span) * 100));
+    
+    // CÁLCULO DE GAMIFICAÇÃO:
+    // Transforma o valor em Reais que falta em "Pontos Necessários" usando o multiplicador atual.
+    // Ex: Faltam R$ 50. Sou Bronze (2x). Logo, preciso "gerar" 100 pontos comprando.
+    const reaisFaltantes = Math.max(0, nivelInfo.max - gastoAtual);
+    pontosParaProximo = Math.ceil(reaisFaltantes * nivelInfo.multiplicador); 
+  } else {
+    progresso = 100;
+  }
+
+  let avisoInatividade = '';
+  if (cliente.ultima_compra) {
+    const dias = Math.floor((new Date().getTime() - new Date(cliente.ultima_compra).getTime()) / (1000 * 60 * 60 * 24));
+    if (dias >= 60) avisoInatividade = 'ATENÇÃO: Seus benefícios e nível serão zerados em breve por inatividade.';
+    else if (dias >= 30) avisoInatividade = `Faltam ${60 - dias} dias para seu nível ser zerado por inatividade.`;
+  }
+
+  return {
+    cliente: { nome: cliente.nome, telefone },
+    pontos: Number(pts.total),
+    cashback: Number(cb.saldo),
+    tickets: Number(tk.quantidade),
+    nivel: { 
+      atual: nivelInfo.atual, 
+      proximo: nivelInfo.proximo, 
+      progresso, 
+      pontosParaProximo, // Retorna em PONTOS
+      multiplicadorAtual: nivelInfo.multiplicador // Envia o multiplicador
+    },
+    avisoInatividade
+  };
+}
+
+// --- ROTA PRINCIPAL ---
+
+export async function POST(req: Request) {
   try {
-    const { telefone, tipo, valorDesconto } = await request.json();
+    const body = await req.json();
+    const telefone = onlyDigits(String(body?.telefone ?? ''));
+    const pin = String(body?.pin ?? '').trim();
 
-    if (!telefone || !tipo || valorDesconto === undefined) {
-      return NextResponse.json({ error: 'Telefone, tipo e valor de desconto obrigatórios' }, { status: 400 });
+    if (telefone.length !== 11) {
+      return NextResponse.json({ ok: false, error: 'Telefone inválido.' }, { status: 400 });
     }
 
-    const tel = telefone.replace(/\D/g, '').trim();
+    // Validação do PIN
+    if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+      return NextResponse.json({ ok: false, error: 'PIN precisa ter exatamente 4 dígitos numéricos.' }, { status: 400 });
+    }
 
-    // Busca dados atuais
-    const [pontosRes, cashbackRes] = await Promise.all([
-      supabase.from('pontos').select('total').eq('telefone', tel).single(),
-      supabase.from('cashback').select('saldo').eq('telefone', tel).single(),
-    ]);
+    // Verificar PIN
+    const pinHash = crypto.createHash('sha256').update(pin).digest('hex');
+    const { data: cliente } = await supabaseAdmin.from('clientes').select('pin_hash').eq('telefone', telefone).maybeSingle();
+    if (!cliente || cliente.pin_hash !== pinHash) {
+      return NextResponse.json({ ok: false, error: 'PIN incorreto.' }, { status: 401 });
+    }
 
-    let pontosAtuais = pontosRes.data?.total || 0;
-    let cashbackAtual = cashbackRes.data?.saldo || 0;
+    const tipo = body?.tipo as 'frete' | 'cashback' | 'produto' | 'pontos' | undefined;
 
-    let pontosGastos = 0;
+    if (!tipo) {
+      const snap = await buscarSnapshot(telefone);
+      return NextResponse.json({ ok: true, ...snap });
+    }
 
-    if (tipo === 'pontos') {
-      pontosGastos = valorDesconto * 20; // 20 pontos por R$ 1 de desconto (ajuste se quiser mudar a conversão)
-      if (pontosAtuais < pontosGastos) {
-        return NextResponse.json({ error: 'Pontos insuficientes' }, { status: 400 });
-      }
-      pontosAtuais -= pontosGastos;
-      await supabase.from('pontos').update({ total: pontosAtuais }).eq('telefone', tel);
+    // Resgate (1x dia)
+    const hoje = new Date().toISOString().split('T')[0];
+    const { data: jaResgatou } = await supabaseAdmin.from('resgates')
+      .select('id').eq('telefone', telefone).gte('criado_em', `${hoje}T00:00:00`).maybeSingle();
+
+    if (jaResgatou) {
+      return NextResponse.json({ ok: false, error: 'Limite atingido: Você só pode fazer 1 resgate por dia.' }, { status: 400 });
+    }
+
+    const antes = await buscarSnapshot(telefone);
+    const codigo = gerarCodigoCupom();
+    let custoEmPontos = 0;
+    const nivelAtual = antes.nivel.atual;
+
+    if (tipo === 'frete') {
+      custoEmPontos = 200;
+    } else if (tipo === 'pontos') {
+      const valorReais = Number(body.valorDesconto);
+      if (!valorReais || valorReais <= 0) return NextResponse.json({ ok: false, error: 'Valor inválido.' }, { status: 400 });
+      custoEmPontos = valorReais / 0.005;
+    } else if (tipo === 'produto') {
+      const { data: produto } = await supabaseAdmin.from('produtos_resgate').select('*').eq('id', body.produtoId).single();
+      if (!produto) return NextResponse.json({ ok: false, error: 'Produto não encontrado.' }, { status: 404 });
+      
+      // Ajuste de custos de produtos se necessário, baseado no nível
+      if (nivelAtual === 'PRATA') custoEmPontos = produto.custo_prata;
+      else if (nivelAtual === 'OURO') custoEmPontos = produto.custo_ouro;
+      else if (nivelAtual === 'REI_DO_CUPIM') custoEmPontos = produto.custo_rei;
+      else custoEmPontos = produto.custo_em_pontos;
     } else if (tipo === 'cashback') {
-      if (cashbackAtual < valorDesconto) {
-        return NextResponse.json({ error: 'Cashback insuficiente' }, { status: 400 });
+      const valorDebito = Number(body.valorDesconto);
+      if (antes.cashback < valorDebito) {
+        return NextResponse.json({ ok: false, error: 'Saldo de cashback insuficiente.' }, { status: 400 });
       }
-      cashbackAtual -= valorDesconto;
-      await supabase.from('cashback').update({ saldo: cashbackAtual }).eq('telefone', tel);
-    } else if (tipo === 'frete') {
-      pontosGastos = 300; // 300 pontos para frete grátis
-      if (pontosAtuais < pontosGastos) {
-        return NextResponse.json({ error: 'Pontos insuficientes para frete grátis' }, { status: 400 });
-      }
-      pontosAtuais -= pontosGastos;
-      await supabase.from('pontos').update({ total: pontosAtuais }).eq('telefone', tel);
+      await supabaseAdmin.from('cashback').update({ saldo: antes.cashback - valorDebito, atualizado_em: nowIso() }).eq('telefone', telefone);
+      await supabaseAdmin.from('resgates').insert({ telefone, tipo, valor: valorDebito, codigo, criado_em: nowIso() });
+      const posCashback = await buscarSnapshot(telefone);
+      return NextResponse.json({ ok: true, codigo, atualizado: posCashback });
+    }
+    
+    if (antes.pontos < custoEmPontos) {
+      return NextResponse.json({ ok: false, error: `Pontos insuficientes. Necessário: ${custoEmPontos} pts.` }, { status: 400 });
     }
 
-    // Gera código único
-    const codigo = `RESGATE-${tipo.toUpperCase()}-${Math.random().toString(36).substring(2, 12).toUpperCase()}`;
+    await supabaseAdmin.from('pontos').update({ total: antes.pontos - custoEmPontos, atualizado_em: nowIso() }).eq('telefone', telefone);
+    await supabaseAdmin.from('resgates').insert({ telefone, tipo, valor: custoEmPontos, codigo, produto_id: body.produtoId || null, criado_em: nowIso() });
 
-    // Salva o cupom na tabela de cupons resgatados
-    await supabase.from('cupons_resgatados').insert({
-      codigo,
-      telefone: tel,
-      tipo,
-      valorDesconto,
-      usado: false,
-    });
+    const depois = await buscarSnapshot(telefone);
+    return NextResponse.json({ ok: true, codigo, atualizado: depois });
 
-    // Retorna o código e valores atualizados
-    return NextResponse.json({
-      codigo,
-      atualizado: {
-        pontos: pontosAtuais,
-        cashback: cashbackAtual,
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Erro interno no resgate' }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({ ok: false, error: err.message ?? 'Erro interno.' }, { status: 500 });
   }
 }

@@ -2,16 +2,17 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Scanner } from '@yudiel/react-qr-scanner'; // ✅ Importando o Scanner
+import { Scanner } from '@yudiel/react-qr-scanner'; 
 
 function ValidarContent() {
   const searchParams = useSearchParams();
-  const cupomUrl = searchParams.get('cupom');
+  // ✅ CORREÇÃO AQUI: searchParams?.get()
+  const cupomUrl = searchParams?.get('cupom');
   
   const [cupom, setCupom] = useState(cupomUrl || '');
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState<any>(null);
-  const [showScanner, setShowScanner] = useState(false); // ✅ Controle da Câmera
+  const [showScanner, setShowScanner] = useState(false); 
 
   useEffect(() => {
     if (cupomUrl) {
@@ -27,8 +28,8 @@ function ValidarContent() {
 
     setLoading(true);
     setResultado(null);
-    setShowScanner(false); // ✅ Fecha câmera se estiver aberta
-    setCupom(codigoLimpo); // Preenche o campo visualmente
+    setShowScanner(false); 
+    setCupom(codigoLimpo); 
 
     try {
       const res = await fetch('/api/validar', {
@@ -60,7 +61,6 @@ function ValidarContent() {
         alert('SUCESSO! Cupom baixado.');
         setResultado(null);
         setCupom('');
-        // window.location.reload(); // Removido para manter SPA fluido
       } else {
         alert('Erro: ' + data.error);
       }
@@ -76,7 +76,7 @@ function ValidarContent() {
       <div className="max-w-md w-full bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
         <h1 className="text-2xl font-bold text-center mb-6 text-[#c5a059]">🛡️ Validação de Cupom</h1>
 
-        {/* ✅ Botão para abrir Scanner */}
+        {/* Botão para abrir Scanner */}
         {!showScanner && !resultado && (
           <button
             onClick={() => setShowScanner(true)}
@@ -86,19 +86,17 @@ function ValidarContent() {
           </button>
         )}
 
-        {/* ✅ Scanner de Câmera */}
+        {/* Scanner de Câmera */}
         {showScanner && (
           <div className="mb-6 bg-black rounded-lg overflow-hidden relative border-4 border-[#c5a059]">
             <Scanner
               onScan={(result) => {
                 if (result && result.length > 0) {
-                  // O QR Code pode vir como URL completa ou só o código
                   const rawValue = result[0].rawValue;
                   console.log('Lido:', rawValue);
 
                   let codigoFinal = rawValue;
                   
-                  // Se for URL (ex: .../validar?cupom=CUP123), extrai só o código
                   if (rawValue.includes('cupom=')) {
                     codigoFinal = rawValue.split('cupom=')[1].split('&')[0];
                   }
@@ -108,7 +106,7 @@ function ValidarContent() {
               }}
               onError={(error) => console.log('Erro Câmera:', error)}
               styles={{ container: { width: '100%', aspectRatio: '1/1' } }}
-              components={{ audio: false }} // Desativa bip se quiser
+              components={{ audio: false }} 
             />
             <button 
               onClick={() => setShowScanner(false)}
@@ -122,7 +120,7 @@ function ValidarContent() {
           </div>
         )}
 
-        {/* Input Manual (caso o QR falhe) */}
+        {/* Input Manual */}
         <div className="flex gap-2 mb-6">
           <input
             value={cupom}

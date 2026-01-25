@@ -18,8 +18,6 @@ function gerarCodigoCupom() {
 
 // --- LÓGICA DE NÍVEIS (Baseada em Gasto ACUMULADO / LIFETIME) ---
 function calcularNivel(gastoTotal: number) {
-  // A lógica agora olha para o histórico total do cliente (XP)
-  
   // Rei do Cupim: Acima de R$ 700 acumulados na vida
   if (gastoTotal >= 700) {
     return { atual: 'REI_DO_CUPIM', proximo: 'MÁXIMO', min: 700, max: 700, multiplicador: 14 };
@@ -39,7 +37,6 @@ function calcularNivel(gastoTotal: number) {
 
 // Garante que o cliente tenha linhas em todas as tabelas de saldo
 async function garantirSaldos(telefone: string) {
-  // Coluna 'gasto_mensal_atual' agora representa o GASTO TOTAL ACUMULADO
   const { data: p } = await supabaseAdmin.from('pontos').select('telefone').eq('telefone', telefone).maybeSingle();
   if (!p) await supabaseAdmin.from('pontos').insert({ telefone, total: 0, nivel: 'BRONZE', gasto_mensal_atual: 0, atualizado_em: nowIso() });
 
@@ -56,12 +53,13 @@ async function buscarSnapshot(telefone: string) {
 
   await garantirSaldos(telefone);
 
-  // Seleciona os dados. 'gasto_mensal_atual' é usado como TOTAL ACUMULADO.
-  const { data: pts } = await supabaseAdmin.from('pontos').select('telefone, total, nivel, gasto_mensal_atual, atualizado_em').eq('telefone', telefone).single();
-  const { data: cb } = await supabaseAdmin.from('cashback').select('*').eq('telefone', telefone).single();
-  const { data: tk } = await supabaseAdmin.from('tickets').select('*').eq('telefone', telefone).single();
+  // Consultas com verificação de erro implícita
+  const { data: pts } = await supabaseAdmin.from('pontos').select('telefone, total, nivel, gasto_mensal_atual, atualizado_em').eq('telefone', telefone).maybeSingle();
+  const { data: cb } = await supabaseAdmin.from('cashback').select('*').eq('telefone', telefone).maybeSingle();
+  const { data: tk } = await supabaseAdmin.from('tickets').select('*').eq('telefone', telefone).maybeSingle();
 
-  const gastoAtual = Number(pts.gasto_mensal_atual || 0);
+  // ✅ CORREÇÃO AQUI: Uso de ?. para evitar erro "is possibly null"
+  const gastoAtual = Number(pts?.gasto_mensal_atual || 0);
   const nivelInfo = calcularNivel(gastoAtual);
 
   // Calcula progresso da barra
@@ -73,9 +71,6 @@ async function buscarSnapshot(telefone: string) {
     const percorridos = Math.max(0, gastoAtual - nivelInfo.min);
     progresso = Math.min(100, Math.floor((percorridos / span) * 100));
     
-    // CÁLCULO DE GAMIFICAÇÃO:
-    // Transforma o valor em Reais que falta em "Pontos Necessários" usando o multiplicador atual.
-    // Ex: Faltam R$ 50. Sou Bronze (2x). Logo, preciso "gerar" 100 pontos comprando.
     const reaisFaltantes = Math.max(0, nivelInfo.max - gastoAtual);
     pontosParaProximo = Math.ceil(reaisFaltantes * nivelInfo.multiplicador); 
   } else {
@@ -91,15 +86,16 @@ async function buscarSnapshot(telefone: string) {
 
   return {
     cliente: { nome: cliente.nome, telefone },
-    pontos: Number(pts.total),
-    cashback: Number(cb.saldo),
-    tickets: Number(tk.quantidade),
+    // ✅ CORREÇÃO AQUI TAMBÉM: Proteção contra nulos
+    pontos: Number(pts?.total || 0),
+    cashback: Number(cb?.saldo || 0),
+    tickets: Number(tk?.quantidade || 0),
     nivel: { 
       atual: nivelInfo.atual, 
       proximo: nivelInfo.proximo, 
       progresso, 
-      pontosParaProximo, // Retorna em PONTOS
-      multiplicadorAtual: nivelInfo.multiplicador // Envia o multiplicador
+      pontosParaProximo, 
+      multiplicadorAtual: nivelInfo.multiplicador 
     },
     avisoInatividade
   };

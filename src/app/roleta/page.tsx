@@ -34,20 +34,30 @@ export default function RoletaPage() {
     return `conic-gradient(${ITENS_RODA.map(item => `${item.cor} ${item.inicio}deg ${item.fim}deg`).join(', ')})`;
   }, []);
 
-  // FUNÇÃO NOVA: FORMATAÇÃO DE TELEFONE
+  // --- FUNÇÃO BLINDADA DE TELEFONE ---
   const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não é número
-    if (value.length > 11) value = value.slice(0, 11); // Trava em 11 números
+    // 1. Pega apenas números
+    let numbers = e.target.value.replace(/\D/g, '');
 
-    // Aplica a máscara visual (XX) XXXXX-XXXX
-    if (value.length > 2) {
-      value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+    // 2. Trava absoluta em 11 dígitos
+    if (numbers.length > 11) {
+      numbers = numbers.slice(0, 11);
     }
-    if (value.length > 9) {
-      value = `${value.slice(0, 10)}-${value.slice(10)}`;
+
+    // 3. Monta a máscara passo a passo
+    let formatted = numbers;
+    
+    if (numbers.length > 0) {
+      formatted = `(${numbers.slice(0, 2)}`; // (11
+    }
+    if (numbers.length > 2) {
+      formatted += `) ${numbers.slice(2, 7)}`; // (11) 91234
+    }
+    if (numbers.length > 7) {
+      formatted += `-${numbers.slice(7)}`; // (11) 91234-5678
     }
     
-    setTelefone(value);
+    setTelefone(formatted);
   };
 
   // 1. Valida Senha do Garçom
@@ -61,11 +71,13 @@ export default function RoletaPage() {
 
   // 2. Valida Telefone e Libera Roleta
   function validarTelefone() {
+    // Limpa a máscara para contar só os números
     const telLimpo = telefone.replace(/\D/g, '');
-    if (telLimpo.length === 11) { // Exige exatamente 11 dígitos
+    
+    if (telLimpo.length === 11) { 
       setFase('roleta');
     } else {
-      alert('Digite um telefone válido com DDD (11 números)!');
+      alert('Por favor, preencha o número completo: (DDD) 9XXXX-XXXX');
     }
   }
 
@@ -80,7 +92,7 @@ export default function RoletaPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-            cliente_id: telefone.replace(/\D/g, ''), // Manda só os números pro backend
+            cliente_id: telefone.replace(/\D/g, ''), // Envia APENAS números
             senha_garcom: senhaGarcom 
         })
       });
@@ -96,7 +108,7 @@ export default function RoletaPage() {
          else itemVisual = ITENS_RODA.find(i => i.id === 'saideira');
       }
 
-      if (!itemVisual) throw new Error('Erro ao visualizar prêmio');
+      if (!itemVisual) throw new Error('Erro visual');
 
       const centroFatia = itemVisual.inicio + ((itemVisual.fim - itemVisual.inicio) / 2);
       const voltas = 5 * 360; 
@@ -118,50 +130,49 @@ export default function RoletaPage() {
 
     } catch (error: any) {
       console.error(error);
-      alert(error.message || 'Erro ao girar a roleta. Tente novamente.');
+      alert(error.message || 'Erro ao girar.');
       setGirando(false);
     }
   }
 
-  // --- RENDERIZAÇÃO DAS TELAS ---
+  // --- RENDERIZAÇÃO ---
 
-  // TELA 1: GARÇOM
   if (fase === 'garcom') {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center font-sans">
         <div className="bg-gray-900 border border-[#c5a059] p-8 rounded-2xl w-full max-w-sm shadow-2xl">
             <h1 className="text-2xl text-[#c5a059] font-black mb-4 uppercase tracking-wider">Área do Garçom</h1>
-            <p className="text-gray-400 mb-6 text-sm">Digite a senha da mesa para liberar a sorte:</p>
+            <p className="text-gray-400 mb-6 text-sm">Digite a senha da mesa:</p>
             <input 
                 type="tel" maxLength={4}
                 value={senhaGarcom} onChange={(e) => setSenhaGarcom(e.target.value)}
-                className="bg-black text-white text-3xl text-center p-4 rounded-xl border border-gray-700 focus:border-[#c5a059] w-full tracking-[10px] mb-6 outline-none transition-colors"
+                className="bg-black text-white text-3xl text-center p-4 rounded-xl border border-gray-700 focus:border-[#c5a059] w-full tracking-[10px] mb-6 outline-none"
                 placeholder="****"
             />
             <button 
                 onClick={validarSenha} 
                 className="w-full bg-[#c5a059] text-black font-bold py-4 rounded-xl hover:bg-[#b08d45] transition-colors uppercase tracking-widest"
             >
-                LIBERAR AVAL
+                LIBERAR
             </button>
         </div>
       </div>
     );
   }
 
-  // TELA 2: CLIENTE (TELEFONE)
   if (fase === 'cliente') {
     return (
       <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-6 text-center font-sans">
         <div className="max-w-sm w-full">
             <h1 className="text-3xl text-white font-bold mb-2">Quase lá! 🎲</h1>
-            <p className="text-gray-400 mb-8">Informe seu WhatsApp para validarmos seu prêmio se você ganhar:</p>
+            <p className="text-gray-400 mb-8">Informe seu WhatsApp para receber o prêmio:</p>
             
             <input 
                 type="tel"
                 placeholder="(11) 99999-9999"
                 value={telefone}
-                onChange={handleTelefoneChange} // <--- AQUI ESTÁ A MÁGICA
+                onChange={handleTelefoneChange}
+                maxLength={15} // <--- TRAVA DO NAVEGADOR: (11) 99999-9999 = 15 caracteres
                 className="bg-white text-black text-2xl text-center p-4 rounded-xl w-full mb-6 border-4 border-transparent focus:border-[#c5a059] outline-none shadow-lg font-bold"
             />
             
@@ -179,20 +190,16 @@ export default function RoletaPage() {
   // TELA 3: A ROLETA
   return (
     <div className="min-h-screen bg-[#1a1a1a] flex flex-col items-center justify-center p-4 overflow-hidden font-sans">
-      <h1 className="text-3xl md:text-5xl font-black text-[#c5a059] mb-8 text-center uppercase tracking-wider drop-shadow-lg animate-fade-in-down">
+      <h1 className="text-3xl md:text-5xl font-black text-[#c5a059] mb-8 text-center uppercase tracking-wider drop-shadow-lg">
         🎰 Roleta do Rei 🎰
       </h1>
 
       <div className="relative w-[320px] h-[320px] md:w-[450px] md:h-[450px] mb-12">
-        {/* Seta Fixa */}
         <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 w-12 h-16 flex justify-center">
              <div className="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[40px] border-t-white drop-shadow-md"></div>
         </div>
-
-        {/* Borda */}
         <div className="absolute inset-[-10px] rounded-full border-4 border-[#c5a059] opacity-30 animate-pulse"></div>
-
-        {/* Roda Giratória */}
+        
         <div 
           ref={rodaRef}
           className="w-full h-full rounded-full relative shadow-2xl border-[8px] border-[#2a2a2a] overflow-hidden"
@@ -222,7 +229,6 @@ export default function RoletaPage() {
               </div>
             );
           })}
-           {/* Centro Decorativo */}
            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-[#c5a059] rounded-full border-4 border-[#1a1a1a] shadow-inner flex items-center justify-center text-2xl">👑</div>
         </div>
       </div>
@@ -237,24 +243,18 @@ export default function RoletaPage() {
         </button>
       )}
 
-      {/* Modal Resultado */}
       {resultado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fade-in">
            <div className="bg-[#1a1a1a] border border-[#c5a059] p-8 rounded-2xl w-full max-w-sm text-center">
                 <div className="text-7xl animate-bounce mb-4">{resultado.emoji}</div>
                 <h2 className="text-3xl font-black text-white uppercase">{resultado.tipo === 'nada' ? 'Que pena!' : 'PARABÉNS!'}</h2>
                 <p className="text-xl text-[#c5a059] font-bold mt-2">{resultado.nome}</p>
-                
                 {resultado.tipo === 'pontos' && (
                     <div className="mt-4 bg-green-900/30 p-3 rounded text-green-400 text-sm">
                         Pontos vinculados ao telefone: <br/><strong>{telefone}</strong>
                     </div>
                 )}
-                
-                <button 
-                    onClick={() => window.location.reload()} 
-                    className="mt-6 w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-gray-200"
-                >
+                <button onClick={() => window.location.reload()} className="mt-6 w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-gray-200">
                     Novo Jogo
                 </button>
            </div>

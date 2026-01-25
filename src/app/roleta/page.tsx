@@ -10,10 +10,10 @@ const FATIA_NORMAL = RESTANTE / 7;
 // Itens visuais da roleta (ID é a chave para o mapeamento)
 const ITENS_RODA = [
   { id: 'ps5', nome: 'PLAYSTATION!!!', emoji: '🎮', cor: '#2563eb', inicio: 0, fim: FATIA_PS5, textoBranco: true },
-  { id: 'saideira', nome: '1 Cerveja', emoji: '🍺', cor: '#f59e0b', inicio: FATIA_PS5, fim: FATIA_PS5 + FATIA_NORMAL, textoBranco: false }, // 1 Cerveja
+  { id: 'saideira', nome: 'A Saideira', emoji: '🍺', cor: '#f59e0b', inicio: FATIA_PS5, fim: FATIA_PS5 + FATIA_NORMAL, textoBranco: false }, // 1 Cerveja
   { id: 'nada1', nome: 'Não foi...', emoji: '😢', cor: '#ef4444', inicio: FATIA_PS5 + FATIA_NORMAL, fim: FATIA_PS5 + (FATIA_NORMAL * 2), textoBranco: true },
   { id: 'sobremesa', nome: 'Sobremesa', emoji: '🍮', cor: '#10b981', inicio: FATIA_PS5 + (FATIA_NORMAL * 2), fim: FATIA_PS5 + (FATIA_NORMAL * 3), textoBranco: true }, // Pudim ou Brownie
-  { id: 'expulsadeira', nome: '2 Cervejas', emoji: '🍻', cor: '#8b5cf6', inicio: FATIA_PS5 + (FATIA_NORMAL * 3), fim: FATIA_PS5 + (FATIA_NORMAL * 4), textoBranco: true }, // 2 Cervejas
+  { id: 'expulsadeira', nome: 'Expulsadeira', emoji: '🍻', cor: '#8b5cf6', inicio: FATIA_PS5 + (FATIA_NORMAL * 3), fim: FATIA_PS5 + (FATIA_NORMAL * 4), textoBranco: true }, // 2 Cervejas
   { id: 'picole', nome: 'Picolé Gold', emoji: '🍦', cor: '#ec4899', inicio: FATIA_PS5 + (FATIA_NORMAL * 4), fim: FATIA_PS5 + (FATIA_NORMAL * 5), textoBranco: true },
   { id: 'nada2', nome: 'Não foi...', emoji: '😢', cor: '#ef4444', inicio: FATIA_PS5 + (FATIA_NORMAL * 5), fim: FATIA_PS5 + (FATIA_NORMAL * 6), textoBranco: true },
   { id: 'pontos', nome: '50 Pontos', emoji: '🌟', cor: '#fbbf24', inicio: FATIA_PS5 + (FATIA_NORMAL * 6), fim: 360, textoBranco: false },

@@ -6,7 +6,7 @@ import { Scanner } from '@yudiel/react-qr-scanner';
 
 function ValidarContent() {
   const searchParams = useSearchParams();
-  // ✅ CORREÇÃO AQUI: searchParams?.get()
+  // searchParams pode ser null, então usamos ?.
   const cupomUrl = searchParams?.get('cupom');
   
   const [cupom, setCupom] = useState(cupomUrl || '');
@@ -106,7 +106,7 @@ function ValidarContent() {
               }}
               onError={(error) => console.log('Erro Câmera:', error)}
               styles={{ container: { width: '100%', aspectRatio: '1/1' } }}
-              components={{ audio: false }} 
+              // Removido 'components' que estava causando erro de tipagem
             />
             <button 
               onClick={() => setShowScanner(false)}

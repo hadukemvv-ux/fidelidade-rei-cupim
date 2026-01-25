@@ -1,219 +1,200 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import jsQR from 'jsqr';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Scanner } from '@yudiel/react-qr-scanner'; // ✅ Importando o Scanner
 
-export default function Validar() {
-  const [resultado, setResultado] = useState<any>(null);
+function ValidarContent() {
+  const searchParams = useSearchParams();
+  const cupomUrl = searchParams.get('cupom');
+  
+  const [cupom, setCupom] = useState(cupomUrl || '');
   const [loading, setLoading] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-  const [cameraAberta, setCameraAberta] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [resultado, setResultado] = useState<any>(null);
+  const [showScanner, setShowScanner] = useState(false); // ✅ Controle da Câmera
 
-  // Abre a câmera
-  const abrirCamera = async () => {
-    setCameraAberta(true);
-    setErro(null);
-
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.play();
-      }
-    } catch (err) {
-      setErro('Não foi possível abrir a câmera. Permita o acesso.');
-      setCameraAberta(false);
-    }
-  };
-
-  // Fecha a câmera
-  const fecharCamera = () => {
-    setCameraAberta(false);
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-  };
-
-  // Escaneia o QR Code em tempo real
   useEffect(() => {
-    if (!cameraAberta || !videoRef.current || !canvasRef.current) return;
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    const scan = () => {
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        canvas.height = video.videoHeight;
-        canvas.width = video.videoWidth;
-        ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
-        if (imageData) {
-          const code = jsQR(imageData.data, imageData.width, imageData.height);
-          if (code) {
-            // QR lido! Extrai dados (ex.: cupom e telefone da URL)
-            const url = new URL(code.data);
-            const cupomLido = url.searchParams.get('cupom');
-            const telefoneLido = url.searchParams.get('telefone');
-
-            if (cupomLido && telefoneLido) {
-              setCodigo(cupomLido);
-              setTelefone(telefoneLido);
-              validarManual(cupomLido, telefoneLido); // Valida automaticamente
-              fecharCamera(); // Fecha câmera após ler
-            }
-          }
-        }
-      }
-      requestAnimationFrame(scan);
-    };
-
-    scan();
-
-    return () => fecharCamera();
-  }, [cameraAberta]);
-
-  const [codigo, setCodigo] = useState('');
-  const [telefone, setTelefone] = useState('');
-
-  // Validação manual ou automática
-  async function validarManual(cupomManual = codigo, telManual = telefone) {
-    const cupomVal = cupomManual.trim().toUpperCase();
-    const telVal = telManual.replace(/\D/g, '').trim();
-
-    if (!cupomVal || !telVal) {
-      setErro('Preencha o código e o telefone.');
-      return;
+    if (cupomUrl) {
+      verificarCupom(cupomUrl);
     }
+  }, [cupomUrl]);
+
+  async function verificarCupom(codigo: string) {
+    if (!codigo) return;
+    
+    // Normaliza
+    const codigoLimpo = codigo.trim().toUpperCase();
 
     setLoading(true);
-    setErro(null);
     setResultado(null);
+    setShowScanner(false); // ✅ Fecha câmera se estiver aberta
+    setCupom(codigoLimpo); // Preenche o campo visualmente
 
     try {
-      const response = await fetch('/api/validar', {
+      const res = await fetch('/api/validar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cupom: cupomVal,
-          telefone: telVal,
-        }),
+        body: JSON.stringify({ cupom: codigoLimpo, acao: 'consultar' }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setErro(data.error || 'Cupom inválido ou já usado.');
-        setLoading(false);
-        return;
-      }
-
+      const data = await res.json();
       setResultado(data);
-    } catch (e) {
-      setErro('Erro de conexão. Tente novamente.');
+    } catch (error) {
+      setResultado({ ok: false, error: 'Erro de conexão.' });
+    } finally {
+      setLoading(false);
     }
+  }
 
-    setLoading(false);
+  async function confirmarUso() {
+    if (!confirm('Tem certeza que deseja marcar este cupom como USADO? A ação não pode ser desfeita.')) return;
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/validar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cupom, acao: 'baixar' }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        alert('SUCESSO! Cupom baixado.');
+        setResultado(null);
+        setCupom('');
+        // window.location.reload(); // Removido para manter SPA fluido
+      } else {
+        alert('Erro: ' + data.error);
+      }
+    } catch (error) {
+      alert('Erro ao processar.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <main className="min-h-screen bg-[#2D1810] text-white flex items-center justify-center">
-      <div className="max-w-md w-full px-4 py-8">
-        <h1 className="text-4xl font-bold text-center mb-8">Validação de Cupom</h1>
+    <div className="min-h-screen bg-gray-900 text-white p-6 flex flex-col items-center justify-center font-sans">
+      <div className="max-w-md w-full bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
+        <h1 className="text-2xl font-bold text-center mb-6 text-[#c5a059]">🛡️ Validação de Cupom</h1>
 
-        <div className="bg-white/5 p-6 rounded-2xl shadow-xl ring-1 ring-white/10 backdrop-blur">
-          {!cameraAberta ? (
-            <button
-              onClick={abrirCamera}
-              className="w-full rounded-xl bg-[#F4A261] py-4 font-bold text-[#2D1810] shadow-lg shadow-[#F4A261]/20 transition hover:bg-[#ffbc7a] mb-6"
-            >
-              Escanear QR Code com Câmera
-            </button>
-          ) : (
-            <div className="mb-6">
-              <div className="relative rounded-xl overflow-hidden bg-black">
-                <video ref={videoRef} autoPlay playsInline className="w-full" />
-                <canvas ref={canvasRef} className="hidden" />
-              </div>
-
-              <div className="flex gap-4 mt-4">
-                <button
-                  onClick={() => validarManual()}
-                  className="flex-1 rounded-xl bg-[#F4A261] py-3 font-semibold text-[#2D1810] hover:bg-[#ffbc7a]"
-                >
-                  Validar Manualmente
-                </button>
-
-                <button
-                  onClick={fecharCamera}
-                  className="flex-1 rounded-xl bg-gray-600 py-3 font-semibold text-white hover:bg-gray-500"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Formulário manual */}
-          <label className="block text-sm text-white/80 mb-2">Código do Cupom</label>
-          <input
-            type="text"
-            placeholder="Ex.: RESGATE-PONTOS-ABC123XYZ"
-            value={codigo}
-            onChange={(e) => setCodigo(e.target.value.toUpperCase())}
-            className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white placeholder:text-white/40 outline-none focus:border-[#F4A261]/60 focus:ring-2 focus:ring-[#F4A261]/25 mb-4"
-          />
-
-          <label className="block text-sm text-white/80 mb-2">Telefone do Cliente (11 dígitos)</label>
-          <input
-            type="tel"
-            placeholder="Ex.: 85999999999"
-            value={telefone}
-            onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, '');
-              if (value.length <= 11) setTelefone(value);
-            }}
-            className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white placeholder:text-white/40 outline-none focus:border-[#F4A261]/60 focus:ring-2 focus:ring-[#F4A261]/25 mb-6"
-          />
-
+        {/* ✅ Botão para abrir Scanner */}
+        {!showScanner && !resultado && (
           <button
-            onClick={() => validarManual()}
-            disabled={loading}
-            className="w-full rounded-xl bg-[#F4A261] py-4 font-bold text-[#2D1810] shadow-lg shadow-[#F4A261]/20 transition hover:bg-[#ffbc7a] disabled:opacity-60"
+            onClick={() => setShowScanner(true)}
+            className="w-full bg-[#c5a059] hover:bg-[#a08040] text-black font-bold py-4 rounded-lg mb-6 flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95"
           >
-            {loading ? 'Validando...' : 'Validar Cupom'}
+            📷 Ler QR Code com Câmera
           </button>
+        )}
 
-          {erro && (
-            <div className="mt-6 rounded-xl border border-[#E63946]/30 bg-[#E63946]/10 p-4 text-center">
-              <p className="text-[#ffd7d7]">{erro}</p>
-            </div>
-          )}
+        {/* ✅ Scanner de Câmera */}
+        {showScanner && (
+          <div className="mb-6 bg-black rounded-lg overflow-hidden relative border-4 border-[#c5a059]">
+            <Scanner
+              onScan={(result) => {
+                if (result && result.length > 0) {
+                  // O QR Code pode vir como URL completa ou só o código
+                  const rawValue = result[0].rawValue;
+                  console.log('Lido:', rawValue);
 
-          {resultado && (
-            <div className="mt-6 rounded-2xl border-2 border-green-500 bg-green-900/30 p-6 text-center">
-              <p className="text-3xl font-bold text-green-400 mb-4">VÁLIDO!</p>
-              <p className="text-xl text-white mb-2">
-                {resultado.tipo === 'frete' ? 'Taxa de entrega grátis' : `R$ ${resultado.valorDesconto} de desconto`}
-              </p>
-              <p className="text-lg text-white/80">
-                Cliente: {resultado.telefone}
-              </p>
-              <p className="text-sm text-white/60 mt-4">
-                Aplique o cupom correspondente no pedido.
-              </p>
-            </div>
-          )}
+                  let codigoFinal = rawValue;
+                  
+                  // Se for URL (ex: .../validar?cupom=CUP123), extrai só o código
+                  if (rawValue.includes('cupom=')) {
+                    codigoFinal = rawValue.split('cupom=')[1].split('&')[0];
+                  }
+                  
+                  verificarCupom(codigoFinal);
+                }
+              }}
+              onError={(error) => console.log('Erro Câmera:', error)}
+              styles={{ container: { width: '100%', aspectRatio: '1/1' } }}
+              components={{ audio: false }} // Desativa bip se quiser
+            />
+            <button 
+              onClick={() => setShowScanner(false)}
+              className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded text-xs z-10 font-bold shadow-sm"
+            >
+              FECHAR X
+            </button>
+            <p className="absolute bottom-2 left-0 right-0 text-center text-white text-xs bg-black/50 py-1">
+              Aponte para o QR Code do cliente
+            </p>
+          </div>
+        )}
+
+        {/* Input Manual (caso o QR falhe) */}
+        <div className="flex gap-2 mb-6">
+          <input
+            value={cupom}
+            onChange={(e) => setCupom(e.target.value.toUpperCase())}
+            placeholder="Ou digite o código..."
+            className="flex-1 bg-gray-900 border border-gray-600 rounded p-3 text-center font-mono uppercase tracking-widest focus:border-[#c5a059] outline-none"
+          />
+          <button
+            onClick={() => verificarCupom(cupom)}
+            disabled={loading || !cupom}
+            className="bg-blue-600 hover:bg-blue-700 px-4 rounded font-bold disabled:opacity-50"
+          >
+            🔍
+          </button>
         </div>
+
+        {loading && <p className="text-center text-gray-400 animate-pulse">Verificando sistema...</p>}
+
+        {resultado && (
+          <div className={`text-center p-6 rounded-xl border-4 ${resultado.ok ? 'bg-green-900/50 border-green-500' : 'bg-red-900/50 border-red-500'}`}>
+            
+            <div className="text-6xl mb-4">
+              {resultado.ok ? '✅' : '🚫'}
+            </div>
+
+            <h2 className="text-3xl font-black mb-2">
+              {resultado.ok ? 'CUPOM VÁLIDO' : 'INVÁLIDO / USADO'}
+            </h2>
+
+            {!resultado.ok ? (
+              <p className="text-red-200 font-bold text-lg">{resultado.mensagem || resultado.error}</p>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-black/30 p-4 rounded-lg border border-white/10">
+                  <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Benefício a Entregar:</p>
+                  <p className="text-2xl font-bold text-[#c5a059] leading-tight">{resultado.detalhes.descricao_amigavel}</p>
+                </div>
+
+                <div className="text-sm text-gray-300 bg-black/20 p-2 rounded">
+                  <p>👤 {resultado.detalhes.telefone}</p>
+                  <p>📅 {new Date(resultado.detalhes.criado_em).toLocaleString('pt-BR')}</p>
+                </div>
+
+                <button
+                  onClick={confirmarUso}
+                  disabled={loading}
+                  className="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-lg text-xl shadow-[0_4px_0_#166534] mt-4 transform active:translate-y-1 active:shadow-none transition-all"
+                >
+                  CONFIRMAR ENTREGA
+                </button>
+              </div>
+            )}
+            
+            <button
+              onClick={() => { setResultado(null); setCupom(''); }}
+              className="mt-6 text-gray-400 hover:text-white underline text-sm block w-full"
+            >
+              Nova Consulta
+            </button>
+          </div>
+        )}
       </div>
-    </main>
+      
+      <p className="mt-8 text-gray-500 text-xs">Área restrita à equipe Rei do Cupim</p>
+    </div>
+  );
+}
+
+export default function ValidarPage() {
+  return (
+    <Suspense fallback={<div className="text-white text-center p-10">Carregando validador...</div>}>
+      <ValidarContent />
+    </Suspense>
   );
 }

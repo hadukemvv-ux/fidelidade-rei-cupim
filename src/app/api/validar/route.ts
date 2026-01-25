@@ -1,51 +1,86 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Função para formatar data bonita
+function formatarData(isoString: string) {
+  return new Date(isoString).toLocaleString('pt-BR');
+}
 
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const { cupom, telefone } = await request.json();
+    const { cupom, acao } = await req.json();
 
-    if (!cupom || !telefone) {
-      return NextResponse.json({ error: 'Código do cupom e telefone obrigatórios' }, { status: 400 });
-    }
+    if (!cupom) return NextResponse.json({ ok: false, error: 'Cupom não informado.' }, { status: 400 });
 
-    const tel = telefone.replace(/\D/g, '').trim();
-    const codigoLimpo = cupom.trim().toUpperCase();
+    // ✅ CORREÇÃO 1: Normaliza o código (remove espaços e força maiúsculas)
+    const codigoLimpo = String(cupom).trim().toUpperCase();
 
-    // Busca o cupom
-    const { data: cupomData, error: buscaError } = await supabase
-      .from('cupons_resgatados')
-      .select('*')
+    console.log(`🔍 Tentando validar: ${codigoLimpo} (Ação: ${acao})`);
+
+    // Buscar o cupom
+    // ✅ CORREÇÃO 2: Usa maybeSingle() para evitar erro se não encontrar
+    const { data: resgate, error } = await supabaseAdmin
+      .from('resgates')
+      .select('*, produtos_resgate(nome)') 
       .eq('codigo', codigoLimpo)
-      .eq('telefone', tel)
-      .single();
+      .maybeSingle();
 
-    if (buscaError || !cupomData) {
-      return NextResponse.json({ error: 'Cupom inválido ou não encontrado para este telefone' }, { status: 400 });
+    if (error) {
+      console.error('❌ Erro Supabase:', error);
+      return NextResponse.json({ ok: false, error: 'Erro interno ao consultar banco.' }, { status: 500 });
     }
 
-    if (cupomData.usado) {
-      return NextResponse.json({ error: 'Cupom já foi utilizado' }, { status: 400 });
+    if (!resgate) {
+      console.warn(`⚠️ Cupom ${codigoLimpo} não encontrado.`);
+      return NextResponse.json({ ok: false, error: 'Cupom NÃO ENCONTRADO. Verifique o código.' }, { status: 404 });
     }
 
-    // Marca como usado
-    await supabase
-      .from('cupons_resgatados')
-      .update({ usado: true, usado_em: new Date().toISOString() })
-      .eq('id', cupomData.id);
+    // Se for apenas consulta (verificar status)
+    if (acao === 'consultar') {
+      if (resgate.usado_em) {
+        return NextResponse.json({ 
+          ok: false, 
+          status: 'JA_USADO', 
+          mensagem: `ATENÇÃO: Este cupom JÁ FOI USADO em ${formatarData(resgate.usado_em)}!`,
+          detalhes: resgate 
+        });
+      }
 
-    return NextResponse.json({
-      valido: true,
-      tipo: cupomData.tipo,
-      valorDesconto: cupomData.valorDesconto,
-      mensagem: 'Cupom válido! Aplique o desconto correspondente no pedido.'
-    });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: 'Erro interno na validação' }, { status: 500 });
+      // Cupom Válido
+      let descricao = '';
+      if (resgate.tipo === 'frete') descricao = 'Entrega Grátis';
+      else if (resgate.tipo === 'pontos') descricao = `Desconto de R$ ${Number(resgate.valor).toFixed(2)}`;
+      else if (resgate.tipo === 'cashback') descricao = `Uso de Cashback: R$ ${Number(resgate.valor).toFixed(2)}`;
+      else if (resgate.tipo === 'produto') descricao = `Produto: ${resgate.produtos_resgate?.nome || 'Item do Cardápio'}`;
+
+      return NextResponse.json({ 
+        ok: true, 
+        status: 'VALIDO', 
+        mensagem: 'Cupom VÁLIDO e disponível para uso.',
+        detalhes: { ...resgate, descricao_amigavel: descricao }
+      });
+    }
+
+    // Se for para BAIXAR (Confirmar uso)
+    if (acao === 'baixar') {
+      if (resgate.usado_em) {
+        return NextResponse.json({ ok: false, error: 'Este cupom já foi baixado anteriormente.' }, { status: 400 });
+      }
+
+      const { error: updateError } = await supabaseAdmin
+        .from('resgates')
+        .update({ usado_em: new Date().toISOString() })
+        .eq('id', resgate.id);
+
+      if (updateError) throw updateError;
+
+      return NextResponse.json({ ok: true, message: 'Cupom baixado com sucesso!' });
+    }
+
+    return NextResponse.json({ ok: false, error: 'Ação inválida.' }, { status: 400 });
+
+  } catch (err: any) {
+    console.error('❌ Erro Geral:', err);
+    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }
 }

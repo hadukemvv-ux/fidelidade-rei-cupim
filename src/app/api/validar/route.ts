@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
     const codigoLimpo = String(cupom).trim().toUpperCase();
 
-    console.log(`🔍 Tentando validar: ${codigoLimpo} (Ação: ${acao})`);
+        console.log(`🔍 [V2.0] VALIDANDO CUPOM SEM JOIN: ${codigoLimpo}`);
 
     // ✅ CORREÇÃO: Removemos o JOIN quebrado (.select('*, produtos_resgate(nome)'))
     // Buscamos apenas os dados do resgate primeiro

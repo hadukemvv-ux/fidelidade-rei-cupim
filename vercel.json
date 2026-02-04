@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/expirar-pontos?token=Fidelidade@2026#Seguro",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

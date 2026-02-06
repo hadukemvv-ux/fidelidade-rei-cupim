@@ -5,7 +5,10 @@ interface SorteioCardProps {
   descricao: string;
   imagemUrl: string;
   dataSorteio: string;
-  modo: string;
+
+  // ✔ TIPAGEM CORRETA
+  modo: "manual" | "automatico";
+
   rodarAgora: () => void;
   rodando: boolean;
 }
@@ -48,7 +51,11 @@ export default function SorteioCard({
 
           <div className="mt-4 text-sm">
             <p><span className="font-bold text-[#c5a059]">Data:</span> {dataSorteio || 'Não definida'}</p>
-            <p><span className="font-bold text-[#c5a059]">Modo:</span> {modo === 'manual' ? 'Manual' : 'Automático'}</p>
+
+            <p>
+              <span className="font-bold text-[#c5a059]">Modo:</span>{" "}
+              {modo === 'manual' ? 'Manual' : 'Automático'}
+            </p>
           </div>
 
           <button

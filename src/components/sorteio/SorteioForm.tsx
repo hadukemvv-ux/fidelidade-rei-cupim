@@ -17,7 +17,7 @@ interface Props {
 
   // 🔥 TIPAGEM CORRIGIDA
   modo: "manual" | "automatico";
-  setModo: (v: "manual" | "automatico") => void;
+  setModo: React.Dispatch<React.SetStateAction<"manual" | "automatico">>;
 
   salvar: () => void;
   saving: boolean;

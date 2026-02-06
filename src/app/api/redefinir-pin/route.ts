@@ -82,11 +82,15 @@ export async function POST(req: Request) {
     // ============================
     // LOG opcional de auditoria
     // ============================
-    await supabaseAdmin.from('logs_seguranca').insert({
-      cliente_id: cliente.id,
-      acao: 'PIN_REDEFINIDO',
-      data: iso(),
-    }).catch(() => {}); // silencioso
+    try {
+      await supabaseAdmin.from('logs_seguranca').insert({
+        cliente_id: cliente.id,
+        acao: 'PIN_REDEFINIDO',
+        data: iso(),
+      });
+    } catch {
+      // silencioso — não impede o fluxo
+    }
 
     return NextResponse.json({
       ok: true,

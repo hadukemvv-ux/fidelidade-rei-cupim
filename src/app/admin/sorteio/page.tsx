@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-// COMPONENTES
-import SorteioCard from '@/components/sorteio/SorteioCard';
-import SorteioForm from '@/components/sorteio/SorteioForm';
-import GanhadoresList from '@/components/sorteio/GanhadoresList';
+// COMPONENTES (❗ caminho relativo para forçar o TS a recarregar tipagem)
+import SorteioCard from '../../../components/sorteio/SorteioCard';
+import SorteioForm from '../../../components/sorteio/SorteioForm';
+import GanhadoresList from '../../../components/sorteio/GanhadoresList';
 
 export default function SorteioAdminPage() {
   const [loading, setLoading] = useState(true);

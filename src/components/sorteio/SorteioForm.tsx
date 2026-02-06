@@ -15,8 +15,9 @@ interface Props {
   dataSorteio: string;
   setDataSorteio: (v: string) => void;
 
-  modo: string;
-  setModo: (v: string) => void;
+  // 🔥 TIPAGEM CORRIGIDA
+  modo: "manual" | "automatico";
+  setModo: (v: "manual" | "automatico") => void;
 
   salvar: () => void;
   saving: boolean;
@@ -77,7 +78,7 @@ export default function SorteioForm({
           <label className="text-xs font-bold text-gray-400">Modo</label>
           <select
             value={modo}
-            onChange={e => setModo(e.target.value)}
+            onChange={e => setModo(e.target.value as "manual" | "automatico")}
             className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white mt-1"
           >
             <option value="manual">Manual</option>

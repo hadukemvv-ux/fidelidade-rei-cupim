@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // ✅ Import para redirecionar
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 function onlyDigits(value: string) {
@@ -11,17 +11,18 @@ function onlyDigits(value: string) {
 function formatPhoneBR(value: string) {
   const digits = onlyDigits(value).slice(0, 11);
 
-  // (85) 98825-7044
   if (digits.length <= 2) return digits;
   if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 
 export default function CadastroPage() {
-  const router = useRouter(); // ✅ Hook de navegação
+  const router = useRouter();
+
   const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
-  const [dataNascimento, setDataNascimento] = useState(''); 
+  const [dataNascimento, setDataNascimento] = useState('');
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,80 +37,76 @@ export default function CadastroPage() {
   const pinOk = pinDigits.length === 4;
   const pinsMatch = pinOk && pinDigits === confirmPinDigits;
 
-  const ganhouBonus = Boolean(dataNascimento); 
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.toLowerCase());
+
+  const ganhouBonus = Boolean(dataNascimento);
 
   async function handleSubmit(e: React.FormEvent) {
-  e.preventDefault();
-  setFeedback(null);
+    e.preventDefault();
+    setFeedback(null);
 
-  if (!nomeOk) {
-    setFeedback({ type: 'error', text: 'Digite seu nome completo (mínimo 3 letras).' });
-    return;
-  }
+    if (!nomeOk)
+      return setFeedback({ type: 'error', text: 'Digite seu nome completo (mínimo 3 letras).' });
 
-  if (!telefoneOk) {
-    setFeedback({ type: 'error', text: 'Digite seu WhatsApp com DDD (11 dígitos).' });
-    return;
-  }
+    if (!emailOk)
+      return setFeedback({ type: 'error', text: 'Digite um email válido.' });
 
-  if (!pinOk) {
-    setFeedback({ type: 'error', text: 'Digite um PIN de 4 dígitos.' });
-    return;
-  }
+    if (!telefoneOk)
+      return setFeedback({ type: 'error', text: 'Digite seu WhatsApp com DDD (11 dígitos).' });
 
-  if (!pinsMatch) {
-    setFeedback({ type: 'error', text: 'Os PINs não coincidem.' });
-    return;
-  }
+    if (!pinOk)
+      return setFeedback({ type: 'error', text: 'Digite um PIN de 4 dígitos.' });
 
-  setLoading(true);
+    if (!pinsMatch)
+      return setFeedback({ type: 'error', text: 'Os PINs não coincidem.' });
 
-  try {
-    const response = await fetch('/api/cadastro', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        nome: nome.trim(),
-        telefone: telefoneDigits,
-        data_nascimento: dataNascimento || null,
-        pin: pinDigits,
-      }),
-    });
+    setLoading(true);
 
-    const data = await response.json();
+    try {
+      const response = await fetch('/api/cadastro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: nome.trim(),
+          email: email.toLowerCase().trim(),
+          telefone: telefoneDigits,
+          data_nascimento: dataNascimento || null,
+          pin: pinDigits,
+        }),
+      });
 
-    if (!response.ok || !data.ok) {
-      setFeedback({ type: 'error', text: data.error || 'Erro no cadastro.' });
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        setFeedback({ type: 'error', text: data.error || 'Erro no cadastro.' });
+        setLoading(false);
+        return;
+      }
+
+      setFeedback({
+        type: 'success',
+        text: (data.message || 'Cadastro realizado com sucesso!')
+          + (ganhouBonus ? ' 🎁 Você ganhou 200 pontos de bônus.' : ''),
+      });
+
+      setNome('');
+      setEmail('');
+      setTelefone('');
+      setDataNascimento('');
+      setPin('');
+      setConfirmPin('');
+
+      setTimeout(() => router.push('/resgate'), 1800);
+
+    } catch (error: any) {
+      setFeedback({
+        type: 'error',
+        text: error.message || 'Erro inesperado. Tente novamente.',
+      });
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setFeedback({
-      type: 'success',
-      text:
-        (data.message || 'Cadastro realizado com sucesso!') +
-        (ganhouBonus ? ' ✅ Você ganhou 200 pontos de bônus.' : ''),
-    });
-
-    setNome('');
-    setTelefone('');
-    setDataNascimento('');
-    setPin('');
-    setConfirmPin('');
-
-    setTimeout(() => {
-      router.push('/resgate');
-    }, 2000);
-
-  } catch (error: any) {
-    setFeedback({
-      type: 'error',
-      text: error.message || 'Não foi possível cadastrar agora. Tente novamente.',
-    });
-  } finally {
-    setLoading(false);
   }
-}
 
   return (
     <div className="min-h-screen bg-[#280404] text-white font-sans">
@@ -129,15 +126,16 @@ export default function CadastroPage() {
 
       <main className="max-w-lg mx-auto px-6 pb-16">
         <div className="bg-[#4d0808] border border-black/20 rounded-xl p-8 shadow-xl">
+
           <p className="text-zinc-200/90 text-sm mb-8">
-            Entre para o <span className="text-[#c5a059] font-bold">Clube Rei do Cupim</span> e comece a acumular benefícios.
+            Entre para o <span className="text-[#c5a059] font-bold">Clube Rei do Cupim</span>!
             Crie um <span className="text-[#c5a059] font-bold">PIN</span> de 4 dígitos para proteger seus pontos.
           </p>
 
           <div className="mb-6 rounded-lg border border-[#c5a059]/30 bg-[#280404]/60 px-4 py-3 text-sm">
             <span className="text-[#c5a059] font-bold">🎁 Bônus de boas-vindas:</span>{' '}
-            Preencha sua <span className="font-bold">data de nascimento</span> e ganhe{' '}
-            <span className="font-bold">200 pontos</span>. (Opcional)
+            Informe sua <span className="font-bold">data de nascimento</span> e ganhe{' '}
+            <span className="font-bold">200 pontos</span>.
           </div>
 
           {feedback && (
@@ -153,6 +151,8 @@ export default function CadastroPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
+
+            {/* NOME */}
             <div>
               <label className="block text-xs uppercase tracking-widest text-[#c5a059] font-bold mb-2">Nome</label>
               <input
@@ -161,9 +161,25 @@ export default function CadastroPage() {
                 placeholder="Ex: Vinicius Rocha"
                 className="w-full bg-[#280404] border border-[#c5a059]/30 focus:border-[#c5a059] outline-none rounded-lg px-4 py-3 text-white placeholder:text-zinc-500"
               />
-              {!nomeOk && nome.length > 0 && <p className="mt-2 text-xs text-zinc-300/80">Digite pelo menos 3 letras.</p>}
             </div>
 
+            {/* EMAIL */}
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-[#c5a059] font-bold mb-2">Email</label>
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                placeholder="exemplo@gmail.com"
+                className="w-full bg-[#280404] border border-[#c5a059]/30 focus:border-[#c5a059] outline-none rounded-lg px-4 py-3 text-white placeholder:text-zinc-500"
+              />
+
+              {!emailOk && email.length > 3 && (
+                <p className="mt-2 text-xs text-zinc-300/80">Digite um email válido.</p>
+              )}
+            </div>
+
+            {/* TELEFONE */}
             <div>
               <label className="block text-xs uppercase tracking-widest text-[#c5a059] font-bold mb-2">
                 WhatsApp (com DDD)
@@ -175,26 +191,24 @@ export default function CadastroPage() {
                 placeholder="(85) 9XXXX-XXXX"
                 className="w-full bg-[#280404] border border-[#c5a059]/30 focus:border-[#c5a059] outline-none rounded-lg px-4 py-3 text-white placeholder:text-zinc-500"
               />
-              <p className="mt-2 text-xs text-zinc-300/80">Precisamos do seu WhatsApp para identificar seus pontos.</p>
             </div>
 
+            {/* DATA DE NASCIMENTO */}
             <div>
               <label className="block text-xs uppercase tracking-widest text-[#c5a059] font-bold mb-2">
                 Data de Nascimento (Opcional)
               </label>
               <input
-  type="date"
-  min="1920-01-01"
-  max={new Date().toISOString().split('T')[0]}
-  value={dataNascimento}
-  onChange={(e) => setDataNascimento(e.target.value)}
+                type="date"
+                min="1920-01-01"
+                max={new Date().toISOString().split('T')[0]}
+                value={dataNascimento}
+                onChange={(e) => setDataNascimento(e.target.value)}
                 className="w-full bg-[#280404] border border-[#c5a059]/30 focus:border-[#c5a059] outline-none rounded-lg px-4 py-3 text-white"
               />
-              <p className="mt-2 text-xs text-zinc-300/80">
-                Preencha e ganhe <span className="font-bold text-[#c5a059]">200 pontos</span>.
-              </p>
             </div>
 
+            {/* PIN */}
             <div>
               <label className="block text-xs uppercase tracking-widest text-[#c5a059] font-bold mb-2">
                 PIN de 4 dígitos
@@ -206,10 +220,9 @@ export default function CadastroPage() {
                 placeholder="Ex: 1234"
                 className="w-full bg-[#280404] border border-[#c5a059]/30 focus:border-[#c5a059] outline-none rounded-lg px-4 py-3 text-white placeholder:text-zinc-500"
               />
-              <p className="mt-2 text-xs text-zinc-300/80">Use apenas números. Você vai precisar dele no resgate.</p>
-              {!pinOk && pin.length > 0 && <p className="mt-2 text-xs text-zinc-300/80">Digite exatamente 4 dígitos.</p>}
             </div>
 
+            {/* CONFIRMAR PIN */}
             <div>
               <label className="block text-xs uppercase tracking-widest text-[#c5a059] font-bold mb-2">
                 Confirmar PIN
@@ -221,9 +234,9 @@ export default function CadastroPage() {
                 placeholder="Digite o PIN novamente"
                 className="w-full bg-[#280404] border border-[#c5a059]/30 focus:border-[#c5a059] outline-none rounded-lg px-4 py-3 text-white placeholder:text-zinc-500"
               />
-              {!pinsMatch && confirmPin.length === 4 && <p className="mt-2 text-xs text-zinc-300/80">Os PINs não coincidem.</p>}
             </div>
 
+            {/* BOTÃO */}
             <button
               type="submit"
               disabled={loading}
@@ -240,6 +253,7 @@ export default function CadastroPage() {
                 Já sou cliente → Consultar
               </Link>
             </div>
+
           </form>
         </div>
       </main>

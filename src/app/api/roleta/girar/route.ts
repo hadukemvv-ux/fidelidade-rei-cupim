@@ -4,10 +4,6 @@ import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
-// ==============================
-// PASSO 2 — FUNÇÕES AUXILIARES
-// ==============================
-
 // Pega IP real do usuário
 function getIP(req: Request) {
   return (
@@ -26,22 +22,18 @@ async function salvarLog(params: any) {
   }
 }
 
-// ==============================
-// ANTI-FRAUDE ROBUSTO (NOVO)
-// ==============================
+// ANTI-FRAUDE ROBUSTO
 async function calcularFraudeScore(garcom_id: number, telefone: string, ip: string) {
   let score = 0;
   let motivos: string[] = [];
 
   const telLimpo = (telefone || "").replace(/\D/g, "");
 
-  // TELEFONE MUITO SUSPEITO
   if (!telLimpo || telLimpo.length < 10 || /^(.)\1+$/.test(telLimpo)) {
     score += 40;
     motivos.push("telefone altamente suspeito ou inválido");
   }
 
-  // GIRO RÁPIDO (<30s)
   const { data: ultimos } = await supabaseAdmin
     .from("garcons_logs")
     .select("criado_em")
@@ -57,7 +49,6 @@ async function calcularFraudeScore(garcom_id: number, telefone: string, ip: stri
     }
   }
 
-  // GIROS DEMAIS EM 10 MINUTOS
   const { count: ultimos10min } = await supabaseAdmin
     .from("garcons_logs")
     .select("*", { count: "exact", head: true })
@@ -72,52 +63,70 @@ async function calcularFraudeScore(garcom_id: number, telefone: string, ip: stri
   return { score, motivos };
 }
 
-// ==========================================
-// GARANTIR CLIENTE (inalterado)
-// ==========================================
+// GARANTIR CLIENTE
 async function garantirCliente(telefone: string) {
-  const telLimpo = telefone.replace(/\D/g, '');
-  if (telLimpo.length < 8) return null;
+  const tel = telefone.replace(/\D/g, '');
 
-  let { data: cliente } = await supabaseAdmin
-      .from('base_clientes_saipos')
-      .select('*')
-      .eq('telefone', telLimpo)
-      .maybeSingle();
+  // mínimo para ser número real
+  if (tel.length < 10) return null;
 
-  if (!cliente) {
-      const pinProvisorio = telLimpo.slice(0, 4);
-      const pinHash = crypto.createHash('sha256').update(pinProvisorio).digest('hex');
+  // 1 — TENTA BUSCAR
+  let { data: clienteExiste, error: errBusca } = await supabaseAdmin
+    .from('base_clientes_saipos')
+    .select('*')
+    .eq('telefone', tel)
+    .maybeSingle();
 
-      const { data: novo, error } = await supabaseAdmin
-          .from('base_clientes_saipos')
-          .insert({
-              telefone: telLimpo,
-              nome: 'Cliente Novo (Roleta)',
-              total_gasto: 0,
-              pontos: 0,
-              nivel: 'BRONZE',
-              pin: pinProvisorio,
-              pin_hash: pinHash
-          })
-          .select()
-          .single();
-
-      if (error) {
-          console.error("Erro ao criar cliente:", error);
-          return null;
-      }
-
-      return { cliente: novo, novo: true };
+  if (errBusca) {
+    console.error("Erro ao buscar cliente:", errBusca);
+    return null;
   }
 
-  return { cliente, novo: false };
+  // 2 — SE EXISTE → só devolve
+  if (clienteExiste) {
+    return { cliente: clienteExiste, novo: false };
+  }
+
+  // 3 — NÃO EXISTE → criar novo pré-cadastro
+  const pinProvisorio = tel.slice(0, 4);
+  const pinHash = crypto.createHash("sha256").update(pinProvisorio).digest("hex");
+
+  const novoCliente = {
+    telefone: tel,
+    nome: "Cliente Novo (Roleta)",
+    email: null,
+    data_nascimento: null,
+
+    pontos: 0,
+    cashback: 0,
+    tickets: 0,
+
+    nivel: "BRONZE",
+    total_gasto: 0,
+    qtd_pedidos: 0,
+
+    criado_em: new Date().toISOString(),
+    atualizado_em: new Date().toISOString(),
+
+    origem: "roleta",
+    pin_hash: pinHash,
+  };
+
+  const { data: criado, error: errInsert } = await supabaseAdmin
+    .from("base_clientes_saipos")
+    .insert(novoCliente)
+    .select()
+    .single();
+
+  if (errInsert) {
+    console.error("Erro ao criar cliente:", errInsert);
+    return null;
+  }
+
+  return { cliente: criado, novo: true };
 }
 
-// ==========================================
 // POST — GIRO DA ROLETA
-// ==========================================
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -144,28 +153,20 @@ export async function POST(req: Request) {
 
     const nivelNome = sufixo === 3 ? 'ouro' : sufixo === 2 ? 'prata' : 'bronze';
 
-    // ==============================
-    // PASSO 4 — PRÉ-DIAGNÓSTICO
-    // ==============================
     let fraude_preliminar = { score: 0, motivos: [] as string[] };
 
     try {
       const ip = getIP(req);
-
       const { score, motivos } = await calcularFraudeScore(
         garcom.id,
         telefone || "",
         ip
       );
-
       fraude_preliminar = { score, motivos };
     } catch (e) {
       console.error("Falha no pré-diagnóstico:", e);
     }
 
-    // ==============================
-    // PASSO 5 — BLOQUEIO REAL
-    // ==============================
     if (fraude_preliminar.score >= 60) {
       try {
         const ip = getIP(req);
@@ -181,19 +182,13 @@ export async function POST(req: Request) {
           suspeito: true,
           motivo: fraude_preliminar.motivos.join(", ")
         });
-      } catch (e) {
-        console.error("Erro ao registrar log de bloqueio:", e);
-      }
+      } catch (e) {}
 
       return NextResponse.json({
         error: "Atividade suspeita detectada. Giro BLOQUEADO.",
         fraude: fraude_preliminar
       }, { status: 403 });
     }
-
-    // ==============================
-    // LÓGICA DO SORTEIO (sem mudanças)
-    // ==============================
 
     const { data: premios } = await supabaseAdmin
       .from('premios_roleta')
@@ -225,31 +220,41 @@ export async function POST(req: Request) {
     const premioSorteado = urna[Math.floor(Math.random() * urna.length)];
     let ehNovo = false;
 
-    if (premioSorteado.tipo === 'pontos' && telefone) {
-      const resultado = await garantirCliente(telefone);
-      if (resultado) {
-        const clienteInfo = resultado.cliente;
-        ehNovo = resultado.novo;
+    // GARANTIR QUE O CLIENTE EXISTE SEMPRE (PRIMEIRA AÇÃO)
+let clienteCriadoOuEncontrado = null;
 
-        const valorPontos = premioSorteado.valor_pontos || 200;
+if (telefone) {
+  clienteCriadoOuEncontrado = await garantirCliente(telefone);
+  ehNovo = clienteCriadoOuEncontrado?.novo || false;
+}
 
-        await supabaseAdmin.from('base_clientes_saipos')
-          .update({ pontos: (clienteInfo.pontos || 0) + valorPontos })
-          .eq('id', clienteInfo.id);
+// CASO O PRÊMIO TENHA PONTOS — AÍ SIM ATUALIZA OS PONTOS
+if (premioSorteado.tipo === 'pontos' && telefone) {
 
-        await supabaseAdmin.from('extrato_pontos').insert({
-          cliente_id: clienteInfo.telefone,
-          tipo: 'entrada',
-          valor: valorPontos,
-          motivo: 'Prêmio Roleta',
-          metodo: 'roleta',
-          detalhes: `Nível ${nivelNome.toUpperCase()} - Garçom ${garcom.nome}`
-        });
-      }
-    }
+  const clienteInfo = clienteCriadoOuEncontrado?.cliente;
+  if (clienteInfo) {
+
+    const valorPontos = premioSorteado.valor_pontos || 200;
+
+    await supabaseAdmin
+      .from('base_clientes_saipos')
+      .update({ pontos: (clienteInfo.pontos || 0) + valorPontos })
+      .eq('id', clienteInfo.id);
+
+    await supabaseAdmin.from("extrato_pontos").insert({
+      cliente_id: clienteInfo.id,
+      tipo: "entrada",
+      valor: valorPontos,
+      origem: "ROLETA",
+      descricao: `Prêmio Roleta - Garçom ${garcom.nome}`,
+      criado_em: new Date().toISOString(),
+      metodo: "roleta"
+    });
+  }
+}
 
     await supabaseAdmin.from('historico_roleta').insert({
-      cliente_telefone: telefone,
+      cliente_telefone: telefone.replace(/\D/g, ""),
       premio_nome: premioSorteado.nome,
       garcom_id: garcom.id,
       nivel_venda: sufixo
@@ -260,9 +265,6 @@ export async function POST(req: Request) {
       .update({ total_giros: (garcom.total_giros || 0) + 1 })
       .eq('id', garcom.id);
 
-    // ==============================
-    // LOG REAL
-    // ==============================
     try {
       const ip = getIP(req);
       const userAgent = req.headers.get("user-agent") || "desconhecido";
@@ -283,9 +285,7 @@ export async function POST(req: Request) {
         suspeito: score >= 30,
         motivo: motivos.join(", ")
       });
-    } catch (err) {
-      console.error("Falha ao registrar log:", err);
-    }
+    } catch (err) {}
 
     return NextResponse.json({
       premio: premioSorteado,

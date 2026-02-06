@@ -1,135 +1,312 @@
-  'use client';
-  import { QRCodeSVG } from 'qrcode.react';
-  import Link from 'next/link';
-  import { useMemo, useState, useEffect } from 'react';
+'use client';
+import { QRCodeSVG } from 'qrcode.react';
+import Link from 'next/link';
+import { useMemo, useState, useEffect } from 'react';
 
-  // --- UTILITÁRIOS ---
-  function onlyDigits(value: string) {
-    return value.replace(/\D/g, '');
+// --- UTILITÁRIOS ---
+function onlyDigits(value: string) {
+  return value.replace(/\D/g, '');
+}
+
+function formatPhoneBR(value: string) {
+  const digits = onlyDigits(value).slice(0, 11);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+function getNivelEmoji(nivel: string) {
+  switch (nivel) {
+    case 'BRONZE': return '🥉';
+    case 'PRATA': return '🥈';
+    case 'OURO': return '🥇';
+    case 'REI_DO_CUPIM': return '👑';
+    default: return '🥉';
   }
+}
 
-  function formatPhoneBR(value: string) {
-    const digits = onlyDigits(value).slice(0, 11);
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  }
+// --- COMPONENTE PRINCIPAL ---
+export default function ResgatePage() {
 
-  function getNivelEmoji(nivel: string) {
-    switch (nivel) {
-      case 'BRONZE': return '🥉';
-      case 'PRATA': return '🥈';
-      case 'OURO': return '🥇';
-      case 'REI_DO_CUPIM': return '👑';
-      default: return '🥉';
+  // LOGIN
+  const [telefone, setTelefone] = useState('');
+  const [pin, setPin] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // PRÉ‑CADASTRO → NOVOS CAMPOS
+  const [showCompletarCadastro, setShowCompletarCadastro] = useState(false);
+  const [nomeCompletar, setNomeCompletar] = useState('');
+  const [emailCompletar, setEmailCompletar] = useState('');
+  const [dataCompletar, setDataCompletar] = useState('');
+  const [pinCompletar, setPinCompletar] = useState('');
+  const [pinCompletar2, setPinCompletar2] = useState('');
+  const [loadingCompletar, setLoadingCompletar] = useState(false);
+
+  // DADOS
+  const [dadosCliente, setDadosCliente] = useState<any>(null);
+  const [cupom, setCupom] = useState<string | null>(null);
+  const [produtos, setProdutos] = useState<any[]>([]);
+  const [premio, setPremio] = useState<any>(null);
+  const [ganhadores, setGanhadores] = useState<any[]>([]);
+
+  // FILTRO PRODUTOS
+  const [filtroCategoria, setFiltroCategoria] = useState('todos');
+
+  // REDEFINIR PIN
+  const [showRedefinirPin, setShowRedefinirPin] = useState(false);
+  const [dataNascimentoRedefinir, setDataNascimentoRedefinir] = useState('');
+  const [novoPin, setNovoPin] = useState('');
+  const [confirmNovoPin, setConfirmNovoPin] = useState('');
+
+  // TRATAMENTO INPUT
+  const telefoneDigits = useMemo(() => onlyDigits(telefone), [telefone]);
+  const telefoneOk = telefoneDigits.length === 11;
+  const pinOk = pin.length === 4;
+
+  // CARREGAR GANHADORES
+  useEffect(() => {
+    async function carregarGanhadores() {
+      try {
+        const res = await fetch('/api/admin/sorteio/ganhadores');
+        const data = await res.json();
+        setGanhadores(data.ganhadores || []);
+      } catch (e) {
+        console.error("Erro ao carregar ganhadores:", e);
+      }
+    }
+    carregarGanhadores();
+  }, []);
+
+  // CARREGAR PRODUTOS E SORTEIO
+  useEffect(() => {
+    async function carregarProdutos() {
+      try {
+        const res = await fetch('/api/produtos');
+        const data = await res.json();
+        setProdutos(data.produtos || []);
+      } catch (e) {
+        console.error("Erro ao carregar produtos:", e);
+      }
+    }
+
+    async function carregarPremio() {
+      try {
+        const res = await fetch('/api/sorteio/atual');
+        const data = await res.json();
+        setPremio(data.sorteio || null);
+      } catch (e) {
+        console.error("Erro ao carregar prêmio:", e);
+      }
+    }
+
+    carregarProdutos();
+    carregarPremio();
+  }, []);
+
+  // --- LOGIN ATUALIZADO ---
+  async function handleSubmit(e: any) {
+    e.preventDefault();
+    setFeedback(null);
+    setCupom(null);
+    setDadosCliente(null);
+
+    if (!telefoneOk) {
+      return setFeedback({ type: 'error', text: 'Digite seu WhatsApp com DDD.' });
+    }
+    if (!pinOk) {
+      return setFeedback({ type: 'error', text: 'PIN deve ter 4 dígitos.' });
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/resgate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telefone: telefoneDigits, pin }),
+      });
+
+      const data = await res.json();
+
+      // 🔥 NOVO — DETECTAR PRÉ‑CADASTRO
+      if (data?.pre_cadastro) {
+        setFeedback({
+          type: 'error',
+          text: data.motivo || 'Seu cadastro foi iniciado pela Roleta. Finalize antes de continuar.'
+        });
+
+        // ABRIR MODAL AUTOMATICAMENTE
+        setTimeout(() => {
+          setShowCompletarCadastro(true);
+        }, 300);
+
+        setLoading(false);
+        return;
+      }
+
+      if (!res.ok || !data?.ok) throw new Error(data.error);
+
+      setDadosCliente(data);
+      setFeedback({ type: 'success', text: 'Bem-vindo de volta!' });
+
+    } catch (e: any) {
+      setFeedback({ type: 'error', text: e.message || 'Erro ao logar.' });
+    } finally {
+      setLoading(false);
     }
   }
+{/* ---------------- MODAL COMPLETAR CADASTRO ---------------- */}
+{showCompletarCadastro && (
+  <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-[#280404] border-2 border-[#c5a059] rounded-2xl p-6 w-full max-w-sm">
 
-  // --- COMPONENTE PRINCIPAL ---
-  export default function ResgatePage() {
+      <h3 className="text-lg font-bold text-[#c5a059] mb-4 text-center">
+        Finalizar Cadastro
+      </h3>
 
-    // LOGIN
-    const [telefone, setTelefone] = useState('');
-    const [pin, setPin] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+      <p className="text-xs text-zinc-300 text-center mb-4">
+        Complete seus dados para acessar sua conta.
+      </p>
 
-    // DADOS
-    const [dadosCliente, setDadosCliente] = useState<any>(null);
-    const [cupom, setCupom] = useState<string | null>(null);
-    const [produtos, setProdutos] = useState<any[]>([]);
-    const [premio, setPremio] = useState<any>(null);
-    const [ganhadores, setGanhadores] = useState<any[]>([]);
+      <div className="space-y-4">
 
-    // FILTRO PRODUTOS
-    const [filtroCategoria, setFiltroCategoria] = useState('todos');
+        {/* NOME */}
+        <input
+          value={nomeCompletar}
+          onChange={(e) => setNomeCompletar(e.target.value)}
+          placeholder="Seu nome completo"
+          className="w-full bg-black/20 border border-[#c5a059]/30 p-3 rounded-lg text-white"
+        />
 
-    // REDEFINIR PIN
-    const [showRedefinirPin, setShowRedefinirPin] = useState(false);
-    const [dataNascimentoRedefinir, setDataNascimentoRedefinir] = useState('');
-    const [novoPin, setNovoPin] = useState('');
-    const [confirmNovoPin, setConfirmNovoPin] = useState('');
+        {/* EMAIL */}
+        <input
+          value={emailCompletar}
+          onChange={(e) => setEmailCompletar(e.target.value)}
+          placeholder="email@exemplo.com"
+          type="email"
+          className="w-full bg-black/20 border border-[#c5a059]/30 p-3 rounded-lg text-white"
+        />
 
-    // TRATAMENTO DE INPUT
-    const telefoneDigits = useMemo(() => onlyDigits(telefone), [telefone]);
-    const telefoneOk = telefoneDigits.length === 11;
-    const pinOk = pin.length === 4;
+        {/* DATA DE NASCIMENTO */}
+        <input
+          type="date"
+          value={dataCompletar}
+          onChange={(e) => setDataCompletar(e.target.value)}
+          className="w-full bg-black/20 border border-[#c5a059]/30 p-3 rounded-lg text-white"
+        />
 
-    // --- CARREGAR GANHADORES ---
-    useEffect(() => {
-      async function carregarGanhadores() {
-        try {
-          const res = await fetch('/api/admin/sorteio/ganhadores');
-          const data = await res.json();
-          setGanhadores(data.ganhadores || []);
-        } catch (e) {
-          console.error("Erro ao carregar ganhadores:", e);
-        }
-      }
-      carregarGanhadores();
-    }, []);
+        {/* PIN */}
+        <input
+          value={pinCompletar}
+          onChange={(e) => setPinCompletar(onlyDigits(e.target.value).slice(0, 4))}
+          placeholder="Crie um PIN"
+          inputMode="numeric"
+          className="w-full bg-black/20 border border-[#c5a059]/30 p-3 rounded-lg text-white text-center tracking-widest"
+        />
 
-    // --- CARREGAR PRODUTOS E SORTEIO ---
-    useEffect(() => {
-      async function carregarProdutos() {
-  try {
-    const res = await fetch('/api/produtos');
-    const data = await res.json();
-    setProdutos(data.produtos || []);
-  } catch (e) {
-    console.error("Erro ao carregar produtos:", e);
-  }
-}
+        {/* CONFIRMAR PIN */}
+        <input
+          value={pinCompletar2}
+          onChange={(e) => setPinCompletar2(onlyDigits(e.target.value).slice(0, 4))}
+          placeholder="Confirmar PIN"
+          inputMode="numeric"
+          className="w-full bg-black/20 border border-[#c5a059]/30 p-3 rounded-lg text-white text-center tracking-widest"
+        />
+      </div>
 
-      async function carregarPremio() {
-        try {
-          const res = await fetch('/api/sorteio/atual');
-          const data = await res.json();
-          setPremio(data.sorteio || null);
-        } catch (e) {
-          console.error("Erro ao carregar prêmio:", e);
-        }
-      }
+      {/* BOTÕES */}
+      <div className="flex gap-3 mt-6">
+        <button
+          onClick={() => setShowCompletarCadastro(false)}
+          className="flex-1 py-3 text-zinc-400 font-bold hover:bg-white/10 rounded-lg"
+        >
+          Cancelar
+        </button>
 
-      carregarProdutos();
-      carregarPremio();
-    }, []);
+        <button
+          onClick={async () => {
+            if (!nomeCompletar.trim()) {
+              setFeedback({ type: 'error', text: 'Digite seu nome.' });
+              return;
+            }
+            if (!emailCompletar.includes('@')) {
+              setFeedback({ type: 'error', text: 'Digite um email válido.' });
+              return;
+            }
+            if (!dataCompletar) {
+              setFeedback({ type: 'error', text: 'Selecione sua data de nascimento.' });
+              return;
+            }
+            if (pinCompletar.length !== 4 || pinCompletar2.length !== 4) {
+              setFeedback({ type: 'error', text: 'PIN deve ter 4 dígitos.' });
+              return;
+            }
+            if (pinCompletar !== pinCompletar2) {
+              setFeedback({ type: 'error', text: 'Os PINs não coincidem.' });
+              return;
+            }
 
-    // --- LOGIN ---
-    async function handleSubmit(e: any) {
-  e.preventDefault();
-  setFeedback(null);
-  setCupom(null);
-  setDadosCliente(null);
+            setLoadingCompletar(true);
 
-  if (!telefoneOk) {
-    return setFeedback({ type: 'error', text: 'Digite seu WhatsApp com DDD.' });
-  }
-  if (!pinOk) {
-    return setFeedback({ type: 'error', text: 'PIN deve ter 4 dígitos.' });
-  }
+            try {
+              // COMPLETAR CADASTRO
+              const res = await fetch('/api/resgate/completar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  telefone: telefoneDigits,
+                  nome: nomeCompletar.trim(),
+                  email: emailCompletar.trim().toLowerCase(),
+                  data_nascimento: dataCompletar,
+                  pin: pinCompletar
+                })
+              });
 
-  setLoading(true);
-  try {
-    const res = await fetch('/api/resgate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ telefone: telefoneDigits, pin }),
-    });
+              const data = await res.json();
 
-    const data = await res.json();
-    if (!res.ok || !data?.ok) throw new Error(data.error);
+              if (!res.ok || !data.ok) {
+                throw new Error(data.error || 'Erro ao completar cadastro.');
+              }
 
-    setDadosCliente(data);
-    setFeedback({ type: 'success', text: 'Bem-vindo de volta!' });
+              // LOGIN AUTOMÁTICO APÓS FINALIZAR
+              const resLogin = await fetch('/api/resgate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  telefone: telefoneDigits,
+                  pin: pinCompletar
+                })
+              });
 
-  } catch (e: any) {
-    setFeedback({ type: 'error', text: e.message || 'Erro ao logar.' });
-  } finally {
-    setLoading(false);
-  }
-}
+              const loginData = await resLogin.json();
 
+              if (!resLogin.ok || !loginData.ok) {
+                throw new Error(loginData.error || 'Erro ao entrar automaticamente.');
+              }
+
+              // SUCESSO!
+              setDadosCliente(loginData);
+              setFeedback({ type: 'success', text: 'Cadastro finalizado! Bem-vindo!' });
+
+              // FECHAR MODAL AO FINAL DA AUTENTICAÇÃO
+              setShowCompletarCadastro(false);
+
+            } catch (err: any) {
+              setFeedback({ type: 'error', text: err.message });
+            } finally {
+              setLoadingCompletar(false);
+            }
+
+          }}
+          className="flex-1 bg-[#e31e24] text-white font-bold py-3 rounded-lg"
+        >
+          {loadingCompletar ? 'SALVANDO...' : 'Salvar e Entrar'}
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
     // --- REDEFINIR PIN ---
     async function redefinirPin() {
       if (!dataNascimentoRedefinir || !novoPin || novoPin !== confirmNovoPin || novoPin.length !== 4) {

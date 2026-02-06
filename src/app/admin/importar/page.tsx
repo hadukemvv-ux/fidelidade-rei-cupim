@@ -8,35 +8,50 @@ type Resultado = {
   processados: number;
   novos: number;
   atualizados: number;
+  ignorados?: number;
 };
 
 export default function ImportarPage() {
-  const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [resultado, setResultado] = useState<Resultado | null>(null);
+  // ESTADOS PARA IMPORTAÇÃO DE VENDAS
+  const [fileVendas, setFileVendas] = useState<File | null>(null);
+  const [loadingVendas, setLoadingVendas] = useState(false);
+  const [resultadoVendas, setResultadoVendas] = useState<Resultado | null>(null);
+
+  // ESTADOS PARA IMPORTAÇÃO DE CLIENTES
+  const [fileClientes, setFileClientes] = useState<File | null>(null);
+  const [loadingClientes, setLoadingClientes] = useState(false);
+  const [resultadoClientes, setResultadoClientes] = useState<Resultado | null>(null);
+
   const [error, setError] = useState<string | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = e.target.files?.[0];
-    setFile(selected || null);
-    setResultado(null);
+  const handleFileVendas = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0] || null;
+    setFileVendas(selected);
+    setResultadoVendas(null);
     setError(null);
   };
 
-  const handleUpload = async () => {
-    if (!file) return;
+  const handleFileClientes = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0] || null;
+    setFileClientes(selected);
+    setResultadoClientes(null);
+    setError(null);
+  };
 
-    setLoading(true);
-    setResultado(null);
+  // --------------------------
+  // IMPORTAÇÃO DE VENDAS
+  // --------------------------
+  const handleUploadVendas = async () => {
+    if (!fileVendas) return;
+
+    setLoadingVendas(true);
+    setResultadoVendas(null);
     setError(null);
 
     try {
-      const data = await file.arrayBuffer();
+      const data = await fileVendas.arrayBuffer();
       const workbook = XLSX.read(data);
-      const sheetName = workbook.SheetNames[0];
-      const ws = workbook.Sheets[sheetName];
+      const ws = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws);
 
       const response = await fetch('/api/admin/importar', {
@@ -45,16 +60,47 @@ export default function ImportarPage() {
         body: JSON.stringify({ rows }),
       });
 
-      if (!response.ok) {
-        throw new Error('Falha ao importar. Verifique o arquivo.');
-      }
+      if (!response.ok) throw new Error('Falha ao importar vendas.');
 
       const res = await response.json();
-      setResultado(res);
+      setResultadoVendas(res);
     } catch (err: any) {
       setError(err.message || 'Erro desconhecido.');
     } finally {
-      setLoading(false);
+      setLoadingVendas(false);
+    }
+  };
+
+  // --------------------------
+  // IMPORTAÇÃO DE CLIENTES
+  // --------------------------
+  const handleUploadClientes = async () => {
+    if (!fileClientes) return;
+
+    setLoadingClientes(true);
+    setResultadoClientes(null);
+    setError(null);
+
+    try {
+      const data = await fileClientes.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const ws = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws);
+
+      const response = await fetch('/api/admin/importar-clientes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rows }),
+      });
+
+      if (!response.ok) throw new Error('Falha ao importar clientes.');
+
+      const res = await response.json();
+      setResultadoClientes(res);
+    } catch (err: any) {
+      setError(err.message || 'Erro desconhecido.');
+    } finally {
+      setLoadingClientes(false);
     }
   };
 
@@ -62,51 +108,94 @@ export default function ImportarPage() {
     <div className="min-h-screen bg-gray-900 text-white p-8 flex flex-col items-center">
 
       <div className="w-full max-w-xl bg-gray-800 border border-gray-700 p-8 rounded-2xl shadow-xl">
-
+        
         <h1 className="text-3xl font-black text-[#c5a059] uppercase text-center mb-6">
-          📥 Importar Planilha
+          📥 Importar Planilhas
         </h1>
 
+        {/* ------------------- BLOCO IMPORTAR VENDAS ------------------- */}
+        <h2 className="text-xl font-bold text-[#c5a059] mb-2">Vendas (Saipos)</h2>
+
         <input
-          ref={fileInputRef}
           type="file"
           accept=".xlsx,.xls,.csv"
-          onChange={handleFileChange}
-          className="w-full bg-gray-700 p-3 border border-gray-600 rounded mb-4"
+          onChange={handleFileVendas}
+          className="w-full bg-gray-700 p-3 border border-gray-600 rounded mb-3"
         />
 
         <button
-          disabled={!file || loading}
-          onClick={handleUpload}
+          disabled={!fileVendas || loadingVendas}
+          onClick={handleUploadVendas}
           className={`w-full py-3 rounded font-bold text-black ${
-            loading || !file
+            loadingVendas || !fileVendas
               ? 'bg-gray-600 cursor-not-allowed'
               : 'bg-[#c5a059] hover:bg-[#b08d45]'
           }`}
         >
-          {loading ? 'Processando…' : 'Enviar Arquivo'}
+          {loadingVendas ? 'Processando Vendas…' : 'Importar Vendas'}
         </button>
 
+        {resultadoVendas && (
+          <div className="mt-4 bg-gray-700 p-4 rounded text-green-400 text-sm font-bold">
+            <p>Processados: {resultadoVendas.processados}</p>
+            <p>Novos: {resultadoVendas.novos}</p>
+            <p>Atualizados: {resultadoVendas.atualizados}</p>
+            {resultadoVendas.ignorados !== undefined && (
+              <p>Ignorados: {resultadoVendas.ignorados}</p>
+            )}
+          </div>
+        )}
+
+        <hr className="my-6 border-gray-700" />
+
+        {/* ------------------- BLOCO IMPORTAR CLIENTES ------------------- */}
+        <h2 className="text-xl font-bold text-[#c5a059] mb-2">Clientes (Saipos)</h2>
+
+        <input
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          onChange={handleFileClientes}
+          className="w-full bg-gray-700 p-3 border border-gray-600 rounded mb-3"
+        />
+
+        <button
+          disabled={!fileClientes || loadingClientes}
+          onClick={handleUploadClientes}
+          className={`w-full py-3 rounded font-bold text-black ${
+            loadingClientes || !fileClientes
+              ? 'bg-gray-600 cursor-not-allowed'
+              : 'bg-blue-500 hover:bg-blue-400'
+          }`}
+        >
+          {loadingClientes ? 'Processando Clientes…' : 'Importar Clientes'}
+        </button>
+
+        {resultadoClientes && (
+          <div className="mt-4 bg-gray-700 p-4 rounded text-blue-300 text-sm font-bold">
+            <p>Processados: {resultadoClientes.processados}</p>
+            <p>Novos: {resultadoClientes.novos}</p>
+            <p>Atualizados: {resultadoClientes.atualizados}</p>
+            {resultadoClientes.ignorados !== undefined && (
+              <p>Ignorados: {resultadoClientes.ignorados}</p>
+            )}
+          </div>
+        )}
+
+        {/* ------------------- ERROS GERAIS ------------------- */}
         {error && (
           <div className="mt-4 text-red-400 text-center text-sm font-bold">
             ❌ {error}
           </div>
         )}
 
-        {resultado && (
-          <div className="mt-6 bg-gray-700 p-4 rounded text-green-400 text-sm font-bold">
-            <p>Processados: {resultado.processados}</p>
-            <p>Novos: {resultado.novos}</p>
-            <p>Atualizados: {resultado.atualizados}</p>
-          </div>
-        )}
-
+        {/* ------------------- VOLTAR ------------------- */}
         <Link
           href="/admin"
           className="block text-center mt-6 py-3 rounded bg-gray-700 hover:bg-gray-600 font-bold text-white"
         >
           ⬅ Voltar ao Painel
         </Link>
+
       </div>
     </div>
   );

@@ -77,7 +77,7 @@ export default function RoletaPage() {
   async function validarSenhaGarcom() {
     if (senhaGarcom.length !== 4) return alert('Senha inválida.');
     try {
-        const res = await fetch('/api/garcom/validar', {
+        const res = await fetch('/api/garcons/validar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ senha: senhaGarcom })

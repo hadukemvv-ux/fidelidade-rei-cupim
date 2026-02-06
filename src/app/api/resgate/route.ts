@@ -18,7 +18,6 @@ function gerarCodigoCupom() {
   return 'CUP' + Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
-// NIVEL / PROGRESSO
 function calcularNivel(gastoTotal: number) {
   if (gastoTotal >= 600) return { atual: 'REI_DO_CUPIM', proximo: null, min: 600, max: 600, multiplicador: 14 };
   if (gastoTotal >= 300) return { atual: 'OURO', proximo: 'REI_DO_CUPIM', min: 300, max: 600, multiplicador: 10 };
@@ -26,7 +25,34 @@ function calcularNivel(gastoTotal: number) {
   return { atual: 'BRONZE', proximo: 'PRATA', min: 0, max: 100, multiplicador: 4 };
 }
 
-// SNAPSHOT DO CLIENTE (para UI)
+// ———————————————————————
+// DETECTAR SE É PRÉ‑CADASTRO (AGORA INCLUINDO EMAIL)
+// ———————————————————————
+function isPreCadastro(cliente: any) {
+  const nome = cliente?.nome || '';
+  const dataNasc = cliente?.data_nascimento;
+  const email = cliente?.email;
+  const telefone = cliente?.telefone || '';
+  const pin_hash = cliente?.pin_hash;
+
+  let pinAutoHash = null;
+  if (telefone.length >= 4) {
+    const autoPin = telefone.substring(0, 4);
+    pinAutoHash = crypto.createHash('sha256').update(autoPin).digest('hex');
+  }
+
+  return (
+    nome === 'Cliente Novo (Roleta)' ||
+    !dataNasc ||
+    !email ||
+    (pin_hash && pin_hash === pinAutoHash)
+  );
+}
+
+
+// =========================
+// SNAPSHOT
+// =========================
 async function buscarSnapshot(telefone: string) {
   const { data: cliente } = await supabaseAdmin
     .from('base_clientes_saipos')
@@ -55,6 +81,7 @@ async function buscarSnapshot(telefone: string) {
     cliente: {
       nome: cliente.nome,
       telefone,
+      email: cliente.email || null,
       data_nascimento: cliente.data_nascimento || null,
     },
     pontos: Number(cliente.pontos || 0),
@@ -70,6 +97,7 @@ async function buscarSnapshot(telefone: string) {
   };
 }
 
+
 // =========================
 // POST — CONSULTA OU RESGATE
 // =========================
@@ -81,16 +109,9 @@ export async function POST(req: Request) {
     const pin = String(body?.pin || '').trim();
     const tipo = body?.tipo;
 
-    if (telefone.length !== 11) {
+    if (telefone.length !== 11)
       return NextResponse.json({ ok: false, error: 'Telefone inválido.' }, { status: 400 });
-    }
 
-    if (pin.length !== 4) {
-      return NextResponse.json({ ok: false, error: 'PIN inválido.' }, { status: 400 });
-    }
-
-    // CHECK PIN
-    const pinHash = crypto.createHash('sha256').update(pin).digest('hex');
     const { data: cliente } = await supabaseAdmin
       .from('base_clientes_saipos')
       .select('*')
@@ -100,23 +121,53 @@ export async function POST(req: Request) {
     if (!cliente)
       return NextResponse.json({ ok: false, error: 'Cliente não encontrado.' }, { status: 404 });
 
-    if (!cliente.pin_hash)
-      return NextResponse.json({ ok: false, error: 'Crie sua senha no cadastro.' }, { status: 401 });
 
-    if (cliente.pin_hash !== pinHash)
-      return NextResponse.json({ ok: false, error: 'PIN incorreto.' }, { status: 401 });
 
-    // =========================
-    // CONSULTA (sem resgate)
-    // =========================
+    // ——————————————————
+    // DETECÇÃO PROFISSIONAL DE PRÉ‑CADASTRO
+    // ——————————————————
+    const preCadastro = isPreCadastro(cliente);
+
+    if (preCadastro && !tipo) {
+      return NextResponse.json({
+        ok: false,
+        pre_cadastro: true,
+        motivo: 'Seu cadastro foi iniciado pela Roleta. Para acessar sua conta, finalize seus dados.',
+      });
+    }
+
+
+    // ——————————————————
+    // CLIENTE COMPLETO → EXIGIR PIN CORRETO
+    // ——————————————————
+    if (!preCadastro) {
+      if (!pin || pin.length !== 4)
+        return NextResponse.json({ ok: false, error: 'PIN inválido.' }, { status: 400 });
+
+      const pinHash = crypto.createHash('sha256').update(pin).digest('hex');
+
+      if (!cliente.pin_hash)
+        return NextResponse.json({ ok: false, error: 'Crie sua senha no cadastro.' }, { status: 401 });
+
+      if (cliente.pin_hash !== pinHash)
+        return NextResponse.json({ ok: false, error: 'PIN incorreto.' }, { status: 401 });
+    }
+
+
+
+    // ==================================================
+    // CONSULTA SEM RESGATE
+    // ==================================================
     if (!tipo) {
       const snap = await buscarSnapshot(telefone);
       return NextResponse.json({ ok: true, ...snap });
     }
 
-    // =========================
+
+    // ==================================================
     // RESGATE
-    // =========================
+    // ==================================================
+
     const hoje = new Date().toISOString().split('T')[0];
 
     const { data: jaResgatou } = await supabaseAdmin
@@ -130,11 +181,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: 'Limite de 1 resgate por dia.' }, { status: 400 });
     }
 
+
     const antes = await buscarSnapshot(telefone);
     let custoPontos = 0;
     let custoCash = 0;
     let nomePremio = '';
     const codigo = gerarCodigoCupom();
+
 
     // =========================
     // TIPOS DE RESGATE
@@ -145,7 +198,7 @@ export async function POST(req: Request) {
 
     } else if (tipo === 'cashback') {
       const valor = Number(body.valorDesconto);
-      if (![5, 10, 15].includes(valor)) {
+      if (![5,10,15].includes(valor)) {
         return NextResponse.json({ ok: false, error: 'Valor inválido.' }, { status: 400 });
       }
       custoCash = valor;
@@ -165,23 +218,26 @@ export async function POST(req: Request) {
       custoPontos = produto.destaque
         ? Math.floor(produto.custo_em_pontos * 0.5)
         : produto.custo_em_pontos;
+
     } else {
       return NextResponse.json({ ok: false, error: 'Tipo inválido.' }, { status: 400 });
     }
 
+
+
     // =========================
     // VALIDAR SALDOS
     // =========================
-    if (custoPontos > 0 && antes.pontos < custoPontos) {
+    if (custoPontos > 0 && antes.pontos < custoPontos)
       return NextResponse.json({ ok: false, error: 'Pontos insuficientes.' }, { status: 400 });
-    }
 
-    if (custoCash > 0 && antes.cashback < custoCash) {
+    if (custoCash > 0 && antes.cashback < custoCash)
       return NextResponse.json({ ok: false, error: 'Cashback insuficiente.' }, { status: 400 });
-    }
+
+
 
     // =========================
-    // DEBITAR
+    // ATUALIZAR SALDOS
     // =========================
     const novoSaldo = {
       atualizado_em: isoNow(),
@@ -196,8 +252,10 @@ export async function POST(req: Request) {
 
     if (updErr) throw updErr;
 
+
+
     // =========================
-    // REGISTRAR RESGATE
+    // REGISTRO DO RESGATE
     // =========================
     await supabaseAdmin.from('resgates').insert({
       telefone,
@@ -209,11 +267,17 @@ export async function POST(req: Request) {
       produto_id: body.produtoId || null,
     });
 
+
     const depois = await buscarSnapshot(telefone);
+
     return NextResponse.json({ ok: true, codigo, atualizado: depois });
+
 
   } catch (err: any) {
     console.error('[RESGATE ERROR]:', err);
-    return NextResponse.json({ ok: false, error: err.message || 'Erro interno.' }, { status: 500 });
+    return NextResponse.json({
+      ok: false,
+      error: err.message || 'Erro interno.',
+    }, { status: 500 });
   }
 }

@@ -3,20 +3,39 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
-// --- UTILITÁRIOS ---
-function limparTel(v: string) {
-  return v ? v.replace(/\D/g, "") : "";
+// Remove acentos
+function normalizarTexto(s: string) {
+  return s
+    ?.toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
-function parseValorItens(v: any) {
-  if (v === null || v === undefined) return 0;
+// Similaridade leve (retorna true se nome for compatível)
+function nomesParecidos(a: string, b: string) {
+  if (!a || !b) return false;
+  const na = normalizarTexto(a);
+  const nb = normalizarTexto(b);
+
+  // Match exato após normalização
+  if (na === nb) return true;
+
+  // Se contém parte relevante do nome → ok
+  return na.includes(nb) || nb.includes(na);
+}
+
+// Converte moeda brasileira em número
+function parseValor(v: any) {
+  if (!v) return 0;
   let s = v.toString().trim();
   s = s.replace(/\./g, "").replace(",", ".");
   const n = parseFloat(s);
   return isNaN(n) ? 0 : n;
 }
 
-// --- REGRAS DE NÍVEL ---
+// Regras de nível
 function nivelPorGasto(total: number) {
   if (total >= 600) return "REI_DO_CUPIM";
   if (total >= 300) return "OURO";
@@ -24,7 +43,6 @@ function nivelPorGasto(total: number) {
   return "BRONZE";
 }
 
-// --- MULTIPLICADORES POR NÍVEL ---
 function regrasNivel(nivel: string) {
   switch (nivel) {
     case "PRATA":
@@ -38,14 +56,14 @@ function regrasNivel(nivel: string) {
   }
 }
 
-// --- REGISTRA EXTRATO ---
+// Registrar extrato
 async function registrarExtrato(cliente_id: number, pontos: number, descricao: string) {
   try {
     await supabaseAdmin.from("extrato_pontos").insert({
       cliente_id,
       tipo: "entrada",
       valor: pontos,
-      origem: "IMPORTACAO_XLS",
+      origem: "IMPORTACAO_VENDAS",
       descricao,
       criado_em: new Date().toISOString(),
       metodo: "importacao"
@@ -54,6 +72,7 @@ async function registrarExtrato(cliente_id: number, pontos: number, descricao: s
     console.log("ERRO EXTRATO:", e);
   }
 }
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -66,147 +85,107 @@ export async function POST(req: Request) {
     }
 
     const rows = body.rows;
+
     let processados = 0;
-    let novos = 0;
     let atualizados = 0;
+    let ignorados = 0;
+    let naoEncontrados = 0;
 
-    // Vamos gerar logs de debug (opcional)
-    console.log("IMPORTAÇÃO XLS — total de linhas:", rows.length);
+    // Buscar TODOS clientes da base (5k)
+    const { data: baseClientes } = await supabaseAdmin
+      .from("base_clientes_saipos")
+      .select("*");
 
-    // LOOP PRINCIPAL DE CADA LINHA DA PLANILHA
+    if (!baseClientes) {
+      return NextResponse.json(
+        { erro: "Não foi possível carregar a base de clientes." },
+        { status: 500 }
+      );
+    }
+
     for (const row of rows) {
       try {
-        // --- CAMPOS POSSÍVEIS DE TELEFONE ---
-        const telRaw =
-          row["Telefone"] ||
-          row["Celular"] ||
-          row["Whatsapp"] ||
-          row["Contato"] ||
-          "";
-
-        const telefone = limparTel(String(telRaw));
-        if (!telefone || telefone.length < 8) continue;
-
-        // --- NOME ---
-        const nome = row["Nome"] || row["Cliente"] || row["Consumidor"] || "Cliente";
-
-        // --- VALOR DOS ITENS ---
-        const valorItens =
-          parseValorItens(row["Itens"]) ||
-          parseValorItens(row["Valor Líquido"]) ||
-          parseValorItens(row["Valor"]) ||
-          0;
-
-        if (valorItens <= 0) continue;
-
-        // --- DESCOBRIR CLIENTE EXISTENTE ---
-        const { data: existente } = await supabaseAdmin
-          .from("base_clientes_saipos")
-          .select("*")
-          .eq("telefone", telefone)
-          .maybeSingle();
-
-        // Vamos preparar dados "antes" e "depois"
-        let cliente = existente || null;
-                // ====================================================================
-        // === SE O CLIENTE NÃO EXISTE, VAMOS CRIAR UM NOVO ===================
-        // ====================================================================
-        if (!cliente) {
-          const nivelInicial = "BRONZE";
-          const regras = regrasNivel(nivelInicial);
-
-          const pontosGanhos = Math.floor(valorItens * regras.multPontos);
-          const cashbackGanhos = Number((valorItens * regras.percCash).toFixed(2));
-          const ticketsGanhos = Math.floor(valorItens / 50) * regras.tickets;
-
-          const insert = await supabaseAdmin
-            .from("base_clientes_saipos")
-            .insert({
-              telefone,
-              nome,
-              nivel: nivelInicial,
-              pontos: pontosGanhos,
-              cashback: cashbackGanhos,
-              tickets: ticketsGanhos,
-              total_gasto: valorItens,
-              qtd_pedidos: 1,
-              primeira_compra: new Date().toISOString(),
-              ultima_compra: new Date().toISOString(),
-              atualizado_em: new Date().toISOString()
-            })
-            .select("*")
-            .single();
-
-          cliente = insert.data;
-          novos++;
-
-          await registrarExtrato(
-            cliente.id,
-            pontosGanhos,
-            `Compra importada (novo cliente): R$ ${valorItens.toFixed(2)}`
-          );
-
-          processados++;
+        const consumidor = row["Consumidor"] || row["CONSUMIDOR"] || null;
+        if (!consumidor) {
+          ignorados++;
           continue;
         }
 
-        // ====================================================================
-        // === CLIENTE EXISTE — ATUALIZAR DADOS (SEM MEXER NO NOME / NASCIMENTO)
-        // ====================================================================
+        const valor = 
+          parseValor(row["Valor"]) ||
+          parseValor(row["Itens"]) ||
+          parseValor(row["Total"]) ||
+          0;
 
-        const totalDepois = (cliente.total_gasto || 0) + valorItens;
-        const novoNivel = nivelPorGasto(totalDepois);
+        if (valor <= 0) {
+          ignorados++;
+          continue;
+        }
 
-        const regras = regrasNivel(novoNivel);
+        // --- BUSCAR CLIENTE POR NOME (SIMILARIDADE LEVE) ---
+        const clienteEncontrado = baseClientes.find((c: any) =>
+          nomesParecidos(c.nome, consumidor)
+        );
 
-        const pontosGanhos = Math.floor(valorItens * regras.multPontos);
-        const cashbackGanhos = Number((valorItens * regras.percCash).toFixed(2));
-        const ticketsGanhos = Math.floor(valorItens / 50) * regras.tickets;
+        if (!clienteEncontrado) {
+          naoEncontrados++;
+          continue;
+        }
+
+        const cliente = clienteEncontrado;
+
+        // ------- ATUALIZAR FIDELIDADE -------
+        const totalNovo = (cliente.total_gasto || 0) + valor;
+        const nivelNovo = nivelPorGasto(totalNovo);
+        const regras = regrasNivel(nivelNovo);
+
+        const pontosGanhos = Math.floor(valor * regras.multPontos);
+        const cashbackGanhos = Number((valor * regras.percCash).toFixed(2));
+        const ticketsGanhos = Math.floor(valor / 50) * regras.tickets;
 
         await supabaseAdmin
           .from("base_clientes_saipos")
           .update({
-            // nome: cliente.nome (não altera)
-            total_gasto: totalDepois,
+            total_gasto: totalNovo,
+            qtd_pedidos: (cliente.qtd_pedidos || 0) + 1,
             ultima_compra: new Date().toISOString(),
-            nivel: novoNivel,
+
+            nivel: nivelNovo,
             pontos: (cliente.pontos || 0) + pontosGanhos,
             cashback: Number(((cliente.cashback || 0) + cashbackGanhos).toFixed(2)),
             tickets: (cliente.tickets || 0) + ticketsGanhos,
-            qtd_pedidos: (cliente.qtd_pedidos || 0) + 1,
+
             atualizado_em: new Date().toISOString()
           })
           .eq("id", cliente.id);
 
-        atualizados++;
-
         await registrarExtrato(
           cliente.id,
           pontosGanhos,
-          `Compra importada: R$ ${valorItens.toFixed(2)}`
+          `Compra importada: R$ ${valor.toFixed(2)}`
         );
 
+        atualizados++;
         processados++;
 
-      } catch (erroLinha: any) {
-        console.log("Erro ao processar linha:", erroLinha);
+      } catch (e) {
+        console.log("Erro ao processar venda:", e);
       }
-    } // fim do for
-        // ==========================================================
-    // === RESPOSTA FINAL DA IMPORTAÇÃO =========================
-    // ==========================================================
+    }
+
     return NextResponse.json({
       sucesso: true,
-      mensagem: "Importação concluída com sucesso!",
+      mensagem: "Importação de vendas concluída.",
       processados,
-      novos,
-      atualizados
+      atualizados,
+      ignorados,
+      naoEncontrados
     });
 
   } catch (err: any) {
-    console.error("ERRO IMPORTAÇÃO XLS:", err);
+    console.error("ERRO IMPORTAÇÃO VENDAS:", err);
     return NextResponse.json(
-      { erro: err.message || "Erro interno ao importar planilha." },
+      { erro: err.message || "Erro interno ao importar vendas." },
       { status: 500 }
     );
   }

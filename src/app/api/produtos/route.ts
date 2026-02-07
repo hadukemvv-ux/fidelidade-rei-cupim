@@ -12,10 +12,8 @@ export async function GET() {
 
     if (error) throw error;
 
-    return NextResponse.json({
-      ok: true,
-      produtos: data || []
-    });
+    // RETORNA DIRETO O ARRAY (IMPORTANTE!)
+    return NextResponse.json(data || []);
 
   } catch (err: any) {
     console.error('[GET /produtos] ERROR:', err);

@@ -220,11 +220,22 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="py-10 px-6 border-t border-[#4d0808]/50 text-center bg-[#1a0a0a]">
-        <p className="text-[#c5a059] italic font-medium">Sua Majestade em Qualidade e Sabor!</p>
-        <div className="mt-4 text-[10px] text-zinc-600 uppercase tracking-[0.2em]">
-          Fortaleza • Ceará
-        </div>
-      </footer>
+  <p className="text-[#c5a059] italic font-medium">Sua Majestade em Qualidade e Sabor!</p>
+
+  <div className="mt-4 text-[10px] text-zinc-600 uppercase tracking-[0.2em]">
+    Fortaleza • Ceará
+  </div>
+
+  {/* BOTÃO ADMIN */}
+  <div className="mt-6">
+    <Link
+      href="/admin"
+      className="text-xs text-[#c5a059] opacity-40 hover:opacity-100 transition-all underline"
+    >
+      Área Administrativa
+    </Link>
+  </div>
+</footer>
     </div>
   );
 }

@@ -58,6 +58,42 @@ export async function POST(req: Request) {
     if (telefone.length !== 11)
       return NextResponse.json({ ok: false, error: 'Telefone inválido.' }, { status: 400 });
 
+    // -------------------------------------------------------------------
+    // 🟩 NOVO: DETECTAR PRÉ‑CADASTRO (quando só enviam telefone)
+    // -------------------------------------------------------------------
+    const isChecagem =
+      !body?.nome &&
+      !body?.email &&
+      !body?.data_nascimento &&
+      !body?.pin;
+
+    if (isChecagem) {
+      const snap = await buscarSnapshot(telefone);
+
+      const pendente =
+        !snap.nome ||
+        !snap.email ||
+        !snap.data_nascimento;
+
+      if (pendente) {
+        return NextResponse.json({
+          ok: true,
+          pre_cadastro: true,
+          status: "pendente",
+          motivo: "Seu cadastro está incompleto."
+        });
+      }
+
+      // cadastro já completo
+      return NextResponse.json({
+        ok: true,
+        pre_cadastro: false,
+        status: "completo"
+      });
+    }
+    // -------------------------------------------------------------------
+
+
     if (nome.length < 3)
       return NextResponse.json({ ok: false, error: 'Nome inválido.' }, { status: 400 });
 

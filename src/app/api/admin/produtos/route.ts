@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-// Campos permitidos na tabela
 const CAMPOS_VALIDOS = [
   'nome',
   'descricao',
@@ -15,9 +14,7 @@ const CAMPOS_VALIDOS = [
 function filtrarCampos(body: any) {
   const permitido: any = {};
   for (const key of CAMPOS_VALIDOS) {
-    if (body[key] !== undefined) {
-      permitido[key] = body[key];
-    }
+    if (body[key] !== undefined) permitido[key] = body[key];
   }
   return permitido;
 }
@@ -33,10 +30,10 @@ export async function PUT(req: Request) {
     if (!id)
       return NextResponse.json({ error: 'ID é obrigatório.' }, { status: 400 });
 
-    // Filtrar somente campos válidos
     const updates = filtrarCampos(body);
     updates.atualizado_em = new Date().toISOString();
 
+    // Garantir formato correto do path da imagem
     if (updates.imagem_url && !updates.imagem_url.startsWith('/'))
       updates.imagem_url = '/' + updates.imagem_url;
 
@@ -63,8 +60,8 @@ export async function PUT(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
     const produto = filtrarCampos(body);
+
     produto.criado_em = new Date().toISOString();
     produto.atualizado_em = new Date().toISOString();
     produto.ativo = produto.ativo ?? true;
@@ -76,8 +73,7 @@ export async function POST(req: Request) {
     if (!produto.custo_em_pontos || produto.custo_em_pontos <= 0)
       return NextResponse.json({ error: 'Custo em pontos inválido.' }, { status: 400 });
 
-    if (!produto.categoria)
-      produto.categoria = 'geral';
+    if (!produto.categoria) produto.categoria = 'geral';
 
     if (produto.imagem_url && !produto.imagem_url.startsWith('/'))
       produto.imagem_url = '/' + produto.imagem_url;

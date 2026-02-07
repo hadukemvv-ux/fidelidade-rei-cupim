@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 
-// COMPONENTES (❗ caminho relativo para forçar o TS a recarregar tipagem)
+// COMPONENTES
 import SorteioCard from '../../../components/sorteio/SorteioCard';
 import SorteioForm from '../../../components/sorteio/SorteioForm';
 import GanhadoresList from '../../../components/sorteio/GanhadoresList';
@@ -33,8 +32,8 @@ export default function SorteioAdminPage() {
       const res = await fetch('/api/admin/sorteio');
       const data = await res.json();
 
-      if (data?.sorteio) {
-        const s = data.sorteio;
+      const s = data?.sorteio;
+      if (s) {
         setSorteio(s);
         setTitulo(s.titulo);
         setDescricao(s.descricao || '');
@@ -67,8 +66,8 @@ export default function SorteioAdminPage() {
           descricao,
           imagem_url: imagemUrl,
           data_sorteio: dataSorteio,
-          modo,
-        }),
+          modo
+        })
       });
 
       await carregarSorteio();
@@ -97,39 +96,20 @@ export default function SorteioAdminPage() {
     }
   }
 
-  // ===================== LOADING =====================
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-900 text-[#c5a059] flex items-center justify-center">
-        Carregando Sorteio...
-      </div>
-    );
+    return <p className="text-[#c5a059]">Carregando sorteio...</p>;
   }
 
   // ===================== PÁGINA =====================
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6 md:p-10 font-sans">
+    <div className="space-y-10">
 
-      {/* HEADER */}
-      <header className="mb-10 flex justify-between items-center border-b border-gray-700 pb-4">
-        <div>
-          <h1 className="text-3xl font-black text-[#c5a059] uppercase tracking-wider">
-            🎁 Controle de Sorteios
-          </h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Gerenciar prêmio, data e histórico do sorteio mensal
-          </p>
-        </div>
+      {/* HEADER AUTOMÁTICO DO LAYOUT */}
+      <div>
+        <h1 className="text-3xl font-black text-[#c5a059]">Controle de Sorteios</h1>
+        <p className="text-gray-400">Gerencie prêmio, data e histórico do sorteio.</p>
+      </div>
 
-        <Link 
-          href="/admin"
-          className="text-xs font-bold px-4 py-2 bg-gray-800 rounded border border-gray-700 hover:bg-gray-700"
-        >
-          ⬅ Voltar
-        </Link>
-      </header>
-
-      {/* CARD DO PRÊMIO ATUAL */}
       <SorteioCard
         titulo={titulo}
         descricao={descricao}
@@ -140,7 +120,6 @@ export default function SorteioAdminPage() {
         rodando={rodando}
       />
 
-      {/* FORMULÁRIO */}
       <SorteioForm
         titulo={titulo}
         setTitulo={setTitulo}
@@ -156,7 +135,6 @@ export default function SorteioAdminPage() {
         saving={saving}
       />
 
-      {/* LISTA DE GANHADORES */}
       <GanhadoresList ganhadores={ganhadores} />
 
     </div>

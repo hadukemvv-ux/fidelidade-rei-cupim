@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 
 export default function AdminCardapio() {
   const [produtos, setProdutos] = useState<any[]>([]);
@@ -8,7 +7,6 @@ export default function AdminCardapio() {
   const [modalOpen, setModalOpen] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState<any>(null);
 
-  // Carregar produtos ao abrir
   useEffect(() => {
     fetchProdutos();
   }, []);
@@ -16,17 +14,17 @@ export default function AdminCardapio() {
   async function fetchProdutos() {
     const res = await fetch('/api/produtos');
     const data = await res.json();
-    setProdutos(data);
+    setProdutos(Array.isArray(data) ? data : []);
     setLoading(false);
   }
 
-  // Ligar/Desligar Promoção Rapidamente
   async function toggleDestaque(produto: any) {
-    // Atualiza visualmente na hora (otimismo)
     const novoStatus = !produto.destaque;
-    setProdutos(prev => prev.map(p => p.id === produto.id ? { ...p, destaque: novoStatus } : p));
 
-    // Salva no banco
+    setProdutos(prev =>
+      prev.map(p => p.id === produto.id ? { ...p, destaque: novoStatus } : p)
+    );
+
     await fetch('/api/admin/produtos', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -34,7 +32,6 @@ export default function AdminCardapio() {
     });
   }
 
-  // Salvar Edição (ou Novo Produto)
   async function salvarProduto(e: React.FormEvent) {
     e.preventDefault();
     const isNew = !produtoEditando.id;
@@ -47,162 +44,209 @@ export default function AdminCardapio() {
     });
 
     setModalOpen(false);
-    fetchProdutos(); // Recarrega a lista
-    alert(isNew ? 'Produto criado!' : 'Produto atualizado!');
-  }
-
-  // Botão de Deletar (Cuidado!)
-  async function deletarProduto(id: number) {
-    if (!confirm('Tem certeza? Isso apagará o produto para sempre.')) return;
-    // (Ainda precisamos criar a rota DELETE na API se quiser usar isso, por enquanto só esconde da lista local)
-    // Implementação futura
-    alert('Funcionalidade de deletar precisa ser ativada na API.');
+    fetchProdutos();
   }
 
   return (
-    <div className="min-h-screen bg-zinc-900 text-white font-sans p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-black text-[#c5a059]">Gestão de Cardápio</h1>
-            <p className="text-zinc-400">Controle total dos seus produtos e promoções.</p>
-          </div>
-          <div className="flex gap-4">
-             <Link href="/admin" className="px-4 py-2 text-zinc-400 hover:text-white">Voltar</Link>
-             <button 
-               onClick={() => { setProdutoEditando({}); setModalOpen(true); }}
-               className="bg-[#e31e24] hover:bg-[#c1191f] text-white font-bold px-6 py-2 rounded-lg"
-             >
-               + Novo Produto
-             </button>
-          </div>
-        </div>
+    <div className="space-y-12">
 
-        {loading ? <p>Carregando cardápio...</p> : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {produtos.map(produto => (
-              <div key={produto.id} className={`bg-zinc-800 rounded-xl overflow-hidden border ${produto.destaque ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'border-zinc-700'}`}>
-                
-                {/* Cabeçalho do Card */}
-                <div className="h-40 bg-black/50 relative">
-                  {produto.imagem_url ? (
-                    <img src={produto.imagem_url} className="w-full h-full object-cover opacity-80" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl">🥘</div>
-                  )}
-                  {produto.destaque && (
-                    <div className="absolute top-2 right-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">
-                      EM PROMOÇÃO (50% OFF)
-                    </div>
-                  )}
-                </div>
-
-                {/* Corpo do Card */}
-                <div className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-lg">{produto.nome}</h3>
-                    <span className="text-[#c5a059] font-bold text-sm">{produto.custo_em_pontos} pts</span>
-                  </div>
-                  <p className="text-xs text-zinc-400 mb-4 h-10 overflow-hidden">{produto.descricao}</p>
-
-                  {/* Controles */}
-                  <div className="flex items-center justify-between pt-4 border-t border-zinc-700">
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <div className={`w-10 h-6 rounded-full p-1 transition-colors ${produto.destaque ? 'bg-green-500' : 'bg-zinc-600'}`} onClick={() => toggleDestaque(produto)}>
-                        <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${produto.destaque ? 'translate-x-4' : 'translate-x-0'}`}></div>
-                      </div>
-                      <span className="text-xs font-bold">{produto.destaque ? 'Promoção Ativa' : 'Preço Normal'}</span>
-                    </label>
-
-                    <button 
-                      onClick={() => { setProdutoEditando(produto); setModalOpen(true); }}
-                      className="text-sm bg-zinc-700 hover:bg-zinc-600 px-3 py-1 rounded transition-colors"
-                    >
-                      ✏️ Editar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+      {/* TÍTULO */}
+      <div>
+        <h1 className="text-3xl font-black text-[#c5a059]">Gestão de Cardápio</h1>
+        <p className="text-zinc-400">Controle total dos produtos resgatáveis por pontos.</p>
       </div>
 
-      {/* MODAL DE EDIÇÃO */}
+      {/* BOTÃO NOVO PRODUTO */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => { setProdutoEditando({}); setModalOpen(true); }}
+          className="bg-[#e31e24] hover:bg-[#c1191f] text-white font-bold px-6 py-2 rounded-lg"
+        >
+          + Novo Produto
+        </button>
+      </div>
+
+      {/* GRID DE PRODUTOS */}
+      {loading ? (
+        <p>Carregando cardápio...</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          {Array.isArray(produtos) && produtos.map(produto => (
+            <div
+              key={produto.id}
+              className={`bg-zinc-800 rounded-xl overflow-hidden border ${
+                produto.destaque
+                  ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]'
+                  : 'border-zinc-700'
+              }`}
+            >
+
+              {/* Imagem */}
+              <div className="h-40 bg-black/50 relative">
+                {produto.imagem_url ? (
+                  <img
+                    src={produto.imagem_url}
+                    className="w-full h-full object-cover opacity-80"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-4xl">
+                    🥘
+                  </div>
+                )}
+
+                {produto.destaque && (
+                  <div className="absolute top-2 right-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">
+                    EM PROMOÇÃO
+                  </div>
+                )}
+              </div>
+
+              {/* Conteúdo */}
+              <div className="p-4">
+                <div className="flex justify-between mb-2">
+                  <h3 className="font-bold text-lg">{produto.nome}</h3>
+                  <span className="text-[#c5a059] font-bold text-sm">
+                    {produto.custo_pontos || produto.custo_em_pontos} pts
+                  </span>
+                </div>
+
+                <p className="text-xs text-zinc-400 mb-4 h-10 overflow-hidden">
+                  {produto.descricao}
+                </p>
+
+                {/* Controles */}
+                <div className="flex items-center justify-between pt-4 border-t border-zinc-700">
+
+                  {/* PROMOÇÃO */}
+                  <div
+                    onClick={() => toggleDestaque(produto)}
+                    className="flex items-center gap-2 cursor-pointer select-none"
+                  >
+                    <div
+                      className={`w-10 h-6 rounded-full p-1 transition-colors ${
+                        produto.destaque ? 'bg-green-500' : 'bg-zinc-600'
+                      }`}
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          produto.destaque ? 'translate-x-4' : 'translate-x-0'
+                        }`}
+                      ></div>
+                    </div>
+                    <span className="text-xs font-bold">
+                      {produto.destaque ? 'Promoção' : 'Normal'}
+                    </span>
+                  </div>
+
+                  {/* EDITAR */}
+                  <button
+                    onClick={() => { setProdutoEditando(produto); setModalOpen(true); }}
+                    className="text-sm bg-zinc-700 hover:bg-zinc-600 px-3 py-1 rounded transition-colors"
+                  >
+                    ✏️ Editar
+                  </button>
+
+                </div>
+              </div>
+            </div>
+          ))}
+
+        </div>
+      )}
+
+      {/* MODAL */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="bg-zinc-800 p-6 rounded-xl w-full max-w-lg border border-zinc-700">
+
             <h2 className="text-xl font-bold text-[#c5a059] mb-4">
               {produtoEditando.id ? 'Editar Produto' : 'Novo Produto'}
             </h2>
-            
+
             <form onSubmit={salvarProduto} className="space-y-4">
+
               <div>
-                <label className="block text-xs uppercase text-zinc-500 mb-1">Nome do Produto</label>
-                <input 
-                  value={produtoEditando.nome || ''} 
-                  onChange={e => setProdutoEditando({...produtoEditando, nome: e.target.value})}
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white" 
+                <label className="block text-xs uppercase text-zinc-500 mb-1">Nome</label>
+                <input
+                  value={produtoEditando.nome || ''}
+                  onChange={e => setProdutoEditando({ ...produtoEditando, nome: e.target.value })}
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white"
                   required
                 />
               </div>
 
               <div>
                 <label className="block text-xs uppercase text-zinc-500 mb-1">Descrição</label>
-                <textarea 
-                  value={produtoEditando.descricao || ''} 
-                  onChange={e => setProdutoEditando({...produtoEditando, descricao: e.target.value})}
+                <textarea
+                  value={produtoEditando.descricao || ''}
+                  onChange={e => setProdutoEditando({ ...produtoEditando, descricao: e.target.value })}
                   className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white h-20"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs uppercase text-zinc-500 mb-1">Custo em Pontos</label>
-                  <input 
-                    type="number"
-                    value={produtoEditando.custo_em_pontos || ''} 
-                    onChange={e => setProdutoEditando({...produtoEditando, custo_em_pontos: Number(e.target.value)})}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white"
-                    required 
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs uppercase text-zinc-500 mb-1">Categoria</label>
-                  <select 
-                    value={produtoEditando.categoria || 'geral'} 
-                    onChange={e => setProdutoEditando({...produtoEditando, categoria: e.target.value})}
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white"
-                  >
-                    <option value="prato">Prato</option>
-                    <option value="bebida">Bebida</option>
-                    <option value="sobremesa">Sobremesa</option>
-                    <option value="acompanhamento">Acompanhamento</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-xs uppercase text-zinc-500 mb-1">Custo em Pontos</label>
+                <input
+                  type="number"
+                  value={produtoEditando.custo_em_pontos || produtoEditando.custo_pontos || ''}
+                  onChange={e =>
+                    setProdutoEditando({
+                      ...produtoEditando,
+                      custo_em_pontos: Number(e.target.value)
+                    })
+                  }
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white"
+                  required
+                />
               </div>
 
               <div>
-                <label className="block text-xs uppercase text-zinc-500 mb-1">Caminho da Imagem (na pasta /public)</label>
-                <input 
-                  value={produtoEditando.imagem_url || ''} 
-                  onChange={e => setProdutoEditando({...produtoEditando, imagem_url: e.target.value})}
-                  placeholder="Ex: /produtos/foto-nova.png"
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white" 
+                <label className="block text-xs uppercase text-zinc-500 mb-1">Categoria</label>
+                <select
+                  value={produtoEditando.categoria || 'geral'}
+                  onChange={e => setProdutoEditando({ ...produtoEditando, categoria: e.target.value })}
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white"
+                >
+                  <option value="prato">Prato</option>
+                  <option value="bebida">Bebida</option>
+                  <option value="sobremesa">Sobremesa</option>
+                  <option value="acompanhamento">Acompanhamento</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase text-zinc-500 mb-1">Imagem</label>
+                <input
+                  value={produtoEditando.imagem_url || ''}
+                  onChange={e => setProdutoEditando({ ...produtoEditando, imagem_url: e.target.value })}
+                  placeholder="/produtos/file.png"
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white"
                 />
-                <p className="text-[10px] text-zinc-500 mt-1">
-                  *Para trocar a foto, coloque o arquivo na pasta 'public/produtos' do projeto e digite o nome aqui.
-                </p>
               </div>
 
               <div className="flex gap-3 mt-6">
-                <button type="button" onClick={() => setModalOpen(false)} className="flex-1 py-3 text-zinc-400 hover:text-white">Cancelar</button>
-                <button type="submit" className="flex-1 bg-[#e31e24] font-bold rounded py-3 hover:bg-[#c1191f]">Salvar</button>
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="flex-1 py-3 text-zinc-400 hover:text-white"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className="flex-1 bg-[#e31e24] font-bold rounded py-3 hover:bg-[#c1191f]"
+                >
+                  Salvar
+                </button>
               </div>
+
             </form>
           </div>
         </div>
       )}
+
     </div>
   );
 }

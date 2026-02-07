@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
@@ -19,15 +19,20 @@ function formatPhoneBR(value: string) {
 export default function CadastroPage() {
   const router = useRouter();
 
+  // CAMPOS DO FORMULÁRIO
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // CONTROLE
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] =
+    useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // MEMO
   const telefoneDigits = useMemo(() => onlyDigits(telefone), [telefone]);
   const pinDigits = useMemo(() => onlyDigits(pin).slice(0, 4), [pin]);
   const confirmPinDigits = useMemo(() => onlyDigits(confirmPin).slice(0, 4), [confirmPin]);
@@ -36,11 +41,24 @@ export default function CadastroPage() {
   const telefoneOk = telefoneDigits.length === 11;
   const pinOk = pinDigits.length === 4;
   const pinsMatch = pinOk && pinDigits === confirmPinDigits;
-
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.toLowerCase());
-
   const ganhouBonus = Boolean(dataNascimento);
 
+  // ===========================================================
+  // 1) PRÉ-CARREGAR TELEFONE DA URL
+  // ===========================================================
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("telefone");
+
+    if (t && onlyDigits(t).length === 11) {
+      setTelefone(formatPhoneBR(t));
+    }
+  }, []);
+
+  // ===========================================================
+  // 2) SUBMIT DO FORMULÁRIO
+  // ===========================================================
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFeedback(null);
@@ -63,6 +81,7 @@ export default function CadastroPage() {
     setLoading(true);
 
     try {
+      // CADASTRAR NOVO CLIENTE
       const response = await fetch('/api/cadastro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -83,20 +102,31 @@ export default function CadastroPage() {
         return;
       }
 
+      // Feedback no cadastro
       setFeedback({
         type: 'success',
         text: (data.message || 'Cadastro realizado com sucesso!')
           + (ganhouBonus ? ' 🎁 Você ganhou 200 pontos de bônus.' : ''),
       });
 
-      setNome('');
-      setEmail('');
-      setTelefone('');
-      setDataNascimento('');
-      setPin('');
-      setConfirmPin('');
+      // LOGIN AUTOMÁTICO (NOVO NO FLUXO PROFISSONAL)
+      const login = await fetch('/api/resgate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telefone: telefoneDigits,
+          pin: pinDigits,
+        }),
+      });
 
-      setTimeout(() => router.push('/resgate'), 1800);
+      const loginData = await login.json();
+
+      if (!login.ok || !loginData.ok) {
+        throw new Error(loginData.error || 'Erro ao entrar automaticamente.');
+      }
+
+      // REDIRECIONAR PARA O RESGATE JÁ LOGADO
+      router.push('/resgate');
 
     } catch (error: any) {
       setFeedback({
@@ -108,6 +138,9 @@ export default function CadastroPage() {
     }
   }
 
+  // ===========================================================
+  // 3) INTERFACE
+  // ===========================================================
   return (
     <div className="min-h-screen bg-[#280404] text-white font-sans">
       <header className="pt-10 pb-6 flex flex-col items-center justify-center">
@@ -159,7 +192,7 @@ export default function CadastroPage() {
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 placeholder="Ex: Vinicius Rocha"
-                className="w-full bg-[#280404] border border-[#c5a059]/30 focus:border-[#c5a059] outline-none rounded-lg px-4 py-3 text-white placeholder:text-zinc-500"
+                className="w-full bg-[#280404] border border-[#c5a059]/30 rounded-lg px-4 py-3 text-white"
               />
             </div>
 
@@ -171,12 +204,8 @@ export default function CadastroPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
                 placeholder="exemplo@gmail.com"
-                className="w-full bg-[#280404] border border-[#c5a059]/30 focus:border-[#c5a059] outline-none rounded-lg px-4 py-3 text-white placeholder:text-zinc-500"
+                className="w-full bg-[#280404] border border-[#c5a059]/30 rounded-lg px-4 py-3 text-white"
               />
-
-              {!emailOk && email.length > 3 && (
-                <p className="mt-2 text-xs text-zinc-300/80">Digite um email válido.</p>
-              )}
             </div>
 
             {/* TELEFONE */}
@@ -189,22 +218,20 @@ export default function CadastroPage() {
                 onChange={(e) => setTelefone(formatPhoneBR(e.target.value))}
                 inputMode="numeric"
                 placeholder="(85) 9XXXX-XXXX"
-                className="w-full bg-[#280404] border border-[#c5a059]/30 focus:border-[#c5a059] outline-none rounded-lg px-4 py-3 text-white placeholder:text-zinc-500"
+                className="w-full bg-[#280404] border border-[#c5a059]/30 rounded-lg px-4 py-3 text-white"
               />
             </div>
 
-            {/* DATA DE NASCIMENTO */}
+            {/* DATA */}
             <div>
               <label className="block text-xs uppercase tracking-widest text-[#c5a059] font-bold mb-2">
                 Data de Nascimento (Opcional)
               </label>
               <input
                 type="date"
-                min="1920-01-01"
-                max={new Date().toISOString().split('T')[0]}
                 value={dataNascimento}
                 onChange={(e) => setDataNascimento(e.target.value)}
-                className="w-full bg-[#280404] border border-[#c5a059]/30 focus:border-[#c5a059] outline-none rounded-lg px-4 py-3 text-white"
+                className="w-full bg-[#280404] border border-[#c5a059]/30 rounded-lg px-4 py-3 text-white"
               />
             </div>
 
@@ -218,11 +245,11 @@ export default function CadastroPage() {
                 onChange={(e) => setPin(onlyDigits(e.target.value).slice(0, 4))}
                 inputMode="numeric"
                 placeholder="Ex: 1234"
-                className="w-full bg-[#280404] border border-[#c5a059]/30 focus:border-[#c5a059] outline-none rounded-lg px-4 py-3 text-white placeholder:text-zinc-500"
+                className="w-full bg-[#280404] border border-[#c5a059]/30 rounded-lg px-4 py-3 text-white"
               />
             </div>
 
-            {/* CONFIRMAR PIN */}
+            {/* CONFIRM PIN */}
             <div>
               <label className="block text-xs uppercase tracking-widest text-[#c5a059] font-bold mb-2">
                 Confirmar PIN
@@ -232,7 +259,7 @@ export default function CadastroPage() {
                 onChange={(e) => setConfirmPin(onlyDigits(e.target.value).slice(0, 4))}
                 inputMode="numeric"
                 placeholder="Digite o PIN novamente"
-                className="w-full bg-[#280404] border border-[#c5a059]/30 focus:border-[#c5a059] outline-none rounded-lg px-4 py-3 text-white placeholder:text-zinc-500"
+                className="w-full bg-[#280404] border border-[#c5a059]/30 rounded-lg px-4 py-3 text-white"
               />
             </div>
 
@@ -240,27 +267,25 @@ export default function CadastroPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#e31e24] hover:bg-[#c1191f] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black py-4 rounded-sm text-lg transition-all shadow-[6px_6px_0px_#c5a059] active:translate-x-1 active:translate-y-1 active:shadow-none"
+              className="w-full bg-[#e31e24] text-white font-black py-4 rounded-sm text-lg shadow-[6px_6px_0px_#c5a059]"
             >
               {loading ? 'CADASTRANDO...' : 'CADASTRAR'}
             </button>
 
-            <div className="flex items-center justify-between pt-2 text-sm">
-              <Link href="/" className="text-[#c5a059] hover:text-white transition-colors">
-                ← Voltar para Home
-              </Link>
-              <Link href="/resgate" className="text-zinc-300 hover:text-white transition-colors">
-                Já sou cliente → Consultar
-              </Link>
+            <div className="flex items-center justify-between pt-4 text-sm">
+              <Link href="/" className="text-[#c5a059]">← Home</Link>
+              <Link href="/resgate" className="text-zinc-300">Já sou cliente →</Link>
             </div>
 
           </form>
+
         </div>
       </main>
 
       <footer className="py-10 px-6 border-t border-[#4d0808]/50 text-center bg-[#1a0a0a]">
         <p className="text-[#c5a059] italic font-medium">Sua Majestade em Qualidade e Sabor!</p>
       </footer>
+
     </div>
   );
 }

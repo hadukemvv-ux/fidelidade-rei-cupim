@@ -1,50 +1,62 @@
-import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export async function GET() {
   try {
+    // Total de Clientes
+    const { count: totalClientes } = await supabase
+      .from('base_clientes_saipos')
+      .select('*', { count: 'exact', head: true });
 
-    // TOTAL DE CLIENTES
-    const { count: totalClientes } = await supabaseAdmin
-      .from("base_clientes_saipos")
-      .select("*", { count: "exact", head: true });
+    // Pontos Distribuídos
+    const { data: entradas } = await supabase
+      .from('extrato_pontos')
+      .select('valor')
+      .eq('tipo', 'entrada');
 
-    // PONTOS DISTRIBUÍDOS
-    const { data: extratos } = await supabaseAdmin
-      .from("extrato_pontos")
-      .select("valor")
-      .eq("tipo", "entrada");
+    const pontosDistribuidos =
+      entradas?.reduce((s, e) => s + e.valor, 0) || 0;
 
-    const pontosDistribuidos = extratos?.reduce((a, b) => a + b.valor, 0) || 0;
+    // Pontos Resgatados
+    const { data: saidas } = await supabase
+      .from('extrato_pontos')
+      .select('valor')
+      .eq('tipo', 'saida');
 
-    // PRÊMIOS ENTREGUES
-    const { count: premiosEntregues } = await supabaseAdmin
-      .from("historico_roleta")
-      .select("*", { count: "exact", head: true });
+    const pontosResgatados =
+      saidas?.reduce((s, e) => s + e.valor, 0) || 0;
 
-    // GIROS DA ROLETA
-    const { count: girosRoleta } = await supabaseAdmin
-      .from("historico_roleta")
-      .select("*", { count: "exact", head: true });
+    // Total de Resgates
+    const { count: totalResgates } = await supabase
+      .from('resgates')
+      .select('*', { count: 'exact', head: true });
 
-    // SALDO MÉDIO DE PONTOS
-    const { data: clientes } = await supabaseAdmin
-      .from("base_clientes_saipos")
-      .select("pontos");
+    // Cashback
+    const { data: cashbackData } = await supabase
+      .from('resgates')
+      .select('valor')
+      .eq('tipo', 'cashback');
 
-    const saldoMedioClientes =
-      (clientes?.reduce((a, b) => a + (b.pontos || 0), 0) || 0) /
-      (clientes?.length || 1);
+    const cashbackDistribuido =
+      cashbackData?.reduce((s, e) => s + e.valor, 0) || 0;
 
     return NextResponse.json({
-      totalClientes,
+      ok: true,
+      totalClientes: totalClientes || 0,
       pontosDistribuidos,
-      premiosEntregues,
-      girosRoleta,
-      saldoMedioClientes,
+      pontosResgatados,
+      totalResgates: totalResgates || 0,
+      cashbackDistribuido
     });
-
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json(
+      { ok: false, error: err.message },
+      { status: 500 }
+    );
   }
 }

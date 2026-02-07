@@ -176,28 +176,7 @@ export async function POST(req: Request) {
       // ---------------------------------------------------------
       // PRÉ‑CADASTRO → PODE completar TODOS os dados
       // ---------------------------------------------------------
-      if (preCadastro) {
-        const updateData: any = {
-          nome: nomeNovo,
-          email: emailNovo,
-          data_nascimento: dataNascimentoNova,
-          pin_hash,
-          atualizado_em: iso(),
-        };
-
-        const { error: updErr } = await supabaseAdmin
-          .from('base_clientes_saipos')
-          .update(updateData)
-          .eq('id', cliente.id);
-
-        if (updErr) throw updErr;
-
-        return NextResponse.json({
-          ok: true,
-          atualizado: true,
-          message: 'Cadastro finalizado com sucesso!'
-        });
-      }
+      
 
       // ---------------------------------------------------------
       // CLIENTE COMPLETO → VALIDAR BLOQUEIOS

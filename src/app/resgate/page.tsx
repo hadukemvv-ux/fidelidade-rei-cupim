@@ -103,7 +103,39 @@ export default function ResgatePage() {
     carregarProdutos();
     carregarPremio();
   }, []);
+// --- DETECTAR SE VEIO DA ROLETA E PRECISA COMPLETAR CADASTRO ---
+useEffect(() => {
+  async function verificarPreCadastro() {
 
+    // Verifica se veio da roleta (via query ?from=roleta ou similar)
+    const origem = typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('from')
+      : null;
+
+    if (origem !== 'roleta') return;
+    if (!telefoneDigits || telefoneDigits.length !== 11) return;
+
+    try {
+      const res = await fetch('/api/resgate/completar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telefone: telefoneDigits })
+      });
+
+      const data = await res.json();
+
+      // Se a API indicar que está pendente → abre o modal
+      if (data?.status === 'pendente' || data?.pre_cadastro) {
+        setShowCompletarCadastro(true);
+      }
+
+    } catch (err) {
+      console.error("Erro ao verificar pré-cadastro:", err);
+    }
+  }
+
+  verificarPreCadastro();
+}, [telefoneDigits]);
   // --- LOGIN ATUALIZADO ---
   async function handleSubmit(e: any) {
     e.preventDefault();

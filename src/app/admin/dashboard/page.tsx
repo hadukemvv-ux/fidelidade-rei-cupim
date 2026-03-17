@@ -1,16 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, BarChart, Bar
 } from 'recharts';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default function DashboardSimples() {
   const [loading, setLoading] = useState(true);
@@ -20,156 +14,133 @@ export default function DashboardSimples() {
     pontosDistribuidos: 0,
     pontosResgatados: 0,
     totalResgates: 0,
-    cashbackDistribuido: 0
+    cashbackDistribuido: 0,
   });
 
   const [grafClientes, setGrafClientes] = useState<any[]>([]);
   const [grafPontos, setGrafPontos] = useState<any[]>([]);
   const [grafResgates, setGrafResgates] = useState<any[]>([]);
 
+  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+
+  const withAdminToken = (url: string) => {
+    if (!adminToken) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
+  };
+
   useEffect(() => {
     async function carregar() {
-      await Promise.all([
-        carregarKPIs(),
-        carregarClientesDia(),
-        carregarPontosDia(),
-        carregarResgatesDia()
-      ]);
-
-      setLoading(false);
+      try {
+        await Promise.all([carregarKPIs(), carregarGraficos()]);
+      } finally {
+        setLoading(false);
+      }
     }
 
     carregar();
   }, []);
 
-  // ---------------- KPI ----------------
+  function ordenarPorDiaAsc(a: { dia: string }, b: { dia: string }) {
+    return a.dia.localeCompare(b.dia);
+  }
+
+  function mapearContagemPorDia(rows: any[], campoData: string) {
+    const mapa: Record<string, number> = {};
+
+    rows.forEach((row) => {
+      const raw = row?.[campoData];
+      if (!raw || typeof raw !== 'string') return;
+
+      const dia = raw.substring(0, 10);
+      mapa[dia] = (mapa[dia] || 0) + 1;
+    });
+
+    return Object.entries(mapa)
+      .map(([dia, total]) => ({ dia, total }))
+      .sort(ordenarPorDiaAsc);
+  }
+
+  function mapearSomaPorDia(rows: any[], campoData: string, campoValor: string) {
+    const mapa: Record<string, number> = {};
+
+    rows.forEach((row) => {
+      const raw = row?.[campoData];
+      if (!raw || typeof raw !== 'string') return;
+
+      const dia = raw.substring(0, 10);
+      const valor = Number(row?.[campoValor] || 0);
+      mapa[dia] = (mapa[dia] || 0) + valor;
+    });
+
+    return Object.entries(mapa)
+      .map(([dia, valor]) => ({ dia, valor }))
+      .sort(ordenarPorDiaAsc);
+  }
+
   async function carregarKPIs() {
-    // Total de clientes
-    const { count: totalClientes } = await supabase
-      .from('base_clientes_saipos')
-      .select('*', { count: 'exact', head: true });
+    const res = await fetch(withAdminToken('/api/admin/dashboard'), { cache: 'no-store' });
+    const data = await res.json();
+    const payload = data?.data ?? data;
 
-    // Pontos distribuídos
-    const { data: entradas } = await supabase
-      .from('extrato_pontos')
-      .select('valor')
-      .eq('tipo', 'entrada');
-
-    const pontosDist = entradas?.reduce((s, e) => s + e.valor, 0) || 0;
-
-    // Pontos resgatados
-    const { data: saidas } = await supabase
-      .from('extrato_pontos')
-      .select('valor')
-      .eq('tipo', 'saida');
-
-    const pontosSai = saidas?.reduce((s, e) => s + e.valor, 0) || 0;
-
-    // Resgates
-    const { count: totalResgates } = await supabase
-      .from('resgates')
-      .select('*', { count: 'exact', head: true });
-
-    // Cashback distribuído
-    const { data: cashbackData } = await supabase
-      .from('resgates')
-      .select('valor')
-      .eq('tipo', 'cashback');
-
-    const cashback = cashbackData?.reduce((s, e) => s + e.valor, 0) || 0;
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error || 'Falha ao carregar KPIs do dashboard.');
+    }
 
     setKpis({
-      totalClientes: totalClientes || 0,
-      pontosDistribuidos: pontosDist,
-      pontosResgatados: pontosSai,
-      totalResgates: totalResgates || 0,
-      cashbackDistribuido: cashback
+      totalClientes: Number(payload?.totalClientes || 0),
+      pontosDistribuidos: Number(payload?.pontosDistribuidos || 0),
+      pontosResgatados: Number(payload?.pontosResgatados || 0),
+      totalResgates: Number(payload?.totalResgates || 0),
+      cashbackDistribuido: Number(payload?.cashbackDistribuido || 0),
     });
   }
 
-  // ---------- Gráfico: Clientes por dia ----------
-  async function carregarClientesDia() {
-    const { data } = await supabase
-      .from('base_clientes_saipos')
-      .select('id, atualizado_em');
-
-    const mapa: Record<string, number> = {};
-
-    data?.forEach((c) => {
-      const dia = c.atualizado_em?.substring(0, 10);
-      mapa[dia] = (mapa[dia] || 0) + 1;
+  async function carregarGraficos() {
+    const res = await fetch(withAdminToken('/api/admin/analytics'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ periodo: '30d' }),
+      cache: 'no-store',
     });
 
-    const arr = Object.entries(mapa).map(([dia, total]) => ({ dia, total }));
-    setGrafClientes(arr);
-  }
+    const data = await res.json();
+    const payload = data?.data ?? data;
 
-  // ---------- Gráfico: Pontos distribuídos por dia ----------
-  async function carregarPontosDia() {
-    const { data } = await supabase
-      .from('extrato_pontos')
-      .select('valor, criado_em')
-      .eq('tipo', 'entrada');
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.error || 'Falha ao carregar séries do dashboard.');
+    }
 
-    const mapa: Record<string, number> = {};
-
-    data?.forEach((r) => {
-      const dia = r.criado_em.substring(0, 10);
-      mapa[dia] = (mapa[dia] || 0) + r.valor;
-    });
-
-    const arr = Object.entries(mapa).map(([dia, valor]) => ({ dia, valor }));
-    setGrafPontos(arr);
-  }
-
-  // ---------- Gráfico: Resgates por dia ----------
-  async function carregarResgatesDia() {
-    const { data } = await supabase
-      .from('resgates')
-      .select('id, criado_em');
-
-    const mapa: Record<string, number> = {};
-
-    data?.forEach((r) => {
-      const dia = r.criado_em.substring(0, 10);
-      mapa[dia] = (mapa[dia] || 0) + 1;
-    });
-
-    const arr = Object.entries(mapa).map(([dia, total]) => ({ dia, total }));
-    setGrafResgates(arr);
+    setGrafClientes(mapearContagemPorDia(payload?.clientesPeriodo || [], 'atualizado_em'));
+    setGrafPontos(mapearSomaPorDia(payload?.pontosEntrada || [], 'criado_em', 'valor'));
+    setGrafResgates(mapearContagemPorDia(payload?.resgatesPeriodo || [], 'criado_em'));
   }
 
   if (loading) {
     return (
-      <div className="text-[#c5a059] text-xl">Carregando dashboard…</div>
+      <div className="text-[#c5a059] text-xl">Carregando dashboard...</div>
     );
   }
 
   return (
     <div className="space-y-12">
 
-      {/* CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
         <Card titulo="Total de Clientes" valor={kpis.totalClientes} cor="white" />
-        <Card titulo="Pontos Distribuídos" valor={kpis.pontosDistribuidos} cor="#c5a059" />
+        <Card titulo="Pontos Distribuidos" valor={kpis.pontosDistribuidos} cor="#c5a059" />
         <Card titulo="Pontos Resgatados" valor={kpis.pontosResgatados} cor="#e31e24" />
-
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
         <Card titulo="Total de Resgates" valor={kpis.totalResgates} cor="lightgreen" />
-        <Card titulo="Cashback Distribuído (R$)" valor={kpis.cashbackDistribuido} cor="skyblue" />
-
+        <Card titulo="Cashback Distribuido (R$)" valor={kpis.cashbackDistribuido} cor="skyblue" />
       </div>
 
-      {/* GRÁFICOS */}
       <Section titulo="Clientes Novos por Dia">
         <GraficoLinha dados={grafClientes} chave="total" />
       </Section>
 
-      <Section titulo="Pontos Distribuídos por Dia">
+      <Section titulo="Pontos Distribuidos por Dia">
         <GraficoBarra dados={grafPontos} chave="valor" />
       </Section>
 
@@ -180,9 +151,6 @@ export default function DashboardSimples() {
     </div>
   );
 }
-
-
-// -------------- COMPONENTES -----------------
 
 type CardProps = {
   titulo: string;
@@ -195,7 +163,7 @@ function Card({ titulo, valor, cor }: CardProps) {
     <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-xl">
       <p className="text-gray-400 text-xs uppercase font-bold mb-1">{titulo}</p>
       <p className="text-5xl font-black" style={{ color: cor }}>
-        {valor.toLocaleString()}
+        {Number(valor || 0).toLocaleString()}
       </p>
     </div>
   );

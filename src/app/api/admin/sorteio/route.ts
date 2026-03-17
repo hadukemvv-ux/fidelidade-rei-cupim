@@ -1,75 +1,104 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { validarDados } from '@/lib/validations';
+import {
+  successResponse,
+  validationErrorResponse,
+  getRequestId,
+  logInfo,
+  logError,
+  handleApiError,
+} from '@/lib/api-utils';
+
+const SorteioAdminSchema = z.object({
+  id: z.preprocess(
+    (value) => (value === null || value === '' ? undefined : value),
+    z.coerce.number().int().positive().optional()
+  ),
+  titulo: z.string().trim().min(3, 'Titulo e obrigatorio').max(255),
+  descricao: z.string().max(1000).optional().nullable(),
+  imagem_url: z.string().max(2048).optional().nullable(),
+  data_sorteio: z.string().refine((value) => !Number.isNaN(Date.parse(value)), {
+    message: 'Data do sorteio invalida',
+  }),
+  modo: z.enum(['manual', 'automatico']),
+});
+
+type SorteioAdminInput = z.infer<typeof SorteioAdminSchema>;
 
 // ======================================================
-// GET — Buscar sorteio ativo
+// GET — Buscar sorteio ativo / em andamento
 // ======================================================
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const requestId = getRequestId(request);
+
+  const authError = validateAdminAuth(request, new URL(request.url));
+  if (authError) return authError;
+
   try {
+    logInfo('/api/admin/sorteio', 'Buscando sorteio ativo', { requestId });
+
     const { data, error } = await supabaseAdmin
       .from('sorteios')
-      .select('id, titulo, descricao, imagem_url, data_sorteio, modo, status, criado_em, atualizado_em')
+      .select('id, titulo, descricao, imagem_url, data_sorteio, modo, status, criado_em')
       .eq('status', 'ativo')
-      .order('data_sorteio', { ascending: true })
-      .limit(1)
-      .maybeSingle();
+      .order('criado_em', { ascending: false })
+      .limit(1);
 
     if (error) {
-      console.error('[GET /sorteio] Erro ->', error);
-      return NextResponse.json(
-        { error: 'Erro ao buscar sorteio.' },
-        { status: 500 }
-      );
+      logError('/api/admin/sorteio', error as Error, { requestId });
+      return handleApiError(error, '/api/admin/sorteio', requestId);
     }
 
-    return NextResponse.json({ ok: true, sorteio: data || null });
+    const sorteio = data?.[0] || null;
 
-  } catch (err: any) {
-    console.error('[GET /sorteio] Exception ->', err);
-    return NextResponse.json(
-      { error: 'Erro inesperado ao buscar sorteio.' },
-      { status: 500 }
-    );
+    logInfo('/api/admin/sorteio', 'Sorteio ativo consultado com sucesso', {
+      sorteio_id: sorteio?.id || null,
+      requestId,
+    });
+
+    return successResponse({ sorteio });
+
+  } catch (error) {
+    logError('/api/admin/sorteio', error instanceof Error ? error : new Error(String(error)), {
+      requestId,
+    });
+    return handleApiError(error, '/api/admin/sorteio', requestId);
   }
 }
 
 // ======================================================
 // POST — Criar / Atualizar sorteio
 // ======================================================
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
+  const requestId = getRequestId(request);
+
+  const authError = validateAdminAuth(request, new URL(request.url));
+  if (authError) return authError;
+
   try {
-    const body = await req.json();
-    const { id, titulo, descricao, imagem_url, data_sorteio, modo } = body;
+    const body = await request.json();
+    const validacao = validarDados<SorteioAdminInput>(SorteioAdminSchema, body);
 
-    // -----------------------
-    // VALIDAÇÃO
-    // -----------------------
-    if (!titulo?.trim()) {
-      return NextResponse.json(
-        { error: 'Título é obrigatório.' },
-        { status: 400 }
-      );
+    if (!validacao.ok) {
+      return validationErrorResponse(validacao.error);
     }
 
-    if (!data_sorteio || isNaN(Date.parse(data_sorteio))) {
-      return NextResponse.json(
-        { error: 'Data do sorteio inválida.' },
-        { status: 400 }
-      );
-    }
+    const { id, titulo, descricao, imagem_url, data_sorteio, modo } = validacao.data;
 
-    if (!['manual', 'automatico'].includes(modo)) {
-      return NextResponse.json(
-        { error: 'Modo inválido.' },
-        { status: 400 }
-      );
-    }
+    logInfo('/api/admin/sorteio', 'Iniciando persistencia de sorteio', {
+      sorteio_id: id || null,
+      modo,
+      requestId,
+    });
 
     // ======================================================
     // UPDATE EXISTENTE
     // ======================================================
     if (id) {
-      const { error } = await supabaseAdmin
+      const { error: updateError } = await supabaseAdmin
         .from('sorteios')
         .update({
           titulo,
@@ -78,30 +107,44 @@ export async function POST(req: Request) {
           data_sorteio,
           modo,
           status: 'ativo',
-          atualizado_em: new Date().toISOString()
+          atualizado_em: new Date().toISOString(),
         })
         .eq('id', id);
 
-      if (error) throw error;
+      if (updateError) {
+        logError('/api/admin/sorteio', updateError as Error, {
+          sorteio_id: id,
+          requestId,
+        });
+        return handleApiError(updateError, '/api/admin/sorteio', requestId);
+      }
 
-      return NextResponse.json({
-        ok: true,
-        atualizado: true
+      logInfo('/api/admin/sorteio', 'Sorteio atualizado com sucesso', {
+        sorteio_id: id,
+        requestId,
+      });
+
+      return successResponse({
+        atualizado: true,
+        sorteio_id: id,
       });
     }
 
     // ======================================================
     // CREATE — garantir que só exista 1 ativo
     // ======================================================
-    const { error: finalizarAtivosErr } = await supabaseAdmin
+    const { error: concluirError } = await supabaseAdmin
       .from('sorteios')
       .update({ status: 'concluido' })
-      .eq('status', 'ativo');
+      .in('status', ['ativo', 'andamento', 'aberto', 'criado']);
 
-    if (finalizarAtivosErr) throw finalizarAtivosErr;
+    if (concluirError) {
+      logError('/api/admin/sorteio', concluirError as Error, { requestId });
+      return handleApiError(concluirError, '/api/admin/sorteio', requestId);
+    }
 
     // Criar sorteio novo
-    const { data, error } = await supabaseAdmin
+    const { data, error: insertError } = await supabaseAdmin
       .from('sorteios')
       .insert({
         titulo,
@@ -115,19 +158,25 @@ export async function POST(req: Request) {
       .select('*')
       .single();
 
-    if (error) throw error;
+    if (insertError) {
+      logError('/api/admin/sorteio', insertError as Error, { requestId });
+      return handleApiError(insertError, '/api/admin/sorteio', requestId);
+    }
 
-    return NextResponse.json({
-      ok: true,
-      criado: true,
-      sorteio: data
+    logInfo('/api/admin/sorteio', 'Sorteio criado com sucesso', {
+      sorteio_id: data?.id || null,
+      requestId,
     });
 
-  } catch (err: any) {
-    console.error('[POST /sorteio] Exception ->', err);
-    return NextResponse.json(
-      { error: err.message || 'Erro inesperado ao salvar.' },
-      { status: 500 }
-    );
+    return successResponse({
+      criado: true,
+      sorteio: data,
+    });
+
+  } catch (error) {
+    logError('/api/admin/sorteio', error instanceof Error ? error : new Error(String(error)), {
+      requestId,
+    });
+    return handleApiError(error, '/api/admin/sorteio', requestId);
   }
 }

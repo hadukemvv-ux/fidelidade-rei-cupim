@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getNivelPorGasto, calcularPontosEarned, calcularTicketsEarned, calcularCashbackValue } from '@/lib/fidelidade-rules';
 
 // Token de segurança para garantir que só a Saipos chame essa rota
-// Você deve definir isso no seu .env como SAIPOS_TOKEN=seu_token_secreto
-const SECRET_TOKEN = process.env.SAIPOS_TOKEN || 'cupim123'; 
+// ⚠️ IMPORTANTE: Sempre defina SAIPOS_TOKEN no seu .env.local ou variáveis do Vercel
+const SECRET_TOKEN = process.env.SAIPOS_TOKEN;
+
+if (!SECRET_TOKEN) {
+  console.warn('⚠️ SAIPOS_TOKEN não definido. Webhook sem proteção.');
+}
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
@@ -13,26 +18,11 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-// Reutilizando a lógica de cálculo de nível para saber o multiplicador
-function getMultiplicadorNivel(gastoTotal: number) {
-  if (gastoTotal >= 700) return 14; // Rei
-  if (gastoTotal >= 400) return 8;  // Ouro
-  if (gastoTotal >= 200) return 4;  // Prata
-  return 2;                         // Bronze
-}
-
-function getCashbackPercent(gastoTotal: number) {
-  if (gastoTotal >= 700) return 0.03; // 3%
-  if (gastoTotal >= 400) return 0.02; // 2%
-  if (gastoTotal >= 200) return 0.01; // 1%
-  return 0.005;                       // 0.5%
-}
-
 export async function POST(req: Request) {
   try {
     // 1. Verificação de Segurança (Header)
     const authHeader = req.headers.get('x-auth-token');
-    if (authHeader !== SECRET_TOKEN) {
+    if (!SECRET_TOKEN || authHeader !== SECRET_TOKEN) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -50,98 +40,86 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, message: 'Valor zerado, ignorado.' });
     }
 
-    // 3. Tratamento do Telefone (O "Problema iFood")
+    // 3. Tratamento do Telefone
     const telefone = onlyDigits(telefoneBruto);
 
-    // Se não tiver telefone válido (ex: iFood mascarado ou sem telefone)
+    // Se não tiver telefone válido
     if (!telefone || telefone.length < 10) {
-      // AQUI entra a lógica futura do QR Code na nota.
-      // Por enquanto, salvamos em uma tabela de 'pedidos_sem_cliente' para resgate posterior?
-      // Ou apenas retornamos OK para não travar a Saipos.
       return NextResponse.json({ ok: true, message: 'Pedido sem telefone válido. Aguardando resgate manual (QR Code).' });
     }
 
-    // 4. Buscar ou Criar Cliente
-    let { data: cliente } = await supabaseAdmin.from('clientes').select('*').eq('telefone', telefone).maybeSingle();
+    // 4. Buscar ou Criar Cliente na tabela principal
+    let { data: cliente } = await supabaseAdmin.from('base_clientes_saipos').select('*').eq('telefone', telefone).maybeSingle();
 
     if (!cliente) {
-      // Cliente novo vindo da Saipos! Criamos cadastro básico.
-      const { data: novoCliente, error: errCreate } = await supabaseAdmin.from('clientes').insert({
+      // Cliente novo vindo da Saipos! Criamos cadastro básico
+      const { data: novoCliente, error: errCreate } = await supabaseAdmin.from('base_clientes_saipos').insert({
         telefone,
         nome: body.customer_name || 'Cliente Saipos',
-        origem_cadastro: 'SAIPOS_AUTO',
-        criado_em: nowIso(),
-        ultima_compra: nowIso() // Já marca a compra
+        nivel: 'BRONZE',
+        pontos: 0,
+        cashback: 0,
+        tickets: 0,
+        total_gasto: 0,
+        qtd_pedidos: 0,
+        primeira_compra: nowIso(),
+        ultima_compra: nowIso(),
       }).select().single();
 
       if (errCreate) throw errCreate;
       cliente = novoCliente;
     } else {
       // Atualiza última compra
-      await supabaseAdmin.from('clientes').update({ ultima_compra: nowIso() }).eq('telefone', telefone);
+      await supabaseAdmin.from('base_clientes_saipos').update({ ultima_compra: nowIso() }).eq('telefone', telefone);
     }
 
-    // 5. Garantir Tabelas de Saldos
-    const { data: pts } = await supabaseAdmin.from('pontos').select('*').eq('telefone', telefone).maybeSingle();
-    if (!pts) await supabaseAdmin.from('pontos').insert({ telefone, total: 0, nivel: 'BRONZE', gasto_mensal_atual: 0 }); // gasto_mensal_atual = Gasto Vitalício
+    // 5. Calcular pontos baseado na ESTRUTURA UNIFICADA
+    const gastoAtual = Number(cliente.total_gasto || 0);
+    const novoGasto = gastoAtual + valorPedido;
+    
+    const nivelInfo = getNivelPorGasto(novoGasto);
+    const pontosGanhos = calcularPontosEarned(valorPedido, novoGasto);
+    const cashbackGanho = calcularCashbackValue(valorPedido, novoGasto);
+    const ticketsGanhos = calcularTicketsEarned(valorPedido, novoGasto);
 
-    // 6. Calcular Pontos e Cashback
-    // Lemos o gasto ATUAL (Vitalício) para definir o multiplicador DESTA compra
-    // OBS: O cliente ganha pontos desta compra com base no nível que ele TINHA antes dela. (Padrão de mercado)
-    const gastoVitalicioAntigo = Number(pts?.gasto_mensal_atual || 0);
-    
-    const multiplicador = getMultiplicadorNivel(gastoVitalicioAntigo);
-    const pontosGanhos = Math.floor(valorPedido * multiplicador);
-    
-    const percentCashback = getCashbackPercent(gastoVitalicioAntigo);
-    const cashbackGanho = valorPedido * percentCashback;
-
-    // Tickets: 1 a cada R$ 50 (exemplo base, ajustável por nível se quiser)
-    // Regra da sua tabela: Bronze=1/50, Prata=2/50, etc.
-    let ticketsPor50 = 1;
-    if (gastoVitalicioAntigo >= 700) ticketsPor50 = 4;
-    else if (gastoVitalicioAntigo >= 400) ticketsPor50 = 3;
-    else if (gastoVitalicioAntigo >= 200) ticketsPor50 = 2;
-    
-    const ticketsGanhos = Math.floor(valorPedido / 50) * ticketsPor50;
-
-    // 7. Atualizar Saldos e Nível (Gasto Vitalício)
-    const novoGastoVitalicio = gastoVitalicioAntigo + valorPedido;
-    
-    // Atualiza Pontos e XP
-    await supabaseAdmin.from('pontos').update({
-      total: (pts?.total || 0) + pontosGanhos,
-      gasto_mensal_atual: novoGastoVitalicio, // Acumula XP
-      atualizado_em: nowIso()
+    // 6. Atualizar cliente com novos saldos
+    await supabaseAdmin.from('base_clientes_saipos').update({
+      nivel: nivelInfo.nivel.toLowerCase(),
+      pontos: (cliente.pontos || 0) + pontosGanhos,
+      cashback: (cliente.cashback || 0) + cashbackGanho,
+      tickets: (cliente.tickets || 0) + ticketsGanhos,
+      total_gasto: novoGasto,
+      qtd_pedidos: (cliente.qtd_pedidos || 0) + 1,
+      ultima_compra: nowIso(),
+      atualizado_em: nowIso(),
     }).eq('telefone', telefone);
 
-    // Atualiza Cashback
-    const { data: cb } = await supabaseAdmin.from('cashback').select('saldo').eq('telefone', telefone).maybeSingle();
-    const saldoCbAntigo = Number(cb?.saldo || 0);
-    if (cb) {
-      await supabaseAdmin.from('cashback').update({ saldo: saldoCbAntigo + cashbackGanho }).eq('telefone', telefone);
-    } else {
-      await supabaseAdmin.from('cashback').insert({ telefone, saldo: cashbackGanho });
+    // 7. Registrar transação em extrato (se existir tabela)
+    try {
+      await supabaseAdmin.from('extrato_pontos').insert({
+        cliente_id: cliente.id,
+        tipo: 'VENDA_SAIPOS',
+        pontos: pontosGanhos,
+        cashback: cashbackGanho,
+        tickets: ticketsGanhos,
+        descricao: `Compra Saipos #${orderId} - R$ ${valorPedido.toFixed(2)}`,
+        criado_em: nowIso(),
+      });
+    } catch (e) {
+      // Se tabela não existe, ignora (compatibilidade)
+      console.log('Tabela extrato_pontos não encontrada, pulando registro');
     }
-
-    // Atualiza Tickets
-    if (ticketsGanhos > 0) {
-      const { data: tk } = await supabaseAdmin.from('tickets').select('quantidade').eq('telefone', telefone).maybeSingle();
-      const saldoTkAntigo = Number(tk?.quantidade || 0);
-      if (tk) {
-        await supabaseAdmin.from('tickets').update({ quantidade: saldoTkAntigo + ticketsGanhos }).eq('telefone', telefone);
-      } else {
-        await supabaseAdmin.from('tickets').insert({ telefone, quantidade: ticketsGanhos });
-      }
-    }
-
-    // 8. Registrar Histórico (Opcional mas recomendado)
-    // Se tiver tabela de 'extrato' ou 'historico_pontos', insira aqui.
     
     return NextResponse.json({ 
       ok: true, 
       message: `Processado com sucesso para ${telefone}`,
-      ganhos: { pontos: pontosGanhos, cashback: cashbackGanho, tickets: ticketsGanhos, novo_xp: novoGastoVitalicio }
+      ganhos: { 
+        pontos: pontosGanhos, 
+        cashback: cashbackGanho.toFixed(2), 
+        tickets: ticketsGanhos, 
+        novo_gasto_total: novoGasto,
+        novo_nivel: nivelInfo.nivel
+      }
     });
 
   } catch (error: any) {
@@ -149,3 +127,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }
+     

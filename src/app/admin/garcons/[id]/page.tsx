@@ -16,22 +16,31 @@ const garcomId = params.id;
   const [status, setStatus] = useState("limpo");
   const [desbloqueando, setDesbloqueando] = useState(false);
   const [analytics, setAnalytics] = useState<any[]>([]);
+  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+
+  const withAdminToken = (url: string) => {
+    if (!adminToken) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
+  };
 
   async function carregarDados() {
     try {
-      const analyticsRes = await fetch("/api/admin/garcons/analytics");
+      const analyticsRes = await fetch(withAdminToken('/api/admin/garcons/analytics'));
       const analyticsJson = await analyticsRes.json();
+      const analyticsPayload = analyticsJson?.data ?? analyticsJson;
 
-      setAnalytics(analyticsJson.analytics || []);
+      setAnalytics(analyticsPayload?.analytics || []);
 
-      const encontrado = analyticsJson.analytics.find((g: any) => g.id == garcomId);
+      const encontrado = (analyticsPayload?.analytics || []).find((g: any) => g.id == garcomId);
       setGarcom(encontrado);
 
       if (encontrado) setStatus(encontrado.status);
 
-      const logsRes = await fetch(`/api/admin/garcons/logs?id=${garcomId}`);
+      const logsRes = await fetch(withAdminToken(`/api/admin/garcons/logs?id=${garcomId}`));
       const logsJson = await logsRes.json();
-      setLogs(logsJson || []);
+      const logsPayload = logsJson?.data ?? logsJson;
+      setLogs(logsPayload?.logs || logsPayload || []);
 
     } catch (err) {
       console.error("Erro:", err);
@@ -50,7 +59,7 @@ const garcomId = params.id;
     setDesbloqueando(true);
 
     try {
-      await fetch("/api/admin/garcons/unblock", {
+      await fetch(withAdminToken('/api/admin/garcons/unblock'), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -1,8 +1,12 @@
 {
   "crons": [
     {
-      "path": "/api/cron/expirar-pontos?token=Fidelidade@2026#Seguro",
+      "path": "/api/cron/expirar-pontos",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/saipos",
+      "schedule": "0 */1 * * *"
     }
   ]
 }

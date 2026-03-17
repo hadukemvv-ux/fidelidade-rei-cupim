@@ -18,7 +18,7 @@ export default function GanhadoresList({ ganhadores }: Props) {
         <div className="space-y-4">
           {ganhadores.map((g: any) => (
             <div 
-              key={g.id}
+              key={g.sorteio_id + ':' + g.cliente_id + ':' + g.criado_em}
               className="p-4 bg-gray-900 rounded-xl border border-gray-700"
             >
               <p className="font-bold text-lg">{g.nome_cliente}</p>

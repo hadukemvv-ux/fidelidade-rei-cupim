@@ -1,7 +1,30 @@
-import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { validarDados } from '@/lib/validations';
+import {
+  calcularPontosEarned,
+  calcularCashbackValue,
+  calcularTicketsEarned,
+  getNivelPorGasto,
+} from '@/lib/fidelidade-rules';
+import {
+  successResponse,
+  validationErrorResponse,
+  getRequestId,
+  logInfo,
+  logError,
+  handleApiError,
+} from '@/lib/api-utils';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
+
+const ImportarVendasSchema = z.object({
+  rows: z.array(z.record(z.string(), z.unknown())).min(1, 'Planilha sem linhas para importar'),
+});
+
+type ImportarVendasInput = z.infer<typeof ImportarVendasSchema>;
 
 // Remove acentos
 function normalizarTexto(s: string) {
@@ -35,56 +58,43 @@ function parseValor(v: any) {
   return isNaN(n) ? 0 : n;
 }
 
-// Regras de nível
-function nivelPorGasto(total: number) {
-  if (total >= 600) return "REI_DO_CUPIM";
-  if (total >= 300) return "OURO";
-  if (total >= 100) return "PRATA";
-  return "BRONZE";
-}
-
-function regrasNivel(nivel: string) {
-  switch (nivel) {
-    case "PRATA":
-      return { multPontos: 7, percCash: 0.01, tickets: 2 };
-    case "OURO":
-      return { multPontos: 10, percCash: 0.02, tickets: 3 };
-    case "REI_DO_CUPIM":
-      return { multPontos: 14, percCash: 0.03, tickets: 4 };
-    default:
-      return { multPontos: 4, percCash: 0.0025, tickets: 1 };
-  }
-}
-
 // Registrar extrato
 async function registrarExtrato(cliente_id: number, pontos: number, descricao: string) {
   try {
-    await supabaseAdmin.from("extrato_pontos").insert({
+    await supabaseAdmin.from('extrato_pontos').insert({
       cliente_id,
-      tipo: "entrada",
+      tipo: 'entrada',
       valor: pontos,
-      origem: "IMPORTACAO_VENDAS",
+      origem: 'IMPORTACAO_VENDAS',
       descricao,
       criado_em: new Date().toISOString(),
-      metodo: "importacao"
+      metodo: 'importacao'
     });
   } catch (e) {
-    console.log("ERRO EXTRATO:", e);
+    console.log('ERRO EXTRATO:', e);
   }
 }
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
+export async function POST(request: NextRequest) {
+  const requestId = getRequestId(request);
 
-    if (!body || !Array.isArray(body.rows)) {
-      return NextResponse.json(
-        { erro: "Formato inválido. Envie { rows: [...] }" },
-        { status: 400 }
-      );
+  const authError = validateAdminAuth(request, new URL(request.url));
+  if (authError) return authError;
+
+  try {
+    const body = await request.json();
+    const validacao = validarDados<ImportarVendasInput>(ImportarVendasSchema, body);
+
+    if (!validacao.ok) {
+      return validationErrorResponse(validacao.error);
     }
 
-    const rows = body.rows;
+    const { rows } = validacao.data;
+
+    logInfo('/api/admin/importar', 'Iniciando importacao de vendas', {
+      total_linhas: rows.length,
+      requestId,
+    });
 
     let processados = 0;
     let atualizados = 0;
@@ -92,29 +102,31 @@ export async function POST(req: Request) {
     let naoEncontrados = 0;
 
     // Buscar TODOS clientes da base (5k)
-    const { data: baseClientes } = await supabaseAdmin
-      .from("base_clientes_saipos")
-      .select("*");
+    const { data: baseClientes, error: baseError } = await supabaseAdmin
+      .from('base_clientes_saipos')
+      .select('*');
+
+    if (baseError) {
+      logError('/api/admin/importar', baseError as Error, { requestId });
+      return handleApiError(baseError, '/api/admin/importar', requestId);
+    }
 
     if (!baseClientes) {
-      return NextResponse.json(
-        { erro: "Não foi possível carregar a base de clientes." },
-        { status: 500 }
-      );
+      throw new Error('Nao foi possivel carregar a base de clientes');
     }
 
     for (const row of rows) {
       try {
-        const consumidor = row["Consumidor"] || row["CONSUMIDOR"] || null;
+        const consumidor = row['Consumidor'] || row['CONSUMIDOR'] || null;
         if (!consumidor) {
           ignorados++;
           continue;
         }
 
         const valor = 
-          parseValor(row["Valor"]) ||
-          parseValor(row["Itens"]) ||
-          parseValor(row["Total"]) ||
+          parseValor(row['Valor']) ||
+          parseValor(row['Itens']) ||
+          parseValor(row['Total']) ||
           0;
 
         if (valor <= 0) {
@@ -124,7 +136,7 @@ export async function POST(req: Request) {
 
         // --- BUSCAR CLIENTE POR NOME (SIMILARIDADE LEVE) ---
         const clienteEncontrado = baseClientes.find((c: any) =>
-          nomesParecidos(c.nome, consumidor)
+          nomesParecidos(c.nome, String(consumidor))
         );
 
         if (!clienteEncontrado) {
@@ -136,15 +148,13 @@ export async function POST(req: Request) {
 
         // ------- ATUALIZAR FIDELIDADE -------
         const totalNovo = (cliente.total_gasto || 0) + valor;
-        const nivelNovo = nivelPorGasto(totalNovo);
-        const regras = regrasNivel(nivelNovo);
-
-        const pontosGanhos = Math.floor(valor * regras.multPontos);
-        const cashbackGanhos = Number((valor * regras.percCash).toFixed(2));
-        const ticketsGanhos = Math.floor(valor / 50) * regras.tickets;
+        const nivelNovo = getNivelPorGasto(totalNovo).nivel;
+        const pontosGanhos = calcularPontosEarned(valor, totalNovo);
+        const cashbackGanhos = Number(calcularCashbackValue(valor, totalNovo).toFixed(2));
+        const ticketsGanhos = calcularTicketsEarned(valor, totalNovo);
 
         await supabaseAdmin
-          .from("base_clientes_saipos")
+          .from('base_clientes_saipos')
           .update({
             total_gasto: totalNovo,
             qtd_pedidos: (cliente.qtd_pedidos || 0) + 1,
@@ -157,7 +167,7 @@ export async function POST(req: Request) {
 
             atualizado_em: new Date().toISOString()
           })
-          .eq("id", cliente.id);
+          .eq('id', cliente.id);
 
         await registrarExtrato(
           cliente.id,
@@ -169,24 +179,30 @@ export async function POST(req: Request) {
         processados++;
 
       } catch (e) {
-        console.log("Erro ao processar venda:", e);
+        console.log('Erro ao processar venda:', e);
       }
     }
 
-    return NextResponse.json({
-      sucesso: true,
-      mensagem: "Importação de vendas concluída.",
+    logInfo('/api/admin/importar', 'Importacao de vendas concluida', {
       processados,
       atualizados,
       ignorados,
-      naoEncontrados
+      naoEncontrados,
+      requestId,
     });
 
-  } catch (err: any) {
-    console.error("ERRO IMPORTAÇÃO VENDAS:", err);
-    return NextResponse.json(
-      { erro: err.message || "Erro interno ao importar vendas." },
-      { status: 500 }
-    );
+    return successResponse({
+      processados,
+      novos: 0,
+      atualizados,
+      ignorados,
+      naoEncontrados,
+      mensagem: 'Importacao de vendas concluida.',
+    });
+  } catch (error) {
+    logError('/api/admin/importar', error instanceof Error ? error : new Error(String(error)), {
+      requestId,
+    });
+    return handleApiError(error, '/api/admin/importar', requestId);
   }
 }

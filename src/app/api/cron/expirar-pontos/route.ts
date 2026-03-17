@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; 
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-const CRON_SECRET = process.env.CRON_SECRET || process.env.SAIPOS_SECRET || null;
+const CRON_SECRET = process.env.CRON_SECRET;
 
 const DIAS_ALERTA_30 = 30;
 // Data de corte: Hoje menos 30 dias. Quem comprou ANTES disso, entra na lista.
@@ -21,30 +17,46 @@ function diasSemCompra(ultimaCompra: string): number {
 }
 
 function rebaixarNivel(nivelAtual: string): string {
-    if (nivelAtual === 'REI_DO_CUPIM') return 'OURO';
+    if (nivelAtual === 'REI') return 'OURO';
     if (nivelAtual === 'OURO') return 'PRATA';
     return 'BRONZE';
 }
 
+/**
+ * Cron endpoint para expirar/penalizar clientes inativos
+ * 
+ * Regras:
+ * - 30-59 dias sem compra: Reduz 30% dos pontos/cashback/tickets + rebaixa de nível
+ * - 60+ dias sem compra: Zera tudo e rebaixa para BRONZE
+ * 
+ * IMPORTANTE: Deve ser executado UMA VEZ por dia apenas!
+ * 
+ * Proteção: Requer token CRON_SECRET via header Authorization ou query param token
+ */
 export async function GET(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '') 
              || request.nextUrl.searchParams.get('token');
   
-  if (CRON_SECRET && token !== CRON_SECRET) {
+  // ⚠️ Token é OBRIGATÓRIO
+  if (!CRON_SECRET) {
+    return NextResponse.json({ 
+      error: 'CRON_SECRET não configurado no .env. Configure para proteger este endpoint.' 
+    }, { status: 500 });
+  }
+  
+  if (token !== CRON_SECRET) {
     return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
   }
 
   const resultados: any[] = [];
 
   try {
-    // 🔥 O PULO DO GATO: Filtra direto no banco!
-    // "Traga apenas quem comprou ANTES de 30 dias atrás"
     const dataCorte = getDataCorte();
     
-    const { data: clientesAlvo, error } = await supabase
+    const { data: clientesAlvo, error } = await supabaseAdmin
       .from('base_clientes_saipos')
       .select('id, telefone, nome, ultima_compra, nivel, pontos, cashback, tickets')
-      .lte('ultima_compra', dataCorte); // Less Than or Equal (Menor ou igual a 30 dias atrás)
+      .lte('ultima_compra', dataCorte);
 
     if (error) throw error;
     
@@ -81,10 +93,8 @@ export async function GET(request: NextRequest) {
         } 
         // Regra 30 Dias (Punição)
         else {
-            // Se já foi punido hoje (ex: rodou cron 2x), devíamos ignorar. 
-            // Mas como não temos flag de "punido", vamos aplicar. 
-            // CUIDADO: Rodar esse cron várias vezes no mesmo dia vai punir o cara repetidamente!
-            // SOLUÇÃO IDEAL FUTURA: Criar campo "ultima_punicao" no banco.
+            // TODO: Implementar campo "ultima_punicao" na tabela base_clientes_saipos
+            // Isso evitará múltiplas punições se o cron rodar mais de uma vez no mesmo dia
             
             const fator = 0.7;
             novosPontos = Math.floor(cliente.pontos * fator);
@@ -95,24 +105,38 @@ export async function GET(request: NextRequest) {
         }
 
         if (acao) {
-            await supabase.from('base_clientes_saipos').update({
+            // Atualizar cliente
+            await supabaseAdmin.from('base_clientes_saipos').update({
                 pontos: novosPontos,
                 cashback: novoCashback,
                 tickets: novosTickets,
                 nivel: novoNivel,
+                atualizado_em: new Date().toISOString(),
             }).eq('id', cliente.id);
 
-            // Log
-            await supabase.from('extrato_pontos').insert({
-                cliente_id: cliente.telefone,
-                tipo: 'saida',
-                valor: cliente.pontos - novosPontos,
-                motivo: 'Expiração por Inatividade',
-                detalhes: `${acao} - ${dias} dias sem comprar.`,
-                metodo: 'cron_job'
-            });
+            // Log na tabela extrato_pontos com cliente_id CORRETO (não telefone!)
+            try {
+              await supabaseAdmin.from('extrato_pontos').insert({
+                  cliente_id: cliente.id,  // ✅ FIXO: Era cliente.telefone, agora é correto
+                  tipo: 'expiração',
+                  pontos: cliente.pontos - novosPontos,
+                  cashback: cliente.cashback - novoCashback,
+                  descricao: `${acao} - ${dias} dias sem comprar.`,
+                  criado_em: new Date().toISOString(),
+              });
+            } catch (logErr) {
+              console.log('Tabela extrato_pontos não existe ainda, pulando log detalhado');
+            }
 
-            resultados.push({ telefone: cliente.telefone, dias, acao });
+            resultados.push({ 
+              telefone: cliente.telefone, 
+              nome: cliente.nome,
+              dias, 
+              acao,
+              novo_nivel: novoNivel,
+              pontos_antes: cliente.pontos,
+              pontos_depois: novosPontos
+            });
         }
     }
 
@@ -120,10 +144,12 @@ export async function GET(request: NextRequest) {
       success: true,
       encontrados_vencidos: clientesAlvo.length,
       processados_com_acao: resultados.length,
-      detalhes: resultados
+      detalhes: resultados,
+      execute_once_per_day: '⚠️ Este cron deve executar UMA ÚNICA VEZ por dia',
     });
 
   } catch (err: any) {
+    console.error('Erro em expirar-pontos cron:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

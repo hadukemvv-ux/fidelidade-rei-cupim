@@ -1,247 +1,141 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+type Periodo = '7d' | '30d' | '90d';
+type SerieDia = { dia: string; total: number };
+type SerieValorDia = { dia: string; valor: number };
+type SerieProduto = { name: string; value: number };
 
-// ==================== TIPOS ====================
+type AnalyticsPayload = {
+  clientesPeriodo?: Array<{ atualizado_em?: string }>;
+  pontosEntrada?: Array<{ criado_em?: string; valor?: number }>;
+  pontosSaida?: Array<{ criado_em?: string; valor?: number }>;
+  resgatesPeriodo?: Array<{ criado_em?: string; tipo?: string; premio_nome?: string | null; valor?: number }>;
+  giros?: Array<{ data_hora?: string }>;
+};
 
-type GrafDia = { dia: string; total: number };
-type GrafValorDia = { dia: string; valor: number };
-type GrafProduto = { name: string; value: number };
-
-type KPIProps = { titulo: string; valor: number; cor: string };
-type SectionProps = { titulo: string; children: React.ReactNode };
-type GraficoLinhaProps = { dados: GrafDia[] | GrafValorDia[]; dataKey: string };
-type GraficoBarProps = { dados: GrafDia[] | GrafValorDia[]; dataKey: string };
+const CHART_COLORS = ['#c5a059', '#e31e24', '#ffdd57', '#7dd3fc', '#86efac', '#a78bfa'];
 
 export default function AnalyticsPage() {
-
   const [loading, setLoading] = useState(true);
-  const [periodo, setPeriodo] = useState<'7d' | '30d' | '90d'>('7d');
+  const [erro, setErro] = useState<string | null>(null);
+  const [periodo, setPeriodo] = useState<Periodo>('7d');
 
   const [kpis, setKpis] = useState({
     clientesNovos: 0,
-    pontosDistribuídos: 0,
+    pontosDistribuidos: 0,
     pontosResgatados: 0,
     cashbackDistribuido: 0,
     girosRoleta: 0,
-    resgates: 0
+    resgates: 0,
   });
 
-  // GRÁFICOS TIPADOS
-  const [grafClientes, setGrafClientes] = useState<GrafDia[]>([]);
-  const [grafPontos, setGrafPontos] = useState<GrafValorDia[]>([]);
-  const [grafResgates, setGrafResgates] = useState<GrafDia[]>([]);
-  const [grafRoleta, setGrafRoleta] = useState<GrafDia[]>([]);
-  const [grafProdutos, setGrafProdutos] = useState<GrafProduto[]>([]);
+  const [grafClientes, setGrafClientes] = useState<SerieDia[]>([]);
+  const [grafPontos, setGrafPontos] = useState<SerieValorDia[]>([]);
+  const [grafResgates, setGrafResgates] = useState<SerieDia[]>([]);
+  const [grafRoleta, setGrafRoleta] = useState<SerieDia[]>([]);
+  const [grafProdutos, setGrafProdutos] = useState<SerieProduto[]>([]);
 
+  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
 
-  // ==================== CARREGAR ====================
+  const withAdminToken = (url: string) => {
+    if (!adminToken) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
+  };
 
   useEffect(() => {
-    async function carregar() {
+    async function carregarAnalytics() {
       setLoading(true);
+      setErro(null);
 
-      await Promise.all([
-        carregarKPIs(),
-        carregarGraficoClientes(),
-        carregarGraficoPontos(),
-        carregarGraficoResgates(),
-        carregarGraficoGiros(),
-        carregarRankingProdutos()
-      ]);
+      try {
+        const res = await fetch(withAdminToken('/api/admin/analytics'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ periodo }),
+          cache: 'no-store',
+        });
 
-      setLoading(false);
+        const json = await res.json();
+        const payload: AnalyticsPayload = (json?.data ?? json) || {};
+
+        if (!res.ok || !json?.ok) {
+          throw new Error(json?.error || 'Falha ao carregar analytics.');
+        }
+
+        const clientesPeriodo = payload.clientesPeriodo || [];
+        const pontosEntrada = payload.pontosEntrada || [];
+        const pontosSaida = payload.pontosSaida || [];
+        const resgatesPeriodo = payload.resgatesPeriodo || [];
+        const giros = payload.giros || [];
+
+        setKpis({
+          clientesNovos: clientesPeriodo.length,
+          pontosDistribuidos: somarValores(pontosEntrada, 'valor'),
+          pontosResgatados: somarValores(pontosSaida, 'valor'),
+          cashbackDistribuido: Number(
+            resgatesPeriodo
+              .filter((item) => item?.tipo === 'cashback')
+              .reduce((acc, item) => acc + Number(item?.valor || 0), 0)
+              .toFixed(2)
+          ),
+          girosRoleta: giros.length,
+          resgates: resgatesPeriodo.length,
+        });
+
+        setGrafClientes(mapearContagemPorDia(clientesPeriodo, 'atualizado_em'));
+        setGrafPontos(mapearSomaPorDia(pontosEntrada, 'criado_em', 'valor'));
+        setGrafResgates(mapearContagemPorDia(resgatesPeriodo, 'criado_em'));
+        setGrafRoleta(mapearContagemPorDia(giros, 'data_hora'));
+        setGrafProdutos(mapearProdutos(resgatesPeriodo));
+      } catch (error) {
+        setErro(error instanceof Error ? error.message : 'Erro ao carregar analytics.');
+      } finally {
+        setLoading(false);
+      }
     }
 
-    carregar();
+    carregarAnalytics();
   }, [periodo]);
 
-  // ==================== DATA INÍCIO ====================
-
-  function getDataInicio() {
-    const hoje = new Date();
-    if (periodo === '7d') hoje.setDate(hoje.getDate() - 7);
-    if (periodo === '30d') hoje.setDate(hoje.getDate() - 30);
-    if (periodo === '90d') hoje.setDate(hoje.getDate() - 90);
-    return hoje.toISOString().substring(0, 10);
-  }
-
-  // ==================== KPIs ====================
-
-  async function carregarKPIs() {
-    const inicio = getDataInicio();
-
-    const { count: clientes } = await supabase
-      .from('base_clientes_saipos')
-      .select('*', { count: 'exact', head: true })
-      .gte('atualizado_em', inicio);
-
-    const { data: entradas } = await supabase
-      .from('extrato_pontos')
-      .select('valor')
-      .eq('tipo', 'entrada')
-      .gte('criado_em', inicio);
-
-    const pontosDist = entradas?.reduce((s, e) => s + e.valor, 0) ?? 0;
-
-    const { data: saidas } = await supabase
-      .from('extrato_pontos')
-      .select('valor')
-      .eq('tipo', 'saida')
-      .gte('criado_em', inicio);
-
-    const pontosSai = saidas?.reduce((s, e) => s + e.valor, 0) ?? 0;
-
-    const { data: cashbackData } = await supabase
-      .from('resgates')
-      .select('valor')
-      .eq('tipo', 'cashback')
-      .gte('criado_em', inicio);
-
-    const cashback = cashbackData?.reduce((s, e) => s + e.valor, 0) ?? 0;
-
-    const { count: totalResgates } = await supabase
-      .from('resgates')
-      .select('*', { count: 'exact', head: true })
-      .gte('criado_em', inicio);
-
-    const { count: giros } = await supabase
-      .from('historico_roleta')
-      .select('*', { count: 'exact', head: true })
-      .gte('data_hora', inicio);
-
-    setKpis({
-      clientesNovos: clientes ?? 0,
-      pontosDistribuídos: pontosDist,
-      pontosResgatados: pontosSai,
-      cashbackDistribuido: cashback,
-      girosRoleta: giros ?? 0,
-      resgates: totalResgates ?? 0
-    });
-  }
-
-  // ==================== GRÁFICOS ====================
-
-  async function carregarGraficoClientes() {
-    const inicio = getDataInicio();
-    const { data } = await supabase
-      .from('base_clientes_saipos')
-      .select('atualizado_em')
-      .gte('atualizado_em', inicio);
-
-    const mapa: Record<string, number> = {};
-
-    data?.forEach((c) => {
-      const dia = c.atualizado_em.substring(0, 10);
-      mapa[dia] = (mapa[dia] || 0) + 1;
-    });
-
-    setGrafClientes(Object.entries(mapa).map(([dia, total]) => ({ dia, total })));
-  }
-
-  async function carregarGraficoPontos() {
-    const inicio = getDataInicio();
-    const { data } = await supabase
-      .from('extrato_pontos')
-      .select('valor, criado_em')
-      .eq('tipo', 'entrada')
-      .gte('criado_em', inicio);
-
-    const mapa: Record<string, number> = {};
-
-    data?.forEach((r) => {
-      const dia = r.criado_em.substring(0, 10);
-      mapa[dia] = (mapa[dia] || 0) + r.valor;
-    });
-
-    setGrafPontos(Object.entries(mapa).map(([dia, valor]) => ({ dia, valor })));
-  }
-
-  async function carregarGraficoResgates() {
-    const inicio = getDataInicio();
-    const { data } = await supabase
-      .from('resgates')
-      .select('criado_em')
-      .gte('criado_em', inicio);
-
-    const mapa: Record<string, number> = {};
-
-    data?.forEach((r) => {
-      const dia = r.criado_em.substring(0, 10);
-      mapa[dia] = (mapa[dia] || 0) + 1;
-    });
-
-    setGrafResgates(Object.entries(mapa).map(([dia, total]) => ({ dia, total })));
-  }
-
-  async function carregarGraficoGiros() {
-    const inicio = getDataInicio();
-    const { data } = await supabase
-      .from('historico_roleta')
-      .select('data_hora')
-      .gte('data_hora', inicio);
-
-    const mapa: Record<string, number> = {};
-
-    data?.forEach((r) => {
-      const dia = r.data_hora.substring(0, 10);
-      mapa[dia] = (mapa[dia] || 0) + 1;
-    });
-
-    setGrafRoleta(Object.entries(mapa).map(([dia, total]) => ({ dia, total })));
-  }
-
-  async function carregarRankingProdutos() {
-    const inicio = getDataInicio();
-    const { data } = await supabase
-      .from('resgates')
-      .select('premio_nome')
-      .eq('tipo', 'produto')
-      .gte('criado_em', inicio);
-
-    const mapa: Record<string, number> = {};
-
-    data?.forEach((p) => {
-      mapa[p.premio_nome] = (mapa[p.premio_nome] || 0) + 1;
-    });
-
-    setGrafProdutos(
-      Object.entries(mapa).map(([name, value]) => ({ name, value }))
-    );
-  }
-
-  // ==================== RENDER ====================
-
   if (loading) {
-    return <div className="text-[#c5a059] text-xl">Carregando analytics…</div>;
+    return <div className="text-[#c5a059] text-xl">Carregando analytics...</div>;
   }
 
-  const colors = ["#c5a059", "#e31e24", "#ffdd57", "#7dd3fc", "#86efac", "#a78bfa"];
+  if (erro) {
+    return <div className="text-red-400">{erro}</div>;
+  }
 
   return (
     <div className="space-y-16">
-
-      {/* FILTROS */}
       <div className="flex gap-3">
-        {['7d', '30d', '90d'].map((p) => (
+        {(['7d', '30d', '90d'] as Periodo[]).map((p) => (
           <button
             key={p}
-            onClick={() => setPeriodo(p as '7d' | '30d' | '90d')}
+            onClick={() => setPeriodo(p)}
             className={`
               px-4 py-2 rounded-lg text-sm font-bold border
-              ${periodo === p
-                ? 'bg-[#c5a059] text-black border-[#c5a059]'
-                : 'bg-gray-800 text-gray-300 border-gray-700'}
+              ${
+                periodo === p
+                  ? 'bg-[#c5a059] text-black border-[#c5a059]'
+                  : 'bg-gray-800 text-gray-300 border-gray-700'
+              }
             `}
           >
             {p === '7d' ? '7 dias' : p === '30d' ? '30 dias' : '90 dias'}
@@ -249,25 +143,23 @@ export default function AnalyticsPage() {
         ))}
       </div>
 
-      {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <KPI titulo="Clientes Novos" valor={kpis.clientesNovos} cor="white" />
-        <KPI titulo="Pontos Distribuídos" valor={kpis.pontosDistribuídos} cor="#c5a059" />
+        <KPI titulo="Pontos Distribuidos" valor={kpis.pontosDistribuidos} cor="#c5a059" />
         <KPI titulo="Pontos Resgatados" valor={kpis.pontosResgatados} cor="#e31e24" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <KPI titulo="Resgates" valor={kpis.resgates} cor="#86efac" />
-        <KPI titulo="Cashback Distribuído" valor={kpis.cashbackDistribuido} cor="#7dd3fc" />
+        <KPI titulo="Cashback Distribuido" valor={kpis.cashbackDistribuido} cor="#7dd3fc" />
         <KPI titulo="Giros da Roleta" valor={kpis.girosRoleta} cor="#a78bfa" />
       </div>
 
-      {/* GRÁFICOS */}
       <Section titulo="Clientes Novos por Dia">
         <GraficoLinha dados={grafClientes} dataKey="total" />
       </Section>
 
-      <Section titulo="Pontos Distribuídos por Dia">
+      <Section titulo="Pontos Distribuidos por Dia">
         <GraficoLinha dados={grafPontos} dataKey="valor" />
       </Section>
 
@@ -284,7 +176,7 @@ export default function AnalyticsPage() {
           <PieChart>
             <Pie data={grafProdutos} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
               {grafProdutos.map((_, i) => (
-                <Cell key={i} fill={colors[i % colors.length]} />
+                <Cell key={`cell-${i}`} fill={CHART_COLORS[i % CHART_COLORS.length]} />
               ))}
             </Pie>
             <Tooltip />
@@ -295,19 +187,74 @@ export default function AnalyticsPage() {
   );
 }
 
-// ==================== COMPONENTES ====================
+function somarValores<T extends Record<string, unknown>>(rows: T[], valueField: string) {
+  return rows.reduce((sum, row) => sum + Number(row?.[valueField] || 0), 0);
+}
 
+function mapearContagemPorDia<T extends Record<string, unknown>>(rows: T[], dateField: string): SerieDia[] {
+  const mapa: Record<string, number> = {};
+
+  rows.forEach((row) => {
+    const raw = row?.[dateField];
+    if (!raw || typeof raw !== 'string') return;
+
+    const dia = raw.substring(0, 10);
+    mapa[dia] = (mapa[dia] || 0) + 1;
+  });
+
+  return Object.entries(mapa)
+    .map(([dia, total]) => ({ dia, total }))
+    .sort((a, b) => a.dia.localeCompare(b.dia));
+}
+
+function mapearSomaPorDia<T extends Record<string, unknown>>(
+  rows: T[],
+  dateField: string,
+  valueField: string
+): SerieValorDia[] {
+  const mapa: Record<string, number> = {};
+
+  rows.forEach((row) => {
+    const raw = row?.[dateField];
+    if (!raw || typeof raw !== 'string') return;
+
+    const dia = raw.substring(0, 10);
+    const valor = Number(row?.[valueField] || 0);
+    mapa[dia] = (mapa[dia] || 0) + valor;
+  });
+
+  return Object.entries(mapa)
+    .map(([dia, valor]) => ({ dia, valor }))
+    .sort((a, b) => a.dia.localeCompare(b.dia));
+}
+
+function mapearProdutos(
+  rows: Array<{ tipo?: string; premio_nome?: string | null }>
+): SerieProduto[] {
+  const mapa: Record<string, number> = {};
+
+  rows.forEach((row) => {
+    if (row?.tipo !== 'produto') return;
+    const nome = (row?.premio_nome || 'Produto').trim();
+    mapa[nome] = (mapa[nome] || 0) + 1;
+  });
+
+  return Object.entries(mapa).map(([name, value]) => ({ name, value }));
+}
+
+type KPIProps = { titulo: string; valor: number; cor: string };
 function KPI({ titulo, valor, cor }: KPIProps) {
   return (
     <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-xl">
       <p className="text-gray-400 text-xs uppercase font-bold mb-1">{titulo}</p>
       <p className="text-4xl font-black" style={{ color: cor }}>
-        {valor.toLocaleString()}
+        {Number(valor || 0).toLocaleString()}
       </p>
     </div>
   );
 }
 
+type SectionProps = { titulo: string; children: React.ReactNode };
 function Section({ titulo, children }: SectionProps) {
   return (
     <div>
@@ -319,7 +266,8 @@ function Section({ titulo, children }: SectionProps) {
   );
 }
 
-function GraficoLinha({ dados, dataKey }: GraficoLinhaProps) {
+type ChartProps = { dados: Array<{ dia: string; [key: string]: string | number }>; dataKey: string };
+function GraficoLinha({ dados, dataKey }: ChartProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={dados}>
@@ -333,7 +281,7 @@ function GraficoLinha({ dados, dataKey }: GraficoLinhaProps) {
   );
 }
 
-function GraficoBar({ dados, dataKey }: GraficoBarProps) {
+function GraficoBar({ dados, dataKey }: ChartProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={dados}>

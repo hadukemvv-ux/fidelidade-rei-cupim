@@ -7,6 +7,14 @@ export default function AdminCardapio() {
   const [modalOpen, setModalOpen] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState<any>(null);
 
+  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+
+  const withAdminToken = (url: string) => {
+    if (!adminToken) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
+  };
+
   useEffect(() => {
     fetchProdutos();
   }, []);
@@ -25,11 +33,23 @@ export default function AdminCardapio() {
       prev.map(p => p.id === produto.id ? { ...p, destaque: novoStatus } : p)
     );
 
-    await fetch('/api/admin/produtos', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: produto.id, destaque: novoStatus })
-    });
+    try {
+      const res = await fetch(withAdminToken('/api/admin/produtos'), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: produto.id, destaque: novoStatus })
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || 'Nao foi possivel atualizar o destaque.');
+      }
+    } catch (error: any) {
+      setProdutos(prev =>
+        prev.map(p => p.id === produto.id ? { ...p, destaque: produto.destaque } : p)
+      );
+      alert(error?.message || 'Erro ao atualizar destaque.');
+    }
   }
 
   async function salvarProduto(e: React.FormEvent) {
@@ -37,14 +57,23 @@ export default function AdminCardapio() {
     const isNew = !produtoEditando.id;
     const method = isNew ? 'POST' : 'PUT';
 
-    await fetch('/api/admin/produtos', {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(produtoEditando)
-    });
+    try {
+      const res = await fetch(withAdminToken('/api/admin/produtos'), {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(produtoEditando)
+      });
 
-    setModalOpen(false);
-    fetchProdutos();
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error || 'Nao foi possivel salvar o produto.');
+      }
+
+      setModalOpen(false);
+      fetchProdutos();
+    } catch (error: any) {
+      alert(error?.message || 'Erro ao salvar produto.');
+    }
   }
 
   return (

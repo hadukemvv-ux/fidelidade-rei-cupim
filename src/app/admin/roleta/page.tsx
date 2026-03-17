@@ -4,6 +4,13 @@ import { useState, useEffect } from 'react';
 export default function AdminRoletaPage() {
   const [premios, setPremios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
+
+  const withAdminToken = (url: string) => {
+    if (!adminToken) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
+  };
 
   useEffect(() => {
     carregar();
@@ -11,11 +18,12 @@ export default function AdminRoletaPage() {
 
   async function carregar() {
     try {
-      const res = await fetch('/api/admin/premios');
+      const res = await fetch(withAdminToken('/api/admin/premios'));
       const data = await res.json();
+      const payload = data?.data ?? data;
 
       // API boa deve retornar { premios: [...] }
-      setPremios(data.premios || data || []);
+      setPremios(payload?.premios || payload || []);
     } catch {
       setPremios([]);
     }
@@ -24,7 +32,7 @@ export default function AdminRoletaPage() {
 
   async function salvarItem(item: any) {
     try {
-      await fetch('/api/admin/premios', {
+      await fetch(withAdminToken('/api/admin/premios'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item)

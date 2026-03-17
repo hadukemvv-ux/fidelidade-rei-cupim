@@ -1,20 +1,28 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const CRON_SECRET = process.env.CRON_SECRET_KEY;
+const CRON_SECRET = process.env.CRON_SECRET;
 
 // Random index seguro
 function randomIndex(max: number) {
   return Math.floor(Math.random() * max);
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     // 1. validar segredo
-    const url = new URL(req.url);
-    const secret = url.searchParams.get("secret");
+    if (!CRON_SECRET) {
+      return NextResponse.json(
+        { error: "CRON_SECRET não configurado no servidor." },
+        { status: 500 }
+      );
+    }
 
-    if (secret !== CRON_SECRET) {
+    const token = req.headers.get("authorization")?.replace("Bearer ", "")
+      || req.nextUrl.searchParams.get("token")
+      || req.nextUrl.searchParams.get("secret"); // compatibilidade com chamadas antigas
+
+    if (token !== CRON_SECRET) {
       return NextResponse.json(
         { error: "Acesso não autorizado" },
         { status: 401 }

@@ -5,10 +5,7 @@ interface SorteioCardProps {
   descricao: string;
   imagemUrl: string;
   dataSorteio: string;
-
-  // ✔ TIPAGEM CORRETA
   modo: "manual" | "automatico";
-
   rodarAgora: () => void;
   rodando: boolean;
 }
@@ -51,20 +48,22 @@ export default function SorteioCard({
 
           <div className="mt-4 text-sm">
             <p><span className="font-bold text-[#c5a059]">Data:</span> {dataSorteio || 'Não definida'}</p>
-
             <p>
               <span className="font-bold text-[#c5a059]">Modo:</span>{" "}
               {modo === 'manual' ? 'Manual' : 'Automático'}
             </p>
           </div>
 
-          <button
-            onClick={rodarAgora}
-            disabled={rodando}
-            className="mt-6 px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-bold disabled:opacity-50"
-          >
-            {rodando ? 'Sorteando...' : '🎉 Rodar sorteio agora'}
-          </button>
+          {/* Botão só aparece se existir sorteio ativo */}
+          {titulo && (
+            <button
+              onClick={rodarAgora}
+              disabled={rodando}
+              className="mt-6 px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-bold disabled:opacity-50"
+            >
+              {rodando ? 'Sorteando...' : '🎉 Rodar sorteio agora'}
+            </button>
+          )}
         </div>
 
       </div>

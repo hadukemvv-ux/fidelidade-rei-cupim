@@ -11,7 +11,7 @@ const supabase = createClient(
 );
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = usePathname() || ""; // <<< CORREÇÃO CRÍTICA AQUI
   const router = useRouter();
 
   const [autorizado, setAutorizado] = useState(false);
@@ -41,15 +41,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!autorizado) return null;
 
-  // LINKS DA SIDEBAR
+  // =========================
+  // MENU PRINCIPAL + SUBMENUS
+  // =========================
+
   const menu = [
     { href: '/admin', icon: '🏠', label: 'Início' },
+
     { href: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
     { href: '/admin/analytics', icon: '📈', label: 'Analytics' },
     { href: '/admin/financeiro', icon: '💰', label: 'Financeiro' },
     { href: '/admin/roleta', icon: '🎰', label: 'Roleta' },
     { href: '/admin/cardapio', icon: '🍔', label: 'Cardápio' },
-    { href: '/admin/sorteio', icon: '🎁', label: 'Sorteio' },
+
+    // ---------- SORTEIO (COM SUBMENU) ----------
+    {
+      href: '/admin/sorteio',
+      icon: '🎁',
+      label: 'Sorteio',
+      submenu: [
+        { href: '/admin/sorteio/previsao', label: '📋 Previsão' },
+        
+        { href: '/admin/sorteio/resumo', label: '📑 Resumo' },
+        { href: '/admin/sorteio/ganhadores', label: '🏆 Ganhadores' },
+      ]
+    },
+    // -------------------------------------------
+
     { href: '/admin/garcons', icon: '👔', label: 'Equipe' },
     { href: '/admin/garcons/alertas', icon: '🔥', label: 'Anti-Fraude' },
     { href: '/admin/importar', icon: '📥', label: 'Importação' },
@@ -73,24 +91,54 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <p className="text-xs text-gray-500 mt-1 tracking-widest">Administração</p>
         </div>
 
+        {/* MENU */}
         <nav className="flex-1 space-y-1">
           {menu.map((item) => {
             const ativo = pathname === item.href;
+
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`
-                  flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition
-                  ${ativo 
-                    ? 'bg-[#c5a059] text-black shadow-lg' 
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }
-                `}
-              >
-                <span className="text-lg">{item.icon}</span>
-                {item.label}
-              </Link>
+              <div key={item.href}>
+                
+                {/* ITEM PRINCIPAL */}
+                <Link
+                  href={item.href}
+                  className={`
+                    flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition
+                    ${ativo 
+                      ? 'bg-[#c5a059] text-black shadow-lg' 
+                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    }
+                  `}
+                >
+                  <span className="text-lg">{item.icon}</span>
+                  {item.label}
+                </Link>
+
+                {/* SUBMENU DO SORTEIO */}
+                {item.submenu && pathname.startsWith('/admin/sorteio') && (
+                  <div className="ml-8 mt-2 space-y-1">
+                    {item.submenu.map((sub) => {
+                      const ativoSub = pathname === sub.href;
+                      return (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className={`
+                            block px-3 py-2 rounded-md text-xs font-bold transition
+                            ${ativoSub 
+                              ? 'bg-[#c5a059] text-black shadow-md' 
+                              : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                            }
+                          `}
+                        >
+                          {sub.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+
+              </div>
             );
           })}
         </nav>
@@ -111,14 +159,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* HEADER INTERNO */}
         <header className="mb-10 border-b border-gray-800 pb-6">
           <h1 className="text-3xl font-black tracking-tight">
-            {pathname?.split('/')?.pop()?.toString().toUpperCase() || 'ADMIN'}
+            {(pathname || '').split('/').pop()?.toUpperCase() || 'ADMIN'}
           </h1>
         </header>
 
-        {/* PÁGINA */}
         <div className="animate-fade-in">
           {children}
         </div>
+
       </main>
 
     </div>

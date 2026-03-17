@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { validarDados, ClienteSchema, type ClienteValidation } from '@/lib/validations';
+import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
 import crypto from 'crypto';
 
 // Helpers
@@ -74,73 +76,75 @@ function isPreCadastro(cliente: any) {
   );
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const requestId = getRequestId(req);
+
   try {
     const body = await req.json();
 
-    const nomeNovo = String(body?.nome ?? '').trim();
-    const emailNovo = validarEmail(body?.email);
-    const telefone = onlyDigits(String(body?.telefone ?? ''));
-    const pin = String(body?.pin ?? '').trim();
-    const dataNascimentoNova = validarDataNascimento(body?.data_nascimento);
+    // ===== 1. VALIDAÇÃO COM ZOD =====
+    const validacao = validarDados<ClienteValidation>(ClienteSchema, body);
+    if (!validacao.ok) {
+      return validationErrorResponse(validacao.error);
+    }
 
-    // -------------------------
-    // Validações iniciais
-    // -------------------------
-    if (nomeNovo.length < 3)
-      return NextResponse.json({ ok: false, error: 'Nome inválido.' }, { status: 400 });
+    const { telefone, nome, email, data_nascimento, pin } = validacao.data;
 
-    if (!emailNovo)
-      return NextResponse.json({ ok: false, error: 'Email inválido.' }, { status: 400 });
+    logInfo('/api/cadastro', 'Iniciando cadastro', {
+      telefone: `****${telefone.slice(-4)}`,
+      requestId,
+    });
 
-    if (telefone.length !== 11)
-      return NextResponse.json({ ok: false, error: 'Telefone inválido.' }, { status: 400 });
-
-    if (!/^\d{4}$/.test(pin))
-      return NextResponse.json({ ok: false, error: 'PIN inválido (4 dígitos).' }, { status: 400 });
+    // ===== 2. VALIDAR PIN (4 dígitos) =====
+    if (!pin || !/^\d{4}$/.test(pin)) {
+      return errorResponse('PIN deve ter exatamente 4 dígitos', 'validation_error');
+    }
 
     const pin_hash = crypto.createHash('sha256').update(pin).digest('hex');
 
-    // -------------------------
-    // CHECAR EMAIL DUPLICADO
-    // -------------------------
-    const { data: emailExistente } = await supabaseAdmin
+    // ===== 3. CHECAR EMAIL DUPLICADO =====
+    const { data: emailExistente, error: emailError } = await supabaseAdmin
       .from('base_clientes_saipos')
       .select('id, telefone')
-      .eq('email', emailNovo)
+      .eq('email', email)
       .maybeSingle();
 
-    if (emailExistente && emailExistente.telefone !== telefone) {
-      return NextResponse.json(
-        { ok: false, error: 'Este email já está em uso por outro cliente.' },
-        { status: 409 }
-      );
+    if (emailError) {
+      logError('/api/cadastro', emailError as Error, {
+        requestId,
+      });
+      return handleApiError(emailError, '/api/cadastro', requestId);
     }
 
-    // -------------------------
-    // Buscar cliente pelo telefone
-    // -------------------------
-    const { data: encontrados, error: errBusca } = await supabaseAdmin
+    if (emailExistente && emailExistente.telefone !== telefone) {
+      return errorResponse('Este email já está cadastrado em outra conta', 'validation_error');
+    }
+
+    // ===== 4. BUSCAR CLIENTE PELO TELEFONE =====
+    const { data: encontrados, error: searchError } = await supabaseAdmin
       .from('base_clientes_saipos')
       .select('*')
       .eq('telefone', telefone);
 
-    if (errBusca) throw errBusca;
+    if (searchError) {
+      logError('/api/cadastro', searchError as Error, {
+        requestId,
+      });
+      return handleApiError(searchError, '/api/cadastro', requestId);
+    }
 
-    // ================================================================
-    // CASO 1 — CRIAÇÃO NORMAL (não existe cliente com este telefone)
-    // ================================================================
+    // ===== CASO 1: NOVO CLIENTE =====
     if (!encontrados || encontrados.length === 0) {
-      const bonus = dataNascimentoNova ? 200 : 0;
+      const bonus = data_nascimento ? 200 : 0;
 
-      const { data: novo, error: errIns } = await supabaseAdmin
+      const { data: novo, error: insertError } = await supabaseAdmin
         .from('base_clientes_saipos')
         .insert({
-          nome: nomeNovo,
-          email: emailNovo,
+          nome,
+          email,
           telefone,
           pin_hash,
-          data_nascimento: dataNascimentoNova,
+          data_nascimento: data_nascimento || null,
           pontos: bonus,
           cashback: 0,
           tickets: 0,
@@ -149,108 +153,138 @@ export async function POST(req: Request) {
           qtd_pedidos: 0,
           primeira_compra: null,
           ultima_compra: null,
-          atualizado_em: iso()
+          atualizado_em: iso(),
         })
-        .select('*')
+        .select('id')
         .single();
 
-      if (errIns) throw errIns;
+      if (insertError) {
+        logError('/api/cadastro', insertError as Error, {
+          requestId,
+        });
+        return handleApiError(insertError, '/api/cadastro', requestId);
+      }
 
-      if (bonus > 0)
+      // Registrar bonus
+      if (bonus > 0) {
         await registrarExtrato(novo.id, bonus, 'Bônus de Cadastro');
+      }
 
-      return NextResponse.json({
-        ok: true,
+logInfo('/api/cadastro', 'Novo cliente criado', {
+        telefone: `****${telefone.slice(-4)}`,
+        bonus,
+        requestId,
+      });
+
+      return successResponse({
         criado: true,
-        message: 'Cadastro realizado com sucesso!'
+        message: 'Cadastro realizado com sucesso!',
+        bonus: bonus > 0 ? `+${bonus} pontos de bônus` : undefined,
       });
     }
 
-    // ================================================================
-    // CASO 2 — EXISTE 1 ÚNICO CLIENTE COM ESTE TELEFONE
-    // ================================================================
+    // ===== CASO 2: CLIENTE EXISTENTE =====
     if (encontrados.length === 1) {
       const cliente = encontrados[0];
       const preCadastro = isPreCadastro(cliente);
 
-      // ---------------------------------------------------------
-      // PRÉ‑CADASTRO → PODE completar TODOS os dados
-      // ---------------------------------------------------------
-      
+      // Se é pré-cadastro, pode completar dados
+      if (preCadastro) {
+        const updateData: Record<string, unknown> = { atualizado_em: iso() };
 
-      // ---------------------------------------------------------
-      // CLIENTE COMPLETO → VALIDAR BLOQUEIOS
-      // ---------------------------------------------------------
-      if (cliente.nome !== nomeNovo)
-        return NextResponse.json(
-          { ok: false, error: 'Este número já possui cadastro. O nome não pode ser alterado.' },
-          { status: 403 }
-        );
+        if (!cliente.nome || cliente.nome === 'Cliente Novo (Roleta)') {
+          updateData.nome = nome;
+        }
+        if (!cliente.email) {
+          updateData.email = email;
+        }
+        if (!cliente.data_nascimento) {
+          updateData.data_nascimento = data_nascimento || null;
+        }
+        if (!cliente.pin_hash) {
+          updateData.pin_hash = pin_hash;
+        }
 
-      if (cliente.data_nascimento && cliente.data_nascimento !== dataNascimentoNova)
-        return NextResponse.json(
-          { ok: false, error: 'Data de nascimento não pode ser alterada após cadastro.' },
-          { status: 403 }
-        );
+        const { error: updateError } = await supabaseAdmin
+          .from('base_clientes_saipos')
+          .update(updateData)
+          .eq('id', cliente.id);
 
-      if (cliente.email && cliente.email !== emailNovo)
-        return NextResponse.json(
-          { ok: false, error: 'Email não pode ser alterado após cadastro.' },
-          { status: 403 }
-        );
+        if (updateError) {
+          logError('/api/cadastro', updateError as Error, {
+            requestId,
+          });
+          return handleApiError(updateError, '/api/cadastro', requestId);
+        }
 
-      if (cliente.pin_hash && cliente.pin_hash !== pin_hash)
-        return NextResponse.json(
-          { ok: false, error: 'PIN incorreto. Para alterar, use "Esqueci meu PIN".' },
-          { status: 401 }
-        );
+        logInfo('/api/cadastro', 'Pré-cadastro completado', {
+          telefone: `****${telefone.slice(-4)}`,
+          requestId,
+        });
 
-      // ---------------------------------------------------------
-      // COMPLETAR CAMPOS FALTANTES
-      // ---------------------------------------------------------
-      const updateData: any = { atualizado_em: iso() };
+        return successResponse({
+          atualizado: true,
+          message: 'Cadastro completado com sucesso!',
+        });
+      }
 
-      if (!cliente.email) updateData.email = emailNovo;
-      if (!cliente.data_nascimento) updateData.data_nascimento = dataNascimentoNova;
-      if (!cliente.pin_hash) updateData.pin_hash = pin_hash;
+      // Se já é cliente completo, validar dados
+      if (cliente.nome !== nome) {
+        return errorResponse('Este número já tem cadastro. Nome não pode ser alterado.', 'validation_error');
+      }
 
-      const { error: updErr } = await supabaseAdmin
-        .from('base_clientes_saipos')
-        .update(updateData)
-        .eq('id', cliente.id);
+      if (cliente.data_nascimento && cliente.data_nascimento !== data_nascimento) {
+        return errorResponse('Data de nascimento não pode ser alterada', 'validation_error');
+      }
 
-      if (updErr) throw updErr;
+      if (cliente.email && cliente.email !== email) {
+        return errorResponse('Email não pode ser alterado após cadastro completo', 'validation_error');
+      }
 
-      return NextResponse.json({
-        ok: true,
-        atualizado: true,
-        message: 'Cadastro já existia — dados complementares adicionados.'
+      if (cliente.pin_hash && cliente.pin_hash !== pin_hash) {
+        logInfo('/api/cadastro', 'PIN incorreto para cliente existente', {
+          telefone: `****${telefone.slice(-4)}`,
+          requestId,
+        });
+        return errorResponse('PIN incorreto', 'unauthorized');
+      }
+
+      return successResponse({
+        message: 'Cadastro já existe com estes dados. Você pode fazer login.',
       });
     }
 
-    // ================================================================
-    // CASO 3 — DUPLICADOS → UNIFICAR
-    // ================================================================
+    // ===== CASO 3: DUPLICADOS =====
+    // Se houver múltiplos clientes, unificar (manter o primeiro)
     const ids = encontrados.map((c) => c.id);
-    const principal = encontrados[0];
     const paraExcluir = ids.slice(1);
 
-    await supabaseAdmin
+    const { error: deleteError } = await supabaseAdmin
       .from('base_clientes_saipos')
       .delete()
       .in('id', paraExcluir);
 
-    return NextResponse.json({
-      ok: true,
-      unificado: true,
-      message: 'Cadastro unificado. Faça login novamente.'
+    if (deleteError) {
+      logError('/api/cadastro', deleteError as Error, {
+        requestId,
+      });
+      return handleApiError(deleteError, '/api/cadastro', requestId);
+    }
+
+    logInfo('/api/cadastro', `Unificados ${paraExcluir.length} clientes duplicados`, {
+      telefone: `****${telefone.slice(-4)}`,
+      requestId,
     });
 
-  } catch (err: any) {
-    console.error('❌ ERRO CADASTRO:', err);
-    return NextResponse.json(
-      { ok: false, error: err.message || 'Erro interno.' },
-      { status: 500 }
-    );
+    return successResponse({
+      unificado: true,
+      message: 'Cadastros unificados. Faça login novamente.',
+    });
+
+  } catch (error) {
+    logError('/api/cadastro', error instanceof Error ? error : new Error(String(error)), {
+      requestId: getRequestId(req),
+    });
+    return handleApiError(error, '/api/cadastro', requestId);
   }
 }

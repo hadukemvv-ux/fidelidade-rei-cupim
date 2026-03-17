@@ -1,5 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest } from 'next/server';
+import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { successResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
 
 export const dynamic = "force-dynamic";
 
@@ -7,10 +9,19 @@ function random(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-const niveis = ["BRONZE", "PRATA", "OURO", "REI_DO_CUPIM"];
+const niveis = ["BRONZE", "PRATA", "OURO", "REI"];
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const requestId = getRequestId(request);
+
+  const authError = validateAdminAuth(request, new URL(request.url));
+  if (authError) return authError;
+
   try {
+    logInfo('/api/admin/seed-financeiro', 'Gerando seed financeiro de clientes de teste', {
+      requestId,
+    });
+
     const clientes = [];
     const timestamp = Date.now(); // garante unicidade
 
@@ -40,15 +51,21 @@ export async function GET() {
       .from("base_clientes_saipos")
       .insert(clientes);
 
-    if (error) throw error;
+    if (error) {
+      logError('/api/admin/seed-financeiro', error as Error, { requestId });
+      return handleApiError(error, '/api/admin/seed-financeiro', requestId);
+    }
 
-    return NextResponse.json({
+    return successResponse({
       sucesso: true,
       inseridos: clientes.length,
       aviso: "Clientes de TESTE criados sem colisão de nomes!"
     });
 
-  } catch (err: any) {
-    return NextResponse.json({ erro: err.message }, { status: 500 });
+  } catch (error) {
+    logError('/api/admin/seed-financeiro', error instanceof Error ? error : new Error(String(error)), {
+      requestId,
+    });
+    return handleApiError(error, '/api/admin/seed-financeiro', requestId);
   }
 }

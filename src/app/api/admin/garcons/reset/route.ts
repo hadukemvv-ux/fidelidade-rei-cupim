@@ -1,16 +1,42 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { successResponse, errorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
 
-export async function POST() {
-  // Zera a coluna 'total_giros' de TODOS os garçons
-  // O histórico detalhado (quem ganhou o que) continua salvo na tabela 'historico_roleta'
-  // Aqui zeramos apenas o PLACAR do mês.
-  
-  const { error } = await supabaseAdmin
-    .from('garcons')
-    .update({ total_giros: 0 })
-    .neq('id', 0); // Update sem where é perigoso, esse neq(0) é só pra travar o update all de forma segura
+export async function POST(request: NextRequest) {
+  const requestId = getRequestId(request);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  // ✅ Validar autenticação de admin
+  const authError = validateAdminAuth(request, new URL(request.url));
+  if (authError) return authError;
+
+  try {
+    logInfo('/api/admin/garcons/reset', 'Iniciando reset de contadores de garçons', { requestId });
+
+    // Zera a coluna 'total_giros' de TODOS os garçons
+    // O histórico detalhado continua salvo
+    const { error, data } = await supabaseAdmin
+      .from('garcons')
+      .update({ total_giros: 0, atualizado_em: new Date().toISOString() })
+      .neq('id', 0);
+
+    if (error) {
+      logError('/api/admin/garcons/reset', error as Error, { requestId });
+      return handleApiError(error, '/api/admin/garcons/reset', requestId);
+    }
+
+    logInfo('/api/admin/garcons/reset', 'Contadores de garçons zerados com sucesso', {
+      requestId,
+    });
+
+    return successResponse({
+      message: 'Contadores de garçons zerados com sucesso',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logError('/api/admin/garcons/reset', error instanceof Error ? error : new Error(String(error)), {
+      requestId,
+    });
+    return handleApiError(error, '/api/admin/garcons/reset', requestId);
+  }
 }

@@ -19,7 +19,7 @@ function getNivelEmoji(nivel: string) {
     case 'BRONZE': return '🥉';
     case 'PRATA': return '🥈';
     case 'OURO': return '🥇';
-    case 'REI_DO_CUPIM': return '👑';
+    case 'REI': return '👑';
     default: return '🥉';
   }
 }
@@ -56,14 +56,17 @@ export default function ResgatePage() {
   useEffect(() => {
     async function load() {
       try {
-        const g = await fetch('/api/admin/sorteio/ganhadores').then(r => r.json());
-        setGanhadores(g.ganhadores || []);
+        const g = await fetch('/api/sorteio/ganhadores').then(r => r.json());
+        const payloadG = g?.data ?? g;
+        setGanhadores(payloadG?.ganhadores || []);
 
         const p = await fetch('/api/produtos').then(r => r.json());
-        setProdutos(p.produtos || []);
+        const payloadP = p?.data ?? p;
+        setProdutos(Array.isArray(payloadP) ? payloadP : payloadP?.produtos || []);
 
         const s = await fetch('/api/sorteio/atual').then(r => r.json());
-        setPremio(s.sorteio || null);
+        const payloadS = s?.data ?? s;
+        setPremio(payloadS?.sorteio || null);
       } catch (err) {
         console.error('Erro ao carregar dados', err);
       }
@@ -141,9 +144,13 @@ export default function ResgatePage() {
       });
 
       const data = await res.json();
-      if (!data.ok) throw new Error(data.error);
+      const payload = data?.data ?? data;
 
-      setDadosCliente(data);
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || payload?.error || 'Erro ao acessar sua conta.');
+      }
+
+      setDadosCliente(payload);
       setFeedback({ type: 'success', text: 'Bem-vindo!' });
 
     } catch (err: any) {
@@ -178,10 +185,14 @@ export default function ResgatePage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const payload = data?.data ?? data;
 
-      setCupom(data.codigo);
-      setDadosCliente(data.atualizado);
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.error || payload?.error || 'Erro ao processar resgate.');
+      }
+
+      setCupom(payload?.codigo || null);
+      setDadosCliente(payload?.atualizado || null);
 
     } catch (err: any) {
       setFeedback({ type: 'error', text: err.message });
@@ -212,7 +223,8 @@ export default function ResgatePage() {
       });
 
       const data = await r.json();
-      if (!r.ok) throw new Error(data.error);
+      const payload = data?.data ?? data;
+      if (!r.ok || !data?.ok) throw new Error(data?.error || payload?.error || 'Erro ao redefinir PIN.');
 
       setFeedback({ type: 'success', text: 'PIN alterado!' });
       setShowRedefinirPin(false);
@@ -389,9 +401,9 @@ export default function ResgatePage() {
 
                 {ganhadores.map(g => (
                   <div key={g.id} className="border-b border-[#c5a059]/20 pb-3 mb-3">
-                    <p className="font-bold">{g.nome_cliente}</p>
-                    <p className="text-sm text-zinc-400">{g.telefone_cliente}</p>
-                    <p className="text-xs">{new Date(g.criado_em).toLocaleString()}</p>
+                    <p className="font-bold">{g.nome || g.nome_cliente}</p>
+                    <p className="text-sm text-zinc-400">{g.telefone || g.telefone_cliente}</p>
+                    <p className="text-xs">{new Date(g.created_at || g.criado_em).toLocaleString()}</p>
                   </div>
                 ))}
               </div>

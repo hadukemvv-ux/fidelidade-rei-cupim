@@ -1,33 +1,77 @@
-import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { NextRequest } from 'next/server';
+import { z } from 'zod';
+import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { validarDados } from '@/lib/validations';
+import {
+  successResponse,
+  validationErrorResponse,
+  getRequestId,
+  logInfo,
+  logError,
+  handleApiError,
+} from '@/lib/api-utils';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
+
+const GarcomLogsQuerySchema = z.object({
+  id: z.coerce.number().int().positive('ID do garcom invalido'),
+});
+
+type GarcomLogsQueryInput = z.infer<typeof GarcomLogsQuerySchema>;
 
 // /api/admin/garcons/logs?id=1
-export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
+export async function GET(request: NextRequest) {
+  const requestId = getRequestId(request);
 
-    if (!id) {
-      return NextResponse.json(
-        { error: "ID do garçom não informado." },
-        { status: 400 }
-      );
+  const authError = validateAdminAuth(request, new URL(request.url));
+  if (authError) return authError;
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const validacao = validarDados<GarcomLogsQueryInput>(GarcomLogsQuerySchema, {
+      id: searchParams.get('id'),
+    });
+
+    if (!validacao.ok) {
+      return validationErrorResponse(validacao.error);
     }
 
-    // Buscar logs completos do garçom
+    const { id } = validacao.data;
+
+    logInfo('/api/admin/garcons/logs', 'Buscando logs do garcom', {
+      garcom_id: id,
+      requestId,
+    });
+
+    // Buscar logs completos do garcom
     const { data: logs, error } = await supabaseAdmin
-      .from("garcons_logs")
-      .select("*")
-      .eq("garcom_id", id)     // <<<<<< CORREÇÃO AQUI
-      .order("criado_em", { ascending: false });
+      .from('garcons_logs')
+      .select('id, garcom_id, premio, telefone_cliente, ip, user_agent, score, suspeito, motivo, criado_em')
+      .eq('garcom_id', id)
+      .order('criado_em', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      logError('/api/admin/garcons/logs', error as Error, {
+        garcom_id: id,
+        requestId,
+      });
+      return handleApiError(error, '/api/admin/garcons/logs', requestId);
+    }
 
-    return NextResponse.json(logs || []);
-  } catch (e: any) {
-    console.error("Erro ao buscar logs:", e);
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    const resultado = logs || [];
+
+    logInfo('/api/admin/garcons/logs', 'Logs do garcom retornados com sucesso', {
+      garcom_id: id,
+      total: resultado.length,
+      requestId,
+    });
+
+    return successResponse({ logs: resultado });
+  } catch (error) {
+    logError('/api/admin/garcons/logs', error instanceof Error ? error : new Error(String(error)), {
+      requestId,
+    });
+    return handleApiError(error, '/api/admin/garcons/logs', requestId);
   }
 }

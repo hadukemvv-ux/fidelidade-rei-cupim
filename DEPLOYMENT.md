@@ -17,7 +17,6 @@ Documento consolidado em 21/03/2026.
    - `SAIPOS_TOKEN`
    - `SAIPOS_ID`
    - `ADMIN_SECRET_TOKEN`
-   - `NEXT_PUBLIC_ADMIN_TOKEN`
    - `CRON_SECRET`
 
 2. Validacao local antes do push:

@@ -3,7 +3,7 @@
 Sistema de fidelidade para restaurante com:
 - Pontos, cashback e tickets por compra
 - Integracao com SAIPOS (webhook + cron)
-- Area admin protegida por token
+- Area admin protegida por sessao
 - Crons de sincronizacao e expiracao
 
 ## Estado atual
@@ -58,12 +58,11 @@ Documentacao historica (manter como referencia):
 - `SAIPOS_TOKEN`
 - `SAIPOS_ID`
 - `ADMIN_SECRET_TOKEN`
-- `NEXT_PUBLIC_ADMIN_TOKEN`
 - `CRON_SECRET`
 
 ## Seguranca basica
 
-- Admin API usa `Authorization: Bearer <ADMIN_SECRET_TOKEN>`
+- Admin API usa `Authorization: Bearer <JWT da sessao Supabase>`
 - Cron API usa `Authorization: Bearer <CRON_SECRET>`
 - Webhook SAIPOS usa `x-auth-token: <SAIPOS_TOKEN>`
 - Nunca commitar `.env.local`

@@ -9,7 +9,7 @@ Sistema de fidelidade com:
 - Pontos, cashback e tickets por compra
 - Integracao com SAIPOS (PDV)
 - Crons para sincronizar vendas e expirar pontos
-- Area admin protegida por token
+- Area admin protegida por sessao
 
 ## 2. Pre-requisitos
 
@@ -34,7 +34,6 @@ Edite ` .env.local ` com:
 - `SAIPOS_TOKEN`
 - `SAIPOS_ID`
 - `ADMIN_SECRET_TOKEN`
-- `NEXT_PUBLIC_ADMIN_TOKEN`
 - `CRON_SECRET`
 
 Depois:
@@ -64,7 +63,7 @@ Esperado atualmente: `16 passaram, 0 falharam`.
 
 ## 5. Tokens e seguranca
 
-- Admin API: `Authorization: Bearer <ADMIN_SECRET_TOKEN>`
+- Admin API: `Authorization: Bearer <JWT da sessao Supabase>`
 - Cron API: `Authorization: Bearer <CRON_SECRET>`
 - Webhook SAIPOS: header `x-auth-token: <SAIPOS_TOKEN>`
 

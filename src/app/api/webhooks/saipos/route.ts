@@ -27,17 +27,29 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    
+
     // 2. Extração de Dados
-    // A Saipos pode mandar campos diferentes, ajuste conforme a documentação deles
     const telefoneBruto = body.customer_phone || body.telefone || '';
     const valorPedido = Number(body.order_total || body.valor_total || 0);
     const orderId = String(body.order_id || body.id_pedido || '');
-    const origem = String(body.source || body.origem || 'SAIPOS').toUpperCase();
+    const idSale = Number(body.id_sale || body.sale_id || 0);
 
     // Se não tem valor, ignora
     if (valorPedido <= 0) {
       return NextResponse.json({ ok: false, message: 'Valor zerado, ignorado.' });
+    }
+
+    // 2.1 Idempotência: ignorar vendas já processadas pelo cron ou por retry do webhook
+    if (idSale) {
+      const { data: jaProcessado } = await supabaseAdmin
+        .from('saipos_pedidos_processados')
+        .select('id_sale')
+        .eq('id_sale', idSale)
+        .maybeSingle();
+
+      if (jaProcessado) {
+        return NextResponse.json({ ok: true, message: `Venda #${idSale} já processada anteriormente. Ignorado.` });
+      }
     }
 
     // 3. Tratamento do Telefone
@@ -56,7 +68,7 @@ export async function POST(req: Request) {
       const { data: novoCliente, error: errCreate } = await supabaseAdmin.from('base_clientes_saipos').insert({
         telefone,
         nome: body.customer_name || 'Cliente Saipos',
-        nivel: 'BRONZE',
+        nivel: 'bronze',
         pontos: 0,
         cashback: 0,
         tickets: 0,
@@ -94,7 +106,12 @@ export async function POST(req: Request) {
       atualizado_em: nowIso(),
     }).eq('telefone', telefone);
 
-    // 7. Registrar transação em extrato (se existir tabela)
+    // 7. Marcar venda como processada (idempotência)
+    if (idSale) {
+      await supabaseAdmin.from('saipos_pedidos_processados').insert({ id_sale: idSale });
+    }
+
+    // 8. Registrar transação em extrato (se existir tabela)
     try {
       await supabaseAdmin.from('extrato_pontos').insert({
         cliente_id: cliente.id,

@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 export const dynamic = 'force-dynamic';
 
 const SAIPOS_TOKEN = process.env.SAIPOS_TOKEN!;
+const SAIPOS_ID = process.env.SAIPOS_ID || '62039';
 const CRON_SECRET = process.env.CRON_SECRET;
 const URL_SAIPOS = 'https://data.saipos.io/v1/search_sales';
 
@@ -68,7 +69,7 @@ export async function GET(req: NextRequest) {
       p_filter_date_end: fim,
       p_limit: '500',
       p_offset: '0',
-      p_store: '62039',
+      p_store: SAIPOS_ID,
     });
 
     const response = await fetch(`${URL_SAIPOS}?${params}`, {

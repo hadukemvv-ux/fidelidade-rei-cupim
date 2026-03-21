@@ -10,7 +10,7 @@ Sistema de fidelidade para restaurante com:
 
 - Build: passando
 - TypeScript: sem erros
-- Suite de integracao: `16/16` testes aprovados
+- Suite de integracao: `17/17` testes aprovados
 - Deploy: push em `main` publica na Vercel automaticamente
 
 ## Inicio rapido
@@ -59,12 +59,14 @@ Documentacao historica (manter como referencia):
 - `SAIPOS_ID`
 - `ADMIN_SECRET_TOKEN`
 - `ADMIN_ALLOWED_EMAILS` (opcional, recomendado)
+- `ADMIN_TEST_EMAIL` e `ADMIN_TEST_PASSWORD` (opcional, recomendado para testes)
 - `CRON_SECRET`
 
 ## Seguranca basica
 
 - Admin API usa `Authorization: Bearer <JWT da sessao Supabase>`
 - Para restringir admin por e-mail, configure `ADMIN_ALLOWED_EMAILS=email1@dominio.com,email2@dominio.com`
+- Para a suite local, prefira `ADMIN_TEST_EMAIL` e `ADMIN_TEST_PASSWORD` de um usuario admin valido
 - Cron API usa `Authorization: Bearer <CRON_SECRET>`
 - Webhook SAIPOS usa `x-auth-token: <SAIPOS_TOKEN>`
 - Nunca commitar `.env.local`

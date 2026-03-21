@@ -2,6 +2,16 @@
 
 Este documento e para rodar validacoes tecnicas no dia a dia.
 
+## Variaveis recomendadas para testes
+
+- `CRON_SECRET`
+- `SAIPOS_TOKEN`
+- `ADMIN_TEST_EMAIL`
+- `ADMIN_TEST_PASSWORD`
+
+Fallback temporario:
+- `ADMIN_SECRET_TOKEN`
+
 ## 1. Check de saude rapido
 
 ```powershell
@@ -39,6 +49,7 @@ Ferramenta:
 Cobertura minima:
 - Admin sem token -> 401
 - Admin token errado -> 403
+- Admin por query token legado -> 401
 - Cron sem token -> 401
 - Webhook sem token -> 401
 
@@ -91,5 +102,6 @@ curl -X POST http://localhost:3000/api/webhooks/saipos \
 - [ ] `npm run build` ok
 - [ ] `node tests/saipos-integration.js` ok
 - [ ] variaveis de ambiente revisadas
+- [ ] `ADMIN_ALLOWED_EMAILS` revisado para os admins reais
 - [ ] cron schedule revisado em `vercel.json`
 - [ ] sem segredos no git

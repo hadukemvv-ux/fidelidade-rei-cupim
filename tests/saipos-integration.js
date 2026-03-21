@@ -6,7 +6,10 @@
  *
  * Requer:
  *   - npm run dev rodando (porta 3000)
- *   - .env.local configurado com ADMIN_SECRET_TOKEN, CRON_SECRET, SAIPOS_TOKEN
+ *   - .env.local configurado com CRON_SECRET, SAIPOS_TOKEN
+ *   - Admin auth via uma das opcoes abaixo:
+ *     1. ADMIN_TEST_EMAIL + ADMIN_TEST_PASSWORD (recomendado)
+ *     2. ADMIN_SECRET_TOKEN (legado, fallback temporario)
  */
 
 const fs = require("fs");
@@ -21,6 +24,13 @@ const BASE = "http://localhost:3000";
 const ADMIN_TOKEN  = getEnv("ADMIN_SECRET_TOKEN");
 const CRON_SECRET  = getEnv("CRON_SECRET");
 const SAIPOS_TOKEN = getEnv("SAIPOS_TOKEN");
+const SUPABASE_URL = getEnv("NEXT_PUBLIC_SUPABASE_URL");
+const SUPABASE_ANON_KEY = getEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+const ADMIN_TEST_EMAIL = getEnv("ADMIN_TEST_EMAIL") || getEnv("ADMIN_EMAIL");
+const ADMIN_TEST_PASSWORD = getEnv("ADMIN_TEST_PASSWORD") || getEnv("ADMIN_PASSWORD");
+
+let adminAuthMode = "desconhecido";
+let cachedAdminHeaders = null;
 
 let passed = 0, failed = 0;
 
@@ -38,6 +48,44 @@ async function test(desc, fn) {
 
 function assert(condition, msg) {
   if (!condition) throw new Error(msg);
+}
+
+async function getAdminHeaders() {
+  if (cachedAdminHeaders) return cachedAdminHeaders;
+
+  if (SUPABASE_URL && SUPABASE_ANON_KEY && ADMIN_TEST_EMAIL && ADMIN_TEST_PASSWORD) {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        email: ADMIN_TEST_EMAIL,
+        password: ADMIN_TEST_PASSWORD,
+      }),
+    });
+
+    const json = await res.json().catch(() => null);
+    const accessToken = json?.access_token;
+
+    if (!res.ok || !accessToken) {
+      throw new Error(`falha ao autenticar admin de teste por sessao: ${res.status} ${JSON.stringify(json)}`);
+    }
+
+    adminAuthMode = "supabase-session";
+    cachedAdminHeaders = { Authorization: `Bearer ${accessToken}` };
+    return cachedAdminHeaders;
+  }
+
+  if (ADMIN_TOKEN) {
+    adminAuthMode = "legacy-token";
+    cachedAdminHeaders = { Authorization: `Bearer ${ADMIN_TOKEN}` };
+    return cachedAdminHeaders;
+  }
+
+  throw new Error("configure ADMIN_TEST_EMAIL + ADMIN_TEST_PASSWORD ou ADMIN_SECRET_TOKEN para validar rotas admin");
 }
 
 async function req(method, path, { headers = {}, body, timeoutMs = 20000 } = {}) {
@@ -71,10 +119,15 @@ const VENDA_GRANDE = {
 // ─── Suíte ───────────────────────────────────────────────────────────────────
 
 async function run() {
+  const adminHeaders = await getAdminHeaders();
+
   console.log("\n══════════════════════════════════════════════════");
   console.log("  TESTES DE INTEGRAÇÃO SAIPOS — Fidelidade");
   console.log("══════════════════════════════════════════════════");
-  console.log(`  Admin Token : ${ADMIN_TOKEN ? `${ADMIN_TOKEN.slice(0,4)}****` : "⚠️ NÃO CONFIGURADO"}`);
+  console.log(`  Admin Auth  : ${adminAuthMode}`);
+  if (ADMIN_TOKEN) {
+    console.log(`  Admin Token : ${ADMIN_TOKEN.slice(0,4)}****`);
+  }
   console.log(`  Cron Secret : ${CRON_SECRET ? `${CRON_SECRET.slice(0,4)}****` : "⚠️ NÃO CONFIGURADO"}`);
   console.log(`  Saipos Token: ${SAIPOS_TOKEN ? `${SAIPOS_TOKEN.slice(0,4)}****` : "⚠️ NÃO CONFIGURADO"}`);
 
@@ -92,12 +145,12 @@ async function run() {
   });
 
   await test("Admin por query token legado → 401", async () => {
-    const r = await req("GET", `/api/admin/premios?token=${ADMIN_TOKEN}`);
+    const r = await req("GET", `/api/admin/premios?token=${ADMIN_TOKEN || "legado"}`);
     assert(r.status === 401, `esperado 401, recebeu ${r.status}`);
   });
 
   await test("Admin token correto → não 401/403", async () => {
-    const r = await req("GET", "/api/admin/premios", { headers: { Authorization: `Bearer ${ADMIN_TOKEN}` } });
+    const r = await req("GET", "/api/admin/premios", { headers: adminHeaders });
     assert(r.status !== 401 && r.status !== 403, `esperado 2xx/5xx, recebeu ${r.status}`);
   });
 

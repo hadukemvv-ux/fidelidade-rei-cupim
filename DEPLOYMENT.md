@@ -18,6 +18,7 @@ Documento consolidado em 21/03/2026.
    - `SAIPOS_ID`
    - `ADMIN_SECRET_TOKEN`
    - `ADMIN_ALLOWED_EMAILS` (opcional, recomendado)
+   - `ADMIN_TEST_EMAIL` e `ADMIN_TEST_PASSWORD` (opcional, recomendado para testes locais)
    - `CRON_SECRET`
 
 2. Validacao local antes do push:

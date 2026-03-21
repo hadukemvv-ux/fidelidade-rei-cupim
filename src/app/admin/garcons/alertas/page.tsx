@@ -1,4 +1,5 @@
 'use client';
+import { fetchAdmin } from '@/lib/adminFetch';
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -7,17 +8,10 @@ export default function AlertasGarconsPage() {
   const [analytics, setAnalytics] = useState<any[]>([]);
   const [resumo, setResumo] = useState<any>(null);
   const [desbloqueando, setDesbloqueando] = useState<number | null>(null);
-  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-  const withAdminToken = (url: string) => {
-    if (!adminToken) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
-  };
 
   async function carregarDados() {
     try {
-      const res = await fetch(withAdminToken('/api/admin/garcons/analytics'));
+      const res = await fetchAdmin('/api/admin/garcons/analytics');
       const json = await res.json();
       const payload = json?.data ?? json;
 
@@ -44,7 +38,7 @@ export default function AlertasGarconsPage() {
     setDesbloqueando(garcom_id);
 
     try {
-      const resposta = await fetch(withAdminToken('/api/admin/garcons/unblock'), {
+      const resposta = await fetchAdmin('/api/admin/garcons/unblock', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

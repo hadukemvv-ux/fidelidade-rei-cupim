@@ -1,16 +1,10 @@
 'use client';
 
+import { fetchAdmin } from '@/lib/adminFetch';
 import { useEffect, useState } from 'react';
 
 export default function SorteioPrevisaoPage() {
   const [loading, setLoading] = useState(true);
-  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-  const withAdminToken = (url: string) => {
-    if (!adminToken) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
-  };
 
   const [sorteio, setSorteio] = useState<any>(null);
   const [previsao, setPrevisao] = useState<any>(null);
@@ -25,7 +19,7 @@ export default function SorteioPrevisaoPage() {
 
   async function carregarPrevisao() {
   try {
-      const res = await fetch(withAdminToken('/api/admin/sorteio/previsao'));
+      const res = await fetchAdmin('/api/admin/sorteio/previsao');
     const data = await res.json();
       const payload = data?.data ?? data;
 

@@ -1,16 +1,10 @@
 'use client';
 
+import { fetchAdmin } from '@/lib/adminFetch';
 import { useEffect, useState } from 'react';
 
 export default function ResumoSorteioPage() {
   const [loading, setLoading] = useState(true);
-  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-  const withAdminToken = (url: string) => {
-    if (!adminToken) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
-  };
 
   const [sorteio, setSorteio] = useState<any>(null);
   const [resumo, setResumo] = useState<any>(null);
@@ -25,7 +19,7 @@ export default function ResumoSorteioPage() {
   async function carregarResumo() {
     try {
       // Primeiro buscamos o sorteio atual
-      const resSorteio = await fetch(withAdminToken('/api/admin/sorteio'));
+      const resSorteio = await fetchAdmin('/api/admin/sorteio');
       const dataSorteio = await resSorteio.json();
       const payloadSorteio = dataSorteio?.data ?? dataSorteio;
 
@@ -37,8 +31,8 @@ export default function ResumoSorteioPage() {
       setSorteio(payloadSorteio.sorteio);
 
       // Agora buscamos o resumo usando o ID
-      const resResumo = await fetch(
-        withAdminToken(`/api/admin/sorteio/resumo?sorteio_id=${payloadSorteio.sorteio.id}`)
+      const resResumo = await fetchAdmin(
+        `/api/admin/sorteio/resumo?sorteio_id=${payloadSorteio.sorteio.id}`
       );
 
       const dataResumo = await resResumo.json();

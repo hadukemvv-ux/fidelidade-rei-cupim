@@ -1,5 +1,6 @@
 'use client';
 
+import { fetchAdmin } from '@/lib/adminFetch';
 import { useEffect, useState } from 'react';
 import {
   LineChart,
@@ -51,21 +52,13 @@ export default function AnalyticsPage() {
   const [grafRoleta, setGrafRoleta] = useState<SerieDia[]>([]);
   const [grafProdutos, setGrafProdutos] = useState<SerieProduto[]>([]);
 
-  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-  const withAdminToken = (url: string) => {
-    if (!adminToken) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
-  };
-
   useEffect(() => {
     async function carregarAnalytics() {
       setLoading(true);
       setErro(null);
 
       try {
-        const res = await fetch(withAdminToken('/api/admin/analytics'), {
+        const res = await fetchAdmin('/api/admin/analytics', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ periodo }),

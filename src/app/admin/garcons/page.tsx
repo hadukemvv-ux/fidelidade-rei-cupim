@@ -1,17 +1,11 @@
 'use client';
+import { fetchAdmin } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function AdminGarconsPage() {
   const [garcons, setGarcons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-    const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-    const withAdminToken = (url: string) => {
-        if (!adminToken) return url;
-        const separator = url.includes('?') ? '&' : '?';
-        return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
-    };
   
   // Estados para Edição/Criação
   const [editando, setEditando] = useState<any>(null);
@@ -27,7 +21,7 @@ export default function AdminGarconsPage() {
 
   async function carregarGarcons() {
     try {
-        const res = await fetch(withAdminToken('/api/admin/garcons'));
+        const res = await fetchAdmin('/api/admin/garcons');
         if (res.ok) {
             const data = await res.json();
             const payload = data?.data ?? data;
@@ -61,7 +55,7 @@ export default function AdminGarconsPage() {
       const url = editando ? `/api/admin/garcons?id=${editando.id}` : '/api/admin/garcons';
 
       try {
-          const res = await fetch(withAdminToken(url), {
+          const res = await fetchAdmin(url, {
               method: metodo,
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload)
@@ -86,7 +80,7 @@ export default function AdminGarconsPage() {
       if (!confirm('Tem certeza? Isso vai ZERAR o contador de giros de TODOS os garçons.')) return;
       
       try {
-          await fetch(withAdminToken('/api/admin/garcons/reset'), { method: 'POST' });
+          await fetchAdmin('/api/admin/garcons/reset', { method: 'POST' });
           alert('Ranking resetado com sucesso! 🏁');
           carregarGarcons();
       } catch (e) {

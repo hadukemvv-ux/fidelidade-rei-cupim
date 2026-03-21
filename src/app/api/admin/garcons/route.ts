@@ -31,7 +31,7 @@ type GarcomIdQueryInput = z.infer<typeof GarcomIdQuerySchema>;
 export async function GET(request: NextRequest) {
   const requestId = getRequestId(request);
 
-  const authError = validateAdminAuth(request, new URL(request.url));
+  const authError = await validateAdminAuth(request, new URL(request.url));
   if (authError) return authError;
 
   try {
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const requestId = getRequestId(request);
 
-  const authError = validateAdminAuth(request, new URL(request.url));
+  const authError = await validateAdminAuth(request, new URL(request.url));
   if (authError) return authError;
 
   try {
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const requestId = getRequestId(request);
 
-  const authError = validateAdminAuth(request, new URL(request.url));
+  const authError = await validateAdminAuth(request, new URL(request.url));
   if (authError) return authError;
 
   try {

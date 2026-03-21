@@ -1,4 +1,5 @@
 "use client";
+import { fetchAdmin } from '@/lib/adminFetch';
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -16,17 +17,10 @@ const garcomId = params.id;
   const [status, setStatus] = useState("limpo");
   const [desbloqueando, setDesbloqueando] = useState(false);
   const [analytics, setAnalytics] = useState<any[]>([]);
-  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-  const withAdminToken = (url: string) => {
-    if (!adminToken) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
-  };
 
   async function carregarDados() {
     try {
-      const analyticsRes = await fetch(withAdminToken('/api/admin/garcons/analytics'));
+      const analyticsRes = await fetchAdmin('/api/admin/garcons/analytics');
       const analyticsJson = await analyticsRes.json();
       const analyticsPayload = analyticsJson?.data ?? analyticsJson;
 
@@ -37,7 +31,7 @@ const garcomId = params.id;
 
       if (encontrado) setStatus(encontrado.status);
 
-      const logsRes = await fetch(withAdminToken(`/api/admin/garcons/logs?id=${garcomId}`));
+      const logsRes = await fetchAdmin(`/api/admin/garcons/logs?id=${garcomId}`);
       const logsJson = await logsRes.json();
       const logsPayload = logsJson?.data ?? logsJson;
       setLogs(logsPayload?.logs || logsPayload || []);
@@ -59,7 +53,7 @@ const garcomId = params.id;
     setDesbloqueando(true);
 
     try {
-      await fetch(withAdminToken('/api/admin/garcons/unblock'), {
+      await fetchAdmin('/api/admin/garcons/unblock', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

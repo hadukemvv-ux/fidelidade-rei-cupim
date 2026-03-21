@@ -1,5 +1,6 @@
 'use client';
 
+import { fetchAdmin } from '@/lib/adminFetch';
 import { useEffect, useState } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
@@ -20,14 +21,6 @@ export default function DashboardSimples() {
   const [grafClientes, setGrafClientes] = useState<any[]>([]);
   const [grafPontos, setGrafPontos] = useState<any[]>([]);
   const [grafResgates, setGrafResgates] = useState<any[]>([]);
-
-  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-  const withAdminToken = (url: string) => {
-    if (!adminToken) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
-  };
 
   useEffect(() => {
     async function carregar() {
@@ -79,7 +72,7 @@ export default function DashboardSimples() {
   }
 
   async function carregarKPIs() {
-    const res = await fetch(withAdminToken('/api/admin/dashboard'), { cache: 'no-store' });
+    const res = await fetchAdmin('/api/admin/dashboard', { cache: 'no-store' });
     const data = await res.json();
     const payload = data?.data ?? data;
 
@@ -97,7 +90,7 @@ export default function DashboardSimples() {
   }
 
   async function carregarGraficos() {
-    const res = await fetch(withAdminToken('/api/admin/analytics'), {
+    const res = await fetchAdmin('/api/admin/analytics', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ periodo: '30d' }),

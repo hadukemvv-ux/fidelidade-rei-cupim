@@ -1,5 +1,6 @@
 'use client';
 
+import { fetchAdmin } from '@/lib/adminFetch';
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
 import Link from 'next/link';
@@ -23,14 +24,6 @@ export default function ImportarPage() {
   const [resultadoClientes, setResultadoClientes] = useState<Resultado | null>(null);
 
   const [error, setError] = useState<string | null>(null);
-
-  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-  const withAdminToken = (url: string) => {
-    if (!adminToken) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
-  };
 
   const handleFileVendas = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0] || null;
@@ -62,7 +55,7 @@ export default function ImportarPage() {
       const ws = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws);
 
-      const response = await fetch(withAdminToken('/api/admin/importar'), {
+      const response = await fetchAdmin('/api/admin/importar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rows }),
@@ -99,7 +92,7 @@ export default function ImportarPage() {
       const ws = workbook.Sheets[workbook.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws);
 
-      const response = await fetch(withAdminToken('/api/admin/importar-clientes'), {
+      const response = await fetchAdmin('/api/admin/importar-clientes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rows }),

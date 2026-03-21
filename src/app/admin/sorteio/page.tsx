@@ -1,5 +1,6 @@
 'use client';
 
+import { fetchAdmin } from '@/lib/adminFetch';
 import { useEffect, useState } from 'react';
 
 import SorteioCard from '../../../components/sorteio/SorteioCard';
@@ -10,13 +11,6 @@ export default function SorteioAdminPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [rodando, setRodando] = useState(false);
-  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-  const withAdminToken = (url: string) => {
-    if (!adminToken) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
-  };
 
   const [sorteio, setSorteio] = useState<any>(null);
   const [ganhadores, setGanhadores] = useState<any[]>([]);
@@ -39,7 +33,7 @@ export default function SorteioAdminPage() {
   // ===================== CARREGAR SORTEIO =====================
   async function carregarSorteio() {
     try {
-      const res = await fetch(withAdminToken('/api/admin/sorteio'));
+      const res = await fetchAdmin('/api/admin/sorteio');
       const data = await res.json();
       const payload = data?.data ?? data;
 
@@ -70,7 +64,7 @@ export default function SorteioAdminPage() {
   // ===================== CARREGAR GANHADORES =====================
   async function carregarGanhadores() {
     try {
-      const res = await fetch(withAdminToken('/api/admin/sorteio/ganhadores'));
+      const res = await fetchAdmin('/api/admin/sorteio/ganhadores');
       const data = await res.json();
       const payload = data?.data ?? data;
       setGanhadores(payload?.ganhadores || []);
@@ -93,7 +87,7 @@ export default function SorteioAdminPage() {
         modo
       };
 
-      const res = await fetch(withAdminToken('/api/admin/sorteio'), {
+      const res = await fetchAdmin('/api/admin/sorteio', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -119,7 +113,7 @@ export default function SorteioAdminPage() {
     setRodando(true);
 
     try {
-      const res = await fetch(withAdminToken('/api/admin/sorteio/rodar'), { method: 'POST' });
+      const res = await fetchAdmin('/api/admin/sorteio/rodar', { method: 'POST' });
       const data = await res.json();
       const payload = data?.data ?? data;
 

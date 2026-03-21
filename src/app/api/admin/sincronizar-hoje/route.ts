@@ -12,7 +12,7 @@ import {
 export async function POST(request: NextRequest) {
   const requestId = getRequestId(request);
 
-  const authError = validateAdminAuth(request, new URL(request.url));
+  const authError = await validateAdminAuth(request, new URL(request.url));
   if (authError) return authError;
 
   try {

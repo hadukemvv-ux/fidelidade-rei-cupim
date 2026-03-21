@@ -1,18 +1,12 @@
 'use client';
 
+import { fetchAdmin } from '@/lib/adminFetch';
 import { useEffect, useState } from 'react';
 
 export default function GanhadoresPage() {
   const [loading, setLoading] = useState(true);
   const [ganhadores, setGanhadores] = useState<any[]>([]);
   const [erro, setErro] = useState<string | null>(null);
-  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-  const withAdminToken = (url: string) => {
-    if (!adminToken) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
-  };
 
   useEffect(() => {
     carregarGanhadores();
@@ -20,7 +14,7 @@ export default function GanhadoresPage() {
 
   async function carregarGanhadores() {
     try {
-      const res = await fetch(withAdminToken('/api/admin/sorteio/ganhadores'));
+      const res = await fetchAdmin('/api/admin/sorteio/ganhadores');
       const data = await res.json();
       const payload = data?.data ?? data;
 

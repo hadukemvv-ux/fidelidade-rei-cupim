@@ -82,7 +82,7 @@ function parseDataParaISO(value: unknown): string | null {
 export async function POST(req: NextRequest) {
   const requestId = getRequestId(req);
 
-  const authError = validateAdminAuth(req, new URL(req.url));
+  const authError = await validateAdminAuth(req, new URL(req.url));
   if (authError) return authError;
 
   try {

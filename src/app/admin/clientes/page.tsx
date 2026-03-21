@@ -1,5 +1,6 @@
 'use client';
 
+import { fetchAdmin } from '@/lib/adminFetch';
 import { useEffect, useState } from "react";
 
 export default function ClientesPage() {
@@ -7,18 +8,10 @@ export default function ClientesPage() {
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
 
-  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-  const withAdminToken = (url: string) => {
-    if (!adminToken) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
-  };
-
   async function carregarClientes() {
     setLoading(true);
 
-    const res = await fetch(withAdminToken('/api/admin/clientes'));
+    const res = await fetchAdmin('/api/admin/clientes');
     const dados = await res.json();
     const payload = dados?.data ?? dados;
 

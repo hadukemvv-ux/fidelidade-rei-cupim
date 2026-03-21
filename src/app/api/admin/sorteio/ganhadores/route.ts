@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const requestId = getRequestId(request);
 
   // ✅ Validar autenticação de admin
-  const authError = validateAdminAuth(request, new URL(request.url));
+  const authError = await validateAdminAuth(request, new URL(request.url));
   if (authError) return authError;
 
   try {

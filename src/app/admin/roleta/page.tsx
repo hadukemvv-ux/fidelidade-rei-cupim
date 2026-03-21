@@ -1,16 +1,10 @@
 'use client';
+import { fetchAdmin } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 
 export default function AdminRoletaPage() {
   const [premios, setPremios] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-  const withAdminToken = (url: string) => {
-    if (!adminToken) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
-  };
 
   useEffect(() => {
     carregar();
@@ -18,7 +12,7 @@ export default function AdminRoletaPage() {
 
   async function carregar() {
     try {
-      const res = await fetch(withAdminToken('/api/admin/premios'));
+      const res = await fetchAdmin('/api/admin/premios');
       const data = await res.json();
       const payload = data?.data ?? data;
 
@@ -32,7 +26,7 @@ export default function AdminRoletaPage() {
 
   async function salvarItem(item: any) {
     try {
-      await fetch(withAdminToken('/api/admin/premios'), {
+      await fetchAdmin('/api/admin/premios', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item)

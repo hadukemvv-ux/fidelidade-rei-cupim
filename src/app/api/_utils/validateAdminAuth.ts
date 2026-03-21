@@ -8,8 +8,9 @@
  */
 
 import { NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-export function validateAdminAuth(request: Request, url?: URL) {
+export async function validateAdminAuth(request: Request, url?: URL) {
   const secret = process.env.ADMIN_SECRET_TOKEN;
 
   if (!secret) {
@@ -37,23 +38,35 @@ export function validateAdminAuth(request: Request, url?: URL) {
     );
   }
 
-  if (token !== secret) {
-    return NextResponse.json(
-      { error: 'Token inválido ou expirado.' },
-      { status: 403 }
-    );
+  // Legacy admin token support (server-only secret)
+  if (token === secret) {
+    return null;
   }
 
-  // ✅ Token válido
-  return null;
+  // Modern admin auth: valid Supabase access token from signed-in session
+  if (headerToken) {
+    try {
+      const { data, error } = await supabaseAdmin.auth.getUser(headerToken);
+      if (!error && data?.user) {
+        return null;
+      }
+    } catch {
+      // Intentionally ignored: falls through to 403 below.
+    }
+  }
+
+  return NextResponse.json(
+    { error: 'Token inválido ou expirado.' },
+    { status: 403 }
+  );
 }
 
 /**
  * Helper para checar se a requisição é autenticada
  * Throw erro se não for autenticado
  */
-export function requireAdminAuth(request: Request, url?: URL) {
-  const result = validateAdminAuth(request, url);
+export async function requireAdminAuth(request: Request, url?: URL) {
+  const result = await validateAdminAuth(request, url);
   if (result) {
     throw result;
   }

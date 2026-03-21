@@ -1,4 +1,5 @@
 'use client';
+import { fetchAdmin } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 
 export default function AdminCardapio() {
@@ -6,14 +7,6 @@ export default function AdminCardapio() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState<any>(null);
-
-  const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN;
-
-  const withAdminToken = (url: string) => {
-    if (!adminToken) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}token=${encodeURIComponent(adminToken)}`;
-  };
 
   useEffect(() => {
     fetchProdutos();
@@ -34,7 +27,7 @@ export default function AdminCardapio() {
     );
 
     try {
-      const res = await fetch(withAdminToken('/api/admin/produtos'), {
+      const res = await fetchAdmin('/api/admin/produtos', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: produto.id, destaque: novoStatus })
@@ -58,7 +51,7 @@ export default function AdminCardapio() {
     const method = isNew ? 'POST' : 'PUT';
 
     try {
-      const res = await fetch(withAdminToken('/api/admin/produtos'), {
+      const res = await fetchAdmin('/api/admin/produtos', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(produtoEditando)

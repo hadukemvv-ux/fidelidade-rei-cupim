@@ -91,6 +91,11 @@ async function run() {
     assert(r.status === 403, `esperado 403, recebeu ${r.status}`);
   });
 
+  await test("Admin por query token legado → 401", async () => {
+    const r = await req("GET", `/api/admin/premios?token=${ADMIN_TOKEN}`);
+    assert(r.status === 401, `esperado 401, recebeu ${r.status}`);
+  });
+
   await test("Admin token correto → não 401/403", async () => {
     const r = await req("GET", "/api/admin/premios", { headers: { Authorization: `Bearer ${ADMIN_TOKEN}` } });
     assert(r.status !== 401 && r.status !== 403, `esperado 2xx/5xx, recebeu ${r.status}`);

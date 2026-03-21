@@ -1,8 +1,7 @@
 /**
  * Admin authentication validator
- * Supports both:
+ * Supports:
  * - Authorization header: "Authorization: Bearer {token}"
- * - Query param: "?token={token}"
  *
  * Auth strategies:
  * - Legacy: ADMIN_SECRET_TOKEN
@@ -40,19 +39,14 @@ export async function validateAdminAuth(request: Request, url?: URL) {
     );
   }
 
-  // Try header first
   const authHeader = request.headers.get('authorization');
   const headerToken = authHeader?.replace('Bearer ', '').trim();
 
-  // Then try query param
-  const urlObj = url || new URL(request.url);
-  const queryToken = urlObj.searchParams.get('token');
-
-  const token = headerToken || queryToken;
+  const token = headerToken;
 
   if (!token) {
     return NextResponse.json(
-      { error: 'Token de autenticação obrigatório (header ou query param).' },
+      { error: 'Token de autenticação obrigatório no header Authorization.' },
       { status: 401 }
     );
   }

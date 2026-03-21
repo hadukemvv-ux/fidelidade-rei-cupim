@@ -34,6 +34,7 @@ Edite ` .env.local ` com:
 - `SAIPOS_TOKEN`
 - `SAIPOS_ID`
 - `ADMIN_SECRET_TOKEN`
+- `ADMIN_ALLOWED_EMAILS` (opcional, recomendado)
 - `CRON_SECRET`
 
 Depois:
@@ -64,6 +65,7 @@ Esperado atualmente: `16 passaram, 0 falharam`.
 ## 5. Tokens e seguranca
 
 - Admin API: `Authorization: Bearer <JWT da sessao Supabase>`
+- Restricao recomendada: `ADMIN_ALLOWED_EMAILS=email1@dominio.com,email2@dominio.com`
 - Cron API: `Authorization: Bearer <CRON_SECRET>`
 - Webhook SAIPOS: header `x-auth-token: <SAIPOS_TOKEN>`
 

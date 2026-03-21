@@ -22,7 +22,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     async function check() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        router.replace('/admin/login');
+        router.replace('/login');
       } else {
         setAutorizado(true);
       }
@@ -75,7 +75,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   async function logout() {
     await supabase.auth.signOut();
-    router.replace('/admin/login');
+    router.replace('/login');
   }
 
   return (

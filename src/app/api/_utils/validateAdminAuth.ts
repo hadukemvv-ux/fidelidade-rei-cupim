@@ -3,12 +3,31 @@
  * Supports both:
  * - Authorization header: "Authorization: Bearer {token}"
  * - Query param: "?token={token}"
- * 
- * Token must match ADMIN_SECRET_TOKEN env var
+ *
+ * Auth strategies:
+ * - Legacy: ADMIN_SECRET_TOKEN
+ * - Modern: Supabase JWT + optional allowlist (ADMIN_ALLOWED_EMAILS)
  */
 
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
+function parseAdminAllowedEmails() {
+  const raw = process.env.ADMIN_ALLOWED_EMAILS || "";
+  return raw
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function hasAdminRole(user: any) {
+  const appRole = String(user?.app_metadata?.role || "").toLowerCase();
+  const userRole = String(user?.user_metadata?.role || "").toLowerCase();
+  const appIsAdmin = user?.app_metadata?.is_admin === true;
+  const userIsAdmin = user?.user_metadata?.is_admin === true;
+
+  return appRole === "admin" || appRole === "superadmin" || userRole === "admin" || userRole === "superadmin" || appIsAdmin || userIsAdmin;
+}
 
 export async function validateAdminAuth(request: Request, url?: URL) {
   const secret = process.env.ADMIN_SECRET_TOKEN;
@@ -47,7 +66,32 @@ export async function validateAdminAuth(request: Request, url?: URL) {
   if (headerToken) {
     try {
       const { data, error } = await supabaseAdmin.auth.getUser(headerToken);
-      if (!error && data?.user) {
+      const user = data?.user;
+      if (!error && user) {
+        const adminAllowedEmails = parseAdminAllowedEmails();
+        const userEmail = String(user.email || "").toLowerCase();
+        const emailAllowed = adminAllowedEmails.includes(userEmail);
+        const userIsAdmin = hasAdminRole(user);
+
+        // Transitional mode:
+        // - If allowlist is configured, enforce allowlist or explicit admin role
+        // - If allowlist is not configured, keep backward compatibility (any valid session)
+        if (adminAllowedEmails.length > 0) {
+          if (emailAllowed || userIsAdmin) {
+            return null;
+          }
+
+          return NextResponse.json(
+            { error: 'Usuário autenticado, mas sem permissão administrativa.' },
+            { status: 403 }
+          );
+        }
+
+        if (userIsAdmin) {
+          return null;
+        }
+
+        console.warn('⚠️ ADMIN_ALLOWED_EMAILS não configurado; permitindo sessão autenticada por compatibilidade.');
         return null;
       }
     } catch {

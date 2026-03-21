@@ -58,11 +58,13 @@ Documentacao historica (manter como referencia):
 - `SAIPOS_TOKEN`
 - `SAIPOS_ID`
 - `ADMIN_SECRET_TOKEN`
+- `ADMIN_ALLOWED_EMAILS` (opcional, recomendado)
 - `CRON_SECRET`
 
 ## Seguranca basica
 
 - Admin API usa `Authorization: Bearer <JWT da sessao Supabase>`
+- Para restringir admin por e-mail, configure `ADMIN_ALLOWED_EMAILS=email1@dominio.com,email2@dominio.com`
 - Cron API usa `Authorization: Bearer <CRON_SECRET>`
 - Webhook SAIPOS usa `x-auth-token: <SAIPOS_TOKEN>`
 - Nunca commitar `.env.local`

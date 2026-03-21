@@ -17,6 +17,7 @@ Documento consolidado em 21/03/2026.
    - `SAIPOS_TOKEN`
    - `SAIPOS_ID`
    - `ADMIN_SECRET_TOKEN`
+   - `ADMIN_ALLOWED_EMAILS` (opcional, recomendado)
    - `CRON_SECRET`
 
 2. Validacao local antes do push:

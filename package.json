@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:kill": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$ports = @(3000,3001); $pids = @(); foreach ($p in $ports) { $pids += (Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique) }; $pids = $pids | Sort-Object -Unique; foreach ($pid in $pids) { Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue }; if (Test-Path '.next/dev/lock') { Remove-Item '.next/dev/lock' -Force }\"",
+    "dev:clean": "npm run dev:kill && npm run dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

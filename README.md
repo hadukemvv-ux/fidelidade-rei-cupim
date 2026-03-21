@@ -22,6 +22,12 @@ npm run dev
 
 Abra `http://localhost:3000`.
 
+Se o `npm run dev` falhar com lock da pasta `.next/dev/lock`:
+
+```bash
+npm run dev:clean
+```
+
 ## Validacao tecnica
 
 ```bash

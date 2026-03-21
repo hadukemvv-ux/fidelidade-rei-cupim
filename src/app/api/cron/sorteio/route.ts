@@ -44,6 +44,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ message: "Nenhum sorteio ativo encontrado" });
     }
 
+    const sorteioLegacyId = Number(sorteio.id_new);
+    if (!Number.isInteger(sorteioLegacyId) || sorteioLegacyId <= 0) {
+      return NextResponse.json(
+        { error: "Sorteio ativo sem id_new valido. Corrija o cadastro do sorteio." },
+        { status: 500 }
+      );
+    }
+
     const agora = new Date();
     const dataSorteio = new Date(sorteio.data_sorteio);
 
@@ -57,7 +65,7 @@ export async function GET(req: NextRequest) {
     const { data: ganhadoresExistentes } = await supabaseAdmin
       .from("sorteios_ganhadores")
       .select("*")
-      .eq("sorteio_id", sorteio.id)
+      .eq("sorteio_id", sorteioLegacyId)
       .limit(1);
 
     if (ganhadoresExistentes && ganhadoresExistentes.length > 0) {
@@ -99,8 +107,8 @@ export async function GET(req: NextRequest) {
     const { error: saveErr } = await supabaseAdmin
       .from("sorteios_ganhadores")
       .insert({
-        sorteio_id: sorteio.id,
-        cliente_id: ganhador.id,
+        sorteio_id: sorteioLegacyId,
+        cliente_id: null,
         nome_cliente: ganhador.nome,
         telefone_cliente: ganhador.telefone,
         tickets_no_sorteio: ganhador.tickets,
@@ -126,6 +134,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       message: "Sorteio automático executado com sucesso",
+      sorteio_id: sorteioLegacyId,
+      sorteio_uuid: sorteio.id,
       ganhador,
     });
 

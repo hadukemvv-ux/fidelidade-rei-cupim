@@ -47,18 +47,23 @@ export async function POST(request: NextRequest) {
       return errorResponse('Nenhum sorteio ativo encontrado', 'not_found');
     }
 
+    const sorteioLegacyId = Number(sorteio.id_new);
+    if (!Number.isInteger(sorteioLegacyId) || sorteioLegacyId <= 0) {
+      return errorResponse('Sorteio ativo sem id_new valido', 'server_error');
+    }
+
     // ======================================================
     // 2. VALIDAR SE JÁ FOI CONCLUÍDO
     // ======================================================
     const { data: ganhadorExistente } = await supabaseAdmin
       .from('sorteios_ganhadores')
       .select('*')
-      .eq('sorteio_id', sorteio.id)
+      .eq('sorteio_id', sorteioLegacyId)
       .limit(1);
 
     if (ganhadorExistente && ganhadorExistente.length > 0) {
       logInfo('/api/admin/sorteio/rodar', 'Tentativa de sorteio duplicado', {
-        sorteio_id: sorteio.id,
+        sorteio_id: sorteioLegacyId,
         requestId,
       });
 
@@ -185,13 +190,13 @@ export async function POST(request: NextRequest) {
     // 8. SALVAR GANHADOR
     // ======================================================
     const timestampGanhador = new Date().toISOString();
-    const hashAuditoria = gerarHashAuditoria(sorteio.id, ganhador.id, timestampGanhador);
+    const hashAuditoria = gerarHashAuditoria(sorteioLegacyId, ganhador.id, timestampGanhador);
 
     const { error: ganhadorErr } = await supabaseAdmin
       .from('sorteios_ganhadores')
       .insert({
-        sorteio_id: sorteio.id,
-        cliente_id: ganhador.id,
+        sorteio_id: sorteioLegacyId,
+        cliente_id: null,
         nome_cliente: ganhador.nome,
         telefone_cliente: ganhador.telefone,
         tickets_no_sorteio: ganhador.tickets,
@@ -264,14 +269,15 @@ export async function POST(request: NextRequest) {
       ]);
 
     logInfo('/api/admin/sorteio/rodar', 'Sorteio concluído com sucesso', {
-      sorteio_id: sorteio.id,
+      sorteio_id: sorteioLegacyId,
       ganhador_id: ganhador.id,
       participantes: clientesOrdenados.length,
       requestId,
     });
 
     return successResponse({
-      sorteio_id: sorteio.id,
+      sorteio_id: sorteioLegacyId,
+      sorteio_uuid: sorteio.id,
       ganhador: {
         id: ganhador.id,
         nome: ganhador.nome,

@@ -4,7 +4,7 @@ import { successResponse, logError, handleApiError } from '@/lib/api-utils';
 type GanhadorRow = {
   id: number;
   sorteio_id: number;
-  cliente_id: number;
+  cliente_id: number | null;
   nome_cliente: string | null;
   telefone_cliente: string | null;
   tickets_no_sorteio: number | null;

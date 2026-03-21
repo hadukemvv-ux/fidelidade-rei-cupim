@@ -114,17 +114,30 @@ export async function GET(request: NextRequest) {
     }
 
     const vendas = await response.json();
+    let falhas = 0;
 
     // ===============================
     // PROCESSAMENTO COM O MOTOR ÚNICO
     // ===============================
     for (const venda of vendas) {
-      await processarVenda(venda);
+      try {
+        await processarVenda(venda);
+      } catch (error: any) {
+        falhas += 1;
+        await registrarLog(
+          "erro_processamento_historico",
+          error?.message || 'Erro desconhecido ao processar venda historica',
+          undefined,
+          venda?.id_sale,
+          Number(venda?.total_amount || 0)
+        );
+      }
     }
 
     return NextResponse.json({
       sucesso: true,
       vendas_recebidas: vendas.length,
+      falhas,
       periodo: { inicio, fim }
     });
 

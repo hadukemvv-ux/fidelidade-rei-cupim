@@ -53,7 +53,7 @@ export interface Sorteio {
 export interface GanhadorSorteio {
   id: number;
   sorteio_id: number;
-  cliente_id: number;
+  cliente_id: number | null;
   nome_cliente: string;
   telefone_cliente: string;
   tickets_no_sorteio: number;

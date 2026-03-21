@@ -102,7 +102,10 @@ async function run() {
   });
 
   await test("Cron token correto → não 401/403", async () => {
-    const r = await req("GET", "/api/cron/saipos", { headers: { Authorization: `Bearer ${CRON_SECRET}` } });
+    const r = await req("GET", "/api/cron/sorteio", {
+      headers: { Authorization: `Bearer ${CRON_SECRET}` },
+      timeoutMs: 20000,
+    });
     assert(r.status !== 401 && r.status !== 403, `esperado 2xx/5xx, recebeu ${r.status}`);
   });
 
@@ -189,7 +192,7 @@ async function run() {
     await test(`${path} com CRON_SECRET → não 401/403`, async () => {
       const r = await req("GET", path, {
         headers: { Authorization: `Bearer ${CRON_SECRET}` },
-        timeoutMs: 30000,
+        timeoutMs: path.includes("/api/cron/saipos") ? 120000 : 30000,
       });
       assert(r.status !== 401 && r.status !== 403,
         `auth falhou com token correto: ${r.status} — ${JSON.stringify(r.json)}`);

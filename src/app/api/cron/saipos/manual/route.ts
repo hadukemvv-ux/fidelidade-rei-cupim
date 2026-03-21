@@ -88,10 +88,15 @@ export async function GET(req: NextRequest) {
 
     // 🔥 PROCESSAR CADA VENDA USANDO O MOTOR ÚNICO
     let processadas = 0;
+    let falhas = 0;
 
     for (const venda of vendas) {
-      await processarVenda(venda);
-      processadas++;
+      try {
+        await processarVenda(venda);
+        processadas++;
+      } catch {
+        falhas++;
+      }
     }
 
     return NextResponse.json({
@@ -99,6 +104,7 @@ export async function GET(req: NextRequest) {
       periodo_usado: { inicio, fim },
       vendas_recebidas: vendas.length,
       vendas_processadas: processadas,
+      falhas,
     });
 
   } catch (err: any) {

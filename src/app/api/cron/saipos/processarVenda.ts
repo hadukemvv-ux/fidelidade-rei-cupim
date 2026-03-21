@@ -20,6 +20,14 @@ async function registrarLog(
 export async function processarVenda(venda: any) {
   const idSale = venda.id_sale;
 
+  if (!idSale) {
+    await registrarLog(
+      "pedido_invalido",
+      "Pedido ignorado — id_sale ausente"
+    );
+    return;
+  }
+
   // 0) Evitar duplicação
   const jaProcessado = await supabaseAdmin
     .from("saipos_pedidos_processados")
@@ -59,18 +67,42 @@ export async function processarVenda(venda: any) {
     return;
   }
 
-  const cpf = venda.customer?.cpf_cnpj || null;
-  const telefone = venda.customer?.phone?.[0] || null;
+  const cpf = venda.customer?.cpf_cnpj || venda.customer_cpf || null;
+  const telefoneRaw = venda.customer?.phone;
+  const telefone = Array.isArray(telefoneRaw)
+    ? telefoneRaw[0] || null
+    : typeof telefoneRaw === "string"
+      ? telefoneRaw
+      : venda.customer_phone || venda.telefone || null;
   const nome = venda.customer?.name || "Cliente";
+
+  if (!cpf && !telefone) {
+    await registrarLog(
+      "pedido_sem_identificacao",
+      "Pedido ignorado — cliente sem CPF e telefone",
+      undefined,
+      idSale,
+      valor
+    );
+    return;
+  }
 
   // 1) Buscar cliente
   let cliente = null;
 
+  const filtros: string[] = [];
+  if (cpf) filtros.push(`cpf.eq.${cpf}`);
+  if (telefone) filtros.push(`telefone.eq.${telefone}`);
+
   const busca = await supabaseAdmin
     .from("base_clientes_saipos")
     .select("*")
-    .or(`cpf.eq.${cpf},telefone.eq.${telefone}`)
+    .or(filtros.join(","))
     .maybeSingle();
+
+  if (busca.error) {
+    throw new Error(`Falha ao buscar cliente da venda ${idSale}: ${busca.error.message}`);
+  }
 
   if (busca.data) cliente = busca.data;
 
@@ -94,6 +126,12 @@ export async function processarVenda(venda: any) {
       .select()
       .single();
 
+    if (insert.error || !insert.data) {
+      throw new Error(
+        `Falha ao criar cliente da venda ${idSale}: ${insert.error?.message || "sem retorno do Supabase"}`
+      );
+    }
+
     cliente = insert.data;
 
     await registrarLog(
@@ -104,14 +142,7 @@ export async function processarVenda(venda: any) {
     );
   }
 
-  // 3) Calcular inatividade
-  const hoje = new Date();
-  const ultima = new Date(cliente.ultima_compra);
-  const diasSemComprar = Math.floor(
-    (hoje.getTime() - ultima.getTime()) / 86400000
-  );
-
-  // 4) Calculate new total spent and get level
+  // 3) Calculate new total spent and get level
   const novoTotal = Number(cliente.total_gasto) + valor;
   const nivelInfo = getNivelPorGasto(novoTotal);
   const pontosGanhos = calcularPontosEarned(valor, novoTotal);

@@ -6,7 +6,7 @@ import { successResponse, getRequestId, logInfo, logError, handleApiError } from
 type GanhadorQueryRow = {
   id: number;
   sorteio_id: number;
-  cliente_id: number;
+  cliente_id: number | null;
   nome: string | null;
   telefone: string | null;
   tickets_no_sorteio: number | null;

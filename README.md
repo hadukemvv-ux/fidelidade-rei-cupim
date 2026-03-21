@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Projeto Fidelidade (SAIPOS + Supabase + Next.js)
 
-## Getting Started
+Sistema de fidelidade para restaurante com:
+- Pontos, cashback e tickets por compra
+- Integracao com SAIPOS (webhook + cron)
+- Area admin protegida por token
+- Crons de sincronizacao e expiracao
 
-First, run the development server:
+## Estado atual
+
+- Build: passando
+- TypeScript: sem erros
+- Suite de integracao: `16/16` testes aprovados
+- Deploy: push em `main` publica na Vercel automaticamente
+
+## Inicio rapido
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Validacao tecnica
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npx tsc --noEmit
+node tests/saipos-integration.js
+```
 
-## Learn More
+## Documentacao oficial do projeto
 
-To learn more about Next.js, take a look at the following resources:
+Para iniciantes:
+- `docs/GUIA-INICIANTE.md`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Para operacao e testes:
+- `docs/GUIA-OPERACAO-E-TESTES.md`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Roadmap:
+- `docs/ROADMAP.md`
 
-## Deploy on Vercel
+Para revisao por outras IAs:
+- `docs/GUIA-PARA-IA-REVIEW.md`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Documentacao historica (manter como referencia):
+- `ARQUITETURA.md`
+- `DEPLOYMENT.md`
+- `IMPLEMENTACOES.md`
+- `STATUS_ALPHA.md`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Variaveis de ambiente essenciais
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SAIPOS_TOKEN`
+- `SAIPOS_ID`
+- `ADMIN_SECRET_TOKEN`
+- `NEXT_PUBLIC_ADMIN_TOKEN`
+- `CRON_SECRET`
+
+## Seguranca basica
+
+- Admin API usa `Authorization: Bearer <ADMIN_SECRET_TOKEN>`
+- Cron API usa `Authorization: Bearer <CRON_SECRET>`
+- Webhook SAIPOS usa `x-auth-token: <SAIPOS_TOKEN>`
+- Nunca commitar `.env.local`

@@ -33,8 +33,9 @@ Edite ` .env.local ` com:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SAIPOS_TOKEN`
 - `SAIPOS_ID`
-- `ADMIN_SECRET_TOKEN`
+- `ADMIN_SECRET_TOKEN` (opcional, fallback legado)
 - `ADMIN_ALLOWED_EMAILS` (opcional, recomendado)
+- `ADMIN_TEST_EMAIL` e `ADMIN_TEST_PASSWORD` (opcional, recomendado para testes)
 - `CRON_SECRET`
 
 Depois:
@@ -60,7 +61,7 @@ npx tsc --noEmit
 node tests/saipos-integration.js
 ```
 
-Esperado atualmente: `16 passaram, 0 falharam`.
+Esperado atualmente: `17 passaram, 0 falharam`.
 
 ## 5. Tokens e seguranca
 

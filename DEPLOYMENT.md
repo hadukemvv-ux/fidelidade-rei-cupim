@@ -16,7 +16,7 @@ Documento consolidado em 21/03/2026.
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `SAIPOS_TOKEN`
    - `SAIPOS_ID`
-   - `ADMIN_SECRET_TOKEN`
+   - `ADMIN_SECRET_TOKEN` (opcional, fallback legado)
    - `ADMIN_ALLOWED_EMAILS` (opcional, recomendado)
    - `ADMIN_TEST_EMAIL` e `ADMIN_TEST_PASSWORD` (opcional, recomendado para testes locais)
    - `CRON_SECRET`

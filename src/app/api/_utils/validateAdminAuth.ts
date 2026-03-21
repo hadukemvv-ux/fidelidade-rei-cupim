@@ -31,14 +31,6 @@ function hasAdminRole(user: any) {
 export async function validateAdminAuth(request: Request, url?: URL) {
   const secret = process.env.ADMIN_SECRET_TOKEN;
 
-  if (!secret) {
-    console.warn('⚠️ ADMIN_SECRET_TOKEN não configurado. Admin routes desprotegidas.');
-    return NextResponse.json(
-      { error: 'Admin token não configurado no servidor.' }, 
-      { status: 500 }
-    );
-  }
-
   const authHeader = request.headers.get('authorization');
   const headerToken = authHeader?.replace('Bearer ', '').trim();
 
@@ -52,7 +44,7 @@ export async function validateAdminAuth(request: Request, url?: URL) {
   }
 
   // Legacy admin token support (server-only secret)
-  if (token === secret) {
+  if (secret && token === secret) {
     return null;
   }
 

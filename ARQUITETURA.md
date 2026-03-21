@@ -18,7 +18,8 @@ Documento consolidado em 21/03/2026 para manter consistencia com os guias em `do
 
 ## Seguranca
 
-- Admin APIs: `Authorization: Bearer <ADMIN_SECRET_TOKEN>`
+- Admin APIs: `Authorization: Bearer <JWT da sessao Supabase>`
+- Restricao recomendada: `ADMIN_ALLOWED_EMAILS` ou metadata admin no usuario Supabase
 - Cron APIs: `Authorization: Bearer <CRON_SECRET>`
 - Webhook SAIPOS: `x-auth-token: <SAIPOS_TOKEN>`
 

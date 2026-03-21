@@ -6,13 +6,15 @@ Atualizado em 21/03/2026.
 
 - Build: passando
 - TypeScript: sem erros
-- Suite de integracao: 16/16
+- Suite de integracao: 17/17
 - Deploy via GitHub -> Vercel: ativo
 
 ## Entregas principais concluidas
 
 1. Seguranca
 - Rotas admin protegidas
+- Admin por query token removido
+- Auth admin principal via sessao Supabase
 - Rotas cron protegidas
 - Remocao de segredos hardcoded
 

@@ -7,7 +7,7 @@ Atualizado em 21/03/2026.
 - Build: OK
 - TypeScript: OK
 - Integracao SAIPOS: OK
-- Suite automatizada: 16/16
+- Suite automatizada: 17/17
 
 ## Maturidade atual
 

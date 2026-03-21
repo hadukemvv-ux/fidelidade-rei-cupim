@@ -1,8 +1,8 @@
-# 🚀 Quick Start Guide - Programa de Fidelidade
+# Quick Start Guide - Programa de Fidelidade
 
 **Tempo de setup**: 10 minutos  
 **Skill necessário**: Node.js basics, TypeScript basics  
-**Last Updated**: 17/03/2026
+**Last Updated**: 21/03/2026
 
 ---
 
@@ -28,9 +28,11 @@ cp .env.example .env.local
 # - SUPABASE_SERVICE_ROLE_KEY
 # - SAIPOS_TOKEN (from Saipos)
 
-# Generate tokens (run twice)
-openssl rand -base64 32  # → ADMIN_SECRET_TOKEN
+# Generate token
 openssl rand -base64 32  # → CRON_SECRET
+
+# Optional legacy fallback for admin auth
+openssl rand -base64 32  # → ADMIN_SECRET_TOKEN
 ```
 
 ---
@@ -57,8 +59,8 @@ src/
 │   │   ├── resgate/       # POST /api/resgate
 │   │   ├── webhooks/      # Webhook receivers (Saipos)
 │   │   ├── cron/          # Scheduled jobs
-│   │   ├── admin/         # 🔒 Protected routes (need ADMIN_SECRET_TOKEN)
-│   │   └── _utils/        # validateAdminAuth, validarToken
+│   │   ├── admin/         # Protected routes (need Supabase session)
+│   │   └── _utils/        # validateAdminAuth
 │   ├── login/page.tsx
 │   └── admin/             # Admin dashboard pages
 ├── lib/
@@ -155,11 +157,11 @@ export async function POST(request: Request) {
 ### Protect admin route
 
 ```typescript
-import { validateAdminAuth } from '@/lib/_utils/validateAdminAuth'
+import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth'
 
 export async function POST(request: Request) {
-  // 1. Check admin token first
-  const authError = validateAdminAuth(request)
+  // 1. Check admin auth first
+  const authError = await validateAdminAuth(request)
   if (authError) return authError
   
   // 2. Then do your logic
@@ -243,15 +245,16 @@ curl -X POST http://localhost:3000/api/webhooks/saipos \
 
 ## 🔒 Security Things to Know
 
-1. **Admin routes**: Require `ADMIN_SECRET_TOKEN` header
+1. **Admin routes**: Require `Authorization: Bearer <JWT da sessao Supabase>`
    ```bash
-   Authorization: Bearer {ADMIN_SECRET_TOKEN}
+  Authorization: Bearer {SUPABASE_ACCESS_TOKEN}
    ```
 
 2. **Webhooks**: Check `x-auth-token` header
 3. **Cron jobs**: Require `CRON_SECRET` (only Vercel can call automatically)
-4. **Never commit**: `.env.local` is in `.gitignore` ✅
-5. **Never log**: Passwords, tokens, sensitive data
+4. **Allowlist recomendada**: configure `ADMIN_ALLOWED_EMAILS`
+5. **Never commit**: `.env.local` is in `.gitignore` ✅
+6. **Never log**: Passwords, tokens, sensitive data
 
 ---
 

@@ -14,7 +14,7 @@ Nao considere calculos duplicados fora desse arquivo como fonte principal.
 
 ## 3. Endpoints sensiveis
 
-- Admin: `src/app/api/admin/**` (token admin)
+- Admin: `src/app/api/admin/**` (sessao Supabase + allowlist/role admin)
 - Cron: `src/app/api/cron/**` (token cron)
 - Webhook SAIPOS: `src/app/api/webhooks/saipos/route.ts`
 
@@ -36,7 +36,7 @@ Nao considere calculos duplicados fora desse arquivo como fonte principal.
 
 - Build passando (`npm run build`)
 - TypeScript sem erros (`npx tsc --noEmit`)
-- Suite de integracao passando (`tests/saipos-integration.js`, 16/16)
+- Suite de integracao passando (`tests/saipos-integration.js`, 17/17)
 
 ## 7. O que uma IA deveria revisar agora
 

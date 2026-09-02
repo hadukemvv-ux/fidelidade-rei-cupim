@@ -1,5 +1,4 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { getNivelPorGasto, calcularPontosEarned, calcularTicketsEarned, calcularCashbackValue, type NivelFidelidade } from "@/lib/fidelidade-rules";
 
 async function registrarLog(
   tipo: string,
@@ -142,30 +141,35 @@ export async function processarVenda(venda: any) {
     );
   }
 
-  // 3) Calculate new total spent and get level
-  const novoTotal = Number(cliente.total_gasto) + valor;
-  const nivelInfo = getNivelPorGasto(novoTotal);
-  const pontosGanhos = calcularPontosEarned(valor, novoTotal);
-  const cashbackGanhos = calcularCashbackValue(valor, novoTotal);
-  const ticketsGanhos = calcularTicketsEarned(valor, novoTotal);
+  // 3) Crédito atômico: idempotência, saldos, nível, fração de tickets e ledger
+  // são confirmados juntos dentro de uma única transação no Postgres.
+  const ocorreuEm = venda.shift_date || venda.created_at || new Date().toISOString();
+  const { data: credito, error: creditoError } = await supabaseAdmin.rpc(
+    "creditar_venda_fidelidade",
+    {
+      p_cliente_id: cliente.id,
+      p_id_sale: idSale,
+      p_valor: valor,
+      p_ocorreu_em: ocorreuEm,
+    }
+  );
 
-  // 5) Atualizar cliente with new level and benefits
-  await supabaseAdmin
+  if (creditoError) {
+    throw new Error(`Falha ao creditar venda ${idSale}: ${creditoError.message}`);
+  }
+
+  if (credito?.duplicada) {
+    await registrarLog("pedido_duplicado", "Pedido ignorado — concorrência/retry", cliente.id, idSale);
+    return;
+  }
+
+  const { error: dadosError } = await supabaseAdmin
     .from("base_clientes_saipos")
-    .update({
-      nome,
-      telefone,
-      cpf,
-      nivel: nivelInfo.nivel.toLowerCase(),
-      pontos: Number(cliente.pontos) + pontosGanhos,
-      cashback: Number(cliente.cashback) + cashbackGanhos,
-      tickets: Number(cliente.tickets) + ticketsGanhos,
-      total_gasto: novoTotal,
-      qtd_pedidos: Number(cliente.qtd_pedidos) + 1,
-      ultima_compra: new Date().toISOString(),
-      atualizado_em: new Date().toISOString(),
-    })
+    .update({ nome, telefone, cpf, atualizado_em: new Date().toISOString() })
     .eq("id", cliente.id);
+  if (dadosError) {
+    await registrarLog("aviso_dados_cliente", dadosError.message, cliente.id, idSale);
+  }
 
   // Log principal
   await registrarLog(
@@ -176,8 +180,4 @@ export async function processarVenda(venda: any) {
     valor
   );
 
-  // 6) Marcar como processado
-  await supabaseAdmin
-    .from("saipos_pedidos_processados")
-    .insert({ id_sale: idSale });
 }

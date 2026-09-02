@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { validarDados, ClienteSchema, type ClienteValidation } from '@/lib/validations';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
 import crypto from 'crypto';
+import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
 
 // Helpers
 function onlyDigits(v: string) {
@@ -89,6 +90,9 @@ export async function POST(req: NextRequest) {
     }
 
     const { telefone, nome, email, data_nascimento, pin } = validacao.data;
+
+    const authError = await validateCustomerAuth(req, telefone);
+    if (authError) return authError;
 
     logInfo('/api/cadastro', 'Iniciando cadastro', {
       telefone: `****${telefone.slice(-4)}`,

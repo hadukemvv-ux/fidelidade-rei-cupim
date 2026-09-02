@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,9 @@ export const dynamic = 'force-dynamic';
 // - top 10 clientes
 // ===========================================
 
-export async function GET() {
+export async function GET(request: Request) {
+  const authError = await validateAdminAuth(request, new URL(request.url));
+  if (authError) return authError;
   try {
     const { data: clientes, error } = await supabaseAdmin
       .from('base_clientes_saipos')

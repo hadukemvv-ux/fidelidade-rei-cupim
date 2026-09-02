@@ -1,9 +1,13 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
+import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
 
 export async function POST(request: NextRequest) {
   const requestId = getRequestId(request);
+
+  const authError = await validateAdminAuth(request, new URL(request.url));
+  if (authError) return authError;
 
   try {
     const body = await request.json();

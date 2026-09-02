@@ -21,11 +21,10 @@ function parseAdminAllowedEmails() {
 
 function hasAdminRole(user: any) {
   const appRole = String(user?.app_metadata?.role || "").toLowerCase();
-  const userRole = String(user?.user_metadata?.role || "").toLowerCase();
   const appIsAdmin = user?.app_metadata?.is_admin === true;
-  const userIsAdmin = user?.user_metadata?.is_admin === true;
 
-  return appRole === "admin" || appRole === "superadmin" || userRole === "admin" || userRole === "superadmin" || appIsAdmin || userIsAdmin;
+  // user_metadata is intentionally ignored: end users can update it themselves.
+  return appRole === "admin" || appRole === "superadmin" || appIsAdmin;
 }
 
 export async function validateAdminAuth(request: Request, url?: URL) {
@@ -59,26 +58,18 @@ export async function validateAdminAuth(request: Request, url?: URL) {
         const emailAllowed = adminAllowedEmails.includes(userEmail);
         const userIsAdmin = hasAdminRole(user);
 
-        // Transitional mode:
-        // - If allowlist is configured, enforce allowlist or explicit admin role
-        // - If allowlist is not configured, keep backward compatibility (any valid session)
-        if (adminAllowedEmails.length > 0) {
-          if (emailAllowed || userIsAdmin) {
-            return null;
-          }
-
-          return NextResponse.json(
-            { error: 'Usuário autenticado, mas sem permissão administrativa.' },
-            { status: 403 }
-          );
-        }
-
-        if (userIsAdmin) {
+        if (emailAllowed || userIsAdmin) {
           return null;
         }
 
-        console.warn('⚠️ ADMIN_ALLOWED_EMAILS não configurado; permitindo sessão autenticada por compatibilidade.');
-        return null;
+        return NextResponse.json(
+          {
+            error: adminAllowedEmails.length === 0
+              ? 'Acesso administrativo não configurado. Defina ADMIN_ALLOWED_EMAILS ou app_metadata.role.'
+              : 'Usuário autenticado, mas sem permissão administrativa.',
+          },
+          { status: 403 }
+        );
       }
     } catch {
       // Intentionally ignored: falls through to 403 below.

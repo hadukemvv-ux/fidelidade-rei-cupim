@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import crypto from 'crypto';
+import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
 
 function onlyDigits(v: string) {
   return v.replace(/\D/g, '');
@@ -57,6 +58,9 @@ export async function POST(req: Request) {
 
     if (telefone.length !== 11)
       return NextResponse.json({ ok: false, error: 'Telefone inválido.' }, { status: 400 });
+
+    const authError = await validateCustomerAuth(req, telefone);
+    if (authError) return authError;
 
     // -------------------------------------------------------------------
     // 🟩 NOVO: DETECTAR PRÉ‑CADASTRO (quando só enviam telefone)

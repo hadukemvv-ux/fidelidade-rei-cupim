@@ -4,6 +4,7 @@ import { getNivelPorGasto, calcularProgressaoNivel } from '@/lib/fidelidade-rule
 import { validarDados, ResgateSchema, type ResgateValidation } from '@/lib/validations';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
 import crypto from 'crypto';
+import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
 
 // =========================
 // HELPERS
@@ -69,7 +70,7 @@ async function buscarSnapshot(telefone: string) {
 
   if (!cliente) throw new Error('Cliente não encontrado.');
 
-  const gastoAtual = Number(cliente.total_gasto || 0);
+  const gastoAtual = Number(cliente.gasto_90_dias ?? cliente.total_gasto ?? 0);
   const nivel = calcularNivel(gastoAtual);
 
   let progresso = 0;
@@ -124,6 +125,9 @@ export async function POST(req: NextRequest) {
 
     const { telefone, pin, tipo, valor, valorDesconto, produtoId } = validacao.data;
 
+    const authError = await validateCustomerAuth(req, telefone);
+    if (authError) return authError;
+
     logInfo('/api/resgate', 'Iniciando resgate', {
       telefone: `****${telefone.slice(-4)}`,
       tipo: tipo || 'consulta',
@@ -151,8 +155,8 @@ export async function POST(req: NextRequest) {
     // 2. DETECÇÃO PRÉ-CADASTRO
     const preCadastro = isPreCadastro(cliente);
 
-    if (preCadastro && !tipo) {
-      // Retorna consulta para pré-cadastro
+    if (preCadastro) {
+      // Pré-cadastro nunca pode consultar saldo nem resgatar antes de comprovar o telefone.
       return successResponse({
         ok: true,
         pre_cadastro: true,

@@ -4,6 +4,7 @@ import { validarDados } from '@/lib/validations';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
 import crypto from 'crypto';
 import { z } from 'zod';
+import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
 
 // Schema para redefinição de PIN
 const RedefinirPinSchema = z.object({
@@ -27,6 +28,9 @@ export async function POST(req: NextRequest) {
     }
 
     const { telefone, data_nascimento, novo_pin } = validacao.data;
+
+    const authError = await validateCustomerAuth(req, telefone);
+    if (authError) return authError;
 
     logInfo('/api/redefinir-pin', 'Iniciando redefinição de PIN', {
       telefone: `****${telefone.slice(-4)}`,

@@ -10,6 +10,7 @@ import {
   logInfo,
   getRequestId 
 } from '@/lib/api-utils';
+import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
 
 // GET /api/consultar?telefone=...
 export async function GET(request: NextRequest) {
@@ -30,13 +31,16 @@ export async function GET(request: NextRequest) {
 
     const { telefone } = validacao.data;
 
+    const authError = await validateCustomerAuth(request, telefone);
+    if (authError) return authError;
+
     // Log da consulta
     logInfo('/api/consultar', 'Buscando cliente', { telefone: `****${telefone.slice(-4)}`, requestId });
 
     // Buscar cliente na tabela principal (otimizado - select específico)
     const { data: cliente, error } = await supabaseAdmin
       .from('base_clientes_saipos')
-      .select('id, nome, email, data_nascimento, telefone, total_gasto, pontos, cashback, tickets')
+      .select('id, nome, email, data_nascimento, telefone, total_gasto, gasto_90_dias, pontos, cashback, tickets')
       .eq('telefone', telefone)
       .single();
 
@@ -54,8 +58,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Usar a estrutura unificada para cálculos
-    const progresso = calcularProgressaoNivel(cliente.total_gasto);
-    const nivelAtual = getNivelPorGasto(cliente.total_gasto);
+    const gastoElegivel = Number(cliente.gasto_90_dias ?? cliente.total_gasto ?? 0);
+    const progresso = calcularProgressaoNivel(gastoElegivel);
+    const nivelAtual = getNivelPorGasto(gastoElegivel);
 
     logInfo('/api/consultar', 'Cliente encontrado e processado', {
       telefone: `****${telefone.slice(-4)}`,

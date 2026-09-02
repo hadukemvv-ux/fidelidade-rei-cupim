@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Identificador da venda ausente.' }, { status: 400 });
     }
 
-    await processarVenda({
+    const resultado = await processarVenda({
       ...body,
       id_sale: idSale,
       total_amount: totalAmount,
@@ -33,7 +33,16 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({ ok: true, id_sale: idSale });
+    if (resultado.status === 'ignorada') {
+      return NextResponse.json({ ok: false, id_sale: resultado.idSale, motivo: resultado.motivo });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      id_sale: resultado.idSale,
+      duplicada: resultado.status === 'duplicada',
+      credito: resultado.status === 'processada' ? resultado.credito : undefined,
+    });
   } catch (error) {
     console.error('Erro no webhook Saipos:', error);
     return NextResponse.json({ error: 'Falha ao processar a venda.' }, { status: 500 });

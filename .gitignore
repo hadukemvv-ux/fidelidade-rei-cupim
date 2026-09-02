@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local database snapshots (may contain customer data)
+/backups/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

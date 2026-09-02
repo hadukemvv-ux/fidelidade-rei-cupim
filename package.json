@@ -8,7 +8,8 @@
     "dev:clean": "npm run dev:kill && npm run dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:unit": "node --experimental-strip-types --test --test-isolation=none tests/*.test.mts"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.15.0",

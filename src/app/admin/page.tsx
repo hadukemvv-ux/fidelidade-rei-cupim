@@ -1,41 +1,37 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { fetchAdmin } from '@/lib/adminFetch';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+type DashboardStats = {
+  pontosDistribuidos: number;
+  totalClientes: number;
+};
 
 export default function AdminHome() {
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<DashboardStats>({
     pontosDistribuidos: 0,
     totalClientes: 0
   });
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     async function fetchStats() {
-      const { data: pontosData } = await supabase
-        .from('extrato_pontos')
-        .select('valor')
-        .eq('tipo', 'entrada');
-
-      const totalPontos =
-        pontosData?.reduce((soma: number, curr: any) => soma + curr.valor, 0) || 0;
-
-      const { count } = await supabase
-        .from('base_clientes_saipos')
-        .select('*', { count: 'exact', head: true });
-
-      setStats({
-        pontosDistribuidos: totalPontos,
-        totalClientes: count || 0
-      });
-
-      setLoading(false);
+      try {
+        const response = await fetchAdmin('/api/admin/dashboard');
+        const payload = await response.json();
+        if (!response.ok || !payload?.ok) throw new Error(payload?.error || 'Falha ao carregar o painel.');
+        setStats({
+          pontosDistribuidos: Number(payload.data?.pontosDistribuidos || 0),
+          totalClientes: Number(payload.data?.totalClientes || 0),
+        });
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : 'Falha ao carregar o painel.');
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchStats();
@@ -47,6 +43,10 @@ export default function AdminHome() {
         Carregando dados...
       </div>
     );
+  }
+
+  if (error) {
+    return <div className="text-red-300">{error}</div>;
   }
 
   return (

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { getCustomerSessionFromRequest } from '@/lib/customerSession';
 
 function onlyDigits(value: string | null | undefined) {
   return String(value || '').replace(/\D/g, '');
@@ -7,6 +8,12 @@ function onlyDigits(value: string | null | undefined) {
 
 export async function validateCustomerAuth(request: Request, expectedPhone: string) {
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
+  const normalizedExpectedPhone = onlyDigits(expectedPhone).slice(-11);
+
+  const session = getCustomerSessionFromRequest(request);
+  if (session?.phone.slice(-11) === normalizedExpectedPhone) {
+    return null;
+  }
 
   if (!token) {
     return NextResponse.json({ error: 'Autenticação obrigatória.' }, { status: 401 });
@@ -19,7 +26,7 @@ export async function validateCustomerAuth(request: Request, expectedPhone: stri
     return NextResponse.json({ error: 'Sessão inválida ou expirada.' }, { status: 401 });
   }
 
-  if (!authenticatedPhone || authenticatedPhone.slice(-11) !== onlyDigits(expectedPhone).slice(-11)) {
+  if (!authenticatedPhone || authenticatedPhone.slice(-11) !== normalizedExpectedPhone) {
     return NextResponse.json({ error: 'A conta autenticada não corresponde ao telefone informado.' }, { status: 403 });
   }
 

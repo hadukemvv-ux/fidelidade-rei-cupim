@@ -13,11 +13,16 @@ Status: em andamento avancado
 - [x] Integracao SAIPOS resiliente (nao derruba cron por venda invalida)
 - [x] Suite de integracao automatizada
 - [x] Build e TypeScript limpos
+- [x] Crédito de vendas SAIPOS atômico e idempotente
+- [x] Resgate atômico com auditoria
+- [x] Sessão HttpOnly de cliente após validação do PIN
 - [ ] Consolidar docs antigas para evitar informacao desatualizada
+- [ ] Definir verificação de posse do telefone para pré-cadastros (sem ativar SMS pago sem autorização)
 
 ## Fase 2 (Confiabilidade)
 
-- [ ] Adicionar testes unitarios para regras de fidelidade
+- [x] Adicionar testes unitarios para regras de fidelidade
+- [ ] Ampliar testes unitários para rotas e funções SQL
 - [ ] Adicionar retries com backoff para chamadas SAIPOS
 - [ ] Alertas (email/slack) para falhas em cron
 - [ ] Dashboard de saude dos jobs (latencia, falhas, ultimo sucesso)

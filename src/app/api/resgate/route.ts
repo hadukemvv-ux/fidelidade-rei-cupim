@@ -2,21 +2,14 @@ import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { getNivelPorGasto, calcularProgressaoNivel } from '@/lib/fidelidade-rules';
 import { validarDados, ResgateSchema, type ResgateValidation } from '@/lib/validations';
-import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
+import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError, checkRateLimit } from '@/lib/api-utils';
 import crypto from 'crypto';
 import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
+import { attachCustomerSession } from '@/lib/customerSession';
 
 // =========================
 // HELPERS
 // =========================
-
-function onlyDigits(value: string) {
-  return value.replace(/\D/g, '');
-}
-
-function isoNow() {
-  return new Date().toISOString();
-}
 
 function gerarCodigoCupom() {
   return 'CUP' + Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -36,7 +29,15 @@ function calcularNivel(gastoTotal: number) {
 // ———————————————————————
 // DETECTAR SE É PRÉ‑CADASTRO (AGORA INCLUINDO EMAIL)
 // ———————————————————————
-function isPreCadastro(cliente: any) {
+type ResgateCliente = {
+  nome?: string | null;
+  data_nascimento?: string | null;
+  email?: string | null;
+  telefone?: string | null;
+  pin_hash?: string | null;
+};
+
+function isPreCadastro(cliente: ResgateCliente) {
   const nome = cliente?.nome || '';
   const dataNasc = cliente?.data_nascimento;
   const email = cliente?.email;
@@ -125,8 +126,17 @@ export async function POST(req: NextRequest) {
 
     const { telefone, pin, tipo, valor, valorDesconto, produtoId } = validacao.data;
 
-    const authError = await validateCustomerAuth(req, telefone);
-    if (authError) return authError;
+    // O primeiro POST sem tipo funciona como login por PIN. Operações que
+    // alteram saldo exigem também a sessão HttpOnly emitida após esse login.
+    if (tipo) {
+      const authError = await validateCustomerAuth(req, telefone);
+      if (authError) return authError;
+    } else {
+      const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+      if (!checkRateLimit(`customer-login:${clientIp}:${telefone}`, 10, 15 * 60)) {
+        return errorResponse('Muitas tentativas. Aguarde 15 minutos e tente novamente.', 'unauthorized', 429);
+      }
+    }
 
     logInfo('/api/resgate', 'Iniciando resgate', {
       telefone: `****${telefone.slice(-4)}`,
@@ -188,33 +198,11 @@ export async function POST(req: NextRequest) {
     // 4. CONSULTA SEM RESGATE (GET snapshot)
     if (!tipo) {
       const snap = await buscarSnapshot(telefone);
-      return successResponse(snap);
+      return attachCustomerSession(successResponse(snap), telefone);
     }
 
     // ========== RESGATE PROPRIAMENTE DITO ==========
 
-    const hoje = new Date().toISOString().split('T')[0];
-
-    // Verificar limite diário
-    const { data: jaResgatou, error: resgateCheckError } = await supabaseAdmin
-      .from('resgates')
-      .select('id')
-      .eq('telefone', telefone)
-      .gte('criado_em', `${hoje}T00:00:00`)
-      .limit(1);
-
-    if (resgateCheckError) {
-      logError('/api/resgate', resgateCheckError as Error, {
-        requestId,
-      });
-      return handleApiError(resgateCheckError, '/api/resgate', requestId);
-    }
-
-    if (jaResgatou && jaResgatou.length > 0) {
-      return errorResponse('Limite de 1 resgate por dia atingido', 'validation_error');
-    }
-
-    const antes = await buscarSnapshot(telefone);
     let custoPontos = 0;
     let custoCash = 0;
     let nomePremio = '';
@@ -277,59 +265,23 @@ export async function POST(req: NextRequest) {
       return errorResponse('Tipo de resgate inválido (frete, cashback, pontos)', 'validation_error');
     }
 
-    // ===== VALIDAR SALDOS =====
-    if (custoPontos > 0 && antes.pontos < custoPontos) {
-      return errorResponse(
-        `Saldo insuficiente. Você tem ${antes.pontos} pontos, precisa de ${custoPontos}`,
-        'validation_error'
-      );
-    }
+    // Débito, limite diário, cupom e auditoria são confirmados juntos.
+    const { error: resgateError } = await supabaseAdmin.rpc('resgatar_beneficio_fidelidade', {
+      p_telefone: telefone,
+      p_tipo: tipo,
+      p_custo_pontos: custoPontos,
+      p_custo_cash: custoCash,
+      p_premio_nome: nomePremio,
+      p_codigo: codigo,
+      p_produto_id: produtoId || null,
+    });
 
-    if (custoCash > 0 && antes.cashback < custoCash) {
-      return errorResponse(
-        `Cashback insuficiente. Você tem R$ ${antes.cashback.toFixed(2)}, precisa de R$ ${custoCash}`,
-        'validation_error'
-      );
-    }
-
-    // ===== ATUALIZAR SALDOS =====
-    const novoSaldo = {
-      atualizado_em: isoNow(),
-      pontos: custoPontos > 0 ? antes.pontos - custoPontos : antes.pontos,
-      cashback: custoCash > 0 ? antes.cashback - custoCash : antes.cashback,
-    };
-
-    const { error: updErr } = await supabaseAdmin
-      .from('base_clientes_saipos')
-      .update(novoSaldo)
-      .eq('telefone', telefone);
-
-    if (updErr) {
-      logError('/api/resgate', updErr as Error, {
-        requestId,
-      });
-      return handleApiError(updErr, '/api/resgate', requestId);
-    }
-
-    // ===== REGISTRAR RESGATE =====
-    const { error: registroErr } = await supabaseAdmin
-      .from('resgates')
-      .insert({
-        telefone,
-        tipo,
-        valor: custoCash > 0 ? custoCash : custoPontos,
-        premio_nome: nomePremio,
-        codigo,
-        criado_em: isoNow(),
-        status: 'processado',
-        produto_id: produtoId || null,
-      });
-
-    if (registroErr) {
-      logError('/api/resgate', registroErr as Error, {
-        requestId,
-      });
-      return handleApiError(registroErr, '/api/resgate', requestId);
+    if (resgateError) {
+      const mensagem = resgateError.message || 'Falha ao processar resgate';
+      if (/limite|saldo|custo|tipo/i.test(mensagem)) {
+        return errorResponse(mensagem, 'validation_error');
+      }
+      return handleApiError(resgateError, '/api/resgate', requestId);
     }
 
     const depois = await buscarSnapshot(telefone);

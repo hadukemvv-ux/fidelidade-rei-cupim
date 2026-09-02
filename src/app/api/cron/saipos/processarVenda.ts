@@ -1,5 +1,26 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+export type ProcessarVendaResult =
+  | { status: "processada"; idSale: number; credito: Record<string, unknown> }
+  | { status: "duplicada"; idSale: number }
+  | { status: "ignorada"; idSale?: number; motivo: string };
+
+type VendaSaipos = {
+  id_sale?: unknown;
+  canceled?: unknown;
+  total_amount?: unknown;
+  customer?: {
+    cpf_cnpj?: unknown;
+    phone?: unknown;
+    name?: unknown;
+  };
+  customer_cpf?: unknown;
+  customer_phone?: unknown;
+  telefone?: unknown;
+  shift_date?: unknown;
+  created_at?: unknown;
+};
+
 async function registrarLog(
   tipo: string,
   mensagem: string,
@@ -16,15 +37,15 @@ async function registrarLog(
   });
 }
 
-export async function processarVenda(venda: any) {
-  const idSale = venda.id_sale;
+export async function processarVenda(venda: VendaSaipos): Promise<ProcessarVendaResult> {
+  const idSale = Number(venda.id_sale);
 
-  if (!idSale) {
+  if (!Number.isSafeInteger(idSale) || idSale <= 0) {
     await registrarLog(
       "pedido_invalido",
       "Pedido ignorado — id_sale ausente"
     );
-    return;
+    return { status: "ignorada", motivo: "id_sale ausente ou inválido" } satisfies ProcessarVendaResult;
   }
 
   // 0) Evitar duplicação
@@ -41,7 +62,7 @@ export async function processarVenda(venda: any) {
       undefined,
       idSale
     );
-    return;
+    return { status: "duplicada", idSale } satisfies ProcessarVendaResult;
   }
 
   // Ignorar canceladas
@@ -52,7 +73,7 @@ export async function processarVenda(venda: any) {
       undefined,
       idSale
     );
-    return;
+    return { status: "ignorada", idSale, motivo: "pedido cancelado" } satisfies ProcessarVendaResult;
   }
 
   const valor = Number(venda.total_amount || 0);
@@ -63,17 +84,24 @@ export async function processarVenda(venda: any) {
       undefined,
       idSale
     );
-    return;
+    return { status: "ignorada", idSale, motivo: "valor ausente ou inválido" } satisfies ProcessarVendaResult;
   }
 
-  const cpf = venda.customer?.cpf_cnpj || venda.customer_cpf || null;
+  const cpfRaw = venda.customer?.cpf_cnpj || venda.customer_cpf;
+  const cpf = typeof cpfRaw === "string" && cpfRaw.trim() ? cpfRaw.trim() : null;
   const telefoneRaw = venda.customer?.phone;
   const telefone = Array.isArray(telefoneRaw)
     ? telefoneRaw[0] || null
     : typeof telefoneRaw === "string"
       ? telefoneRaw
-      : venda.customer_phone || venda.telefone || null;
-  const nome = venda.customer?.name || "Cliente";
+      : typeof venda.customer_phone === "string"
+        ? venda.customer_phone
+        : typeof venda.telefone === "string"
+          ? venda.telefone
+          : null;
+  const nome = typeof venda.customer?.name === "string" && venda.customer.name.trim()
+    ? venda.customer.name.trim()
+    : "Cliente";
 
   if (!cpf && !telefone) {
     await registrarLog(
@@ -83,7 +111,7 @@ export async function processarVenda(venda: any) {
       idSale,
       valor
     );
-    return;
+    return { status: "ignorada", idSale, motivo: "cliente sem CPF ou telefone" } satisfies ProcessarVendaResult;
   }
 
   // 1) Buscar cliente
@@ -143,7 +171,11 @@ export async function processarVenda(venda: any) {
 
   // 3) Crédito atômico: idempotência, saldos, nível, fração de tickets e ledger
   // são confirmados juntos dentro de uma única transação no Postgres.
-  const ocorreuEm = venda.shift_date || venda.created_at || new Date().toISOString();
+  const ocorreuEm = typeof venda.shift_date === "string"
+    ? venda.shift_date
+    : typeof venda.created_at === "string"
+      ? venda.created_at
+      : new Date().toISOString();
   const { data: credito, error: creditoError } = await supabaseAdmin.rpc(
     "creditar_venda_fidelidade",
     {
@@ -160,7 +192,7 @@ export async function processarVenda(venda: any) {
 
   if (credito?.duplicada) {
     await registrarLog("pedido_duplicado", "Pedido ignorado — concorrência/retry", cliente.id, idSale);
-    return;
+    return { status: "duplicada", idSale } satisfies ProcessarVendaResult;
   }
 
   const { error: dadosError } = await supabaseAdmin
@@ -180,4 +212,9 @@ export async function processarVenda(venda: any) {
     valor
   );
 
+  return {
+    status: "processada",
+    idSale,
+    credito: (credito || {}) as Record<string, unknown>,
+  } satisfies ProcessarVendaResult;
 }

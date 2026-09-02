@@ -1,41 +1,13 @@
-import { NextResponse, NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { validarDados, ClienteSchema, type ClienteValidation } from '@/lib/validations';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
 import crypto from 'crypto';
 import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
-
-// Helpers
-function onlyDigits(v: string) {
-  return v.replace(/\D/g, '');
-}
+import { attachCustomerSession } from '@/lib/customerSession';
 
 function iso() {
   return new Date().toISOString();
-}
-
-function validarEmail(email?: string | null) {
-  if (!email) return null;
-  const e = String(email).trim().toLowerCase();
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(e) ? e : null;
-}
-
-function validarDataNascimento(str?: string | null) {
-  if (!str) return null;
-
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) return null;
-
-  const d = new Date(str);
-  if (isNaN(d.getTime())) return null;
-
-  const ano = d.getFullYear();
-  const hoje = new Date();
-
-  if (ano < 1920) return null;
-  if (d > hoje) return null;
-
-  return str;
 }
 
 async function registrarExtrato(cliente_id: number, valor: number, descricao: string) {
@@ -55,16 +27,24 @@ async function registrarExtrato(cliente_id: number, valor: number, descricao: st
 }
 
 // Detectar PRÉ‑CADASTRO (roleta)
-function isPreCadastro(cliente: any) {
+type CadastroCliente = {
+  nome?: string | null;
+  data_nascimento?: string | null;
+  email?: string | null;
+  telefone?: string | null;
+  pin_hash?: string | null;
+};
+
+function isPreCadastro(cliente: CadastroCliente) {
   const nome = cliente?.nome || '';
   const dataNasc = cliente?.data_nascimento;
   const email = cliente?.email;
-  const telefone = cliente?.telefone;
+  const telefone = cliente.telefone || '';
   const pin_hash = cliente?.pin_hash;
 
   // PIN automático gerado pela roleta
   let pinAutoHash = null;
-  if (telefone?.length >= 4) {
+  if (telefone.length >= 4) {
     const autoPin = telefone.substring(0, 4);
     pinAutoHash = crypto.createHash('sha256').update(autoPin).digest('hex');
   }
@@ -90,9 +70,6 @@ export async function POST(req: NextRequest) {
     }
 
     const { telefone, nome, email, data_nascimento, pin } = validacao.data;
-
-    const authError = await validateCustomerAuth(req, telefone);
-    if (authError) return authError;
 
     logInfo('/api/cadastro', 'Iniciando cadastro', {
       telefone: `****${telefone.slice(-4)}`,
@@ -180,12 +157,17 @@ logInfo('/api/cadastro', 'Novo cliente criado', {
         requestId,
       });
 
-      return successResponse({
+      return attachCustomerSession(successResponse({
         criado: true,
         message: 'Cadastro realizado com sucesso!',
         bonus: bonus > 0 ? `+${bonus} pontos de bônus` : undefined,
-      });
+      }), telefone);
     }
+
+    // Um telefone já existente só pode ser alterado por uma sessão que
+    // pertença ao próprio cliente. Cadastros novos continuam públicos.
+    const authError = await validateCustomerAuth(req, telefone);
+    if (authError) return authError;
 
     // ===== CASO 2: CLIENTE EXISTENTE =====
     if (encontrados.length === 1) {

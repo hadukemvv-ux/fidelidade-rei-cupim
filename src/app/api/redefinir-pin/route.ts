@@ -3,13 +3,12 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { validarDados } from '@/lib/validations';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
 import { z } from 'zod';
-import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
 import { hashPin, verifyPin } from '@/lib/pin';
+import { clearOtpGrant, consumeOtpGrant } from '@/lib/whatsappOtp';
 
 // Schema para redefinição de PIN
 const RedefinirPinSchema = z.object({
   telefone: z.string().regex(/^\d{10,11}$/, 'Telefone deve ter 10 ou 11 dígitos'),
-  data_nascimento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data deve estar em formato YYYY-MM-DD'),
   novo_pin: z.string().regex(/^\d{4}$/, 'PIN deve ter 4 dígitos'),
 });
 
@@ -27,10 +26,7 @@ export async function POST(req: NextRequest) {
       return validationErrorResponse(validacao.error);
     }
 
-    const { telefone, data_nascimento, novo_pin } = validacao.data;
-
-    const authError = await validateCustomerAuth(req, telefone);
-    if (authError) return authError;
+    const { telefone, novo_pin } = validacao.data;
 
     logInfo('/api/redefinir-pin', 'Iniciando redefinição de PIN', {
       telefone: `****${telefone.slice(-4)}`,
@@ -40,7 +36,7 @@ export async function POST(req: NextRequest) {
     // ===== BUSCAR CLIENTE =====
     const { data: cliente, error: clienteError } = await supabaseAdmin
       .from('base_clientes_saipos')
-      .select('id, nome, telefone, pin_hash, data_nascimento')
+      .select('id, nome, telefone, pin_hash')
       .eq('telefone', telefone)
       .maybeSingle();
 
@@ -57,28 +53,21 @@ export async function POST(req: NextRequest) {
       return errorResponse('Cliente não encontrado', 'not_found');
     }
 
-    // ===== VALIDAR DATA DE NASCIMENTO =====
-    if (!cliente.data_nascimento) {
-      return errorResponse(
-        'Data de nascimento não cadastrada. Entre em contato com o suporte',
-        'validation_error'
-      );
-    }
-
-    if (cliente.data_nascimento !== data_nascimento) {
-      logInfo('/api/redefinir-pin', 'Data de nascimento não confere', {
-        telefone: `****${telefone.slice(-4)}`,
-        requestId,
-      });
-      return errorResponse('Data de nascimento não confere', 'validation_error');
-    }
-
     // ===== VALIDAR PIN NOVO =====
     if ((await verifyPin(novo_pin, cliente.pin_hash)).valid) {
       return errorResponse('Este já é o seu PIN atual', 'validation_error');
     }
 
     const novoPinHash = await hashPin(novo_pin);
+
+    if (!(await consumeOtpGrant(req, telefone, 'redefinir_pin'))) {
+      return errorResponse(
+        'Confirme o código enviado ao seu WhatsApp antes de trocar o PIN.',
+        'unauthorized',
+        403,
+        requestId
+      );
+    }
 
     // ===== ATUALIZAR PIN =====
     const { error: updateError } = await supabaseAdmin
@@ -95,7 +84,7 @@ export async function POST(req: NextRequest) {
     try {
       await supabaseAdmin.from('saipos_cron_logs').insert({
         tipo: 'PIN_REDEFINIDO',
-        mensagem: `PIN redefinido para cliente ${cliente.telefone}`,
+        mensagem: `PIN redefinido após OTP para telefone final ${cliente.telefone.slice(-4)}`,
         id_cliente: cliente.id,
         criado_em: new Date().toISOString(),
       });
@@ -110,10 +99,10 @@ export async function POST(req: NextRequest) {
       requestId,
     });
 
-    return successResponse({
+    return clearOtpGrant(successResponse({
       message: 'PIN redefinido com sucesso!',
       timestamp: new Date().toISOString(),
-    });
+    }));
 
   } catch (error) {
     logError('/api/redefinir-pin', error instanceof Error ? error : new Error(String(error)), {

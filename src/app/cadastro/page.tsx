@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useEffect } from 'react';
+import WhatsappOtpVerification from '@/components/WhatsappOtpVerification';
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
@@ -26,6 +27,7 @@ export default function CadastroPage() {
   const [dataNascimento, setDataNascimento] = useState('');
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
+  const [whatsappVerificado, setWhatsappVerificado] = useState(false);
 
   // CONTROLE
   const [loading, setLoading] = useState(false);
@@ -78,6 +80,9 @@ export default function CadastroPage() {
     if (!pinsMatch)
       return setFeedback({ type: 'error', text: 'Os PINs não coincidem.' });
 
+    if (!whatsappVerificado)
+      return setFeedback({ type: 'error', text: 'Confirme o código enviado ao seu WhatsApp.' });
+
     setLoading(true);
 
     try {
@@ -97,10 +102,6 @@ export default function CadastroPage() {
       const data = await response.json();
 
       if (!response.ok || !data.ok) {
-        if (response.status === 403) {
-          router.push(`/cadastro/completar?telefone=${telefoneDigits}`);
-          return;
-        }
         setFeedback({ type: 'error', text: data.error || 'Erro no cadastro.' });
         setLoading(false);
         return;
@@ -268,9 +269,15 @@ export default function CadastroPage() {
             </div>
 
             {/* BOTÃO */}
+            <WhatsappOtpVerification
+              telefone={telefoneDigits}
+              proposito="cadastro"
+              onVerified={setWhatsappVerificado}
+            />
+
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !whatsappVerificado}
               className="w-full bg-[#e31e24] text-white font-black py-4 rounded-sm text-lg shadow-[6px_6px_0px_#c5a059]"
             >
               {loading ? 'CADASTRANDO...' : 'CADASTRAR'}

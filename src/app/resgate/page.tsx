@@ -273,15 +273,9 @@ export default function ResgatePage() {
                   {loading ? 'ENTRANDO...' : 'ENTRAR'}
                 </button>
 
-                <button
-                  onClick={() => setFeedback({
-                    type: 'error',
-                    text: 'Para redefinir o PIN com segurança, procure o atendimento do restaurante.',
-                  })}
-                  className="mt-2 text-xs underline text-zinc-400"
-                >
+                <Link href="/redefinir-pin" className="mt-3 inline-block text-xs underline text-zinc-400">
                   Esqueci o PIN
-                </button>
+                </Link>
               </div>
             )}
 

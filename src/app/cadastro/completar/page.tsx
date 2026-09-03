@@ -11,16 +11,14 @@ export default function CompletarCadastroPage() {
           Seu cadastro já foi iniciado. Para proteger seus pontos, a conclusão precisa confirmar que o WhatsApp pertence a você.
         </p>
         <p className="mt-4 text-sm text-zinc-300">
-          Enquanto a verificação segura por telefone não estiver disponível, procure o atendimento do restaurante.
+          Enviaremos um código pelo WhatsApp somente para esta confirmação. Depois, seus acessos serão feitos com telefone e PIN.
         </p>
-        <a
-          href="https://wa.me/5585988257044"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href="/cadastro"
           className="mt-7 block w-full bg-[#c5a059] text-black font-black py-3 rounded-xl"
         >
-          FALAR COM O RESTAURANTE
-        </a>
+          CONFIRMAR MEU WHATSAPP
+        </Link>
         <Link href="/" className="mt-5 inline-block text-sm text-zinc-400 underline">
           Voltar ao início
         </Link>

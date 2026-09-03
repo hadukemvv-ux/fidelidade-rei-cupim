@@ -21,10 +21,13 @@ Frações de ticket são transportadas para a compra seguinte. Portanto, uma com
 - O cliente acessa o saldo com telefone e PIN de quatro dígitos.
 - Depois do PIN correto, a sessão fica protegida em cookie HttpOnly por oito horas.
 - Alteração de cadastro, consulta protegida e resgate exigem sessão vinculada ao mesmo telefone.
-- Cadastro novo, pré-cadastro e recuperação de PIN exigem confirmação da posse do telefone. Enquanto a automação segura não estiver pronta, o site encaminha para o atendimento pelo WhatsApp.
+- Cadastro novo, pré-cadastro e recuperação de PIN exigem um código enviado por WhatsApp.
+- O WhatsApp não é exigido no login cotidiano: depois do cadastro, o cliente usa telefone e PIN.
+- No beta, somente telefones convidados podem pedir códigos. Cada telefone pode receber até três códigos por hora, cada IP até dez por hora e o projeto inteiro até trinta por dia.
+- A autorização gerada pelo OTP dura dez minutos, fica em cookie HttpOnly, serve apenas para o telefone/finalidade confirmados e só pode ser usada uma vez.
 - PINs novos usam derivação forte com salt; hashes antigos são migrados automaticamente após um login válido.
 - Dez tentativas incorretas bloqueiam temporariamente novas tentativas da conta por 15 minutos.
-- Nenhum SMS ou serviço pago está ativado.
+- A integração Twilio Verify está implementada, mas permanece desativada até configurar o remetente e revisar as credenciais/custos.
 
 ## Resgates
 

@@ -19,14 +19,13 @@ function isPreCadastro(c: CheckCliente | null) {
 
   const nome = c.nome || '';
   const email = c.email;
-  const dataNasc = c.data_nascimento;
   const pin_hash = c.pin_hash;
   const telefone = c.telefone || '';
 
   return (
     nome === 'Cliente Novo (Roleta)' ||
     !email ||
-    !dataNasc ||
+    !pin_hash ||
     isLegacyAutomaticPin(telefone, pin_hash)
   );
 }

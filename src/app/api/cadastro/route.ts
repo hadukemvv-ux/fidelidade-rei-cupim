@@ -4,9 +4,24 @@ import { validarDados, ClienteSchema, type ClienteValidation } from '@/lib/valid
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
 import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
 import { hashPin, isLegacyAutomaticPin, verifyPin } from '@/lib/pin';
+import { attachCustomerSession } from '@/lib/customerSession';
+import { clearOtpGrant, consumeOtpGrant } from '@/lib/whatsappOtp';
 
 function iso() {
   return new Date().toISOString();
+}
+
+async function registrarExtrato(cliente_id: number, valor: number, descricao: string) {
+  const { error } = await supabaseAdmin.from('extrato_pontos').insert({
+    cliente_id,
+    tipo: 'entrada',
+    valor,
+    origem: 'SISTEMA',
+    descricao,
+    criado_em: iso(),
+    metodo: 'cadastro',
+  });
+  if (error) logError('/api/cadastro/extrato', error as Error, { cliente_id });
 }
 
 // Detectar PRÉ‑CADASTRO (roleta)
@@ -20,17 +35,27 @@ type CadastroCliente = {
 
 function isPreCadastro(cliente: CadastroCliente) {
   const nome = cliente?.nome || '';
-  const dataNasc = cliente?.data_nascimento;
   const email = cliente?.email;
   const telefone = cliente.telefone || '';
   const pin_hash = cliente?.pin_hash;
 
   return (
     nome === 'Cliente Novo (Roleta)' ||
-    !dataNasc ||
     !email ||
+    !pin_hash ||
     isLegacyAutomaticPin(telefone, pin_hash)
   );
+}
+
+async function validarEmailDisponivel(email: string | null | undefined, telefone: string) {
+  if (!email) return null;
+  const { data, error } = await supabaseAdmin
+    .from('base_clientes_saipos')
+    .select('id, telefone')
+    .eq('email', email)
+    .maybeSingle();
+  if (error) throw error;
+  return data && data.telefone !== telefone ? data : null;
 }
 
 export async function POST(req: NextRequest) {
@@ -72,34 +97,51 @@ export async function POST(req: NextRequest) {
 
     // ===== CASO 1: NOVO CLIENTE =====
     if (!encontrados || encontrados.length === 0) {
-      return errorResponse(
-        'Confirme este WhatsApp com o atendimento antes de criar sua conta.',
-        'unauthorized',
-        403,
-        requestId
-      );
-    }
+      if (await validarEmailDisponivel(email, telefone)) {
+        return errorResponse('Este email já está cadastrado em outra conta', 'validation_error');
+      }
 
-    // Um telefone já existente só pode ser alterado por uma sessão que
-    // pertença ao próprio cliente. Cadastros novos continuam públicos.
-    const authError = await validateCustomerAuth(req, telefone);
-    if (authError) return authError;
+      const pin_hash = await hashPin(pin);
+      if (!(await consumeOtpGrant(req, telefone, 'cadastro'))) {
+        return errorResponse('Confirme o código enviado ao seu WhatsApp antes de cadastrar.', 'unauthorized', 403, requestId);
+      }
 
-    // A consulta de e-mail só acontece depois da autenticação, evitando
-    // transformar o cadastro público em um enumerador de contas.
-    const { data: emailExistente, error: emailError } = await supabaseAdmin
-      .from('base_clientes_saipos')
-      .select('id, telefone')
-      .eq('email', email)
-      .maybeSingle();
+      const bonus = data_nascimento ? 200 : 0;
+      const { data: novo, error: insertError } = await supabaseAdmin
+        .from('base_clientes_saipos')
+        .insert({
+          nome,
+          email,
+          telefone,
+          pin_hash,
+          data_nascimento: data_nascimento || null,
+          telefone_verificado_em: iso(),
+          pontos: bonus,
+          cashback: 0,
+          tickets: 0,
+          nivel: 'BRONZE',
+          total_gasto: 0,
+          qtd_pedidos: 0,
+          primeira_compra: null,
+          ultima_compra: null,
+          atualizado_em: iso(),
+        })
+        .select('id')
+        .single();
+      if (insertError) throw insertError;
+      if (bonus > 0) await registrarExtrato(novo.id, bonus, 'Bônus de Cadastro');
 
-    if (emailError) {
-      logError('/api/cadastro', emailError as Error, { requestId });
-      return handleApiError(emailError, '/api/cadastro', requestId);
-    }
+      logInfo('/api/cadastro', 'Novo cliente verificado criado', {
+        telefone: `****${telefone.slice(-4)}`,
+        bonus,
+        requestId,
+      });
 
-    if (emailExistente && emailExistente.telefone !== telefone) {
-      return errorResponse('Este email já está cadastrado em outra conta', 'validation_error');
+      return attachCustomerSession(clearOtpGrant(successResponse({
+        criado: true,
+        message: 'Cadastro realizado com sucesso!',
+        bonus,
+      })), telefone);
     }
 
     // ===== CASO 2: CLIENTE EXISTENTE =====
@@ -107,9 +149,21 @@ export async function POST(req: NextRequest) {
       const cliente = encontrados[0];
       const preCadastro = isPreCadastro(cliente);
 
-      // Se é pré-cadastro, pode completar dados
+      // Pré-cadastro só pode ser assumido após comprovar o WhatsApp.
       if (preCadastro) {
-        const updateData: Record<string, unknown> = { atualizado_em: iso() };
+        if (await validarEmailDisponivel(email, telefone)) {
+          return errorResponse('Este email já está cadastrado em outra conta', 'validation_error');
+        }
+
+        const novoPinHash = await hashPin(pin);
+        if (!(await consumeOtpGrant(req, telefone, 'cadastro'))) {
+          return errorResponse('Confirme o código enviado ao seu WhatsApp antes de concluir.', 'unauthorized', 403, requestId);
+        }
+
+        const updateData: Record<string, unknown> = {
+          atualizado_em: iso(),
+          telefone_verificado_em: iso(),
+        };
 
         if (!cliente.nome || cliente.nome === 'Cliente Novo (Roleta)') {
           updateData.nome = nome;
@@ -120,8 +174,8 @@ export async function POST(req: NextRequest) {
         if (!cliente.data_nascimento) {
           updateData.data_nascimento = data_nascimento || null;
         }
-        if (!cliente.pin_hash) {
-          updateData.pin_hash = await hashPin(pin);
+        if (!cliente.pin_hash || isLegacyAutomaticPin(telefone, cliente.pin_hash)) {
+          updateData.pin_hash = novoPinHash;
         }
 
         const { error: updateError } = await supabaseAdmin
@@ -141,10 +195,18 @@ export async function POST(req: NextRequest) {
           requestId,
         });
 
-        return successResponse({
+        return attachCustomerSession(clearOtpGrant(successResponse({
           atualizado: true,
           message: 'Cadastro completado com sucesso!',
-        });
+        })), telefone);
+      }
+
+      // Conta completa só pode ser consultada/alterada pela própria sessão.
+      const authError = await validateCustomerAuth(req, telefone);
+      if (authError) return authError;
+
+      if (await validarEmailDisponivel(email, telefone)) {
+        return errorResponse('Este email já está cadastrado em outra conta', 'validation_error');
       }
 
       // Se já é cliente completo, validar dados
@@ -182,6 +244,8 @@ export async function POST(req: NextRequest) {
     }
 
     // ===== CASO 3: DUPLICADOS =====
+    const authError = await validateCustomerAuth(req, telefone);
+    if (authError) return authError;
     // Se houver múltiplos clientes, unificar (manter o primeiro)
     const ids = encontrados.map((c) => c.id);
     const paraExcluir = ids.slice(1);

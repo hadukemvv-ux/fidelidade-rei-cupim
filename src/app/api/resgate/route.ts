@@ -28,15 +28,14 @@ type ResgateCliente = {
 
 function isPreCadastro(cliente: ResgateCliente) {
   const nome = cliente?.nome || '';
-  const dataNasc = cliente?.data_nascimento;
   const email = cliente?.email;
   const telefone = cliente?.telefone || '';
   const pin_hash = cliente?.pin_hash;
 
   return (
     nome === 'Cliente Novo (Roleta)' ||
-    !dataNasc ||
     !email ||
+    !pin_hash ||
     isLegacyAutomaticPin(telefone, pin_hash)
   );
 }

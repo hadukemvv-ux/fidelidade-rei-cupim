@@ -8,6 +8,13 @@ Este documento e para rodar validacoes tecnicas no dia a dia.
 - `SAIPOS_TOKEN`
 - `ADMIN_TEST_EMAIL`
 - `ADMIN_TEST_PASSWORD`
+- `WHATSAPP_OTP_ENABLED` (manter `false` até o remetente estar pronto)
+- `WHATSAPP_OTP_BETA_ONLY`
+- `WHATSAPP_OTP_BETA_PHONES`
+- `TWILIO_ACCOUNT_SID`
+- `TWILIO_AUTH_TOKEN`
+- `TWILIO_VERIFY_SERVICE_SID`
+- `OTP_MAX_GLOBAL_DAY`
 
 Fallback temporario:
 - `ADMIN_SECRET_TOKEN`
@@ -65,6 +72,24 @@ Comportamento esperado:
 - Sem token: 401
 - Com token correto: nao retornar 401/403
 - Crons SAIPOS podem demorar mais (dependem da API externa)
+
+### 2.5 WhatsApp OTP (beta)
+
+Antes do primeiro envio real:
+
+1. Confirmar que o remetente WhatsApp está aprovado na Twilio/Meta.
+2. Manter `WHATSAPP_OTP_BETA_ONLY=true`.
+3. Preencher `WHATSAPP_OTP_BETA_PHONES` apenas com os convidados.
+4. Começar com `OTP_MAX_GLOBAL_DAY=30`.
+5. Só então alterar `WHATSAPP_OTP_ENABLED=true`.
+
+Fluxos que consomem OTP:
+
+- primeiro cadastro;
+- conclusão de pré-cadastro da roleta;
+- recuperação de PIN.
+
+O login normal por telefone e PIN não envia mensagem e não gera custo de OTP.
 
 ## 3. Comandos uteis
 

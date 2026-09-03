@@ -17,7 +17,8 @@ Status: em andamento avancado
 - [x] Resgate atômico com auditoria
 - [x] Sessão HttpOnly de cliente após validação do PIN
 - [ ] Consolidar docs antigas para evitar informacao desatualizada
-- [ ] Definir verificação de posse do telefone para pré-cadastros (sem ativar SMS pago sem autorização)
+- [x] Implementar verificação de posse do telefone por WhatsApp OTP com ativação controlada
+- [ ] Configurar remetente e credenciais Twilio Verify e executar o primeiro teste real
 
 ## Fase 2 (Confiabilidade)
 
@@ -29,6 +30,8 @@ Status: em andamento avancado
 - [x] Impedir criacao publica de conta sem confirmacao do telefone
 - [x] Migrar PINs legados para hash forte com salt no login
 - [x] Bloquear tentativas repetidas de PIN por conta no banco
+- [x] Limitar OTP por telefone, IP e teto global diário com reserva atômica no banco
+- [ ] Adicionar Cloudflare Turnstile antes de abrir o cadastro ao público geral
 - [ ] Alertas (email/slack) para falhas em cron
 - [ ] Dashboard de saude dos jobs (latencia, falhas, ultimo sucesso)
 

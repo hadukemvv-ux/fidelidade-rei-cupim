@@ -39,3 +39,23 @@ test('expõe progressão e catálogo sem lacunas', () => {
   assert.equal(progresso.progresso?.percentual, 50);
   assert.deepEqual(getAllNivelThresholds().map((item) => item.min), [0, 100, 250, 500]);
 });
+
+test('mantém o catálogo canônico usado pelo frontend e pelo backend', () => {
+  assert.deepEqual(
+    getAllNivelThresholds().map(({ nivel, nome, min, max, beneficio }) => ({
+      nivel,
+      nome,
+      min,
+      max,
+      pontos: beneficio.pontos,
+      cashback: beneficio.cashback,
+      tickets: beneficio.tickets,
+    })),
+    [
+      { nivel: 'BRONZE', nome: 'Brasa', min: 0, max: 99.99, pontos: 1, cashback: 0, tickets: 1 },
+      { nivel: 'PRATA', nome: 'Chama', min: 100, max: 249.99, pontos: 2, cashback: 0.005, tickets: 2 },
+      { nivel: 'OURO', nome: 'Nobre', min: 250, max: 499.99, pontos: 4, cashback: 0.01, tickets: 5 },
+      { nivel: 'REI', nome: 'Majestade — Rei do Cupim', min: 500, max: null, pontos: 7, cashback: 0.03, tickets: 10 },
+    ]
+  );
+});

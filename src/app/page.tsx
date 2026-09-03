@@ -1,59 +1,55 @@
 'use client';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
+import { getAllNivelThresholds, type NivelFidelidade } from '@/lib/fidelidade-rules';
+
+const apresentacaoPorNivel: Record<NivelFidelidade, { emoji: string; descricao: string }> = {
+  BRONZE: { emoji: '🥉', descricao: 'Nível inicial. Comece a pontuar agora!' },
+  PRATA: { emoji: '🥈', descricao: 'Mais benefícios para quem volta sempre.' },
+  OURO: { emoji: '🥇', descricao: 'Recompensas reforçadas para clientes frequentes.' },
+  REI: { emoji: '👑', descricao: 'A realeza: o máximo de retorno do programa.' },
+};
+
+const beneficios = Object.fromEntries(
+  getAllNivelThresholds().map((nivel) => [
+    nivel.nivel,
+    {
+      multiplicador: `${nivel.beneficio.pontos}x`,
+      cashback: `${(nivel.beneficio.cashback * 100).toFixed(2).replace('.', ',')}%`,
+      tickets: `${nivel.beneficio.tickets} a cada R$ 100`,
+      emoji: apresentacaoPorNivel[nivel.nivel].emoji,
+      nome: nivel.nome,
+      descricao: apresentacaoPorNivel[nivel.nivel].descricao,
+      meta: nivel.min === 0
+        ? 'Cadastro grátis'
+        : `Acumular R$ ${nivel.min} em compras elegíveis`,
+    },
+  ])
+) as Record<NivelFidelidade, {
+  multiplicador: string;
+  cashback: string;
+  tickets: string;
+  emoji: string;
+  nome: string;
+  descricao: string;
+  meta: string;
+}>;
 
 export default function Home() {
-  const [nivelSelecionado, setNivelSelecionado] = useState('BRONZE');
-
-  const beneficios = {
-    BRONZE: {
-      multiplicador: '4x',
-      cashback: '0,25%',
-      tickets: '1 a cada R$ 50',
-      emoji: '🥉',
-      nome: 'Bronze',
-      descricao: 'Nível inicial. Comece a pontuar agora!',
-      meta: 'Cadastro Grátis'
-    },
-    PRATA: {
-      multiplicador: '7x',
-      cashback: '1,00%',
-      tickets: '2 a cada R$ 50',
-      emoji: '🥈',
-      nome: 'Prata',
-      descricao: 'Acelerando seus ganhos.',
-      meta: 'Acumular R$ 100 em compras' // ✅ Atualizado
-    },
-    OURO: {
-      multiplicador: '10x',
-      cashback: '2,00%',
-      tickets: '3 a cada R$ 50',
-      emoji: '🥇',
-      nome: 'Ouro',
-      descricao: 'Benefícios em dobro e status VIP.',
-      meta: 'Acumular R$ 300 em compras' // ✅ Atualizado
-    },
-    REI_DO_CUPIM: {
-      multiplicador: '14x',
-      cashback: '3,00%',
-      tickets: '4 a cada R$ 50',
-      emoji: '👑',
-      nome: 'Rei do Cupim',
-      descricao: 'A realeza! O máximo de retorno possível.',
-      meta: 'Acumular R$ 600 em compras' // ✅ Atualizado
-    }
-  };
-
-  const beneficioAtual = beneficios[nivelSelecionado as keyof typeof beneficios];
+  const [nivelSelecionado, setNivelSelecionado] = useState<NivelFidelidade>('BRONZE');
+  const beneficioAtual = beneficios[nivelSelecionado];
 
   return (
     <div className="min-h-screen bg-[#280404] text-white font-sans">
       {/* Header */}
       <header className="pt-12 pb-6 flex flex-col items-center justify-center">
         <div className="relative w-48 h-48 mb-4">
-          <img
+          <Image
             src="/logo.png"
             alt="Logo Rei do Cupim"
+            fill
+            sizes="192px"
             className="w-full h-full object-contain"
           />
         </div>
@@ -99,7 +95,7 @@ export default function Home() {
             Conheça os Níveis
           </h2>
           <p className="text-zinc-300 text-sm">
-            Seu nível é baseado no total que você já gastou com a gente (XP Vitalício).
+            Seu nível considera o gasto elegível registrado pelo programa.
           </p>
           
           <div className="mt-8 mb-4">
@@ -119,7 +115,7 @@ export default function Home() {
             {Object.entries(beneficios).map(([key, nivel]) => (
               <button
                 key={key}
-                onClick={() => setNivelSelecionado(key)}
+                onClick={() => setNivelSelecionado(key as NivelFidelidade)}
                 className={`px-4 py-2 md:px-6 md:py-3 rounded-full font-bold text-xs md:text-sm transition-all transform hover:scale-105 ${
                   nivelSelecionado === key
                     ? 'bg-[#c5a059] text-[#280404] shadow-[0_0_15px_#c5a059] scale-105'
@@ -162,7 +158,7 @@ export default function Home() {
         </div>
 
         {/* Banner do Rei */}
-        {nivelSelecionado === 'REI_DO_CUPIM' && (
+        {nivelSelecionado === 'REI' && (
           <div className="mt-12 bg-gradient-to-r from-[#c5a059] to-[#e31e24] border-4 border-[#c5a059] rounded-xl p-8 text-center shadow-[0_0_30px_#c5a059] animate-pulse relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
             <div className="relative z-10">
@@ -170,7 +166,7 @@ export default function Home() {
                     👑 Vossa Majestade!
                 </h3>
                 <p className="text-[#280404] font-bold text-lg">
-                    Neste nível, cada pedido seu vale O DOBRO de um cliente prata.
+                    7 pontos por real, 3% de cashback e 10 tickets a cada R$ 100 em compras.
                 </p>
             </div>
           </div>

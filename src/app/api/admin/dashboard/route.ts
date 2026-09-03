@@ -1,7 +1,7 @@
-import { NextResponse, NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { successResponse, errorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
+import { successResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
 
 export async function GET(request: NextRequest) {
   const requestId = getRequestId(request);
@@ -40,13 +40,27 @@ export async function GET(request: NextRequest) {
       return handleApiError(entradasError, '/api/admin/dashboard', requestId);
     }
 
-    const pontosDistribuidos = entradas?.reduce((s, e) => s + (e.valor || 0), 0) || 0;
+    const { data: creditosAtomicos, error: creditosError } = await supabaseAdmin
+      .from('fidelidade_transacoes')
+      .select('pontos_gerados');
+
+    if (creditosError) {
+      logError('/api/admin/dashboard', creditosError as Error, { requestId });
+      return handleApiError(creditosError, '/api/admin/dashboard', requestId);
+    }
+
+    const pontosDistribuidosLegado = entradas?.reduce((s, e) => s + Number(e.valor || 0), 0) || 0;
+    const pontosDistribuidosAtomicos = creditosAtomicos?.reduce(
+      (s, e) => s + Number(e.pontos_gerados || 0),
+      0
+    ) || 0;
+    const pontosDistribuidos = pontosDistribuidosLegado + pontosDistribuidosAtomicos;
 
     // 3. Pontos Resgatados
     const { data: saidas, error: saidasError } = await supabaseAdmin
-      .from('extrato_pontos')
+      .from('resgates')
       .select('valor')
-      .eq('tipo', 'saida');
+      .in('tipo', ['frete', 'pontos', 'produto']);
 
     if (saidasError) {
       logError('/api/admin/dashboard', saidasError as Error, {
@@ -55,7 +69,7 @@ export async function GET(request: NextRequest) {
       return handleApiError(saidasError, '/api/admin/dashboard', requestId);
     }
 
-    const pontosResgatados = saidas?.reduce((s, e) => s + (e.valor || 0), 0) || 0;
+    const pontosResgatados = saidas?.reduce((s, e) => s + Number(e.valor || 0), 0) || 0;
 
     // 4. Total de Resgates
     const { count: totalResgates, error: resgateCountError } = await supabaseAdmin

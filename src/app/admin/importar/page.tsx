@@ -69,8 +69,8 @@ export default function ImportarPage() {
       }
 
       setResultadoVendas(payload);
-    } catch (err: any) {
-      setError(err.message || 'Erro desconhecido.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido.');
     } finally {
       setLoadingVendas(false);
     }
@@ -106,8 +106,8 @@ export default function ImportarPage() {
       }
 
       setResultadoClientes(payload);
-    } catch (err: any) {
-      setError(err.message || 'Erro desconhecido.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido.');
     } finally {
       setLoadingClientes(false);
     }
@@ -124,6 +124,9 @@ export default function ImportarPage() {
 
         {/* ------------------- BLOCO IMPORTAR VENDAS ------------------- */}
         <h2 className="text-xl font-bold text-[#c5a059] mb-2">Vendas (Saipos)</h2>
+        <p className="mb-3 text-sm text-amber-300">
+          A importação manual está temporariamente desativada. As vendas devem entrar pela integração automática da Saipos, que evita créditos duplicados.
+        </p>
 
         <input
           type="file"
@@ -133,7 +136,7 @@ export default function ImportarPage() {
         />
 
         <button
-          disabled={!fileVendas || loadingVendas}
+          disabled
           onClick={handleUploadVendas}
           className={`w-full py-3 rounded font-bold text-black ${
             loadingVendas || !fileVendas
@@ -141,7 +144,7 @@ export default function ImportarPage() {
               : 'bg-[#c5a059] hover:bg-[#b08d45]'
           }`}
         >
-          {loadingVendas ? 'Processando Vendas…' : 'Importar Vendas'}
+          Importação protegida
         </button>
 
         {resultadoVendas && (

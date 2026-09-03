@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { getNivelPorGasto, calcularProgressaoNivel } from '@/lib/fidelidade-rules';
+import { calcularProgressaoNivel } from '@/lib/fidelidade-rules';
 import { validarDados, ResgateSchema, type ResgateValidation } from '@/lib/validations';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError, checkRateLimit } from '@/lib/api-utils';
 import crypto from 'crypto';
@@ -13,17 +13,6 @@ import { attachCustomerSession } from '@/lib/customerSession';
 
 function gerarCodigoCupom() {
   return 'CUP' + Math.random().toString(36).slice(2, 8).toUpperCase();
-}
-
-function calcularNivel(gastoTotal: number) {
-  const nivelInfo = getNivelPorGasto(gastoTotal);
-  return {
-    atual: nivelInfo.nivel,
-    proximo: calcularProgressaoNivel(gastoTotal).proximoNivel,
-    min: nivelInfo.gastoMinimo,
-    max: nivelInfo.gastoMaximo || 999999,
-    multiplicador: nivelInfo.beneficio.pontos,
-  };
 }
 
 // ———————————————————————
@@ -72,19 +61,7 @@ async function buscarSnapshot(telefone: string) {
   if (!cliente) throw new Error('Cliente não encontrado.');
 
   const gastoAtual = Number(cliente.gasto_90_dias ?? cliente.total_gasto ?? 0);
-  const nivel = calcularNivel(gastoAtual);
-
-  let progresso = 0;
-  let faltamReais = 0;
-
-  if (nivel.atual !== 'REI') {
-    const intervalo = nivel.max - nivel.min;
-    progresso = Math.floor(((gastoAtual - nivel.min) / intervalo) * 100);
-    progresso = Math.max(0, Math.min(100, progresso));
-    faltamReais = Math.max(0, nivel.max - gastoAtual);
-  } else {
-    progresso = 100;
-  }
+  const progressao = calcularProgressaoNivel(gastoAtual);
 
   return {
     cliente: {
@@ -97,11 +74,11 @@ async function buscarSnapshot(telefone: string) {
     cashback: Number(cliente.cashback || 0),
     tickets: Number(cliente.tickets || 0),
     nivel: {
-      atual: nivel.atual,
-      proximo: nivel.proximo,
-      progresso,
-      faltamReais,
-      multiplicadorAtual: nivel.multiplicador,
+      atual: progressao.nivel,
+      proximo: progressao.proximoNivel,
+      progresso: progressao.progresso?.percentual ?? 100,
+      faltamReais: progressao.progresso?.gastoFaltante ?? 0,
+      multiplicadorAtual: progressao.beneficio.pontos,
     },
   };
 }
@@ -262,7 +239,7 @@ export async function POST(req: NextRequest) {
       nomePremio = produto.nome || 'Produto';
 
     } else {
-      return errorResponse('Tipo de resgate inválido (frete, cashback, pontos)', 'validation_error');
+      return errorResponse('Tipo de resgate inválido (frete, cashback, pontos, produto)', 'validation_error');
     }
 
     // Débito, limite diário, cupom e auditoria são confirmados juntos.

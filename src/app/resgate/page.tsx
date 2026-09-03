@@ -46,12 +46,6 @@ export default function ResgatePage() {
   const [ganhadores, setGanhadores] = useState<any[]>([]);
   const [filtroCategoria, setFiltroCategoria] = useState('todos');
 
-  // Redefinir PIN
-  const [showRedefinirPin, setShowRedefinirPin] = useState(false);
-  const [dataNascimentoRedefinir, setDataNascimentoRedefinir] = useState('');
-  const [novoPin, setNovoPin] = useState('');
-  const [confirmNovoPin, setConfirmNovoPin] = useState('');
-
   // Carregar produtos, sorteio e ganhadores
   useEffect(() => {
     async function load() {
@@ -105,7 +99,10 @@ export default function ResgatePage() {
 
       // status = pre_cadastro → mandar para completar
       if (data.status === 'pre_cadastro') {
-        window.location.href = `/cadastro/completar?telefone=${telefoneDigits}`;
+        setFeedback({
+          type: 'error',
+          text: 'Seu cadastro foi iniciado, mas ainda precisa de confirmação segura do telefone. Procure o atendimento do restaurante para concluir.',
+        });
         return;
       }
 
@@ -202,44 +199,6 @@ export default function ResgatePage() {
   }
 
   // =======================================
-  // 4 — REDEFINIR PIN
-  // =======================================
-  async function redefinirPin() {
-    if (!dataNascimentoRedefinir || !novoPin || novoPin.length !== 4 || novoPin !== confirmNovoPin) {
-      setFeedback({ type: 'error', text: 'Preencha os dados corretamente.' });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const r = await fetch('/api/redefinir-pin', {
-        method: 'POST',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          telefone: telefoneDigits,
-          data_nascimento: dataNascimentoRedefinir,
-          novo_pin: novoPin
-        })
-      });
-
-      const data = await r.json();
-      const payload = data?.data ?? data;
-      if (!r.ok || !data?.ok) throw new Error(data?.error || payload?.error || 'Erro ao redefinir PIN.');
-
-      setFeedback({ type: 'success', text: 'PIN alterado!' });
-      setShowRedefinirPin(false);
-      setNovoPin('');
-      setConfirmNovoPin('');
-      setDataNascimentoRedefinir('');
-
-    } catch (err: any) {
-      setFeedback({ type: 'error', text: err.message });
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // =======================================
   // INTERFACE
   // =======================================
   return (
@@ -315,7 +274,10 @@ export default function ResgatePage() {
                 </button>
 
                 <button
-                  onClick={()=> setShowRedefinirPin(true)}
+                  onClick={() => setFeedback({
+                    type: 'error',
+                    text: 'Para redefinir o PIN com segurança, procure o atendimento do restaurante.',
+                  })}
                   className="mt-2 text-xs underline text-zinc-400"
                 >
                   Esqueci o PIN
@@ -323,39 +285,6 @@ export default function ResgatePage() {
               </div>
             )}
 
-          </div>
-        )}
-
-        {/* ======================== REDEFINIR PIN ======================== */}
-        {showRedefinirPin && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-[#280404] border-2 border-[#c5a059] rounded-2xl p-6 w-full max-w-sm">
-              
-              <h3 className="text-lg font-bold text-[#c5a059] mb-4 text-center">Nova Senha</h3>
-
-              <input type="date"
-                value={dataNascimentoRedefinir}
-                onChange={(e)=> setDataNascimentoRedefinir(e.target.value)}
-                className="w-full mb-3 bg-black/20 border border-[#c5a059]/30 p-3 rounded-lg text-white"/>
-
-              <input value={novoPin}
-                onChange={(e)=> setNovoPin(onlyDigits(e.target.value))}
-                placeholder="Novo PIN"
-                className="w-full mb-3 bg-black/20 border border-[#c5a059]/30 p-3 rounded-lg text-center text-white"/>
-
-              <input value={confirmNovoPin}
-                onChange={(e)=> setConfirmNovoPin(onlyDigits(e.target.value))}
-                placeholder="Confirmar PIN"
-                className="w-full mb-3 bg-black/20 border border-[#c5a059]/30 p-3 rounded-lg text-center text-white"/>
-
-              <div className="flex gap-3 mt-4">
-                <button className="flex-1 py-3 text-zinc-400" onClick={()=> setShowRedefinirPin(false)}>Cancelar</button>
-                <button className="flex-1 bg-[#e31e24] text-white py-3 rounded-lg" onClick={redefinirPin}>
-                  Salvar
-                </button>
-              </div>
-
-            </div>
           </div>
         )}
 
@@ -514,6 +443,22 @@ export default function ResgatePage() {
 
                 </div>
 
+                {/* ENTREGA GRÁTIS */}
+                <div>
+                  <h3 className="text-lg font-black mb-4">🛵 Entrega Grátis</h3>
+                  <button
+                    onClick={() => resgatar('frete')}
+                    disabled={dadosCliente.pontos < 200 || loading}
+                    className={`w-full p-4 rounded-xl border font-black ${
+                      dadosCliente.pontos >= 200
+                        ? 'bg-[#c5a059] text-black border-[#c5a059]'
+                        : 'bg-zinc-900 text-zinc-600 border-zinc-800'
+                    }`}
+                  >
+                    RESGATAR POR 200 PONTOS
+                  </button>
+                </div>
+
                 {/* CASHBACK */}
                 <div>
                   <h3 className="text-lg font-black mb-4">💰 Usar Cashback</h3>
@@ -539,7 +484,8 @@ export default function ResgatePage() {
 
                 {/* SAIR */}
                 <button
-                  onClick={()=>{
+                  onClick={async ()=>{
+                    await fetch('/api/resgate/logout', { method: 'POST' });
                     setDadosCliente(null);
                     setTelefone('');
                     setPin('');

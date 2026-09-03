@@ -86,10 +86,21 @@ export async function POST(request: NextRequest) {
       return handleApiError(entradaError, '/api/admin/analytics', requestId);
     }
 
+    const { data: pontosEntradaAtomica, error: entradaAtomicaError } = await supabaseAdmin
+      .from('fidelidade_transacoes')
+      .select('pontos_gerados, ocorreu_em')
+      .gte('ocorreu_em', inicioISO)
+      .lte('ocorreu_em', fimISO);
+
+    if (entradaAtomicaError) {
+      logError('/api/admin/analytics', entradaAtomicaError as Error, { requestId });
+      return handleApiError(entradaAtomicaError, '/api/admin/analytics', requestId);
+    }
+
     const { data: pontosSaida, error: saidaError } = await supabaseAdmin
-      .from('extrato_pontos')
+      .from('resgates')
       .select('valor, criado_em')
-      .eq('tipo', 'saida')
+      .in('tipo', ['frete', 'pontos', 'produto'])
       .gte('criado_em', inicioISO)
       .lte('criado_em', fimISO);
 
@@ -123,7 +134,13 @@ export async function POST(request: NextRequest) {
     return successResponse({
       periodo: { inicio: inicioISO, fim: fimISO },
       clientesPeriodo: clientesPeriodo || [],
-      pontosEntrada: pontosEntrada || [],
+      pontosEntrada: [
+        ...(pontosEntrada || []),
+        ...(pontosEntradaAtomica || []).map((item) => ({
+          valor: Number(item.pontos_gerados || 0),
+          criado_em: item.ocorreu_em,
+        })),
+      ],
       pontosSaida: pontosSaida || [],
       resgatesPeriodo: resgatesPeriodo || [],
       giros: giros || [],

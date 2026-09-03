@@ -88,9 +88,10 @@ export async function processarVenda(venda: VendaSaipos): Promise<ProcessarVenda
   }
 
   const cpfRaw = venda.customer?.cpf_cnpj || venda.customer_cpf;
-  const cpf = typeof cpfRaw === "string" && cpfRaw.trim() ? cpfRaw.trim() : null;
+  const cpfDigits = typeof cpfRaw === "string" ? cpfRaw.replace(/\D/g, "") : "";
+  const cpf = cpfDigits.length >= 11 ? cpfDigits : null;
   const telefoneRaw = venda.customer?.phone;
-  const telefone = Array.isArray(telefoneRaw)
+  const telefoneInformado = Array.isArray(telefoneRaw)
     ? telefoneRaw[0] || null
     : typeof telefoneRaw === "string"
       ? telefoneRaw
@@ -99,6 +100,10 @@ export async function processarVenda(venda: VendaSaipos): Promise<ProcessarVenda
         : typeof venda.telefone === "string"
           ? venda.telefone
           : null;
+  const telefoneDigits = typeof telefoneInformado === "string"
+    ? telefoneInformado.replace(/\D/g, "").slice(-11)
+    : "";
+  const telefone = telefoneDigits.length >= 10 ? telefoneDigits : null;
   const nome = typeof venda.customer?.name === "string" && venda.customer.name.trim()
     ? venda.customer.name.trim()
     : "Cliente";
@@ -195,9 +200,16 @@ export async function processarVenda(venda: VendaSaipos): Promise<ProcessarVenda
     return { status: "duplicada", idSale } satisfies ProcessarVendaResult;
   }
 
+  const dadosCliente: Record<string, string> = {
+    nome,
+    atualizado_em: new Date().toISOString(),
+  };
+  if (telefone) dadosCliente.telefone = telefone;
+  if (cpf) dadosCliente.cpf = cpf;
+
   const { error: dadosError } = await supabaseAdmin
     .from("base_clientes_saipos")
-    .update({ nome, telefone, cpf, atualizado_em: new Date().toISOString() })
+    .update(dadosCliente)
     .eq("id", cliente.id);
   if (dadosError) {
     await registrarLog("aviso_dados_cliente", dadosError.message, cliente.id, idSale);

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
+import { getNivelPorGasto, type NivelFidelidade } from '@/lib/fidelidade-rules';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,10 +34,15 @@ export async function GET(request: Request) {
       });
     }
 
+    const clientesComNivel = clientes.map((cliente) => ({
+      ...cliente,
+      nivel: getNivelPorGasto(Number(cliente.gasto_90_dias ?? cliente.total_gasto ?? 0)).nivel,
+    }));
+
     // ============================
     // 1 — RANKING (maior gasto)
     // ============================
-    const ranking = [...clientes]
+    const ranking = [...clientesComNivel]
       .sort((a, b) => (b.total_gasto || 0) - (a.total_gasto || 0))
       .map((c, index) => ({
         posicao: index + 1,
@@ -58,38 +64,35 @@ export async function GET(request: Request) {
     // ============================
     // 3 — DISTRIBUIÇÃO DE NÍVEIS
     // ============================
-    const niveis = {
+    const niveis: Record<NivelFidelidade, number> = {
       BRONZE: 0,
       PRATA: 0,
       OURO: 0,
-      REI_DO_CUPIM: 0
+      REI: 0
     };
 
-    clientes.forEach((c) => {
-  const nivel = (c.nivel || "BRONZE").trim().toUpperCase();
-
-  if (nivel in niveis) {
-    (niveis as any)[nivel]++;
-  }
-});
+    clientesComNivel.forEach((cliente) => {
+      const nivel = cliente.nivel as NivelFidelidade;
+      niveis[nivel] += 1;
+    });
 
     // ============================
     // 4 — MÉDIA DE GASTO POR NÍVEL
     // ============================
-    const gastoPorNivel: any = {
-  BRONZE: [],
-  PRATA: [],
-  OURO: [],
-  REI_DO_CUPIM: []
-};
+    const gastoPorNivel: Record<NivelFidelidade, number[]> = {
+      BRONZE: [],
+      PRATA: [],
+      OURO: [],
+      REI: [],
+    };
 
-clientes.forEach((c) => {
-  const nivel = (c.nivel || "BRONZE").trim().toUpperCase();
-  (gastoPorNivel[nivel] ?? gastoPorNivel["BRONZE"]).push(c.total_gasto || 0);
-});
+    clientesComNivel.forEach((cliente) => {
+      const nivel = cliente.nivel as NivelFidelidade;
+      gastoPorNivel[nivel].push(Number(cliente.total_gasto || 0));
+    });
 
     const gasto_medio_por_nivel = Object.fromEntries(
-      Object.entries(gastoPorNivel).map(([nivel, lista]: any) => [
+      Object.entries(gastoPorNivel).map(([nivel, lista]) => [
         nivel,
         lista.length > 0
           ? lista.reduce((s: number, v: number) => s + v, 0) / lista.length
@@ -104,10 +107,10 @@ clientes.forEach((c) => {
       gasto_medio_por_nivel
     });
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("ERRO /financeiro/clientes:", err);
     return NextResponse.json(
-      { erro: err.message || "Erro interno." },
+      { erro: err instanceof Error ? err.message : "Erro interno." },
       { status: 500 }
     );
   }

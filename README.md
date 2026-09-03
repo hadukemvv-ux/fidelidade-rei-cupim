@@ -47,6 +47,9 @@ Para operacao e testes:
 Roadmap:
 - `docs/ROADMAP.md`
 
+Regras atuais do programa:
+- `docs/REGRAS-FIDELIDADE.md`
+
 Para revisao por outras IAs:
 - `docs/GUIA-PARA-IA-REVIEW.md`
 

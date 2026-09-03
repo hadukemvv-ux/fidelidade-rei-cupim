@@ -348,7 +348,7 @@ export default function ResgatePage() {
                 </p>
 
                 <div className="bg-white p-2 rounded-xl inline-block">
-                  <QRCodeSVG value={`https://fidelidade-cupim.vercel.app/validar?cupom=${cupom}`} size={120} />
+                  <QRCodeSVG value={`${window.location.origin}/validar?cupom=${cupom}`} size={120} />
                 </div>
 
                 <p className="text-xs font-bold mt-2">Mostre ao caixa para validar.</p>

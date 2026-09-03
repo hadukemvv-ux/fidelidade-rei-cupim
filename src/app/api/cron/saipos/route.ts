@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { buscarVendasSaipos, SaiposApiError } from '@/lib/saipos';
 import { processarVenda } from './processarVenda'; // MOTOR ÚNICO
 
 export const dynamic = 'force-dynamic';
 
-const SAIPOS_TOKEN = process.env.SAIPOS_TOKEN!;
-const SAIPOS_ID = process.env.SAIPOS_ID || '62039'; // fallback para compatibilidade
 const CRON_SECRET = process.env.CRON_SECRET;
-const URL_SAIPOS = 'https://data.saipos.io/v1/search_sales';
 
 // Função de log (continua aqui porque pertence AO CRON)
 async function registrarLog(
@@ -42,8 +40,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!SAIPOS_TOKEN) throw new Error('Token Saipos não configurado.');
-
     const hoje = new Date();
     const inicio = new Date(
       hoje.getFullYear(),
@@ -58,45 +54,20 @@ export async function GET(request: NextRequest) {
       23, 59, 59
     ).toISOString();
 
-    const params = new URLSearchParams({
-      p_date_column_filter: 'shift_date',
-      p_filter_date_start: inicio,
-      p_filter_date_end: fim,
-      p_limit: '200',
-      p_offset: '0',
-      p_store: SAIPOS_ID,
-    });
-
-    const response = await fetch(`${URL_SAIPOS}?${params}`, {
-      headers: { Authorization: `Bearer ${SAIPOS_TOKEN}` },
-    });
-
-    if (!response.ok) {
-      await registrarLog(
-        "erro_api",
-        `Erro Saipos: ${response.status}`
-      );
-
-      return NextResponse.json(
-        { erro: 'Erro Saipos', detalhes: await response.text() },
-        { status: response.status }
-      );
-    }
-
-    const vendas = await response.json();
+    const vendas = await buscarVendasSaipos({ inicio, fim, limit: 200 });
     let falhas = 0;
 
     // 🔥 USANDO O MOTOR ÚNICO
     for (const venda of vendas) {
       try {
         await processarVenda(venda);
-      } catch (error: any) {
+      } catch (error: unknown) {
         falhas += 1;
         await registrarLog(
           "erro_processamento",
-          error?.message || "Erro desconhecido ao processar venda",
+          error instanceof Error ? error.message : "Erro desconhecido ao processar venda",
           undefined,
-          venda?.id_sale,
+          Number.isSafeInteger(Number(venda?.id_sale)) ? Number(venda.id_sale) : undefined,
           Number(venda?.total_amount || 0)
         );
       }
@@ -108,8 +79,15 @@ export async function GET(request: NextRequest) {
       falhas,
     });
 
-  } catch (e: any) {
-    await registrarLog("erro_fatal", e.message);
-    return NextResponse.json({ erro: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    const mensagem = e instanceof Error ? e.message : 'Erro desconhecido';
+    await registrarLog("erro_fatal", mensagem);
+    return NextResponse.json(
+      {
+        erro: mensagem,
+        ...(e instanceof SaiposApiError ? { tentativas: e.tentativas } : {}),
+      },
+      { status: e instanceof SaiposApiError ? e.status : 500 }
+    );
   }
 }

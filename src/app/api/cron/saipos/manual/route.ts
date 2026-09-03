@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processarVenda } from '../processarVenda';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { buscarVendasSaipos, SaiposApiError } from '@/lib/saipos';
 
 export const dynamic = 'force-dynamic';
 
-const SAIPOS_TOKEN = process.env.SAIPOS_TOKEN!;
-const SAIPOS_ID = process.env.SAIPOS_ID || '62039';
 const CRON_SECRET = process.env.CRON_SECRET;
-const URL_SAIPOS = 'https://data.saipos.io/v1/search_sales';
 
 function formatarData(d: string) {
   return new Date(d).toISOString();
@@ -31,8 +28,6 @@ export async function GET(req: NextRequest) {
         { status: 401 }
       );
     }
-
-    if (!SAIPOS_TOKEN) throw new Error('Token Saipos não configurado.');
 
     const { searchParams } = new URL(req.url);
 
@@ -63,28 +58,7 @@ export async function GET(req: NextRequest) {
       fim = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate(), 23, 59, 59).toISOString();
     }
 
-    const params = new URLSearchParams({
-      p_date_column_filter: 'shift_date',
-      p_filter_date_start: inicio,
-      p_filter_date_end: fim,
-      p_limit: '500',
-      p_offset: '0',
-      p_store: SAIPOS_ID,
-    });
-
-    const response = await fetch(`${URL_SAIPOS}?${params}`, {
-      headers: { Authorization: `Bearer ${SAIPOS_TOKEN}` },
-    });
-
-    if (!response.ok) {
-      const erro = await response.text();
-      return NextResponse.json(
-        { erro: `Erro Saipos: ${erro}` },
-        { status: response.status }
-      );
-    }
-
-    const vendas = await response.json();
+    const vendas = await buscarVendasSaipos({ inicio, fim, limit: 500 });
 
     // 🔥 PROCESSAR CADA VENDA USANDO O MOTOR ÚNICO
     let processadas = 0;
@@ -107,7 +81,14 @@ export async function GET(req: NextRequest) {
       falhas,
     });
 
-  } catch (err: any) {
-    return NextResponse.json({ erro: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const mensagem = err instanceof Error ? err.message : 'Erro desconhecido';
+    return NextResponse.json(
+      {
+        erro: mensagem,
+        ...(err instanceof SaiposApiError ? { tentativas: err.tentativas } : {}),
+      },
+      { status: err instanceof SaiposApiError ? err.status : 500 }
+    );
   }
 }

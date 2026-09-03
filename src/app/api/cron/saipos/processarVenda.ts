@@ -1,25 +1,10 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import type { VendaSaipos } from "@/lib/saipos";
 
 export type ProcessarVendaResult =
   | { status: "processada"; idSale: number; credito: Record<string, unknown> }
   | { status: "duplicada"; idSale: number }
   | { status: "ignorada"; idSale?: number; motivo: string };
-
-type VendaSaipos = {
-  id_sale?: unknown;
-  canceled?: unknown;
-  total_amount?: unknown;
-  customer?: {
-    cpf_cnpj?: unknown;
-    phone?: unknown;
-    name?: unknown;
-  };
-  customer_cpf?: unknown;
-  customer_phone?: unknown;
-  telefone?: unknown;
-  shift_date?: unknown;
-  created_at?: unknown;
-};
 
 async function registrarLog(
   tipo: string,

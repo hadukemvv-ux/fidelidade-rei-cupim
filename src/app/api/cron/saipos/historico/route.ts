@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { buscarVendasSaipos, SaiposApiError } from '@/lib/saipos';
 import { processarVenda } from '../processarVenda'; // IMPORTAÇÃO CORRETA
 
 export const dynamic = 'force-dynamic';
 
-const SAIPOS_TOKEN = process.env.SAIPOS_TOKEN!;
-const SAIPOS_ID = process.env.SAIPOS_ID || '62039';
 const CRON_SECRET = process.env.CRON_SECRET;
-const URL_SAIPOS = 'https://data.saipos.io/v1/search_sales';
 
 // Função auxiliar de logs
 async function registrarLog(
@@ -40,8 +38,6 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
-
-    if (!SAIPOS_TOKEN) throw new Error('Token Saipos não configurado.');
 
     const url = new URL(request.url);
 
@@ -91,29 +87,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Parâmetros Saipos
-    const params = new URLSearchParams({
-      p_date_column_filter: 'shift_date',
-      p_filter_date_start: inicio,
-      p_filter_date_end: fim,
-      p_limit: '500',
-      p_offset: '0',
-      p_store: SAIPOS_ID,
-    });
-
-    const response = await fetch(`${URL_SAIPOS}?${params}`, {
-      headers: { Authorization: `Bearer ${SAIPOS_TOKEN}` },
-    });
-
-    if (!response.ok) {
-      await registrarLog("erro_api_historico", `Erro Saipos: ${response.status}`);
-      return NextResponse.json(
-        { erro: 'Erro Saipos', detalhes: await response.text() },
-        { status: response.status }
-      );
-    }
-
-    const vendas = await response.json();
+    const vendas = await buscarVendasSaipos({ inicio, fim, limit: 500 });
     let falhas = 0;
 
     // ===============================
@@ -122,13 +96,13 @@ export async function GET(request: NextRequest) {
     for (const venda of vendas) {
       try {
         await processarVenda(venda);
-      } catch (error: any) {
+      } catch (error: unknown) {
         falhas += 1;
         await registrarLog(
           "erro_processamento_historico",
-          error?.message || 'Erro desconhecido ao processar venda historica',
+          error instanceof Error ? error.message : 'Erro desconhecido ao processar venda historica',
           undefined,
-          venda?.id_sale,
+          Number.isSafeInteger(Number(venda?.id_sale)) ? Number(venda.id_sale) : undefined,
           Number(venda?.total_amount || 0)
         );
       }
@@ -141,7 +115,14 @@ export async function GET(request: NextRequest) {
       periodo: { inicio, fim }
     });
 
-  } catch (e: any) {
-    return NextResponse.json({ erro: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    const mensagem = e instanceof Error ? e.message : 'Erro desconhecido';
+    return NextResponse.json(
+      {
+        erro: mensagem,
+        ...(e instanceof SaiposApiError ? { tentativas: e.tentativas } : {}),
+      },
+      { status: e instanceof SaiposApiError ? e.status : 500 }
+    );
   }
 }

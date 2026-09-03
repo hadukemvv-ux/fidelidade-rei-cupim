@@ -2,9 +2,9 @@ import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { validarDados } from '@/lib/validations';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
-import crypto from 'crypto';
 import { z } from 'zod';
 import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
+import { hashPin, verifyPin } from '@/lib/pin';
 
 // Schema para redefinição de PIN
 const RedefinirPinSchema = z.object({
@@ -36,8 +36,6 @@ export async function POST(req: NextRequest) {
       telefone: `****${telefone.slice(-4)}`,
       requestId,
     });
-
-    const novoPinHash = crypto.createHash('sha256').update(novo_pin).digest('hex');
 
     // ===== BUSCAR CLIENTE =====
     const { data: cliente, error: clienteError } = await supabaseAdmin
@@ -76,9 +74,11 @@ export async function POST(req: NextRequest) {
     }
 
     // ===== VALIDAR PIN NOVO =====
-    if (cliente.pin_hash === novoPinHash) {
+    if ((await verifyPin(novo_pin, cliente.pin_hash)).valid) {
       return errorResponse('Este já é o seu PIN atual', 'validation_error');
     }
+
+    const novoPinHash = await hashPin(novo_pin);
 
     // ===== ATUALIZAR PIN =====
     const { error: updateError } = await supabaseAdmin

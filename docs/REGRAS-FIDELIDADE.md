@@ -17,11 +17,14 @@ Frações de ticket são transportadas para a compra seguinte. Portanto, uma com
 
 ## Cadastro e acesso
 
-- Novo cadastro com data de nascimento recebe 200 pontos de bônus.
+- Novo cadastro verificado com data de nascimento recebe 200 pontos de bônus.
 - O cliente acessa o saldo com telefone e PIN de quatro dígitos.
 - Depois do PIN correto, a sessão fica protegida em cookie HttpOnly por oito horas.
 - Alteração de cadastro, consulta protegida e resgate exigem sessão vinculada ao mesmo telefone.
-- Pré-cadastro e recuperação de PIN aguardam uma forma segura de confirmar a posse do telefone. Nenhum SMS pago está ativado.
+- Cadastro novo, pré-cadastro e recuperação de PIN exigem confirmação da posse do telefone. Enquanto a automação segura não estiver pronta, o site encaminha para o atendimento pelo WhatsApp.
+- PINs novos usam derivação forte com salt; hashes antigos são migrados automaticamente após um login válido.
+- Dez tentativas incorretas bloqueiam temporariamente novas tentativas da conta por 15 minutos.
+- Nenhum SMS ou serviço pago está ativado.
 
 ## Resgates
 

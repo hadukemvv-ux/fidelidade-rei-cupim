@@ -21,6 +21,10 @@ Atualizado em 03/09/2026.
 - Migrations `202609020001`, `202609020002`, `202609020003` e `202609030001` aplicadas no Supabase
 - Cron SAIPOS com retentativas, paginacao, janela de recuperacao de 3 dias e horario civil de Sao Paulo
 - Segredos de cron aceitos apenas no cabecalho `Authorization`, nunca na URL
+- Cadastro público de telefone bloqueado até confirmação de posse pelo atendimento
+- PIN previsível da roleta removido; novos PINs usam scrypt com salt
+- PINs SHA-256 legados são migrados automaticamente depois de login válido
+- Limite de tentativas de PIN registrado no banco, além da proteção local por IP
 - Documentacao base pronta para iniciante e para IA
 
 ## Riscos abertos (nao bloqueantes)

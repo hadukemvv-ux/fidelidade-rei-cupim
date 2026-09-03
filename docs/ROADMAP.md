@@ -26,6 +26,9 @@ Status: em andamento avancado
 - [x] Adicionar retries com backoff para chamadas SAIPOS
 - [x] Paginar vendas SAIPOS e usar dias civis de Sao Paulo
 - [x] Impedir segredos de cron em parametros da URL
+- [x] Impedir criacao publica de conta sem confirmacao do telefone
+- [x] Migrar PINs legados para hash forte com salt no login
+- [x] Bloquear tentativas repetidas de PIN por conta no banco
 - [ ] Alertas (email/slack) para falhas em cron
 - [ ] Dashboard de saude dos jobs (latencia, falhas, ultimo sucesso)
 

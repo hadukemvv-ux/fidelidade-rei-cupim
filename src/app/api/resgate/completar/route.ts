@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import crypto from 'crypto';
 import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
+import { hashPin } from '@/lib/pin';
 
 function onlyDigits(v: string) {
   return v.replace(/\D/g, '');
@@ -110,7 +110,7 @@ export async function POST(req: Request) {
     if (!/^\d{4}$/.test(pin))
       return NextResponse.json({ ok: false, error: 'PIN deve ter 4 dígitos.' }, { status: 400 });
 
-    const pin_hash = crypto.createHash('sha256').update(pin).digest('hex');
+    const pin_hash = await hashPin(pin);
 
 
     // ——————————————
@@ -155,10 +155,10 @@ export async function POST(req: Request) {
       cliente: snap
     });
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.log('❌ ERRO EM COMPLETAR CADASTRO:', err);
     return NextResponse.json(
-      { ok: false, error: err.message || 'Erro interno.' },
+      { ok: false, error: err instanceof Error ? err.message : 'Erro interno.' },
       { status: 500 }
     );
   }

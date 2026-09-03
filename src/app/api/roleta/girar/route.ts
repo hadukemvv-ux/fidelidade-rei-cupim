@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +13,18 @@ function getIP(req: Request) {
 }
 
 // Salva log na tabela
-async function salvarLog(params: any) {
+type GarcomLog = {
+  garcom_id: number;
+  telefone_cliente: string | null;
+  premio: string;
+  ip: string;
+  user_agent: string;
+  score: number;
+  suspeito: boolean;
+  motivo: string;
+};
+
+async function salvarLog(params: GarcomLog) {
   try {
     await supabaseAdmin.from("garcons_logs").insert(params);
   } catch (e) {
@@ -23,9 +33,9 @@ async function salvarLog(params: any) {
 }
 
 // ANTI-FRAUDE ROBUSTO
-async function calcularFraudeScore(garcom_id: number, telefone: string, ip: string) {
+async function calcularFraudeScore(garcom_id: number, telefone: string) {
   let score = 0;
-  let motivos: string[] = [];
+  const motivos: string[] = [];
 
   const telLimpo = (telefone || "").replace(/\D/g, "");
 
@@ -71,7 +81,7 @@ async function garantirCliente(telefone: string) {
   if (tel.length < 10) return null;
 
   // 1 — TENTA BUSCAR
-  let { data: clienteExiste, error: errBusca } = await supabaseAdmin
+  const { data: clienteExiste, error: errBusca } = await supabaseAdmin
     .from('base_clientes_saipos')
     .select('*')
     .eq('telefone', tel)
@@ -88,9 +98,6 @@ async function garantirCliente(telefone: string) {
   }
 
   // 3 — NÃO EXISTE → criar novo pré-cadastro
-  const pinProvisorio = tel.slice(0, 4);
-  const pinHash = crypto.createHash("sha256").update(pinProvisorio).digest("hex");
-
   const novoCliente = {
     telefone: tel,
     nome: "Cliente Novo (Roleta)",
@@ -109,7 +116,7 @@ async function garantirCliente(telefone: string) {
     atualizado_em: new Date().toISOString(),
 
     origem: "roleta",
-    pin_hash: pinHash,
+    pin_hash: null,
   };
 
   const { data: criado, error: errInsert } = await supabaseAdmin
@@ -156,15 +163,13 @@ export async function POST(req: Request) {
     let fraude_preliminar = { score: 0, motivos: [] as string[] };
 
     try {
-      const ip = getIP(req);
       const { score, motivos } = await calcularFraudeScore(
         garcom.id,
-        telefone || "",
-        ip
+        telefone || ""
       );
       fraude_preliminar = { score, motivos };
-    } catch (e) {
-      console.error("Falha no pré-diagnóstico:", e);
+    } catch (error) {
+      console.error("Falha no pré-diagnóstico:", error);
     }
 
     if (fraude_preliminar.score >= 60) {
@@ -182,7 +187,7 @@ export async function POST(req: Request) {
           suspeito: true,
           motivo: fraude_preliminar.motivos.join(", ")
         });
-      } catch (e) {}
+      } catch {}
 
       return NextResponse.json({
         error: "Atividade suspeita detectada. Giro BLOQUEADO.",
@@ -197,7 +202,7 @@ export async function POST(req: Request) {
 
     if (!premios) throw new Error('Sem prêmios cadastrados.');
 
-    let urna: any[] = [];
+    const urna: Array<(typeof premios)[number]> = [];
 
     premios.forEach(premio => {
       if (premio.nome.toLowerCase().includes('playstation')) return;
@@ -271,8 +276,7 @@ if (premioSorteado.tipo === 'pontos' && telefone) {
 
       const { score, motivos } = await calcularFraudeScore(
         garcom.id,
-        telefone || "",
-        ip
+        telefone || ""
       );
 
       await salvarLog({
@@ -285,7 +289,7 @@ if (premioSorteado.tipo === 'pontos' && telefone) {
         suspeito: score >= 30,
         motivo: motivos.join(", ")
       });
-    } catch (err) {}
+    } catch {}
 
     return NextResponse.json({
       premio: premioSorteado,
@@ -293,7 +297,7 @@ if (premioSorteado.tipo === 'pontos' && telefone) {
       cliente_novo: ehNovo,
       fraude_preliminar,
       mensagem: ehNovo
-        ? 'Conta criada! Use os 4 primeiros dígitos do seu Whats como senha no Delivery.'
+        ? 'Pré-cadastro criado! Confirme seu WhatsApp com o atendimento para acessar a conta.'
         : 'Prêmio aplicado!'
     });
 

@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import crypto from 'crypto';
+import { isLegacyAutomaticPin } from '@/lib/pin';
 
 function onlyDigits(v: string) {
   return v.replace(/\D/g, '');
 }
 
-function isPreCadastro(c: any) {
+type CheckCliente = {
+  nome?: string | null;
+  email?: string | null;
+  data_nascimento?: string | null;
+  pin_hash?: string | null;
+  telefone?: string | null;
+};
+
+function isPreCadastro(c: CheckCliente | null) {
   if (!c) return false;
 
   const nome = c.nome || '';
@@ -15,19 +23,11 @@ function isPreCadastro(c: any) {
   const pin_hash = c.pin_hash;
   const telefone = c.telefone || '';
 
-  // se telefone existe e o hash do PIN é igual ao PIN automático
-  let autoPin = null;
-  if (telefone.length >= 4) {
-    autoPin = crypto.createHash('sha256')
-      .update(telefone.substring(0, 4))
-      .digest('hex');
-  }
-
   return (
     nome === 'Cliente Novo (Roleta)' ||
     !email ||
     !dataNasc ||
-    (pin_hash && pin_hash === autoPin)
+    isLegacyAutomaticPin(telefone, pin_hash)
   );
 }
 
@@ -77,10 +77,10 @@ export async function POST(req: Request) {
       cadastro_completo: true
     });
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[CHECK ERROR]:', err);
     return NextResponse.json(
-      { ok: false, status: 'erro', error: err.message || 'Erro interno.' },
+      { ok: false, status: 'erro', error: err instanceof Error ? err.message : 'Erro interno.' },
       { status: 500 }
     );
   }

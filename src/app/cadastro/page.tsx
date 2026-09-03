@@ -97,6 +97,10 @@ export default function CadastroPage() {
       const data = await response.json();
 
       if (!response.ok || !data.ok) {
+        if (response.status === 403) {
+          router.push(`/cadastro/completar?telefone=${telefoneDigits}`);
+          return;
+        }
         setFeedback({ type: 'error', text: data.error || 'Erro no cadastro.' });
         setLoading(false);
         return;
@@ -128,10 +132,10 @@ export default function CadastroPage() {
       // REDIRECIONAR PARA O RESGATE JÁ LOGADO
       router.push('/resgate');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       setFeedback({
         type: 'error',
-        text: error.message || 'Erro inesperado. Tente novamente.',
+        text: error instanceof Error ? error.message : 'Erro inesperado. Tente novamente.',
       });
     } finally {
       setLoading(false);

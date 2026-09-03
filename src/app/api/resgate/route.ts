@@ -3,9 +3,9 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { calcularProgressaoNivel } from '@/lib/fidelidade-rules';
 import { validarDados, ResgateSchema, type ResgateValidation } from '@/lib/validations';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError, checkRateLimit } from '@/lib/api-utils';
-import crypto from 'crypto';
 import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
 import { attachCustomerSession } from '@/lib/customerSession';
+import { hashPin, isLegacyAutomaticPin, verifyPin } from '@/lib/pin';
 
 // =========================
 // HELPERS
@@ -33,17 +33,11 @@ function isPreCadastro(cliente: ResgateCliente) {
   const telefone = cliente?.telefone || '';
   const pin_hash = cliente?.pin_hash;
 
-  let pinAutoHash = null;
-  if (telefone.length >= 4) {
-    const autoPin = telefone.substring(0, 4);
-    pinAutoHash = crypto.createHash('sha256').update(autoPin).digest('hex');
-  }
-
   return (
     nome === 'Cliente Novo (Roleta)' ||
     !dataNasc ||
     !email ||
-    (pin_hash && pin_hash === pinAutoHash)
+    isLegacyAutomaticPin(telefone, pin_hash)
   );
 }
 
@@ -157,18 +151,45 @@ export async function POST(req: NextRequest) {
         return errorResponse('PIN deve ter 4 dígitos', 'validation_error');
       }
 
-      const pinHash = crypto.createHash('sha256').update(pin).digest('hex');
-
       if (!cliente.pin_hash) {
         return errorResponse('Crie sua senha no cadastro', 'unauthorized');
       }
 
-      if (cliente.pin_hash !== pinHash) {
+      const inicioJanela = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      const { count: falhasRecentes, error: falhasError } = await supabaseAdmin
+        .from('saipos_cron_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('tipo', 'pin_incorreto')
+        .eq('id_cliente', cliente.id)
+        .gte('criado_em', inicioJanela);
+
+      if (!falhasError && (falhasRecentes || 0) >= 10) {
+        return errorResponse('Muitas tentativas. Aguarde 15 minutos e tente novamente.', 'unauthorized', 429);
+      }
+
+      const verificacaoPin = await verifyPin(pin, cliente.pin_hash);
+      if (!verificacaoPin.valid) {
+        await supabaseAdmin.from('saipos_cron_logs').insert({
+          tipo: 'pin_incorreto',
+          mensagem: 'Tentativa de PIN incorreto bloqueada pelo login do cliente',
+          id_cliente: cliente.id,
+          criado_em: new Date().toISOString(),
+        });
         logInfo('/api/resgate', 'PIN incorreto para cliente', {
           telefone: `****${telefone.slice(-4)}`,
           requestId,
         });
         return errorResponse('PIN incorreto', 'unauthorized');
+      }
+
+      if (verificacaoPin.needsRehash) {
+        const { error: migrationError } = await supabaseAdmin
+          .from('base_clientes_saipos')
+          .update({ pin_hash: await hashPin(pin), atualizado_em: new Date().toISOString() })
+          .eq('id', cliente.id);
+        if (migrationError) {
+          logError('/api/resgate', migrationError as Error, { cliente_id: cliente.id, requestId });
+        }
       }
     }
 

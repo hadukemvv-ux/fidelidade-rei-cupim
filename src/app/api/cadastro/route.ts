@@ -2,28 +2,11 @@ import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { validarDados, ClienteSchema, type ClienteValidation } from '@/lib/validations';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
-import crypto from 'crypto';
 import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
-import { attachCustomerSession } from '@/lib/customerSession';
+import { hashPin, isLegacyAutomaticPin, verifyPin } from '@/lib/pin';
 
 function iso() {
   return new Date().toISOString();
-}
-
-async function registrarExtrato(cliente_id: number, valor: number, descricao: string) {
-  try {
-    await supabaseAdmin.from('extrato_pontos').insert({
-      cliente_id,
-      tipo: 'entrada',
-      valor,
-      origem: 'SISTEMA',
-      descricao,
-      criado_em: iso(),
-      metodo: 'cadastro'
-    });
-  } catch (e) {
-    console.log('⚠️ Extrato falhou:', e);
-  }
 }
 
 // Detectar PRÉ‑CADASTRO (roleta)
@@ -42,18 +25,11 @@ function isPreCadastro(cliente: CadastroCliente) {
   const telefone = cliente.telefone || '';
   const pin_hash = cliente?.pin_hash;
 
-  // PIN automático gerado pela roleta
-  let pinAutoHash = null;
-  if (telefone.length >= 4) {
-    const autoPin = telefone.substring(0, 4);
-    pinAutoHash = crypto.createHash('sha256').update(autoPin).digest('hex');
-  }
-
   return (
     nome === 'Cliente Novo (Roleta)' ||
     !dataNasc ||
     !email ||
-    (pinAutoHash && pin_hash === pinAutoHash)
+    isLegacyAutomaticPin(telefone, pin_hash)
   );
 }
 
@@ -81,27 +57,7 @@ export async function POST(req: NextRequest) {
       return errorResponse('PIN deve ter exatamente 4 dígitos', 'validation_error');
     }
 
-    const pin_hash = crypto.createHash('sha256').update(pin).digest('hex');
-
-    // ===== 3. CHECAR EMAIL DUPLICADO =====
-    const { data: emailExistente, error: emailError } = await supabaseAdmin
-      .from('base_clientes_saipos')
-      .select('id, telefone')
-      .eq('email', email)
-      .maybeSingle();
-
-    if (emailError) {
-      logError('/api/cadastro', emailError as Error, {
-        requestId,
-      });
-      return handleApiError(emailError, '/api/cadastro', requestId);
-    }
-
-    if (emailExistente && emailExistente.telefone !== telefone) {
-      return errorResponse('Este email já está cadastrado em outra conta', 'validation_error');
-    }
-
-    // ===== 4. BUSCAR CLIENTE PELO TELEFONE =====
+    // ===== 3. BUSCAR CLIENTE PELO TELEFONE =====
     const { data: encontrados, error: searchError } = await supabaseAdmin
       .from('base_clientes_saipos')
       .select('*')
@@ -116,58 +72,35 @@ export async function POST(req: NextRequest) {
 
     // ===== CASO 1: NOVO CLIENTE =====
     if (!encontrados || encontrados.length === 0) {
-      const bonus = data_nascimento ? 200 : 0;
-
-      const { data: novo, error: insertError } = await supabaseAdmin
-        .from('base_clientes_saipos')
-        .insert({
-          nome,
-          email,
-          telefone,
-          pin_hash,
-          data_nascimento: data_nascimento || null,
-          pontos: bonus,
-          cashback: 0,
-          tickets: 0,
-          nivel: 'BRONZE',
-          total_gasto: 0,
-          qtd_pedidos: 0,
-          primeira_compra: null,
-          ultima_compra: null,
-          atualizado_em: iso(),
-        })
-        .select('id')
-        .single();
-
-      if (insertError) {
-        logError('/api/cadastro', insertError as Error, {
-          requestId,
-        });
-        return handleApiError(insertError, '/api/cadastro', requestId);
-      }
-
-      // Registrar bonus
-      if (bonus > 0) {
-        await registrarExtrato(novo.id, bonus, 'Bônus de Cadastro');
-      }
-
-logInfo('/api/cadastro', 'Novo cliente criado', {
-        telefone: `****${telefone.slice(-4)}`,
-        bonus,
-        requestId,
-      });
-
-      return attachCustomerSession(successResponse({
-        criado: true,
-        message: 'Cadastro realizado com sucesso!',
-        bonus: bonus > 0 ? `+${bonus} pontos de bônus` : undefined,
-      }), telefone);
+      return errorResponse(
+        'Confirme este WhatsApp com o atendimento antes de criar sua conta.',
+        'unauthorized',
+        403,
+        requestId
+      );
     }
 
     // Um telefone já existente só pode ser alterado por uma sessão que
     // pertença ao próprio cliente. Cadastros novos continuam públicos.
     const authError = await validateCustomerAuth(req, telefone);
     if (authError) return authError;
+
+    // A consulta de e-mail só acontece depois da autenticação, evitando
+    // transformar o cadastro público em um enumerador de contas.
+    const { data: emailExistente, error: emailError } = await supabaseAdmin
+      .from('base_clientes_saipos')
+      .select('id, telefone')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (emailError) {
+      logError('/api/cadastro', emailError as Error, { requestId });
+      return handleApiError(emailError, '/api/cadastro', requestId);
+    }
+
+    if (emailExistente && emailExistente.telefone !== telefone) {
+      return errorResponse('Este email já está cadastrado em outra conta', 'validation_error');
+    }
 
     // ===== CASO 2: CLIENTE EXISTENTE =====
     if (encontrados.length === 1) {
@@ -188,7 +121,7 @@ logInfo('/api/cadastro', 'Novo cliente criado', {
           updateData.data_nascimento = data_nascimento || null;
         }
         if (!cliente.pin_hash) {
-          updateData.pin_hash = pin_hash;
+          updateData.pin_hash = await hashPin(pin);
         }
 
         const { error: updateError } = await supabaseAdmin
@@ -227,12 +160,20 @@ logInfo('/api/cadastro', 'Novo cliente criado', {
         return errorResponse('Email não pode ser alterado após cadastro completo', 'validation_error');
       }
 
-      if (cliente.pin_hash && cliente.pin_hash !== pin_hash) {
+      const verificacaoPin = await verifyPin(pin, cliente.pin_hash);
+      if (!verificacaoPin.valid) {
         logInfo('/api/cadastro', 'PIN incorreto para cliente existente', {
           telefone: `****${telefone.slice(-4)}`,
           requestId,
         });
         return errorResponse('PIN incorreto', 'unauthorized');
+      }
+
+      if (verificacaoPin.needsRehash) {
+        await supabaseAdmin
+          .from('base_clientes_saipos')
+          .update({ pin_hash: await hashPin(pin), atualizado_em: iso() })
+          .eq('id', cliente.id);
       }
 
       return successResponse({

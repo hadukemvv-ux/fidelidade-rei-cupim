@@ -7,8 +7,8 @@ Atualizado em 03/09/2026.
 - Build: OK
 - TypeScript: OK
 - Integracao SAIPOS: OK
-- Testes unitarios locais: 8/8
-- Suite de integracao com servicos externos: nao executada neste checkpoint
+- Testes unitarios locais: 14/14
+- Integracao SAIPOS: autenticacao e resposta real confirmadas em 03/09/2026; o provedor apresentou tambem uma falha temporaria PGRST003/504
 
 ## Maturidade atual
 
@@ -19,7 +19,8 @@ Atualizado em 03/09/2026.
 - RLS ativo nas tabelas operacionais e acesso publico direto bloqueado
 - Frontend e backend usam a mesma fonte de regras de fidelidade
 - Migrations `202609020001`, `202609020002`, `202609020003` e `202609030001` aplicadas no Supabase
-- Crons operacionais com tratamento de falhas
+- Cron SAIPOS com retentativas, paginacao, janela de recuperacao de 3 dias e horario civil de Sao Paulo
+- Segredos de cron aceitos apenas no cabecalho `Authorization`, nunca na URL
 - Documentacao base pronta para iniciante e para IA
 
 ## Riscos abertos (nao bloqueantes)
@@ -29,12 +30,14 @@ Atualizado em 03/09/2026.
 3. Contrato de schema do sorteio ainda legado (UUID + id_new)
 4. Necessidade de evolucao de observabilidade (alertas e metricas)
 5. Cobertura de testes unitarios ainda pode crescer
+6. Token SAIPOS atual funciona, mas deve ser rotacionado e salvo como Secret na Vercel
 
 ## Proximo foco
 
-- Fase de Confiabilidade (ver `docs/ROADMAP.md`)
-- Consolidacao de contratos de dados
-- Melhorias de monitoramento de producao
+1. Rotacionar o token SAIPOS com acesso ao painel do fornecedor
+2. Definir verificacao segura do telefone sem ativar servico pago sem autorizacao
+3. Consolidar contratos de dados do sorteio
+4. Iniciar o novo sistema visual com logo, fotos e referencias aprovadas
 
 ## Onde acompanhar o plano
 

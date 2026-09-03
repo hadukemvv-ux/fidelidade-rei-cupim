@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processarVenda } from '../processarVenda';
-import { buscarVendasSaipos, SaiposApiError } from '@/lib/saipos';
+import {
+  buscarTodasVendasSaipos,
+  periodoDiaSaoPaulo,
+  periodoUltimosDiasSaoPaulo,
+  SaiposApiError,
+} from '@/lib/saipos';
 
 export const dynamic = 'force-dynamic';
 
 const CRON_SECRET = process.env.CRON_SECRET;
-
-function formatarData(d: string) {
-  return new Date(d).toISOString();
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,8 +20,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const token = req.headers.get('authorization')?.replace('Bearer ', '')
-      || req.nextUrl.searchParams.get('token');
+    const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
 
     if (token !== CRON_SECRET) {
       return NextResponse.json(
@@ -40,25 +40,21 @@ export async function GET(req: NextRequest) {
 
     // Caso 1: "?dia=YYYY-MM-DD"
     if (dia) {
-      const d = new Date(dia);
-      inicio = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0).toISOString();
-      fim = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).toISOString();
+      ({ inicio, fim } = periodoDiaSaoPaulo(dia));
     }
 
     // Caso 2: "?inicio=YYYY-MM-DD&fim=YYYY-MM-DD"
     else if (inicioParam && fimParam) {
-      inicio = formatarData(inicioParam);
-      fim = formatarData(fimParam);
+      inicio = new Date(inicioParam).toISOString();
+      fim = new Date(fimParam).toISOString();
     }
 
     // Caso 3: nada → HOJE
     else {
-      const hoje = new Date();
-      inicio = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate(), 0, 0, 0).toISOString();
-      fim = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate(), 23, 59, 59).toISOString();
+      ({ inicio, fim } = periodoUltimosDiasSaoPaulo(1));
     }
 
-    const vendas = await buscarVendasSaipos({ inicio, fim, limit: 500 });
+    const vendas = await buscarTodasVendasSaipos({ inicio, fim, pageSize: 200 });
 
     // 🔥 PROCESSAR CADA VENDA USANDO O MOTOR ÚNICO
     let processadas = 0;

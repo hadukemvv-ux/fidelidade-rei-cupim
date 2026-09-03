@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { buscarVendasSaipos, SaiposApiError } from '@/lib/saipos';
+import {
+  buscarTodasVendasSaipos,
+  periodoUltimosDiasSaoPaulo,
+  SaiposApiError,
+} from '@/lib/saipos';
 import { processarVenda } from './processarVenda'; // MOTOR ÚNICO
 
 export const dynamic = 'force-dynamic';
@@ -30,8 +34,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const token = request.headers.get('authorization')?.replace('Bearer ', '') 
-               || request.nextUrl.searchParams.get('token');
+    const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
 
     if (token !== CRON_SECRET) {
       return NextResponse.json(
@@ -40,21 +43,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const hoje = new Date();
-    const inicio = new Date(
-      hoje.getFullYear(),
-      hoje.getMonth(),
-      hoje.getDate(),
-      0, 0, 0
-    ).toISOString();
-    const fim = new Date(
-      hoje.getFullYear(),
-      hoje.getMonth(),
-      hoje.getDate(),
-      23, 59, 59
-    ).toISOString();
-
-    const vendas = await buscarVendasSaipos({ inicio, fim, limit: 200 });
+    // Reconsulta hoje e os dois dias anteriores. Como o crédito é idempotente,
+    // essa sobreposição recupera uma eventual indisponibilidade do cron anterior.
+    const { inicio, fim } = periodoUltimosDiasSaoPaulo(3);
+    const vendas = await buscarTodasVendasSaipos({ inicio, fim, pageSize: 200 });
     let falhas = 0;
 
     // 🔥 USANDO O MOTOR ÚNICO
@@ -77,6 +69,7 @@ export async function GET(request: NextRequest) {
       sucesso: true,
       processadas: vendas.length,
       falhas,
+      periodo: { inicio, fim },
     });
 
   } catch (e: unknown) {

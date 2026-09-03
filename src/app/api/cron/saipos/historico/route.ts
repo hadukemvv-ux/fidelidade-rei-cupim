@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { buscarVendasSaipos, SaiposApiError } from '@/lib/saipos';
+import { buscarTodasVendasSaipos, periodoUltimosDiasSaoPaulo, SaiposApiError } from '@/lib/saipos';
 import { processarVenda } from '../processarVenda'; // IMPORTAÇÃO CORRETA
 
 export const dynamic = 'force-dynamic';
@@ -29,8 +29,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
-      || request.nextUrl.searchParams.get('token');
+    const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '').trim();
 
     if (token !== CRON_SECRET) {
       return NextResponse.json(
@@ -52,22 +51,7 @@ export async function GET(request: NextRequest) {
     // A) Range de dias
     // ===============================
     if (dias) {
-      const hoje = new Date();
-      const inicioDate = new Date(hoje.getTime() - Number(dias) * 86400000);
-
-      inicio = new Date(
-        inicioDate.getFullYear(),
-        inicioDate.getMonth(),
-        inicioDate.getDate(),
-        0, 0, 0
-      ).toISOString();
-
-      fim = new Date(
-        hoje.getFullYear(),
-        hoje.getMonth(),
-        hoje.getDate(),
-        23, 59, 59
-      ).toISOString();
+      ({ inicio, fim } = periodoUltimosDiasSaoPaulo(Number(dias)));
     }
 
     // ===============================
@@ -87,7 +71,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const vendas = await buscarVendasSaipos({ inicio, fim, limit: 500 });
+    const vendas = await buscarTodasVendasSaipos({ inicio, fim, pageSize: 200 });
     let falhas = 0;
 
     // ===============================

@@ -18,9 +18,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const token = req.headers.get("authorization")?.replace("Bearer ", "")
-      || req.nextUrl.searchParams.get("token")
-      || req.nextUrl.searchParams.get("secret"); // compatibilidade com chamadas antigas
+    const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
 
     if (token !== CRON_SECRET) {
       return NextResponse.json(
@@ -87,7 +85,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 5. montar entradas
-    const entradas: any[] = [];
+    const entradas: Array<(typeof clientes)[number]> = [];
     clientes.forEach(cli => {
       const t = Number(cli.tickets) || 0;
       if (t > 0) entradas.push(...Array(t).fill(cli));
@@ -139,10 +137,10 @@ export async function GET(req: NextRequest) {
       ganhador,
     });
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[CRON SORTEIO ERROR]:", err);
     return NextResponse.json(
-      { error: err.message },
+      { error: err instanceof Error ? err.message : "Erro desconhecido" },
       { status: 500 }
     );
   }

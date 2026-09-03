@@ -10,7 +10,7 @@ Status: em andamento avancado
 
 - [x] Endpoints admin protegidos
 - [x] Endpoints cron protegidos
-- [x] Integracao SAIPOS resiliente (nao derruba cron por venda invalida)
+- [x] Integracao SAIPOS resiliente (retentativas, paginacao e recuperacao de 3 dias)
 - [x] Suite de integracao automatizada
 - [x] Build e TypeScript limpos
 - [x] Crédito de vendas SAIPOS atômico e idempotente
@@ -23,7 +23,9 @@ Status: em andamento avancado
 
 - [x] Adicionar testes unitarios para regras de fidelidade
 - [ ] Ampliar testes unitários para rotas e funções SQL
-- [ ] Adicionar retries com backoff para chamadas SAIPOS
+- [x] Adicionar retries com backoff para chamadas SAIPOS
+- [x] Paginar vendas SAIPOS e usar dias civis de Sao Paulo
+- [x] Impedir segredos de cron em parametros da URL
 - [ ] Alertas (email/slack) para falhas em cron
 - [ ] Dashboard de saude dos jobs (latencia, falhas, ultimo sucesso)
 
@@ -55,3 +57,13 @@ Uma fase so fecha quando:
 - Testes relevantes passam
 - Logs estao compreensiveis
 - Documentacao da fase foi atualizada
+
+## Ritmo de trabalho
+
+Cada rodada deve terminar nesta ordem:
+
+1. Uma mudanca de escopo pequeno e claro
+2. Testes automatizados e build
+3. Commit no GitHub
+4. Deploy e verificacao externa, quando aplicavel
+5. Atualizacao de `STATUS_ALPHA.md` com resultado e proxima tarefa

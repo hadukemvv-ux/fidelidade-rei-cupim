@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buscarVendasSaipos, SaiposApiError } from '../src/lib/saipos.ts';
+import {
+  buscarTodasVendasSaipos,
+  buscarVendasSaipos,
+  periodoDiaSaoPaulo,
+  periodoUltimosDiasSaoPaulo,
+  SaiposApiError,
+} from '../src/lib/saipos.ts';
 
 const periodo = {
   inicio: '2026-09-03T00:00:00.000Z',
@@ -51,4 +57,43 @@ test('rejeita resposta autenticada em formato inesperado', async () => {
     (error: unknown) => error instanceof SaiposApiError && error.status === 502
   );
   assert.equal(chamadas, 1);
+});
+
+test('pagina até receber um lote menor que o limite', async () => {
+  const offsets: string[] = [];
+  const fetchImpl: typeof fetch = async (input) => {
+    const url = new URL(String(input));
+    const offset = url.searchParams.get('p_offset') || '';
+    offsets.push(offset);
+    const lote = offset === '0'
+      ? [{ id_sale: 1 }, { id_sale: 2 }]
+      : [{ id_sale: 3 }];
+    return new Response(JSON.stringify(lote), { status: 200 });
+  };
+
+  const vendas = await buscarTodasVendasSaipos({
+    ...periodo,
+    pageSize: 2,
+    fetchImpl,
+  });
+
+  assert.deepEqual(offsets, ['0', '2']);
+  assert.deepEqual(vendas.map((venda) => venda.id_sale), [1, 2, 3]);
+});
+
+test('calcula dias civis no horário de São Paulo', () => {
+  assert.deepEqual(periodoDiaSaoPaulo('2026-09-03'), {
+    inicio: '2026-09-03T03:00:00.000Z',
+    fim: '2026-09-04T02:59:59.999Z',
+  });
+  assert.deepEqual(periodoUltimosDiasSaoPaulo(3, new Date('2026-09-03T12:00:00.000Z')), {
+    inicio: '2026-09-01T03:00:00.000Z',
+    fim: '2026-09-04T02:59:59.999Z',
+  });
+});
+
+test('rejeita datas e intervalos fora do limite seguro', () => {
+  assert.throws(() => periodoDiaSaoPaulo('2026-02-30'));
+  assert.throws(() => periodoUltimosDiasSaoPaulo(0));
+  assert.throws(() => periodoUltimosDiasSaoPaulo(91));
 });

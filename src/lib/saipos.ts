@@ -14,6 +14,11 @@ type BuscarVendasOptions = {
   timeoutMs?: number;
 };
 
+type BuscarTodasVendasOptions = Omit<BuscarVendasOptions, 'limit' | 'offset'> & {
+  pageSize?: number;
+  maxPages?: number;
+};
+
 export type VendaSaipos = {
   id_sale?: unknown;
   canceled?: unknown;
@@ -149,4 +154,90 @@ export async function buscarVendasSaipos({
   }
 
   throw ultimoErro;
+}
+
+/** Busca todas as páginas de um período, com um teto defensivo contra loops. */
+export async function buscarTodasVendasSaipos({
+  pageSize = 200,
+  maxPages = 50,
+  ...options
+}: BuscarTodasVendasOptions): Promise<VendaSaipos[]> {
+  if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 500) {
+    throw new Error('Tamanho de página Saipos inválido.');
+  }
+  if (!Number.isInteger(maxPages) || maxPages < 1 || maxPages > 100) {
+    throw new Error('Limite de páginas Saipos inválido.');
+  }
+
+  const vendas: VendaSaipos[] = [];
+
+  for (let pagina = 0; pagina < maxPages; pagina += 1) {
+    const lote = await buscarVendasSaipos({
+      ...options,
+      limit: pageSize,
+      offset: pagina * pageSize,
+    });
+    vendas.push(...lote);
+
+    if (lote.length < pageSize) return vendas;
+  }
+
+  throw new SaiposApiError(
+    `A consulta Saipos excedeu o limite seguro de ${maxPages * pageSize} vendas.`,
+    502,
+    'Paginação interrompida para evitar execução sem limite.',
+    1
+  );
+}
+
+const FUSO_SAO_PAULO = 'America/Sao_Paulo';
+
+function dataCivilSaoPaulo(agora: Date) {
+  const partes = new Intl.DateTimeFormat('en-CA', {
+    timeZone: FUSO_SAO_PAULO,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(agora);
+  const valor = (tipo: Intl.DateTimeFormatPartTypes) =>
+    partes.find((parte) => parte.type === tipo)?.value;
+  return {
+    ano: Number(valor('year')),
+    mes: Number(valor('month')),
+    dia: Number(valor('day')),
+  };
+}
+
+/**
+ * Gera uma janela de dias civis de São Paulo. O Brasil não adota horário de
+ * verão desde 2019, portanto meia-noite local corresponde a 03:00 UTC.
+ */
+export function periodoUltimosDiasSaoPaulo(dias: number, agora = new Date()) {
+  if (!Number.isInteger(dias) || dias < 1 || dias > 90) {
+    throw new Error('O período deve ter entre 1 e 90 dias.');
+  }
+
+  const { ano, mes, dia } = dataCivilSaoPaulo(agora);
+  return {
+    inicio: new Date(Date.UTC(ano, mes - 1, dia - (dias - 1), 3, 0, 0, 0)).toISOString(),
+    fim: new Date(Date.UTC(ano, mes - 1, dia + 1, 3, 0, 0, 0) - 1).toISOString(),
+  };
+}
+
+export function periodoDiaSaoPaulo(dia: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia)) {
+    throw new Error('Data inválida. Use YYYY-MM-DD.');
+  }
+
+  const [ano, mes, data] = dia.split('-').map(Number);
+  const meioDia = new Date(Date.UTC(ano, mes - 1, data, 15));
+  const civil = dataCivilSaoPaulo(meioDia);
+  if (civil.ano !== ano || civil.mes !== mes || civil.dia !== data) {
+    throw new Error('Data inválida. Use uma data existente.');
+  }
+
+  return {
+    inicio: new Date(Date.UTC(ano, mes - 1, data, 3, 0, 0, 0)).toISOString(),
+    fim: new Date(Date.UTC(ano, mes - 1, data + 1, 3, 0, 0, 0) - 1).toISOString(),
+  };
 }

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  CUSTO_ENTREGA_GRATIS_PONTOS,
   calcularCashbackValue,
   calcularPontosEarned,
   calcularProgressaoNivel,
@@ -8,6 +9,11 @@ import {
   getAllNivelThresholds,
   getNivelPorGasto,
 } from '../src/lib/fidelidade-rules.ts';
+
+test('entrega grátis não pode ser resgatada somente com o bônus de cadastro', () => {
+  assert.equal(CUSTO_ENTREGA_GRATIS_PONTOS, 1000);
+  assert.ok(CUSTO_ENTREGA_GRATIS_PONTOS > 200);
+});
 
 test('classifica corretamente todos os limites de nível', () => {
   assert.equal(getNivelPorGasto(0).nivel, 'BRONZE');

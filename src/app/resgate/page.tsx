@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { CUSTO_ENTREGA_GRATIS_PONTOS } from '@/lib/fidelidade-rules';
 
 type Feedback = { type: 'success' | 'error'; text: string } | null;
 type ClubSection = 'recompensas' | 'cashback' | 'sorteio';
@@ -206,7 +207,7 @@ export default function ResgatePage() {
               const original = Number(product.custo_em_pontos || 0); const finalCost = product.destaque ? Math.floor(original * .5) : original; const available = dadosCliente.pontos >= finalCost;
               return <article className="reward-card" key={product.id}><div className="reward-image">{product.imagem_url ? <img src={product.imagem_url} alt={product.nome} /> : <Image src="/images/home/espetinhos.webp" alt="" fill sizes="20rem" />}{product.destaque && <span>50% OFF</span>}</div><div className="reward-body"><small>{product.categoria || 'Recompensa'}</small><h3>{product.nome}</h3><p>{product.descricao || 'Feito na hora, do jeito do Rei.'}</p></div><div className="reward-footer"><strong>{finalCost.toLocaleString('pt-BR')} <small>pts</small></strong><button type="button" disabled={!available || loading} onClick={() => setPendingReward({ tipo: 'produto', produtoId: product.id, nome: product.nome, custo: `${finalCost.toLocaleString('pt-BR')} pontos` })}>{available ? 'Resgatar' : `Faltam ${(finalCost - dadosCliente.pontos).toLocaleString('pt-BR')}`}</button></div></article>;
             })}</div> : <div className="club-empty">Nenhuma recompensa nesta categoria por enquanto.</div>}
-            <article className="delivery-reward"><div><span>Entrega grátis</span><h3>A gente leva o sabor até você.</h3><p>Troque 200 pontos pelo benefício.</p></div><button type="button" disabled={dadosCliente.pontos < 200 || loading} onClick={() => setPendingReward({ tipo: 'frete', nome: 'Entrega grátis', custo: '200 pontos' })}>{dadosCliente.pontos >= 200 ? 'Resgatar entrega' : `Faltam ${200 - dadosCliente.pontos} pts`}</button></article>
+            <article className="delivery-reward"><div><span>★ Destaque do clube</span><h3>Taxa de entrega por nossa conta.</h3><p>Use {CUSTO_ENTREGA_GRATIS_PONTOS.toLocaleString('pt-BR')} pontos em pedidos diretos. Consulte disponibilidade e área de entrega.</p></div><button type="button" disabled={dadosCliente.pontos < CUSTO_ENTREGA_GRATIS_PONTOS || loading} onClick={() => setPendingReward({ tipo: 'frete', nome: 'Taxa de entrega grátis', custo: `${CUSTO_ENTREGA_GRATIS_PONTOS.toLocaleString('pt-BR')} pontos` })}>{dadosCliente.pontos >= CUSTO_ENTREGA_GRATIS_PONTOS ? 'Quero entrega grátis' : `Faltam ${(CUSTO_ENTREGA_GRATIS_PONTOS - dadosCliente.pontos).toLocaleString('pt-BR')} pts`}</button></article>
           </section>
         )}
 

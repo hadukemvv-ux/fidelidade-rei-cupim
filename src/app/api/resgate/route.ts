@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { calcularProgressaoNivel } from '@/lib/fidelidade-rules';
+import { calcularProgressaoNivel, CUSTO_ENTREGA_GRATIS_PONTOS } from '@/lib/fidelidade-rules';
 import { validarDados, ResgateSchema, type ResgateValidation } from '@/lib/validations';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError, checkRateLimit } from '@/lib/api-utils';
 import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
@@ -193,8 +193,8 @@ export async function POST(req: NextRequest) {
 
     // ===== VALIDAR TIPO E CALCULAR CUSTO =====
     if (tipo === 'frete') {
-      custoPontos = 200;
-      nomePremio = 'Entrega Grátis';
+      custoPontos = CUSTO_ENTREGA_GRATIS_PONTOS;
+      nomePremio = 'Taxa de entrega grátis';
 
     } else if (tipo === 'cashback') {
       const valorCashback = Number(valorDesconto || valor || 0);

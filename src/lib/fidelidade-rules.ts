@@ -2,6 +2,10 @@
 export type NivelFidelidade = 'BRONZE' | 'PRATA' | 'OURO' | 'REI';
 
 export interface BeneficioNivel { pontos: number; cashback: number; tickets: number }
+
+// O custo acompanha o valor percebido de uma entrega e impede que o bônus
+// inicial de cadastro seja convertido imediatamente em frete grátis.
+export const CUSTO_ENTREGA_GRATIS_PONTOS = 1000;
 export interface NivelInfo {
   nivel: NivelFidelidade;
   nome: string;

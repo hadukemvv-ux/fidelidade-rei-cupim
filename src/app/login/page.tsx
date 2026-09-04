@@ -35,24 +35,25 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 font-sans">
+    <div className="staff-page min-h-screen bg-black flex items-center justify-center p-4 font-sans">
       <form onSubmit={handleLogin} className="bg-gray-900 p-8 rounded-2xl border border-[#c5a059] w-full max-w-md shadow-2xl">
         <div className="text-center mb-8">
-            <h1 className="text-3xl font-black text-[#c5a059] uppercase">👑 Área Restrita</h1>
-            <p className="text-gray-400 mt-2 text-sm">Apenas para a Realeza</p>
+            <img src="/logo.png" alt="O Rei do Cupim" className="mx-auto mb-5 h-16 w-16 object-contain" />
+            <h1 className="text-3xl font-black text-[#c5a059] uppercase">Área da equipe</h1>
+            <p className="text-gray-400 mt-2 text-sm">Acesso administrativo protegido</p>
         </div>
 
         <div className="space-y-4">
             <input
             type="email"
-            placeholder="E-mail Real"
+            placeholder="E-mail"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full bg-black text-white p-4 rounded-xl border border-gray-700 focus:border-[#c5a059] outline-none transition-colors"
             />
             <input
             type="password"
-            placeholder="Senha Secreta"
+            placeholder="Senha"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full bg-black text-white p-4 rounded-xl border border-gray-700 focus:border-[#c5a059] outline-none transition-colors"
@@ -63,7 +64,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-[#c5a059] hover:bg-[#b08d45] text-black font-black uppercase tracking-wider p-4 rounded-xl mt-8 transition-transform hover:scale-105 shadow-lg disabled:opacity-50"
         >
-            {loading ? 'Validando...' : 'ENTRAR NO CASTELO'}
+            {loading ? 'Validando...' : 'ENTRAR'}
         </button>
       </form>
     </div>

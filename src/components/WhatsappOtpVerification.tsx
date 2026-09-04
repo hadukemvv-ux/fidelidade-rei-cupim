@@ -79,14 +79,14 @@ export default function WhatsappOtpVerification({
 
   if (verified) {
     return (
-      <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+      <div className="otp-panel otp-success rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
         ✓ WhatsApp confirmado. Você pode continuar.
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 rounded-xl border border-[#c5a059]/30 bg-black/20 p-4">
+    <div className="otp-panel space-y-3 rounded-xl border border-[#c5a059]/30 bg-black/20 p-4">
       <p className="text-sm text-zinc-200">
         Enviaremos um código apenas agora para confirmar que este WhatsApp é seu. Os próximos acessos serão com seu PIN, sem mensagem.
       </p>

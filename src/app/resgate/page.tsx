@@ -202,13 +202,13 @@ export default function ResgatePage() {
   // INTERFACE
   // =======================================
   return (
-    <div className="min-h-screen bg-[#280404] text-white pb-24">
+    <div className="account-page min-h-screen bg-[#280404] text-white pb-24">
       
       <header className="py-6 px-6 bg-[#1a0a0a] shadow-lg border-b border-[#c5a059]/30 flex justify-between items-center sticky top-0 z-50">
         <div className="w-12 h-12">
           <img src="/logo.png" className="w-full h-full object-contain"/>
         </div>
-        <h1 className="text-lg font-black text-[#c5a059] tracking-widest">LOJA DE PONTOS</h1>
+        <h1 className="text-lg font-black text-[#c5a059] tracking-widest">MEU CLUBE</h1>
         <Link href="/" className="text-xs text-zinc-400 hover:text-white">Sair</Link>
       </header>
 

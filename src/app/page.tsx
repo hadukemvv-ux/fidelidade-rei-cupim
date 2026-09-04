@@ -124,11 +124,58 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="channels-section section-pad" aria-labelledby="channels-title">
+        <div className="channels-heading">
+          <div>
+            <p className="kicker">Onde encontrar o Rei</p>
+            <h2 id="channels-title">Escolha seu caminho.<br /><em>A gente cuida da fome.</em></h2>
+          </div>
+          <p>
+            Cupons e preços mudam em cada plataforma. Confira a oferta no aplicativo e compare com o pedido direto antes de fechar.
+          </p>
+        </div>
+
+        <div className="channel-grid">
+          <a className="channel-card instagram" href="https://www.instagram.com/oreidocupim_/" target="_blank" rel="noopener noreferrer">
+            <span className="channel-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.4" cy="6.7" r="1" className="fill"/></svg>
+            </span>
+            <div><small>Novidades e promoções</small><strong>Instagram</strong><span>@oreidocupim_</span></div>
+            <i aria-hidden="true">↗</i>
+          </a>
+
+          <a className="channel-card maps" href="https://maps.app.goo.gl/YArFsTEErt8N1PiL6" target="_blank" rel="noopener noreferrer">
+            <span className="channel-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 22s7-6.1 7-13A7 7 0 0 0 5 9c0 6.9 7 13 7 13Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            </span>
+            <div><small>Venha até a churrascaria</small><strong>Google Maps</strong><span>Abrir rota</span></div>
+            <i aria-hidden="true">↗</i>
+          </a>
+
+          <a className="channel-card ifood" href="https://www.ifood.com.br/delivery/fortaleza-ce/churrascaria-o-rei-do-cupim-henrique-jorge/d4fc2476-227b-4fe1-87be-85a88bf5fee4?utm_medium=share" target="_blank" rel="noopener noreferrer">
+            <span className="channel-mark wordmark" aria-hidden="true">iFood</span>
+            <div><small>Delivery</small><strong>Peça no iFood</strong><span>Conferir cupons no app</span></div>
+            <i aria-hidden="true">↗</i>
+          </a>
+
+          <a className="channel-card food99" href="https://oia.99app.com/dlp9/RQpH0q" target="_blank" rel="noopener noreferrer">
+            <span className="channel-mark wordmark" aria-hidden="true">99</span>
+            <div><small>Delivery</small><strong>Peça no 99Food</strong><span>Conferir cupons no app</span></div>
+            <i aria-hidden="true">↗</i>
+          </a>
+        </div>
+
+        <div className="coupon-note">
+          <span>Códigos de desconto</span>
+          <p>Quando tivermos um código oficial ativo, ele aparecerá aqui e no Instagram — sem cupom vencido e sem pegadinha.</p>
+        </div>
+      </section>
+
       <section className="final-cta">
         <Image src="/images/home/espetinhos.webp" alt="Espetinhos gourmet assados" fill sizes="100vw" />
         <div className="final-shade" />
         <div className="final-content">
-          <Image src="/logo.png" alt="" width={72} height={72} />
+          <Image className="final-logo" src="/brand/logo-vertical.png" alt="O Rei do Cupim" width={148} height={154} />
           <p className="kicker">A brasa já está acesa</p>
           <h2>Seu próximo pedido<br /><em>já pode valer pontos.</em></h2>
           <div className="final-actions">

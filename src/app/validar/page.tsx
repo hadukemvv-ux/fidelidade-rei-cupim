@@ -72,7 +72,7 @@ function ValidarContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6 flex flex-col items-center justify-center font-sans">
+    <div className="operations-page min-h-screen bg-gray-900 text-white p-6 flex flex-col items-center justify-center font-sans">
       <div className="max-w-md w-full bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
         <h1 className="text-2xl font-bold text-center mb-6 text-[#c5a059]">🛡️ Validação de Cupom</h1>
 

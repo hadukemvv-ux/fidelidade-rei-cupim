@@ -147,7 +147,7 @@ export default function CadastroPage() {
   // 3) INTERFACE
   // ===========================================================
   return (
-    <div className="min-h-screen bg-[#280404] text-white font-sans">
+    <div className="portal-page min-h-screen bg-[#280404] text-white font-sans">
       <header className="pt-10 pb-6 flex flex-col items-center justify-center">
         <div className="relative w-40 h-40 mb-4">
           <img src="/logo.png" alt="Logo Rei do Cupim" className="w-full h-full object-contain" />
@@ -170,7 +170,7 @@ export default function CadastroPage() {
             Crie um <span className="text-[#c5a059] font-bold">PIN</span> de 4 dígitos para proteger seus pontos.
           </p>
 
-          <div className="mb-6 rounded-lg border border-[#c5a059]/30 bg-[#280404]/60 px-4 py-3 text-sm">
+          <div className="welcome-bonus mb-6 rounded-lg border border-[#c5a059]/30 bg-[#280404]/60 px-4 py-3 text-sm">
             <span className="text-[#c5a059] font-bold">🎁 Bônus de boas-vindas:</span>{' '}
             Informe sua <span className="font-bold">data de nascimento</span> e ganhe{' '}
             <span className="font-bold">200 pontos</span>.

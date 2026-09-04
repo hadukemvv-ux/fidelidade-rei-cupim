@@ -79,12 +79,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-900 text-white">
+    <div className="admin-shell flex min-h-screen bg-gray-900 text-white">
 
       {/* SIDEBAR FIXA */}
-      <aside className="w-64 bg-gray-950 border-r border-gray-800 flex flex-col py-8 px-4">
+      <aside className="admin-sidebar w-64 bg-gray-950 border-r border-gray-800 flex flex-col py-8 px-4">
         
-        <div className="mb-10 text-center">
+        <div className="admin-brand mb-10 text-center">
+          <img src="/logo.png" alt="" className="mx-auto mb-3 h-12 w-12 object-contain" />
           <h1 className="text-xl font-black text-[#c5a059] uppercase">
             Rei do Cupim
           </h1>
@@ -92,7 +93,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* MENU */}
-        <nav className="flex-1 space-y-1">
+        <nav className="admin-nav flex-1 space-y-1">
           {menu.map((item) => {
             const ativo = pathname === item.href;
 
@@ -154,16 +155,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* CONTEÚDO */}
-      <main className="flex-1 p-10">
+      <main className="admin-main flex-1 p-10">
 
         {/* HEADER INTERNO */}
-        <header className="mb-10 border-b border-gray-800 pb-6">
+        <header className="admin-page-header mb-10 border-b border-gray-800 pb-6">
           <h1 className="text-3xl font-black tracking-tight">
             {(pathname || '').split('/').pop()?.toUpperCase() || 'ADMIN'}
           </h1>
         </header>
 
-        <div className="animate-fade-in">
+        <div className="admin-content animate-fade-in">
           {children}
         </div>
 

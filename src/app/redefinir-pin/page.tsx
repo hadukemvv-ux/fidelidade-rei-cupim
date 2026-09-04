@@ -51,7 +51,7 @@ export default function RedefinirPinPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#280404] px-5 py-12 text-white">
+    <main className="portal-page portal-static min-h-screen bg-[#280404] px-5 py-12 text-white">
       <div className="mx-auto max-w-md rounded-2xl border border-[#c5a059]/30 bg-[#4d0808] p-7 shadow-2xl">
         <h1 className="text-center text-2xl font-black text-[#c5a059]">RECUPERAR PIN</h1>
         <p className="mb-6 mt-2 text-center text-sm text-zinc-300">

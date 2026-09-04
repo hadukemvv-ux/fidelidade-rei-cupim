@@ -126,11 +126,11 @@ export default function RoletaPage() {
     } catch (error: any) { alert(error.message); setGirando(false); }
   }
 
-  if (loadingPremios) return <div className="min-h-screen bg-[#280404] flex items-center justify-center text-[#c5a059] font-bold animate-pulse uppercase tracking-widest">Sincronizando Roleta...</div>;
+  if (loadingPremios) return <div className="operations-page min-h-screen bg-[#280404] flex items-center justify-center text-[#c5a059] font-bold animate-pulse uppercase tracking-widest">Preparando a Roleta...</div>;
 
   if (fase === 'garcom') {
     return (
-      <div className="min-h-screen bg-[#280404] flex flex-col items-center justify-center p-6 text-center font-sans">
+      <div className="operations-page min-h-screen bg-[#280404] flex flex-col items-center justify-center p-6 text-center font-sans">
         <div className="bg-[#1a0a0a] border border-[#c5a059] p-8 rounded-2xl w-full max-w-sm shadow-2xl relative overflow-hidden">
             <h1 className="text-2xl text-[#c5a059] font-black mb-4 uppercase tracking-wider">Área do Garçom</h1>
             <input type="tel" maxLength={4} value={senhaGarcom} onChange={(e) => setSenhaGarcom(e.target.value)} className="bg-[#280404] text-white text-3xl text-center p-4 rounded-xl border border-[#c5a059]/30 focus:border-[#c5a059] w-full tracking-[10px] mb-6 outline-none shadow-inner placeholder-zinc-700" placeholder="••••" />
@@ -142,7 +142,7 @@ export default function RoletaPage() {
 
   if (fase === 'confirmacao_garcom') {
     return (
-      <div className="min-h-screen bg-[#280404] flex flex-col items-center justify-center p-6 text-center font-sans animate-fade-in">
+      <div className="operations-page min-h-screen bg-[#280404] flex flex-col items-center justify-center p-6 text-center font-sans animate-fade-in">
         <div className={`bg-[#1a0a0a] border-2 ${nivelInfo.cor.replace('text-', 'border-')} p-8 rounded-2xl w-full max-w-sm shadow-2xl relative`}>
             <h2 className="text-3xl text-white font-black mb-6">{dadosGarcom?.nome}</h2>
             <div className={`${nivelInfo.bg} p-4 rounded-xl mb-6 border`}>
@@ -158,7 +158,7 @@ export default function RoletaPage() {
 
   if (fase === 'cliente') {
     return (
-      <div className="min-h-screen bg-[#280404] flex flex-col items-center justify-center p-6 text-center font-sans animate-fade-in">
+      <div className="operations-page min-h-screen bg-[#280404] flex flex-col items-center justify-center p-6 text-center font-sans animate-fade-in">
         <div className="max-w-sm w-full">
             <h1 className="text-3xl text-white font-black mb-2 uppercase">Cliente</h1>
             <input type="tel" placeholder="(11) 99999-9999" value={telefone} onChange={handleTelefoneChange} maxLength={15} className="bg-[#1a0a0a] text-white text-2xl text-center p-4 rounded-xl w-full mb-6 font-bold border border-[#c5a059]/30 focus:border-[#c5a059] outline-none shadow-lg placeholder-zinc-700" />
@@ -169,7 +169,7 @@ export default function RoletaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#280404] flex flex-col items-center justify-center p-4 overflow-hidden font-sans relative">
+    <div className="operations-page min-h-screen bg-[#280404] flex flex-col items-center justify-center p-4 overflow-hidden font-sans relative">
       <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_#4d0808_0%,_#280404_70%)] -z-10"></div>
       <h1 className="text-4xl md:text-5xl font-black text-[#c5a059] mb-8 text-center uppercase tracking-widest drop-shadow-[0_2px_0_rgba(0,0,0,0.5)]">Roleta do Rei</h1>
       <div className="relative w-[340px] h-[340px] md:w-[480px] md:h-[480px] mb-12">

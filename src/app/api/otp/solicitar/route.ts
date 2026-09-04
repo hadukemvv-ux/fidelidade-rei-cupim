@@ -9,7 +9,7 @@ import {
   privateIdentifier,
   sendWhatsAppOtp,
 } from '@/lib/whatsappOtp';
-import { isLegacyAutomaticPin } from '@/lib/pin';
+import { isPreCadastro } from '@/lib/customerRegistration';
 
 const schema = z.object({
   telefone: z.string(),
@@ -40,17 +40,12 @@ export async function POST(request: Request) {
 
     const { data: customer, error: customerError } = await supabaseAdmin
       .from('base_clientes_saipos')
-      .select('nome, email, pin_hash, telefone')
+      .select('nome, pin_hash, telefone')
       .eq('telefone', phone.local)
       .maybeSingle();
     if (customerError) throw customerError;
 
-    const isPreRegistration = customer ? (
-      customer.nome === 'Cliente Novo (Roleta)' ||
-      !customer.email ||
-      !customer.pin_hash ||
-      isLegacyAutomaticPin(customer.telefone, customer.pin_hash)
-    ) : false;
+    const isPreRegistration = isPreCadastro(customer);
     if (parsed.data.proposito === 'cadastro' && customer && !isPreRegistration) {
       return errorResponse('Este WhatsApp já possui conta. Entre normalmente com seu PIN.', 'validation_error', 409, requestId);
     }

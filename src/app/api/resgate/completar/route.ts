@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
 import { hashPin } from '@/lib/pin';
+import { isPreCadastro } from '@/lib/customerRegistration';
 
 function onlyDigits(v: string) {
   return v.replace(/\D/g, '');
@@ -43,6 +44,7 @@ async function buscarSnapshot(telefone: string) {
     pontos: cliente.pontos,
     cashback: cliente.cashback,
     tickets: cliente.tickets,
+    cadastro_completo: !isPreCadastro(cliente),
   };
 }
 
@@ -74,10 +76,7 @@ export async function POST(req: Request) {
     if (isChecagem) {
       const snap = await buscarSnapshot(telefone);
 
-      const pendente =
-        !snap.nome ||
-        !snap.email ||
-        !snap.data_nascimento;
+      const pendente = !snap.cadastro_completo;
 
       if (pendente) {
         return NextResponse.json({
@@ -101,12 +100,6 @@ export async function POST(req: Request) {
     if (nome.length < 3)
       return NextResponse.json({ ok: false, error: 'Nome inválido.' }, { status: 400 });
 
-    if (!email)
-      return NextResponse.json({ ok: false, error: 'Email inválido.' }, { status: 400 });
-
-    if (!data_nascimento)
-      return NextResponse.json({ ok: false, error: 'Data de nascimento inválida.' }, { status: 400 });
-
     if (!/^\d{4}$/.test(pin))
       return NextResponse.json({ ok: false, error: 'PIN deve ter 4 dígitos.' }, { status: 400 });
 
@@ -116,11 +109,9 @@ export async function POST(req: Request) {
     // ——————————————
     // Validar email duplicado
     // ——————————————
-    const { data: emailExiste } = await supabaseAdmin
-      .from('base_clientes_saipos')
-      .select('telefone')
-      .eq('email', email)
-      .maybeSingle();
+    const { data: emailExiste } = email
+      ? await supabaseAdmin.from('base_clientes_saipos').select('telefone').eq('email', email).maybeSingle()
+      : { data: null };
 
     if (emailExiste && emailExiste.telefone !== telefone) {
       return NextResponse.json(
@@ -133,15 +124,17 @@ export async function POST(req: Request) {
     // ——————————————
     // Atualizar o cliente
     // ——————————————
+    const updateData: Record<string, unknown> = {
+      nome,
+      pin_hash,
+      atualizado_em: iso(),
+    };
+    if (email) updateData.email = email;
+    if (data_nascimento) updateData.data_nascimento = data_nascimento;
+
     const { error: updErr } = await supabaseAdmin
       .from('base_clientes_saipos')
-      .update({
-        nome,
-        email,
-        data_nascimento,
-        pin_hash,
-        atualizado_em: iso()
-      })
+      .update(updateData)
       .eq('telefone', telefone);
 
     if (updErr) throw updErr;

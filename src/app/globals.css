@@ -349,3 +349,185 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Meu Clube: acesso e experiência de recompensas */
+.club-loading { min-height: 100svh; display: grid; place-content: center; justify-items: center; gap: 1rem; background: radial-gradient(circle at 50% 35%, rgba(240,43,31,.22), transparent 25%), var(--ink); }
+.club-loading img { object-fit: contain; animation: club-breathe 1.25s ease-in-out infinite alternate; }
+.club-loading span { color: rgba(255,255,255,.65); font-size: .85rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+
+.club-login-page { min-height: 100svh; display: grid; background: var(--ink); }
+.club-login-photo { position: relative; min-height: 37svh; overflow: hidden; }
+.club-login-photo img { object-fit: cover; object-position: 50% 56%; }
+.club-login-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(19,11,9,.12), var(--ink)); }
+.club-login-content { position: relative; z-index: 1; display: flex; flex-direction: column; padding: 1.1rem 1.2rem 3rem; background: radial-gradient(circle at 85% 20%, rgba(240,43,31,.16), transparent 27%), var(--ink); }
+.club-login-brand { position: absolute; top: -3.1rem; left: 1.2rem; display: flex; align-items: center; gap: .65rem; font-weight: 900; }
+.club-login-brand img { width: 3rem; height: 3rem; object-fit: contain; }
+.club-login-copy { margin: 1.4rem 0 1.7rem; }
+.club-login-copy > p { margin: 0 0 .7rem; color: var(--gold); font-size: .76rem; font-weight: 900; letter-spacing: .17em; text-transform: uppercase; }
+.club-login-copy h1 { max-width: 11ch; margin: 0; font-family: var(--font-display); font-size: clamp(3rem, 13vw, 6.8rem); line-height: .88; text-transform: uppercase; }
+.club-login-copy h1 em { color: var(--ember); font-style: normal; }
+.club-login-card { width: 100%; padding: 1.25rem; border: 1px solid rgba(255,255,255,.14); background: rgba(40,24,20,.88); box-shadow: 0 24px 70px rgba(0,0,0,.35); }
+.login-step { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.2rem; }
+.login-step > span { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; background: var(--ember); font-family: var(--font-display); font-size: 1.15rem; }
+.login-step p { margin: 0; font-weight: 900; text-transform: uppercase; }
+.club-login-card label { display: block; margin: 0 0 .5rem; color: var(--gold); font-size: .76rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.club-field { display: grid; grid-template-columns: auto 1fr; align-items: center; min-height: 3.8rem; border: 1px solid rgba(255,255,255,.2); background: #100807; transition: border-color .2s ease, box-shadow .2s ease; }
+.club-field:focus-within { border-color: var(--ember); box-shadow: 0 0 0 3px rgba(240,43,31,.14); }
+.club-field > span { padding: 0 .8rem; color: rgba(255,255,255,.52); border-right: 1px solid rgba(255,255,255,.14); }
+.club-field input, .club-pin-step input { width: 100%; min-width: 0; min-height: 3.7rem; padding: .8rem 1rem; border: 0; outline: 0; background: transparent; color: white; font-size: 1.08rem; }
+.club-main-button { width: 100%; min-height: 3.8rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .8rem; padding: .9rem 1.1rem; border: 0; background: var(--ember); color: white; cursor: pointer; font-size: .9rem; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; transition: transform .18s ease, filter .18s ease; }
+.club-main-button:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.club-main-button:active { transform: scale(.98); }
+.club-main-button:disabled { opacity: .55; cursor: wait; }
+.club-main-button > span { font-size: 1.4rem; }
+.club-pin-step { margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid rgba(255,255,255,.12); }
+.club-pin-step input { border: 1px solid rgba(255,255,255,.2); background: #100807; text-align: center; font-size: 1.6rem; letter-spacing: .7em; }
+.club-forgot { display: block; width: max-content; margin: .9rem auto 0; color: rgba(255,255,255,.6); font-size: .82rem; border-bottom: 1px solid rgba(255,255,255,.25); }
+.club-new-user { margin: 1.15rem 0 0; color: rgba(255,255,255,.55); font-size: .85rem; text-align: center; }
+.club-new-user a { color: var(--gold); font-weight: 900; }
+.club-feedback { margin-bottom: 1rem; padding: .85rem 1rem; border-left: 3px solid; font-size: .9rem; line-height: 1.45; }
+.club-feedback.success { border-color: #41d68a; background: rgba(65,214,138,.1); color: #bdf7d8; }
+.club-feedback.error { border-color: #ff5549; background: rgba(255,85,73,.1); color: #ffd0cc; }
+
+.club-page { min-height: 100svh; background: var(--cream); color: var(--ink); }
+.club-header { position: sticky; z-index: 40; top: 0; display: flex; align-items: center; justify-content: space-between; padding: .75rem 1rem; border-bottom: 1px solid rgba(255,255,255,.1); background: rgba(19,11,9,.94); color: white; backdrop-filter: blur(16px); }
+.club-brand { display: flex; align-items: center; gap: .65rem; }
+.club-brand img { width: 2.5rem; height: 2.5rem; object-fit: contain; }
+.club-brand span { display: grid; }
+.club-brand small { color: var(--gold); font-size: .6rem; font-weight: 900; letter-spacing: .18em; }
+.club-brand strong { font-size: .93rem; }
+.club-logout { min-height: 2.6rem; padding: .6rem 1rem; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; background: transparent; color: rgba(255,255,255,.72); cursor: pointer; font-size: .8rem; font-weight: 800; }
+.club-dashboard { width: min(100%, 78rem); margin: 0 auto; padding: 1rem 1rem 5rem; }
+.club-overview { position: relative; display: grid; gap: 1.3rem; overflow: hidden; padding: 1.5rem; background: radial-gradient(circle at 92% 8%, rgba(240,43,31,.35), transparent 28%), var(--ink); color: white; }
+.club-overview::after { content: "REI"; position: absolute; right: -1rem; bottom: -2.2rem; color: rgba(255,255,255,.025); font-family: var(--font-display); font-size: 11rem; line-height: 1; }
+.club-welcome, .club-level-card { position: relative; z-index: 1; }
+.club-welcome p { margin: 0 0 .25rem; color: rgba(255,255,255,.58); }
+.club-welcome h1 { margin: 0; font-family: var(--font-display); font-size: clamp(3.7rem, 16vw, 7rem); line-height: .9; text-transform: uppercase; }
+.club-welcome h1 em { color: var(--ember); font-style: normal; }
+.club-welcome > span { display: block; margin-top: .75rem; color: rgba(255,255,255,.72); font-size: .92rem; }
+.club-level-card { padding: 1.15rem; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.055); backdrop-filter: blur(8px); }
+.club-level-top, .club-level-bottom { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.club-level-top span, .club-level-bottom span { color: var(--gold); font-size: .7rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.club-level-top strong { font-family: var(--font-display); font-size: 2.25rem; line-height: 1; text-transform: uppercase; }
+.club-progress-track { height: .55rem; margin: 1rem 0 .75rem; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.1); }
+.club-progress-track i { display: block; width: var(--club-progress); height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--ember), var(--gold)); box-shadow: 0 0 18px rgba(240,43,31,.5); transition: width .8s cubic-bezier(.2,.8,.2,1); }
+.club-level-bottom { align-items: center; }
+.club-level-bottom b { color: rgba(255,255,255,.65); font-size: .75rem; text-align: right; }
+.club-balances { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; margin: .6rem 0 1rem; }
+.balance-card { min-width: 0; padding: 1rem .75rem; border: 1px solid rgba(19,11,9,.12); background: var(--paper); transition: transform .2s ease, box-shadow .2s ease; }
+.balance-card:active { transform: scale(.97); }
+.balance-card > span, .balance-card > small { display: block; }
+.balance-card > span { color: #765e54; font-size: .66rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.balance-card > strong { display: block; overflow: hidden; margin: .5rem 0 .35rem; font-family: var(--font-display); font-size: clamp(1.5rem, 7vw, 2.8rem); line-height: 1; text-overflow: ellipsis; }
+.balance-card > small { color: #806a60; font-size: .65rem; line-height: 1.25; }
+.balance-cash { background: var(--ember); color: white; border-color: var(--ember); }
+.balance-cash > span, .balance-cash > small { color: rgba(255,255,255,.76); }
+.club-section-tabs { position: sticky; z-index: 30; top: 4.1rem; display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 0 2.4rem; padding: .35rem; border: 1px solid rgba(19,11,9,.12); background: rgba(245,234,212,.94); backdrop-filter: blur(14px); }
+.club-section-tabs button { min-height: 2.9rem; padding: .6rem .35rem; border: 0; background: transparent; color: #7a655c; cursor: pointer; font-size: .73rem; font-weight: 900; text-transform: uppercase; transition: background .2s ease, color .2s ease, transform .2s ease; }
+.club-section-tabs button:active { transform: scale(.95); }
+.club-section-tabs button.active { background: var(--ink); color: white; }
+.club-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.4rem; }
+.club-section-heading p { margin: 0 0 .45rem; color: var(--ember-dark); font-size: .72rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+.club-section-heading h2 { max-width: 13ch; margin: 0; font-family: var(--font-display); font-size: clamp(2.6rem, 10vw, 5rem); line-height: .9; text-transform: uppercase; }
+.club-section-heading > span { flex: 0 0 auto; color: #806a60; font-size: .7rem; font-weight: 800; }
+.club-filters { display: flex; gap: .45rem; margin: 0 -1rem 1rem; padding: 0 1rem .25rem; overflow-x: auto; scrollbar-width: none; }
+.club-filters button { flex: 0 0 auto; min-height: 2.5rem; padding: .55rem .9rem; border: 1px solid rgba(19,11,9,.18); border-radius: 999px; background: transparent; color: #6f5a51; cursor: pointer; font-size: .72rem; font-weight: 900; text-transform: capitalize; }
+.club-filters button.active { border-color: var(--ember); background: var(--ember); color: white; }
+.rewards-rail { display: grid; grid-auto-flow: column; grid-auto-columns: min(82vw, 20rem); gap: .75rem; margin: 0 -1rem; padding: 0 1rem 1.2rem; overflow-x: auto; overscroll-behavior-inline: contain; scroll-snap-type: inline mandatory; scroll-padding-inline: 1rem; scrollbar-width: none; cursor: grab; }
+.rewards-rail:active { cursor: grabbing; }
+.reward-card { scroll-snap-align: start; display: grid; grid-template-rows: 13.5rem 1fr auto; min-height: 27rem; border: 1px solid rgba(19,11,9,.14); background: var(--paper); box-shadow: 0 14px 30px rgba(54,29,18,.08); transition: transform .22s ease, box-shadow .22s ease; }
+.reward-card:active { transform: scale(.985); }
+.reward-image { position: relative; overflow: hidden; background: var(--charcoal); }
+.reward-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.reward-card:hover .reward-image img { transform: scale(1.04); }
+.reward-image > span { position: absolute; top: .7rem; right: .7rem; padding: .45rem .6rem; background: var(--ember); color: white; font-size: .68rem; font-weight: 1000; }
+.reward-body { padding: 1rem 1rem .6rem; }
+.reward-body > small { color: var(--ember-dark); font-size: .66rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.reward-body h3 { margin: .35rem 0 .4rem; font-size: 1.08rem; }
+.reward-body p { margin: 0; color: #786158; font-size: .82rem; line-height: 1.45; }
+.reward-footer { display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: .8rem 1rem 1rem; }
+.reward-footer > strong { font-family: var(--font-display); font-size: 1.7rem; }
+.reward-footer > strong small { font-family: var(--font-body); font-size: .65rem; text-transform: uppercase; }
+.reward-footer button, .delivery-reward button { min-height: 2.7rem; padding: .65rem .85rem; border: 0; background: var(--ink); color: white; cursor: pointer; font-size: .7rem; font-weight: 900; text-transform: uppercase; transition: transform .18s ease, background .18s ease; }
+.reward-footer button:active, .delivery-reward button:active { transform: scale(.94); }
+.reward-footer button:disabled, .delivery-reward button:disabled { background: #d5c8b2; color: #796c5e; cursor: not-allowed; }
+.club-empty { padding: 2rem; border: 1px dashed rgba(19,11,9,.2); color: #765f56; text-align: center; }
+.delivery-reward { display: grid; gap: 1.2rem; margin-top: 1rem; padding: 1.35rem; background: linear-gradient(135deg, #2c1812, #130b09); color: white; }
+.delivery-reward span { color: var(--gold); font-size: .72rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+.delivery-reward h3 { max-width: 16ch; margin: .45rem 0; font-family: var(--font-display); font-size: 2rem; line-height: .95; text-transform: uppercase; }
+.delivery-reward p { margin: 0; color: rgba(255,255,255,.62); font-size: .86rem; }
+.delivery-reward button { background: var(--ember); }
+.cashback-options { display: grid; gap: .7rem; }
+.cashback-options button { position: relative; min-height: 10rem; display: grid; align-content: end; justify-items: start; padding: 1.2rem; overflow: hidden; border: 1px solid rgba(19,11,9,.14); background: var(--paper); color: var(--ink); cursor: pointer; text-align: left; transition: transform .2s ease, border-color .2s ease; }
+.cashback-options button::after { content: "%"; position: absolute; top: -.9rem; right: .3rem; color: rgba(240,43,31,.08); font-family: var(--font-display); font-size: 9rem; line-height: 1; }
+.cashback-options button:active { transform: scale(.97); }
+.cashback-options button:not(:disabled):hover { border-color: var(--ember); transform: translateY(-3px); }
+.cashback-options button:disabled { opacity: .48; cursor: not-allowed; }
+.cashback-options span, .cashback-options small { color: #775e54; font-size: .7rem; font-weight: 900; text-transform: uppercase; }
+.cashback-options strong { position: relative; z-index: 1; margin: .3rem 0; font-family: var(--font-display); font-size: 3rem; color: var(--ember-dark); }
+.draw-layout { display: grid; gap: .8rem; }
+.draw-ticket { position: relative; min-height: 20rem; display: grid; align-content: center; justify-items: center; padding: 2rem; overflow: hidden; background: var(--ember); color: white; text-align: center; }
+.draw-ticket::before, .draw-ticket::after { content: ""; position: absolute; left: -.8rem; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--cream); }
+.draw-ticket::before { top: 2rem; }
+.draw-ticket::after { bottom: 2rem; }
+.draw-ticket > span { font-size: .72rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+.draw-ticket > strong { font-family: var(--font-display); font-size: 8rem; line-height: .9; }
+.draw-ticket > b { font-size: .85rem; text-transform: uppercase; }
+.draw-ticket > small { max-width: 18rem; margin-top: 1rem; color: rgba(255,255,255,.72); line-height: 1.45; }
+.draw-prize { min-height: 20rem; display: grid; grid-template-rows: 12rem 1fr; background: var(--ink); color: white; }
+.draw-prize img { width: 100%; height: 100%; object-fit: cover; }
+.draw-prize div { padding: 1.2rem; }
+.draw-prize span { color: var(--gold); font-size: .7rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.draw-prize h3 { margin: .45rem 0; font-family: var(--font-display); font-size: 2.3rem; line-height: .95; text-transform: uppercase; }
+.draw-prize p { margin: 0; color: rgba(255,255,255,.62); }
+.winner-strip { display: grid; gap: .6rem; margin-top: 1rem; padding: 1.1rem; border: 1px solid rgba(19,11,9,.14); background: var(--paper); }
+.winner-strip > span { color: var(--ember-dark); font-size: .7rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.winner-strip article { display: flex; align-items: center; gap: .7rem; padding-top: .6rem; border-top: 1px solid rgba(19,11,9,.1); }
+.winner-strip i { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: 50%; background: var(--ink); color: var(--gold); font-family: var(--font-display); font-style: normal; }
+.winner-strip article div { display: grid; gap: .1rem; }
+.winner-strip article strong { font-size: .86rem; }
+.winner-strip article small { color: #836d63; font-size: .7rem; }
+.club-modal-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; align-items: end; padding: 1rem; background: rgba(8,4,3,.78); backdrop-filter: blur(7px); animation: club-fade .2s ease both; }
+.club-confirm-modal, .club-coupon { width: min(100%, 31rem); margin: 0 auto; padding: 1.5rem; background: var(--paper); color: var(--ink); box-shadow: 0 30px 90px rgba(0,0,0,.45); animation: club-sheet .28s cubic-bezier(.2,.8,.2,1) both; }
+.modal-kicker, .club-coupon > span { color: var(--ember-dark); font-size: .7rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+.club-confirm-modal h2, .club-coupon h2 { margin: .55rem 0 .8rem; font-family: var(--font-display); font-size: 2.6rem; line-height: .95; text-transform: uppercase; }
+.club-confirm-modal p { color: #6f5a51; line-height: 1.5; }
+.modal-pin { margin: 1rem 0; text-align: left; }
+.modal-pin label { display: block; margin-bottom: .45rem; color: var(--ember-dark); font-size: .7rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.modal-pin input { width: 100%; min-height: 3.4rem; border: 1px solid rgba(19,11,9,.2); background: white; color: var(--ink); font-size: 1.4rem; letter-spacing: .6em; text-align: center; }
+.modal-cancel { width: 100%; min-height: 2.8rem; margin-top: .45rem; border: 0; background: transparent; color: #735e55; cursor: pointer; font-weight: 800; }
+.coupon-backdrop { align-items: center; }
+.club-coupon { text-align: center; }
+.coupon-code { margin: 1.2rem 0; padding: .8rem; border: 2px dashed var(--ember); color: var(--ember-dark); font-family: var(--font-display); font-size: 2.5rem; letter-spacing: .1em; }
+.coupon-qr { width: max-content; margin: 0 auto; padding: .7rem; background: white; }
+.club-coupon p { color: #6f5a51; }
+.club-coupon button { width: 100%; min-height: 3.3rem; border: 0; background: var(--ink); color: white; cursor: pointer; font-weight: 900; text-transform: uppercase; }
+
+@media (min-width: 800px) {
+  .club-login-page { grid-template-columns: 1.05fr .95fr; }
+  .club-login-photo { min-height: 100svh; }
+  .club-login-photo::after { background: linear-gradient(90deg, transparent 55%, var(--ink)); }
+  .club-login-content { justify-content: center; padding: 4rem clamp(2rem, 6vw, 6rem) 4rem 2rem; }
+  .club-login-brand { top: 2rem; left: 2rem; }
+  .club-login-copy { margin-top: 2rem; }
+  .club-login-copy h1 { font-size: clamp(4rem, 6vw, 6.8rem); }
+  .club-login-card { max-width: 32rem; padding: 1.6rem; }
+  .club-header { padding: .9rem 2rem; }
+  .club-dashboard { padding: 2rem 2rem 7rem; }
+  .club-overview { grid-template-columns: 1.15fr .85fr; align-items: end; padding: 2.5rem; }
+  .club-level-card { padding: 1.5rem; }
+  .club-balances { gap: .75rem; margin: .75rem 0 1.3rem; }
+  .balance-card { padding: 1.4rem; }
+  .club-section-tabs { top: 4.5rem; width: max-content; grid-template-columns: repeat(3, 10rem); }
+  .club-section-heading > span { font-size: .78rem; }
+  .club-filters { margin-inline: 0; padding-inline: 0; }
+  .rewards-rail { grid-auto-flow: initial; grid-auto-columns: initial; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-inline: 0; padding-inline: 0; overflow: visible; cursor: default; }
+  .delivery-reward { grid-template-columns: 1fr max-content; align-items: center; padding: 2rem; }
+  .cashback-options { grid-template-columns: repeat(3, 1fr); }
+  .draw-layout { grid-template-columns: 1fr 1fr; }
+  .club-modal-backdrop { align-items: center; }
+}
+
+@keyframes club-breathe { to { transform: scale(1.08); filter: drop-shadow(0 0 18px rgba(240,43,31,.5)); } }
+@keyframes club-fade { from { opacity: 0; } }
+@keyframes club-sheet { from { opacity: 0; transform: translateY(24px) scale(.98); } }

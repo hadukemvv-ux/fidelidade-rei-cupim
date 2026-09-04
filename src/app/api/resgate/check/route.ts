@@ -1,33 +1,9 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { isLegacyAutomaticPin } from '@/lib/pin';
+import { isPreCadastro } from '@/lib/customerRegistration';
 
 function onlyDigits(v: string) {
   return v.replace(/\D/g, '');
-}
-
-type CheckCliente = {
-  nome?: string | null;
-  email?: string | null;
-  data_nascimento?: string | null;
-  pin_hash?: string | null;
-  telefone?: string | null;
-};
-
-function isPreCadastro(c: CheckCliente | null) {
-  if (!c) return false;
-
-  const nome = c.nome || '';
-  const email = c.email;
-  const pin_hash = c.pin_hash;
-  const telefone = c.telefone || '';
-
-  return (
-    nome === 'Cliente Novo (Roleta)' ||
-    !email ||
-    !pin_hash ||
-    isLegacyAutomaticPin(telefone, pin_hash)
-  );
 }
 
 export async function POST(req: Request) {

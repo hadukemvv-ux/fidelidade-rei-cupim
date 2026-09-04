@@ -1,503 +1,222 @@
 'use client';
-import { QRCodeSVG } from 'qrcode.react';
+
+import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect, useMemo } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 
-function onlyDigits(v: string) {
-  return v.replace(/\D/g, '');
-}
+type Feedback = { type: 'success' | 'error'; text: string } | null;
+type ClubSection = 'recompensas' | 'cashback' | 'sorteio';
+type CustomerData = {
+  cliente: { nome: string; telefone: string };
+  pontos: number;
+  cashback: number;
+  tickets: number;
+  nivel: { atual: string; proximo: string | null; progresso: number; faltamReais: number; multiplicadorAtual: number };
+};
+type Product = { id: number; nome: string; descricao?: string | null; imagem_url?: string | null; custo_em_pontos: number; destaque?: boolean; ativo?: boolean; categoria?: string | null };
+type Draw = { titulo: string; imagem_url?: string | null; data_sorteio?: string | null };
+type Winner = { id: number | string; nome?: string; nome_cliente?: string; created_at?: string; criado_em?: string };
+type PendingReward = { tipo: 'produto' | 'frete' | 'cashback'; nome: string; custo: string; valorDesconto?: number; produtoId?: number };
 
-function formatPhoneBR(v: string) {
-  const d = onlyDigits(v).slice(0, 11);
-  if (d.length <= 2) return d;
-  if (d.length <= 7) return `(${d.slice(0,2)}) ${d.slice(2)}`;
-  return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
-}
+const sections: Array<{ id: ClubSection; label: string }> = [
+  { id: 'recompensas', label: 'Recompensas' },
+  { id: 'cashback', label: 'Cashback' },
+  { id: 'sorteio', label: 'Sorteio' },
+];
 
-function getNivelEmoji(nivel: string) {
-  switch (nivel) {
-    case 'BRONZE': return '🥉';
-    case 'PRATA': return '🥈';
-    case 'OURO': return '🥇';
-    case 'REI': return '👑';
-    default: return '🥉';
-  }
+const levelNames: Record<string, string> = { BRONZE: 'Brasa', PRATA: 'Chama', OURO: 'Nobre', REI: 'Majestade' };
+
+function onlyDigits(value: string) { return value.replace(/\D/g, ''); }
+function formatPhoneBR(value: string) {
+  const digits = onlyDigits(value).slice(0, 11);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
+function formatMoney(value: number) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+function firstName(name: string) { return name.trim().split(/\s+/)[0] || 'Cliente'; }
 
 export default function ResgatePage() {
-
-  // Campos de entrada
   const [telefone, setTelefone] = useState('');
-  const telefoneDigits = useMemo(() => onlyDigits(telefone), [telefone]);
-
   const [pin, setPin] = useState('');
-
-  // Controle geral
-  const [feedback, setFeedback] = useState<any>(null);
+  const [pinLiberado, setPinLiberado] = useState(false);
+  const [feedback, setFeedback] = useState<Feedback>(null);
   const [loading, setLoading] = useState(false);
-
-  // Dados logados
-  const [dadosCliente, setDadosCliente] = useState<any>(null);
+  const [restoringSession, setRestoringSession] = useState(true);
+  const [dadosCliente, setDadosCliente] = useState<CustomerData | null>(null);
   const [cupom, setCupom] = useState<string | null>(null);
-
-  // Loja
-  const [produtos, setProdutos] = useState<any[]>([]);
-  const [premio, setPremio] = useState<any>(null);
-  const [ganhadores, setGanhadores] = useState<any[]>([]);
+  const [produtos, setProdutos] = useState<Product[]>([]);
+  const [premio, setPremio] = useState<Draw | null>(null);
+  const [ganhadores, setGanhadores] = useState<Winner[]>([]);
   const [filtroCategoria, setFiltroCategoria] = useState('todos');
+  const [activeSection, setActiveSection] = useState<ClubSection>('recompensas');
+  const [pendingReward, setPendingReward] = useState<PendingReward | null>(null);
 
-  // Carregar produtos, sorteio e ganhadores
+  const telefoneDigits = useMemo(() => onlyDigits(telefone), [telefone]);
+  const visibleProducts = useMemo(() => produtos
+    .filter((product) => product.ativo !== false)
+    .filter((product) => filtroCategoria === 'todos' ? true : filtroCategoria === 'destaque' ? product.destaque : product.categoria === filtroCategoria), [produtos, filtroCategoria]);
+
   useEffect(() => {
-    async function load() {
-      try {
-        const g = await fetch('/api/sorteio/ganhadores').then(r => r.json());
-        const payloadG = g?.data ?? g;
-        setGanhadores(payloadG?.ganhadores || []);
+    Promise.all([
+      fetch('/api/sorteio/ganhadores').then((response) => response.json()),
+      fetch('/api/produtos').then((response) => response.json()),
+      fetch('/api/sorteio/atual').then((response) => response.json()),
+    ]).then(([winnersResponse, productsResponse, drawResponse]) => {
+      const winners = winnersResponse?.data ?? winnersResponse;
+      const products = productsResponse?.data ?? productsResponse;
+      const draw = drawResponse?.data ?? drawResponse;
+      setGanhadores(winners?.ganhadores || []);
+      setProdutos(Array.isArray(products) ? products : products?.produtos || []);
+      setPremio(draw?.sorteio || null);
+    }).catch(() => setFeedback({ type: 'error', text: 'Não foi possível carregar todas as recompensas agora.' }));
 
-        const p = await fetch('/api/produtos').then(r => r.json());
-        const payloadP = p?.data ?? p;
-        setProdutos(Array.isArray(payloadP) ? payloadP : payloadP?.produtos || []);
-
-        const s = await fetch('/api/sorteio/atual').then(r => r.json());
-        const payloadS = s?.data ?? s;
-        setPremio(payloadS?.sorteio || null);
-      } catch (err) {
-        console.error('Erro ao carregar dados', err);
-      }
-    }
-    load();
+    fetch('/api/resgate')
+      .then(async (response) => ({ ok: response.ok, body: await response.json() }))
+      .then(({ ok, body }) => { if (ok && body?.ok) setDadosCliente(body.data ?? body); })
+      .finally(() => setRestoringSession(false));
   }, []);
 
-  // =======================================
-  // 1 — PRIMEIRO PASSO: CHECAR STATUS
-  // =======================================
   async function verificarCadastro() {
     setFeedback(null);
-
-    if (telefoneDigits.length !== 11) {
-      setFeedback({ type: 'error', text: 'Digite seu WhatsApp com DDD.' });
-      return;
-    }
-
+    if (telefoneDigits.length !== 11) return setFeedback({ type: 'error', text: 'Digite seu WhatsApp com DDD.' });
     setLoading(true);
-
     try {
-      const res = await fetch('/api/resgate/check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ telefone: telefoneDigits })
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erro ao verificar.');
-
-      // status = novo → mandar para cadastro
-      if (data.status === 'novo') {
+      const response = await fetch('/api/resgate/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telefone: telefoneDigits }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Não foi possível verificar este número.');
+      if (data.status === 'novo' || data.status === 'pre_cadastro') {
         window.location.href = `/cadastro?telefone=${telefoneDigits}`;
         return;
       }
-
-      // status = pre_cadastro → mandar para completar
-      if (data.status === 'pre_cadastro') {
-        setFeedback({
-          type: 'error',
-          text: 'Seu cadastro foi iniciado, mas ainda precisa de confirmação segura do telefone. Procure o atendimento do restaurante para concluir.',
-        });
-        return;
-      }
-
-      // status = completo → mostrar campo PIN
-      if (data.status === 'completo') {
-        setFeedback({
-          type: 'success',
-          text: 'Telefone encontrado. Digite sua senha (PIN).'
-        });
-      }
-
-    } catch (err: any) {
-      setFeedback({ type: 'error', text: err.message });
-    } finally {
-      setLoading(false);
-    }
+      setPinLiberado(true);
+      setFeedback({ type: 'success', text: 'Tudo certo. Agora digite seu PIN.' });
+    } catch (error) {
+      setFeedback({ type: 'error', text: error instanceof Error ? error.message : 'Erro ao verificar.' });
+    } finally { setLoading(false); }
   }
 
-  // =======================================
-  // 2 — LOGIN FINAL COM PIN
-  // =======================================
   async function fazerLogin() {
     setFeedback(null);
-
-    if (pin.length !== 4) {
-      setFeedback({ type: 'error', text: 'PIN deve ter 4 dígitos.' });
-      return;
-    }
-
+    if (pin.length !== 4) return setFeedback({ type: 'error', text: 'O PIN precisa ter 4 dígitos.' });
     setLoading(true);
     try {
-      const res = await fetch('/api/resgate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ telefone: telefoneDigits, pin })
-      });
-
-      const data = await res.json();
+      const response = await fetch('/api/resgate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telefone: telefoneDigits, pin }) });
+      const data = await response.json();
       const payload = data?.data ?? data;
-
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || payload?.error || 'Erro ao acessar sua conta.');
+      if (!response.ok || !data?.ok) throw new Error(data?.error || payload?.error || 'Não foi possível entrar.');
+      if (payload?.pre_cadastro) {
+        window.location.href = `/cadastro?telefone=${telefoneDigits}`;
+        return;
       }
-
       setDadosCliente(payload);
-      setFeedback({ type: 'success', text: 'Bem-vindo!' });
-
-    } catch (err: any) {
-      setFeedback({ type: 'error', text: err.message });
-    } finally {
-      setLoading(false);
-    }
+      setFeedback(null);
+    } catch (error) {
+      setFeedback({ type: 'error', text: error instanceof Error ? error.message : 'Erro ao acessar sua conta.' });
+    } finally { setLoading(false); }
   }
 
-  // =======================================
-  // 3 — RESGATE
-  // =======================================
-  async function resgatar(tipo: any, valorDesconto?: any, produtoId?: number) {
-    if (!dadosCliente) return;
-
-    if (!confirm("Confirmar resgate?")) return;
-
+  async function confirmarResgate() {
+    if (!dadosCliente || !pendingReward) return;
     setLoading(true);
     setFeedback(null);
-
     try {
-      const res = await fetch('/api/resgate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          telefone: telefoneDigits,
-          pin,
-          tipo,
-          valorDesconto,
-          produtoId
-        })
+      const response = await fetch('/api/resgate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telefone: dadosCliente.cliente.telefone, pin, tipo: pendingReward.tipo, valorDesconto: pendingReward.valorDesconto, produtoId: pendingReward.produtoId }),
       });
-
-      const data = await res.json();
+      const data = await response.json();
       const payload = data?.data ?? data;
-
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || payload?.error || 'Erro ao processar resgate.');
-      }
-
+      if (!response.ok || !data?.ok) throw new Error(data?.error || payload?.error || 'Não foi possível concluir o resgate.');
       setCupom(payload?.codigo || null);
       setDadosCliente(payload?.atualizado || null);
-
-    } catch (err: any) {
-      setFeedback({ type: 'error', text: err.message });
-    } finally {
-      setLoading(false);
-    }
+      setPendingReward(null);
+    } catch (error) {
+      setFeedback({ type: 'error', text: error instanceof Error ? error.message : 'Erro ao processar resgate.' });
+      setPendingReward(null);
+    } finally { setLoading(false); }
   }
 
-  // =======================================
-  // INTERFACE
-  // =======================================
+  async function sair() {
+    await fetch('/api/resgate/logout', { method: 'POST' });
+    setDadosCliente(null); setTelefone(''); setPin(''); setPinLiberado(false); setCupom(null);
+  }
+
+  if (restoringSession) return <main className="club-loading" aria-live="polite"><Image src="/logo.png" alt="" width={76} height={76} priority /><span>Acendendo a brasa...</span></main>;
+
+  if (!dadosCliente) {
+    return (
+      <main className="club-login-page">
+        <div className="club-login-photo"><Image src="/images/home/hero-cupim.webp" alt="Cupim assado na brasa" fill priority sizes="(max-width: 799px) 100vw, 50vw" /></div>
+        <section className="club-login-content" aria-labelledby="club-login-title">
+          <Link href="/" className="club-login-brand" aria-label="Voltar ao início"><Image src="/logo.png" alt="" width={52} height={52} /><span>O Rei do Cupim</span></Link>
+          <div className="club-login-copy"><p>Seu espaço no clube</p><h1 id="club-login-title">Tudo que você ganhou.<br /><em>Pronto para aproveitar.</em></h1></div>
+          <div className="club-login-card">
+            <div className="login-step"><span>{pinLiberado ? '02' : '01'}</span><p>{pinLiberado ? 'Digite seu PIN' : 'Informe seu WhatsApp'}</p></div>
+            {feedback && <div className={`club-feedback ${feedback.type}`} role="status">{feedback.text}</div>}
+            <label htmlFor="club-phone">WhatsApp com DDD</label>
+            <div className="club-field"><span aria-hidden="true">+55</span><input id="club-phone" value={telefone} onChange={(event) => { setTelefone(formatPhoneBR(event.target.value)); setPinLiberado(false); }} inputMode="tel" autoComplete="tel" placeholder="(85) 9 0000-0000" disabled={loading} /></div>
+            {!pinLiberado ? (
+              <button type="button" className="club-main-button" onClick={verificarCadastro} disabled={loading}>{loading ? 'Verificando...' : 'Continuar'}<span aria-hidden="true">→</span></button>
+            ) : (
+              <div className="club-pin-step">
+                <label htmlFor="club-pin">PIN de 4 dígitos</label>
+                <input id="club-pin" value={pin} onChange={(event) => setPin(onlyDigits(event.target.value).slice(0, 4))} onKeyDown={(event) => { if (event.key === 'Enter') fazerLogin(); }} inputMode="numeric" autoComplete="current-password" type="password" maxLength={4} placeholder="••••" autoFocus />
+                <button type="button" className="club-main-button" onClick={fazerLogin} disabled={loading}>{loading ? 'Entrando...' : 'Abrir meu clube'}<span aria-hidden="true">→</span></button>
+                <Link href="/redefinir-pin" className="club-forgot">Esqueci meu PIN</Link>
+              </div>
+            )}
+            <p className="club-new-user">Primeira vez por aqui? <Link href="/cadastro">Cadastre-se grátis</Link></p>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  const progress = Math.max(0, Math.min(100, Number(dadosCliente.nivel?.progresso ?? 0)));
+  const currentLevel = levelNames[dadosCliente.nivel?.atual] || dadosCliente.nivel?.atual || 'Brasa';
+  const nextLevel = dadosCliente.nivel?.proximo ? levelNames[dadosCliente.nivel.proximo] : null;
+  const progressStyle = { '--club-progress': `${progress}%` } as CSSProperties;
+
   return (
-    <div className="account-page min-h-screen bg-[#280404] text-white pb-24">
-      
-      <header className="py-6 px-6 bg-[#1a0a0a] shadow-lg border-b border-[#c5a059]/30 flex justify-between items-center sticky top-0 z-50">
-        <div className="w-12 h-12">
-          <img src="/logo.png" className="w-full h-full object-contain"/>
-        </div>
-        <h1 className="text-lg font-black text-[#c5a059] tracking-widest">MEU CLUBE</h1>
-        <Link href="/" className="text-xs text-zinc-400 hover:text-white">Sair</Link>
-      </header>
+    <div className="club-page">
+      <header className="club-header"><Link href="/" className="club-brand"><Image src="/logo.png" alt="" width={44} height={44} /><span><small>CLUBE</small><strong>O Rei do Cupim</strong></span></Link><button type="button" onClick={sair} className="club-logout">Sair</button></header>
+      <main className="club-dashboard">
+        {feedback && <div className={`club-feedback ${feedback.type}`} role="status">{feedback.text}</div>}
+        <section className="club-overview" aria-labelledby="welcome-title">
+          <div className="club-welcome"><p>Que bom ter você de volta,</p><h1 id="welcome-title">{firstName(dadosCliente.cliente.nome)}<em>.</em></h1><span>Seu próximo benefício já está mais perto.</span></div>
+          <article className="club-level-card" style={progressStyle}>
+            <div className="club-level-top"><span>Seu nível</span><strong>{currentLevel}</strong></div><div className="club-progress-track"><i /></div>
+            <div className="club-level-bottom">{nextLevel ? <><span>{Math.round(progress)}% do caminho</span><b>Faltam {formatMoney(dadosCliente.nivel.faltamReais)} para {nextLevel}</b></> : <><span>Nível máximo</span><b>Você chegou ao topo do clube</b></>}</div>
+          </article>
+        </section>
+        <section className="club-balances" aria-label="Seus saldos">
+          <article className="balance-card balance-points"><span>Pontos</span><strong>{dadosCliente.pontos.toLocaleString('pt-BR')}</strong><small>{dadosCliente.nivel?.multiplicadorAtual || 1}x por real</small></article>
+          <article className="balance-card balance-cash"><span>Cashback</span><strong>{formatMoney(Number(dadosCliente.cashback))}</strong><small>para usar em desconto</small></article>
+          <article className="balance-card balance-tickets"><span>Tickets</span><strong>{dadosCliente.tickets.toLocaleString('pt-BR')}</strong><small>sorteio em breve</small></article>
+        </section>
+        <nav className="club-section-tabs" aria-label="Áreas do clube">{sections.map((section) => <button key={section.id} type="button" className={activeSection === section.id ? 'active' : ''} onClick={() => setActiveSection(section.id)}>{section.label}</button>)}</nav>
 
-      <main className="max-w-xl mx-auto px-4 pt-4">
-
-        {/* FEEDBACK */}
-        {feedback && (
-          <div className={`mb-6 px-4 py-3 rounded-lg text-sm border shadow-md ${
-            feedback.type === 'success'
-            ? 'bg-emerald-900/60 border-emerald-500 text-emerald-100'
-            : 'bg-red-900/60 border-red-500 text-red-100'
-          }`}>
-            {feedback.text}
-          </div>
+        {activeSection === 'recompensas' && (
+          <section className="club-store" aria-labelledby="rewards-title">
+            <div className="club-section-heading"><div><p>Troque seus pontos</p><h2 id="rewards-title">Escolha seu próximo sabor.</h2></div><span>Arraste para explorar →</span></div>
+            <div className="club-filters" aria-label="Filtrar recompensas">{['todos', 'destaque', 'prato', 'bebida', 'sobremesa'].map((category) => <button key={category} type="button" className={filtroCategoria === category ? 'active' : ''} onClick={() => setFiltroCategoria(category)}>{category === 'destaque' ? 'Ofertas' : category}</button>)}</div>
+            {visibleProducts.length > 0 ? <div className="rewards-rail">{visibleProducts.map((product) => {
+              const original = Number(product.custo_em_pontos || 0); const finalCost = product.destaque ? Math.floor(original * .5) : original; const available = dadosCliente.pontos >= finalCost;
+              return <article className="reward-card" key={product.id}><div className="reward-image">{product.imagem_url ? <img src={product.imagem_url} alt={product.nome} /> : <Image src="/images/home/espetinhos.webp" alt="" fill sizes="20rem" />}{product.destaque && <span>50% OFF</span>}</div><div className="reward-body"><small>{product.categoria || 'Recompensa'}</small><h3>{product.nome}</h3><p>{product.descricao || 'Feito na hora, do jeito do Rei.'}</p></div><div className="reward-footer"><strong>{finalCost.toLocaleString('pt-BR')} <small>pts</small></strong><button type="button" disabled={!available || loading} onClick={() => setPendingReward({ tipo: 'produto', produtoId: product.id, nome: product.nome, custo: `${finalCost.toLocaleString('pt-BR')} pontos` })}>{available ? 'Resgatar' : `Faltam ${(finalCost - dadosCliente.pontos).toLocaleString('pt-BR')}`}</button></div></article>;
+            })}</div> : <div className="club-empty">Nenhuma recompensa nesta categoria por enquanto.</div>}
+            <article className="delivery-reward"><div><span>Entrega grátis</span><h3>A gente leva o sabor até você.</h3><p>Troque 200 pontos pelo benefício.</p></div><button type="button" disabled={dadosCliente.pontos < 200 || loading} onClick={() => setPendingReward({ tipo: 'frete', nome: 'Entrega grátis', custo: '200 pontos' })}>{dadosCliente.pontos >= 200 ? 'Resgatar entrega' : `Faltam ${200 - dadosCliente.pontos} pts`}</button></article>
+          </section>
         )}
 
-        {/* ======================== LOGIN ======================== */}
-        {!dadosCliente && (
-          <div className="bg-[#4d0808] border border-[#c5a059]/30 p-8 rounded-2xl shadow-2xl">
+        {activeSection === 'cashback' && <section className="club-cashback" aria-labelledby="cashback-title"><div className="club-section-heading"><div><p>Desconto imediato</p><h2 id="cashback-title">Seu cashback vira economia.</h2></div></div><div className="cashback-options">{[5, 10, 15].map((value) => { const available = Number(dadosCliente.cashback) >= value; return <button type="button" key={value} disabled={!available || loading} onClick={() => setPendingReward({ tipo: 'cashback', valorDesconto: value, nome: `Desconto de ${formatMoney(value)}`, custo: `${formatMoney(value)} do cashback` })}><span>Desconto</span><strong>{formatMoney(value)}</strong><small>{available ? 'Toque para usar' : 'Saldo insuficiente'}</small></button>; })}</div></section>}
 
-            <h2 className="text-2xl font-black text-white mb-6 text-center">
-              Acesse sua Conta
-            </h2>
-
-            {/* TELEFONE */}
-            <div className="mb-5">
-              <label className="text-xs font-bold text-[#c5a059] uppercase ml-1">WhatsApp</label>
-              <input
-                value={telefone}
-                onChange={(e)=> setTelefone(formatPhoneBR(e.target.value))}
-                className="w-full bg-[#280404] border border-[#c5a059]/30 p-3 rounded-xl text-white"
-                placeholder="(85) 9XXXX-XXXX"
-              />
-            </div>
-
-            {/* BOTÃO VERIFICAR */}
-            <button
-              onClick={verificarCadastro}
-              disabled={loading}
-              className="w-full bg-[#c5a059] text-black font-bold py-4 rounded-xl text-lg shadow active:translate-y-1"
-            >
-              {loading ? 'VERIFICANDO...' : 'CONTINUAR'}
-            </button>
-
-            {/* PIN aparece SOMENTE se status = completo */}
-            {feedback?.text?.includes('Digite sua senha') && (
-              <div className="mt-6">
-                <label className="text-xs font-bold text-[#c5a059] uppercase ml-1">PIN</label>
-                <input
-                  value={pin}
-                  onChange={(e)=> setPin(onlyDigits(e.target.value).slice(0,4))}
-                  className="w-full bg-[#280404] border border-[#c5a059]/30 p-3 rounded-xl text-center text-white tracking-[0.5em]"
-                  placeholder="****"
-                  type="password"
-                />
-
-                <button
-                  onClick={fazerLogin}
-                  disabled={loading}
-                  className="mt-4 w-full bg-[#e31e24] text-white font-black py-4 rounded-xl text-lg shadow active:translate-y-1"
-                >
-                  {loading ? 'ENTRANDO...' : 'ENTRAR'}
-                </button>
-
-                <Link href="/redefinir-pin" className="mt-3 inline-block text-xs underline text-zinc-400">
-                  Esqueci o PIN
-                </Link>
-              </div>
-            )}
-
-          </div>
-        )}
-
-        {/* ======================== ÁREA LOGADA ======================== */}
-        {dadosCliente && (
-          <div className="space-y-8 mt-6">
-
-            {/* BOAS-VINDAS */}
-            <div className="bg-gradient-to-br from-[#4d0808] to-[#280404] rounded-2xl p-6 shadow-xl border border-[#c5a059]/20">
-
-              <p className="text-zinc-400 text-xs font-bold uppercase">Bem-vindo,</p>
-              <h2 className="text-2xl font-black">{dadosCliente.cliente.nome.split(' ')[0]}</h2>
-
-              <div className="mt-3 flex gap-4">
-                <div>
-                  <p className="text-[#c5a059] text-xs uppercase">Pontos</p>
-                  <p className="text-3xl font-black">{dadosCliente.pontos}</p>
-                </div>
-
-                <div>
-                  <p className="text-[#e31e24] text-xs uppercase">Cashback</p>
-                  <p className="text-3xl font-black">R$ {Number(dadosCliente.cashback).toFixed(2)}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* PRÊMIO DO SORTEIO */}
-            {premio && (
-              <div className="bg-[#4d0808] border border-[#c5a059]/30 p-5 rounded-2xl">
-                <h2 className="text-xl font-black text-[#c5a059] mb-3">🎁 Prêmio do Sorteio</h2>
-                <div className="w-full h-48 overflow-hidden rounded-xl border mb-3">
-                  <img src={premio.imagem_url} className="w-full h-full object-cover"/>
-                </div>
-                <p className="font-bold">{premio.titulo}</p>
-                <p className="text-xs text-[#c5a059] mt-2">📅 Sorteio: {premio.data_sorteio}</p>
-              </div>
-            )}
-
-            {/* GANHADORES */}
-            {ganhadores.length > 0 && (
-              <div className="bg-[#4d0808] border border-[#c5a059]/30 p-5 rounded-2xl">
-                <h2 className="text-xl font-black text-[#c5a059] mb-3">🏆 Últimos Ganhadores</h2>
-
-                {ganhadores.map(g => (
-                  <div key={g.id} className="border-b border-[#c5a059]/20 pb-3 mb-3">
-                    <p className="font-bold">{g.nome || g.nome_cliente}</p>
-                    <p className="text-sm text-zinc-400">{g.telefone || g.telefone_cliente}</p>
-                    <p className="text-xs">{new Date(g.created_at || g.criado_em).toLocaleString()}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* CUPOM */}
-            {cupom && (
-              <div className="bg-[#c5a059] text-[#280404] p-6 rounded-2xl text-center">
-                <p className="text-xs font-black uppercase mb-2">Resgate Confirmado!</p>
-
-                <p className="text-4xl font-black mb-4 border-2 border-[#280404] border-dashed rounded-lg bg-white/10 py-2 tracking-widest">
-                  {cupom}
-                </p>
-
-                <div className="bg-white p-2 rounded-xl inline-block">
-                  <QRCodeSVG value={`${window.location.origin}/validar?cupom=${cupom}`} size={120} />
-                </div>
-
-                <p className="text-xs font-bold mt-2">Mostre ao caixa para validar.</p>
-
-                <button onClick={()=> setCupom(null)} className="mt-3 text-xs underline">Fechar</button>
-              </div>
-            )}
-
-            {/* PRODUTOS */}
-            {!cupom && (
-              <div className="space-y-8">
-
-                <div>
-                  <h3 className="text-lg font-black mb-4">🍔 Trocar Pontos por Produtos</h3>
-
-                  {/* filtros */}
-                  <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-                    {['todos','destaque','prato','bebida','sobremesa'].map(cat => (
-                      <button
-                        key={cat}
-                        onClick={()=> setFiltroCategoria(cat)}
-                        className={`px-4 py-1 rounded-full text-xs font-bold capitalize border ${
-                          filtroCategoria === cat
-                            ? 'bg-[#c5a059] text-black'
-                            : 'text-zinc-400 border-zinc-700'
-                        }`}
-                      >
-                        {cat === 'destaque' ? '🔥 Ofertas' : cat}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* lista */}
-                  <div className="grid gap-4">
-                    {produtos
-                      .filter(p => p.ativo !== false)
-                      .filter(p => filtroCategoria === 'todos'
-                        ? true
-                        : filtroCategoria === 'destaque'
-                        ? p.destaque
-                        : p.categoria === filtroCategoria
-                      )
-                      .map(p => {
-                        const original = p.custo_em_pontos;
-                        const final = p.destaque ? Math.floor(original*0.5) : original;
-                        const pode = dadosCliente.pontos >= final;
-
-                        return (
-                          <div key={p.id} className="bg-[#280404] border border-[#c5a059]/20 p-3 rounded-xl flex gap-3 relative">
-                            
-                            {p.destaque && (
-                              <div className="absolute top-0 right-0 bg-red-600 text-white text-[9px] px-2 py-1">
-                                50% OFF
-                              </div>
-                            )}
-
-                            <div className="w-20 h-20 bg-black/40 rounded-lg overflow-hidden">
-                              {p.imagem_url
-                                ? <img src={p.imagem_url} className="w-full h-full object-cover"/>
-                                : <span className="text-2xl">{p.categoria==='bebida'?'🥤':'🍖'}</span>
-                              }
-                            </div>
-
-                            <div className="flex-1">
-                              <h4 className="font-bold">{p.nome}</h4>
-                              <p className="text-[10px] text-zinc-400">
-                                {p.descricao || 'Delicioso e feito na hora.'}
-                              </p>
-
-                              <div className="mt-2 flex gap-2">
-                                {p.destaque && <span className="text-xs line-through text-zinc-500">{original}</span>}
-                                <span className="text-sm font-black text-[#c5a059]">{final} pts</span>
-                              </div>
-                            </div>
-
-                            <button
-                              onClick={()=> resgatar('produto', 0, p.id)}
-                              disabled={!pode || loading}
-                              className={`px-4 py-2 rounded-lg font-bold text-xs ${
-                                pode
-                                  ? 'bg-[#c5a059] text-black'
-                                  : 'bg-zinc-800 text-zinc-500'
-                              }`}
-                            >
-                              {loading ? '...' : 'RESGATAR'}
-                            </button>
-                          </div>
-                        );
-                      })
-                    }
-                  </div>
-
-                </div>
-
-                {/* ENTREGA GRÁTIS */}
-                <div>
-                  <h3 className="text-lg font-black mb-4">🛵 Entrega Grátis</h3>
-                  <button
-                    onClick={() => resgatar('frete')}
-                    disabled={dadosCliente.pontos < 200 || loading}
-                    className={`w-full p-4 rounded-xl border font-black ${
-                      dadosCliente.pontos >= 200
-                        ? 'bg-[#c5a059] text-black border-[#c5a059]'
-                        : 'bg-zinc-900 text-zinc-600 border-zinc-800'
-                    }`}
-                  >
-                    RESGATAR POR 200 PONTOS
-                  </button>
-                </div>
-
-                {/* CASHBACK */}
-                <div>
-                  <h3 className="text-lg font-black mb-4">💰 Usar Cashback</h3>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    {[5,10,15].map(valor => (
-                      <button
-                        key={valor}
-                        onClick={()=> resgatar("cashback", valor)}
-                        disabled={dadosCliente.cashback < valor}
-                        className={`p-4 rounded-xl text-center border ${
-                          dadosCliente.cashback >= valor
-                            ? 'bg-[#e31e24] text-white'
-                            : 'bg-zinc-900 text-zinc-700 border-zinc-800'
-                        }`}
-                      >
-                        <p className="text-xs font-bold">Desconto</p>
-                        <p className="text-2xl font-black">R$ {valor}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* SAIR */}
-                <button
-                  onClick={async ()=>{
-                    await fetch('/api/resgate/logout', { method: 'POST' });
-                    setDadosCliente(null);
-                    setTelefone('');
-                    setPin('');
-                    setCupom(null);
-                  }}
-                  className="w-full py-4 text-xs text-zinc-500 hover:text-white"
-                >
-                  SAIR DA MINHA CONTA
-                </button>
-
-              </div>
-            )}
-
-          </div>
-        )}
-
+        {activeSection === 'sorteio' && <section className="club-draw" aria-labelledby="draw-title"><div className="club-section-heading"><div><p>Suas chances</p><h2 id="draw-title">Cada ticket pode virar história.</h2></div></div><div className="draw-layout"><article className="draw-ticket"><span>Você já acumulou</span><strong>{dadosCliente.tickets}</strong><b>{dadosCliente.tickets === 1 ? 'ticket de sorteio' : 'tickets de sorteio'}</b><small>Continue acumulando. O sorteio será liberado em breve.</small></article>{premio && <article className="draw-prize">{premio.imagem_url && <img src={premio.imagem_url} alt={premio.titulo} />}<div><span>Próximo prêmio</span><h3>{premio.titulo}</h3>{premio.data_sorteio && <p>{new Date(`${premio.data_sorteio}T12:00:00`).toLocaleDateString('pt-BR')}</p>}</div></article>}</div>{ganhadores.length > 0 && <div className="winner-strip"><span>Últimos ganhadores</span>{ganhadores.slice(0, 4).map((winner) => <article key={winner.id}><i>{firstName(winner.nome || winner.nome_cliente || 'Cliente').slice(0, 1)}</i><div><strong>{winner.nome || winner.nome_cliente || 'Cliente do clube'}</strong><small>{new Date(winner.created_at || winner.criado_em || '').toLocaleDateString('pt-BR')}</small></div></article>)}</div>}</section>}
       </main>
 
+      {pendingReward && <div className="club-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPendingReward(null); }}><section className="club-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title"><span className="modal-kicker">Confirmar resgate</span><h2 id="confirm-title">{pendingReward.nome}</h2><p>Serão usados <strong>{pendingReward.custo}</strong>. Depois, mostre o cupom no caixa.</p>{!pin && <div className="modal-pin"><label htmlFor="confirm-pin">Confirme seu PIN</label><input id="confirm-pin" value={pin} onChange={(event) => setPin(onlyDigits(event.target.value).slice(0, 4))} inputMode="numeric" type="password" maxLength={4} placeholder="••••" autoFocus /></div>}<button type="button" className="club-main-button" onClick={confirmarResgate} disabled={loading || pin.length !== 4}>{loading ? 'Preparando...' : 'Sim, quero resgatar'}</button><button type="button" className="modal-cancel" onClick={() => setPendingReward(null)}>Agora não</button></section></div>}
+      {cupom && <div className="club-modal-backdrop coupon-backdrop"><section className="club-coupon" role="dialog" aria-modal="true" aria-labelledby="coupon-title"><span>Resgate confirmado</span><h2 id="coupon-title">Seu prêmio está pronto!</h2><div className="coupon-code">{cupom}</div><div className="coupon-qr"><QRCodeSVG value={`${window.location.origin}/validar?cupom=${cupom}`} size={150} /></div><p>Mostre este QR Code no caixa.</p><button type="button" onClick={() => setCupom(null)}>Voltar ao clube</button></section></div>}
     </div>
   );
 }

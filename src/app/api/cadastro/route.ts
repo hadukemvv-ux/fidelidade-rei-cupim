@@ -6,6 +6,7 @@ import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
 import { hashPin, isLegacyAutomaticPin, verifyPin } from '@/lib/pin';
 import { attachCustomerSession } from '@/lib/customerSession';
 import { clearOtpGrant, consumeOtpGrant } from '@/lib/whatsappOtp';
+import { isPreCadastro } from '@/lib/customerRegistration';
 
 function iso() {
   return new Date().toISOString();
@@ -22,29 +23,6 @@ async function registrarExtrato(cliente_id: number, valor: number, descricao: st
     metodo: 'cadastro',
   });
   if (error) logError('/api/cadastro/extrato', error as Error, { cliente_id });
-}
-
-// Detectar PRÉ‑CADASTRO (roleta)
-type CadastroCliente = {
-  nome?: string | null;
-  data_nascimento?: string | null;
-  email?: string | null;
-  telefone?: string | null;
-  pin_hash?: string | null;
-};
-
-function isPreCadastro(cliente: CadastroCliente) {
-  const nome = cliente?.nome || '';
-  const email = cliente?.email;
-  const telefone = cliente.telefone || '';
-  const pin_hash = cliente?.pin_hash;
-
-  return (
-    nome === 'Cliente Novo (Roleta)' ||
-    !email ||
-    !pin_hash ||
-    isLegacyAutomaticPin(telefone, pin_hash)
-  );
 }
 
 async function validarEmailDisponivel(email: string | null | undefined, telefone: string) {
@@ -111,7 +89,7 @@ export async function POST(req: NextRequest) {
         .from('base_clientes_saipos')
         .insert({
           nome,
-          email,
+          email: email || null,
           telefone,
           pin_hash,
           data_nascimento: data_nascimento || null,
@@ -168,7 +146,7 @@ export async function POST(req: NextRequest) {
         if (!cliente.nome || cliente.nome === 'Cliente Novo (Roleta)') {
           updateData.nome = nome;
         }
-        if (!cliente.email) {
+        if (!cliente.email && email) {
           updateData.email = email;
         }
         if (!cliente.data_nascimento) {
@@ -218,7 +196,7 @@ export async function POST(req: NextRequest) {
         return errorResponse('Data de nascimento não pode ser alterada', 'validation_error');
       }
 
-      if (cliente.email && cliente.email !== email) {
+      if (email && cliente.email && cliente.email !== email) {
         return errorResponse('Email não pode ser alterado após cadastro completo', 'validation_error');
       }
 

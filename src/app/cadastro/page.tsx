@@ -22,7 +22,6 @@ export default function CadastroPage() {
 
   // CAMPOS DO FORMULÁRIO
   const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
   const [pin, setPin] = useState('');
@@ -43,7 +42,6 @@ export default function CadastroPage() {
   const telefoneOk = telefoneDigits.length === 11;
   const pinOk = pinDigits.length === 4;
   const pinsMatch = pinOk && pinDigits === confirmPinDigits;
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.toLowerCase());
   const ganhouBonus = Boolean(dataNascimento);
 
   // ===========================================================
@@ -68,9 +66,6 @@ export default function CadastroPage() {
     if (!nomeOk)
       return setFeedback({ type: 'error', text: 'Digite seu nome completo (mínimo 3 letras).' });
 
-    if (!emailOk)
-      return setFeedback({ type: 'error', text: 'Digite um email válido.' });
-
     if (!telefoneOk)
       return setFeedback({ type: 'error', text: 'Digite seu WhatsApp com DDD (11 dígitos).' });
 
@@ -92,7 +87,6 @@ export default function CadastroPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nome: nome.trim(),
-          email: email.toLowerCase().trim(),
           telefone: telefoneDigits,
           data_nascimento: dataNascimento || null,
           pin: pinDigits,
@@ -197,18 +191,6 @@ export default function CadastroPage() {
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 placeholder="Ex: Vinicius Rocha"
-                className="w-full bg-[#280404] border border-[#c5a059]/30 rounded-lg px-4 py-3 text-white"
-              />
-            </div>
-
-            {/* EMAIL */}
-            <div>
-              <label className="block text-xs uppercase tracking-widest text-[#c5a059] font-bold mb-2">Email</label>
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                type="email"
-                placeholder="exemplo@gmail.com"
                 className="w-full bg-[#280404] border border-[#c5a059]/30 rounded-lg px-4 py-3 text-white"
               />
             </div>

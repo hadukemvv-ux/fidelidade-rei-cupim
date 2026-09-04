@@ -4,8 +4,9 @@ import { calcularProgressaoNivel } from '@/lib/fidelidade-rules';
 import { validarDados, ResgateSchema, type ResgateValidation } from '@/lib/validations';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError, checkRateLimit } from '@/lib/api-utils';
 import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
-import { attachCustomerSession } from '@/lib/customerSession';
-import { hashPin, isLegacyAutomaticPin, verifyPin } from '@/lib/pin';
+import { attachCustomerSession, getCustomerSessionFromRequest } from '@/lib/customerSession';
+import { hashPin, verifyPin } from '@/lib/pin';
+import { isPreCadastro } from '@/lib/customerRegistration';
 
 // =========================
 // HELPERS
@@ -14,32 +15,6 @@ import { hashPin, isLegacyAutomaticPin, verifyPin } from '@/lib/pin';
 function gerarCodigoCupom() {
   return 'CUP' + Math.random().toString(36).slice(2, 8).toUpperCase();
 }
-
-// ———————————————————————
-// DETECTAR SE É PRÉ‑CADASTRO (AGORA INCLUINDO EMAIL)
-// ———————————————————————
-type ResgateCliente = {
-  nome?: string | null;
-  data_nascimento?: string | null;
-  email?: string | null;
-  telefone?: string | null;
-  pin_hash?: string | null;
-};
-
-function isPreCadastro(cliente: ResgateCliente) {
-  const nome = cliente?.nome || '';
-  const email = cliente?.email;
-  const telefone = cliente?.telefone || '';
-  const pin_hash = cliente?.pin_hash;
-
-  return (
-    nome === 'Cliente Novo (Roleta)' ||
-    !email ||
-    !pin_hash ||
-    isLegacyAutomaticPin(telefone, pin_hash)
-  );
-}
-
 
 // =========================
 // SNAPSHOT
@@ -74,6 +49,17 @@ async function buscarSnapshot(telefone: string) {
       multiplicadorAtual: progressao.beneficio.pontos,
     },
   };
+}
+
+export async function GET(req: NextRequest) {
+  const session = getCustomerSessionFromRequest(req);
+  if (!session) return errorResponse('Sessão não encontrada.', 'unauthorized', 401);
+
+  try {
+    return successResponse(await buscarSnapshot(session.phone));
+  } catch {
+    return errorResponse('Não foi possível restaurar sua sessão.', 'unauthorized', 401);
+  }
 }
 
 

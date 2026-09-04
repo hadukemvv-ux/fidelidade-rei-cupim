@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     const { data: clientes, error } = await supabaseAdmin
       .from('base_clientes_saipos')
-      .select('total_gasto, qtd_pedidos, updated_at');
+      .select('total_gasto, qtd_pedidos, atualizado_em');
 
     if (error) {
       logError('/api/financeiro/overview', error as Error, { requestId });
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     limite30Dias.setDate(limite30Dias.getDate() - 30);
 
     const novos_clientes_30dias = clientes.filter((c) => {
-      const dataUpdate = new Date(c.updated_at || 0);
+      const dataUpdate = new Date(c.atualizado_em || 0);
       return dataUpdate >= limite30Dias;
     }).length;
 

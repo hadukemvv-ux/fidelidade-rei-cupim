@@ -1,175 +1,144 @@
 'use client';
+
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { fetchAdmin } from '@/lib/adminFetch';
 
-// SUPABASE
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+type NavItem = { href: string; icon: string; label: string; hint: string };
+
+const navigation: Array<{ label: string; items: NavItem[] }> = [
+  { label: 'Visão geral', items: [
+    { href: '/admin', icon: '⌂', label: 'Início', hint: 'Resumo e atalhos' },
+    { href: '/admin/analytics', icon: '▥', label: 'Relatórios', hint: 'Resultados por período' },
+  ] },
+  { label: 'Clientes e vendas', items: [
+    { href: '/admin/clientes', icon: '◎', label: 'Clientes', hint: 'Saldos e histórico' },
+    { href: '/admin/financeiro', icon: 'R$', label: 'Financeiro', hint: 'Receita e custos' },
+  ] },
+  { label: 'Programa de fidelidade', items: [
+    { href: '/admin/cardapio', icon: '★', label: 'Recompensas', hint: 'Produtos e pontos' },
+    { href: '/admin/roleta', icon: '↻', label: 'Roleta', hint: 'Prêmios e chances' },
+    { href: '/admin/sorteio', icon: '◇', label: 'Sorteios', hint: 'Configuração e resultados' },
+  ] },
+  { label: 'Operação', items: [
+    { href: '/admin/garcons', icon: '♟', label: 'Equipe', hint: 'Garçons e desempenho' },
+    { href: '/admin/garcons/alertas', icon: '!', label: 'Segurança', hint: 'Alertas e bloqueios' },
+    { href: '/admin/importar', icon: '⇧', label: 'Importação', hint: 'Clientes da Saipos' },
+  ] },
+];
+
+const pageInfo: Record<string, { title: string; description: string }> = {
+  '/admin': { title: 'Painel principal', description: 'O que importa agora e onde fazer cada tarefa.' },
+  '/admin/analytics': { title: 'Relatórios', description: 'Acompanhe adesão, pontos, resgates e uso do programa.' },
+  '/admin/clientes': { title: 'Clientes', description: 'Consulte saldos, nível, compras e autorizações.' },
+  '/admin/financeiro': { title: 'Financeiro', description: 'Veja faturamento acumulado e o custo estimado da fidelidade.' },
+  '/admin/cardapio': { title: 'Recompensas', description: 'Defina quais produtos podem ser trocados por pontos.' },
+  '/admin/roleta': { title: 'Roleta', description: 'Ajuste os prêmios e suas probabilidades.' },
+  '/admin/sorteio': { title: 'Sorteios', description: 'Prepare o próximo sorteio e consulte resultados.' },
+  '/admin/sorteio/previsao': { title: 'Previsão do sorteio', description: 'Confira participantes e chances antes de sortear.' },
+  '/admin/sorteio/resumo': { title: 'Resumo do sorteio', description: 'Consulte os números de um sorteio específico.' },
+  '/admin/sorteio/ganhadores': { title: 'Ganhadores', description: 'Histórico dos resultados já realizados.' },
+  '/admin/garcons': { title: 'Equipe', description: 'Cadastre garçons e acompanhe o uso da roleta.' },
+  '/admin/garcons/alertas': { title: 'Segurança', description: 'Revise atividades suspeitas e desbloqueios.' },
+  '/admin/importar': { title: 'Importação', description: 'Atualize a base de clientes com uma planilha da Saipos.' },
+};
+
+const raffleNavigation = [
+  { href: '/admin/sorteio', label: 'Configuração' },
+  { href: '/admin/sorteio/previsao', label: 'Participantes' },
+  { href: '/admin/sorteio/resumo', label: 'Resumo' },
+  { href: '/admin/sorteio/ganhadores', label: 'Ganhadores' },
+];
+
+function isActive(pathname: string, href: string) {
+  if (href === '/admin') return pathname === href;
+  if (href === '/admin/sorteio') return pathname.startsWith('/admin/sorteio');
+  if (href === '/admin/garcons') return pathname === href || /^\/admin\/garcons\/\d+$/.test(pathname);
+  return pathname === href;
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname() || ""; // <<< CORREÇÃO CRÍTICA AQUI
+  const pathname = usePathname() || '/admin';
   const router = useRouter();
+  const [access, setAccess] = useState<'checking' | 'allowed' | 'denied'>('checking');
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const [autorizado, setAutorizado] = useState(false);
-  const [verificando, setVerificando] = useState(true);
-
-  // VERIFICAR SESSÃO ADMIN
   useEffect(() => {
-    async function check() {
+    let active = true;
+    async function checkAccess() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.replace('/login');
-      } else {
-        setAutorizado(true);
+        return;
       }
-      setVerificando(false);
+
+      const response = await fetchAdmin('/api/admin/dashboard', { cache: 'no-store' }).catch(() => null);
+      if (!active) return;
+      if (response?.status === 401 || response?.status === 403) setAccess('denied');
+      else setAccess('allowed');
     }
-    check();
-  }, []);
+    checkAccess();
+    return () => { active = false; };
+  }, [router]);
 
-  if (verificando) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-[#c5a059]">
-        Verificando acesso…
-      </div>
-    );
-  }
-
-  if (!autorizado) return null;
-
-  // =========================
-  // MENU PRINCIPAL + SUBMENUS
-  // =========================
-
-  const menu = [
-    { href: '/admin', icon: '🏠', label: 'Início' },
-
-    { href: '/admin/dashboard', icon: '📊', label: 'Dashboard' },
-    { href: '/admin/analytics', icon: '📈', label: 'Analytics' },
-    { href: '/admin/financeiro', icon: '💰', label: 'Financeiro' },
-    { href: '/admin/roleta', icon: '🎰', label: 'Roleta' },
-    { href: '/admin/cardapio', icon: '🍔', label: 'Cardápio' },
-
-    // ---------- SORTEIO (COM SUBMENU) ----------
-    {
-      href: '/admin/sorteio',
-      icon: '🎁',
-      label: 'Sorteio',
-      submenu: [
-        { href: '/admin/sorteio/previsao', label: '📋 Previsão' },
-        
-        { href: '/admin/sorteio/resumo', label: '📑 Resumo' },
-        { href: '/admin/sorteio/ganhadores', label: '🏆 Ganhadores' },
-      ]
-    },
-    // -------------------------------------------
-
-    { href: '/admin/garcons', icon: '👔', label: 'Equipe' },
-    { href: '/admin/garcons/alertas', icon: '🔥', label: 'Anti-Fraude' },
-    { href: '/admin/importar', icon: '📥', label: 'Importação' },
-  ];
+  const currentPage = useMemo(() => {
+    if (/^\/admin\/garcons\/\d+$/.test(pathname)) {
+      return { title: 'Perfil da equipe', description: 'Histórico, status e atividade deste garçom.' };
+    }
+    return pageInfo[pathname] || { title: 'Administração', description: 'Clube Rei do Cupim.' };
+  }, [pathname]);
 
   async function logout() {
     await supabase.auth.signOut();
     router.replace('/login');
   }
 
+  if (access === 'checking') {
+    return <div className="admin-gate"><Image src="/logo.png" width={54} height={54} alt="" /><span>Verificando seu acesso…</span></div>;
+  }
+
+  if (access === 'denied') {
+    return <main className="admin-gate admin-denied"><span className="admin-gate-mark">!</span><h1>Esta conta não tem acesso administrativo.</h1><p>Entre com o e-mail autorizado da administração.</p><button onClick={logout}>Trocar de conta</button></main>;
+  }
+
   return (
-    <div className="admin-shell flex min-h-screen bg-gray-900 text-white">
+    <div className="admin-shell">
+      <header className="admin-mobile-bar">
+        <Link href="/admin" className="admin-mobile-brand"><Image src="/logo.png" width={36} height={36} alt="" /><span>Painel do Rei</span></Link>
+        <button type="button" onClick={() => setMenuOpen((value) => !value)} aria-expanded={menuOpen} aria-controls="admin-navigation">{menuOpen ? 'Fechar' : 'Menu'}</button>
+      </header>
 
-      {/* SIDEBAR FIXA */}
-      <aside className="admin-sidebar w-64 bg-gray-950 border-r border-gray-800 flex flex-col py-8 px-4">
-        
-        <div className="admin-brand mb-10 text-center">
-          <img src="/logo.png" alt="" className="mx-auto mb-3 h-12 w-12 object-contain" />
-          <h1 className="text-xl font-black text-[#c5a059] uppercase">
-            Rei do Cupim
-          </h1>
-          <p className="text-xs text-gray-500 mt-1 tracking-widest">Administração</p>
-        </div>
-
-        {/* MENU */}
-        <nav className="admin-nav flex-1 space-y-1">
-          {menu.map((item) => {
-            const ativo = pathname === item.href;
-
-            return (
-              <div key={item.href}>
-                
-                {/* ITEM PRINCIPAL */}
-                <Link
-                  href={item.href}
-                  className={`
-                    flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition
-                    ${ativo 
-                      ? 'bg-[#c5a059] text-black shadow-lg' 
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                    }
-                  `}
-                >
-                  <span className="text-lg">{item.icon}</span>
-                  {item.label}
-                </Link>
-
-                {/* SUBMENU DO SORTEIO */}
-                {item.submenu && pathname.startsWith('/admin/sorteio') && (
-                  <div className="ml-8 mt-2 space-y-1">
-                    {item.submenu.map((sub) => {
-                      const ativoSub = pathname === sub.href;
-                      return (
-                        <Link
-                          key={sub.href}
-                          href={sub.href}
-                          className={`
-                            block px-3 py-2 rounded-md text-xs font-bold transition
-                            ${ativoSub 
-                              ? 'bg-[#c5a059] text-black shadow-md' 
-                              : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                            }
-                          `}
-                        >
-                          {sub.label}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-
-              </div>
-            );
-          })}
+      <aside className={`admin-sidebar ${menuOpen ? 'is-open' : ''}`} id="admin-navigation">
+        <Link href="/admin" className="admin-brand"><Image src="/logo.png" alt="" width={48} height={48} /><span><strong>O Rei do Cupim</strong><small>Administração</small></span></Link>
+        <nav className="admin-nav" aria-label="Navegação administrativa">
+          {navigation.map((group) => (
+            <section key={group.label}>
+              <p>{group.label}</p>
+              {group.items.map((item) => {
+                const active = isActive(pathname, item.href);
+                return <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className={active ? 'active' : ''} aria-current={active ? 'page' : undefined}><i aria-hidden="true">{item.icon}</i><span><strong>{item.label}</strong><small>{item.hint}</small></span></Link>;
+              })}
+            </section>
+          ))}
         </nav>
-
-        {/* LOGOUT */}
-        <button
-          onClick={logout}
-          className="mt-8 border border-red-800 text-red-400 py-2 px-4 rounded-lg text-xs hover:bg-red-900/20 transition"
-        >
-          SAIR
-        </button>
-
+        <div className="admin-sidebar-footer"><Link href="/" target="_blank">Abrir site do cliente ↗</Link><button onClick={logout}>Sair da conta</button></div>
       </aside>
 
-      {/* CONTEÚDO */}
-      <main className="admin-main flex-1 p-10">
+      {menuOpen && <button className="admin-menu-backdrop" onClick={() => setMenuOpen(false)} aria-label="Fechar menu" />}
 
-        {/* HEADER INTERNO */}
-        <header className="admin-page-header mb-10 border-b border-gray-800 pb-6">
-          <h1 className="text-3xl font-black tracking-tight">
-            {(pathname || '').split('/').pop()?.toUpperCase() || 'ADMIN'}
-          </h1>
-        </header>
-
-        <div className="admin-content animate-fade-in">
-          {children}
-        </div>
-
+      <main className="admin-main">
+        <header className="admin-page-header"><div><span>Administração</span><h1>{currentPage.title}</h1><p>{currentPage.description}</p></div><Link href="/" target="_blank">Ver site ↗</Link></header>
+        {pathname.startsWith('/admin/sorteio') && <nav className="admin-subnav" aria-label="Seções dos sorteios">{raffleNavigation.map((item) => <Link key={item.href} href={item.href} className={pathname === item.href ? 'active' : ''}>{item.label}</Link>)}</nav>}
+        <div className="admin-content">{children}</div>
       </main>
-
     </div>
   );
 }

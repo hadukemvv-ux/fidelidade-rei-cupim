@@ -2,42 +2,59 @@
 import { fetchAdmin } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 
+type PremioRoleta = {
+  id: number;
+  nome: string;
+  emoji: string;
+  descricao_vitoria?: string;
+  probabilidade: number;
+  [key: string]: unknown;
+};
+
+async function fetchPremios() {
+  const response = await fetchAdmin('/api/admin/premios');
+  const json = await response.json();
+  if (!response.ok || !json?.ok) throw new Error(json?.error || 'Não foi possível carregar os prêmios.');
+  const payload = json?.data ?? json;
+  return (payload?.premios || payload || []) as PremioRoleta[];
+}
+
 export default function AdminRoletaPage() {
-  const [premios, setPremios] = useState<any[]>([]);
+  const [premios, setPremios] = useState<PremioRoleta[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    carregar();
+    let active = true;
+    async function load() {
+      try {
+        const result = await fetchPremios();
+        if (active) setPremios(result);
+      } catch {
+        if (active) setPremios([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    load();
+    return () => { active = false; };
   }, []);
 
-  async function carregar() {
+  async function salvarItem(item: PremioRoleta) {
     try {
-      const res = await fetchAdmin('/api/admin/premios');
-      const data = await res.json();
-      const payload = data?.data ?? data;
-
-      // API boa deve retornar { premios: [...] }
-      setPremios(payload?.premios || payload || []);
-    } catch {
-      setPremios([]);
-    }
-    setLoading(false);
-  }
-
-  async function salvarItem(item: any) {
-    try {
-      await fetchAdmin('/api/admin/premios', {
+      const response = await fetchAdmin('/api/admin/premios', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item)
       });
+      const json = await response.json();
+      if (!response.ok || !json?.ok) throw new Error(json?.error || 'Não foi possível salvar o prêmio.');
       alert('Item atualizado com sucesso!');
-    } catch {
-      alert('Erro ao salvar.');
+    } catch (cause) {
+      alert(cause instanceof Error ? cause.message : 'Erro ao salvar.');
     }
   }
 
-  const handleChange = (index: number, field: string, value: any) => {
+  const handleChange = (index: number, field: keyof PremioRoleta, value: string | number) => {
     setPremios(prev =>
       prev.map((p, i) => (i === index ? { ...p, [field]: value } : p))
     );

@@ -1,7 +1,7 @@
-import { NextResponse, NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
-import { successResponse, errorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
+import { successResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await supabaseAdmin
       .from('base_clientes_saipos')
-      .select('id, telefone, nome, email, nivel, pontos, cashback, tickets, total_gasto, qtd_pedidos, ultima_compra, bloqueado')
+      .select('id, telefone, nome, email, nivel, pontos, cashback, tickets, total_gasto, qtd_pedidos, ultima_compra, data_nascimento, aceita_whatsapp_aniversario')
       .order('ultima_compra', { ascending: false });
 
     if (error) {

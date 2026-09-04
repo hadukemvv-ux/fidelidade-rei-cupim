@@ -1,137 +1,67 @@
 'use client';
+
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { fetchAdmin } from '@/lib/adminFetch';
 
 type DashboardStats = {
-  pontosDistribuidos: number;
   totalClientes: number;
+  saldoPontosAtivos: number;
+  totalResgates: number;
+  clientesAniversario: number;
 };
 
-export default function AdminHome() {
-  const [stats, setStats] = useState<DashboardStats>({
-    pontosDistribuidos: 0,
-    totalClientes: 0
-  });
+const sections = [
+  { href: '/admin/clientes', icon: '◎', title: 'Encontrar um cliente', description: 'Consulte telefone, nível, pontos, cashback, tickets e última compra.', action: 'Abrir clientes' },
+  { href: '/admin/cardapio', icon: '★', title: 'Alterar recompensas', description: 'Cadastre produtos, ajuste o custo em pontos e escolha os destaques.', action: 'Gerenciar recompensas' },
+  { href: '/admin/analytics', icon: '▥', title: 'Acompanhar resultados', description: 'Veja cadastros, pontos, resgates e roleta nos últimos 7, 30 ou 90 dias.', action: 'Ver relatórios' },
+  { href: '/admin/garcons', icon: '♟', title: 'Gerenciar equipe', description: 'Cadastre garçons, confira o ranking e investigue atividades suspeitas.', action: 'Abrir equipe' },
+];
 
-  const [loading, setLoading] = useState(true);
+export default function AdminHome() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    async function fetchStats() {
+    async function load() {
       try {
-        const response = await fetchAdmin('/api/admin/dashboard');
-        const payload = await response.json();
-        if (!response.ok || !payload?.ok) throw new Error(payload?.error || 'Falha ao carregar o painel.');
-        setStats({
-          pontosDistribuidos: Number(payload.data?.pontosDistribuidos || 0),
-          totalClientes: Number(payload.data?.totalClientes || 0),
-        });
+        const response = await fetchAdmin('/api/admin/dashboard', { cache: 'no-store' });
+        const json = await response.json();
+        if (!response.ok || !json?.ok) throw new Error(json?.error || 'Não foi possível carregar o resumo.');
+        setStats(json.data);
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : 'Falha ao carregar o painel.');
-      } finally {
-        setLoading(false);
+        setError(cause instanceof Error ? cause.message : 'Não foi possível carregar o resumo.');
       }
     }
-
-    fetchStats();
+    load();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="text-[#c5a059] text-lg">
-        Carregando dados...
-      </div>
-    );
-  }
-
-  if (error) {
-    return <div className="text-red-300">{error}</div>;
-  }
-
   return (
-    <div className="space-y-12">
+    <div className="admin-home">
+      {error && <div className="admin-notice error"><strong>O resumo não carregou.</strong><span>{error}</span></div>}
 
-      {/* CARDS DE ESTATÍSTICAS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        <div className="bg-gray-800 p-8 rounded-2xl border border-gray-700 shadow-lg">
-          <p className="text-gray-400 text-xs font-bold uppercase mb-2">
-            Pontos Distribuídos
-          </p>
-          <p className="text-5xl font-black text-[#c5a059]">
-            {stats.pontosDistribuidos.toLocaleString()}
-          </p>
+      <section aria-labelledby="admin-summary-title">
+        <div className="admin-section-title"><div><span>Resumo</span><h2 id="admin-summary-title">Situação do clube</h2></div><small>Dados atualizados ao abrir a página</small></div>
+        <div className="admin-kpi-grid">
+          <article><span>Clientes na base</span><strong>{stats ? stats.totalClientes.toLocaleString('pt-BR') : '—'}</strong><small>Cadastros importados e digitais</small></article>
+          <article><span>Pontos em circulação</span><strong>{stats ? stats.saldoPontosAtivos.toLocaleString('pt-BR') : '—'}</strong><small>Estimativa: distribuídos menos resgatados</small></article>
+          <article><span>Resgates registrados</span><strong>{stats ? stats.totalResgates.toLocaleString('pt-BR') : '—'}</strong><small>Produtos, cashback e entregas</small></article>
+          <article className="accent"><span>Autorizaram aniversário</span><strong>{stats ? stats.clientesAniversario.toLocaleString('pt-BR') : '—'}</strong><small>Campanha ainda não envia mensagens</small></article>
         </div>
+      </section>
 
-        <div className="bg-gray-800 p-8 rounded-2xl border border-gray-700 shadow-lg">
-          <p className="text-gray-400 text-xs font-bold uppercase mb-2">
-            Base de Clientes
-          </p>
-          <p className="text-5xl font-black text-white">
-            {stats.totalClientes.toLocaleString()}
-          </p>
+      <section aria-labelledby="admin-actions-title">
+        <div className="admin-section-title"><div><span>Atalhos</span><h2 id="admin-actions-title">O que você quer fazer?</h2></div></div>
+        <div className="admin-action-grid">
+          {sections.map((section) => <Link key={section.href} href={section.href}><i aria-hidden="true">{section.icon}</i><div><h3>{section.title}</h3><p>{section.description}</p><span>{section.action} →</span></div></Link>)}
         </div>
+      </section>
 
-      </div>
-
-      {/* IMPORTADOR */}
-      <div className="bg-gray-800 p-8 rounded-2xl border border-gray-700 shadow-xl">
-        <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
-          📥 Importador Manual
-        </h2>
-
-        <p className="text-gray-400 text-sm mb-4">
-          Envie planilhas direto para o backend.
-        </p>
-
-        <Link
-          href="/admin/importar"
-          className="inline-block bg-[#c5a059] text-black px-8 py-4 rounded-xl font-bold hover:bg-[#b08d45] transition shadow-lg"
-        >
-          Abrir Importador Manual
-        </Link>
-      </div>
-
-      {/* MENU */}
-      <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest">
-        Ferramentas de Operação
-      </h3>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-
-        <Menu icon="📊" cor="blue" href="/admin/dashboard" label="Dashboard" />
-        <Menu icon="📈" cor="green" href="/admin/analytics" label="Analytics" />
-        <Menu icon="🎰" cor="purple" href="/admin/roleta" label="Roleta" />
-        <Menu icon="🎁" cor="yellow" href="/admin/sorteio" label="Sorteio" />
-        <Menu icon="🍔" cor="#c5a059" href="/admin/cardapio" label="Cardápio" />
-        <Menu icon="👔" cor="#c5a059" href="/admin/garcons" label="Equipe" />
-        <Menu icon="🔥" cor="red" href="/admin/garcons/alertas" label="Anti-Fraude" />
-        <Menu icon="🎰" cor="gray" href="/roleta" target="_blank" label="Abrir Roleta" />
-
-      </div>
-
+      <section className="admin-status-grid" aria-label="Situação das integrações">
+        <article><div><span className="status-dot ready" />Integração automática</div><h3>Saipos</h3><p>As vendas devem entrar automaticamente. A importação manual de vendas continua bloqueada para evitar duplicidade.</p><Link href="/admin/importar">Abrir importação de clientes →</Link></article>
+        <article><div><span className="status-dot waiting" />Aguardando configuração</div><h3>WhatsApp de aniversário</h3><p>A data e a autorização já são registradas. O envio automático será ativado somente depois da integração do novo número.</p></article>
+        <article><div><span className="status-dot attention" />Ações sensíveis</div><h3>Sorteios e segurança</h3><p>Rodar sorteio, zerar ranking e desbloquear usuário alteram dados. Essas ações continuam exigindo confirmação.</p><Link href="/admin/sorteio">Abrir sorteios →</Link></article>
+      </section>
     </div>
-  );
-}
-
-type MenuProps = {
-  icon: string;
-  label: string;
-  href: string;
-  cor: string;
-  target?: string; // opcional
-};
-
-function Menu({ icon, label, href, cor, target = "_self" }: MenuProps) {
-  return (
-    <Link
-      href={href}
-      target={target}
-      className="bg-gray-800 p-6 rounded-xl border border-gray-700 text-center group flex flex-col items-center hover:border-[#c5a059] transition"
-    >
-      <div className="text-4xl mb-3 group-hover:scale-110 transition">{icon}</div>
-      <div className="font-bold text-sm" style={{ color: cor }}>{label}</div>
-    </Link>
   );
 }

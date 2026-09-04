@@ -1,72 +1,50 @@
 'use client';
+
+import Image from 'next/image';
+import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-// Conexão manual
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  async function handleLogin(event: React.FormEvent) {
+    event.preventDefault();
     setLoading(true);
-    
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      alert('❌ Acesso negado: ' + error.message);
+    setError('');
+    const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (authError) {
+      setError('E-mail ou senha incorretos. Confira os dados e tente novamente.');
       setLoading(false);
-    } else {
-      // Sucesso!
-      router.push('/admin'); 
-      router.refresh();
+      return;
     }
-  };
+    router.push('/admin');
+    router.refresh();
+  }
 
   return (
-    <div className="staff-page min-h-screen bg-black flex items-center justify-center p-4 font-sans">
-      <form onSubmit={handleLogin} className="bg-gray-900 p-8 rounded-2xl border border-[#c5a059] w-full max-w-md shadow-2xl">
-        <div className="text-center mb-8">
-            <img src="/logo.png" alt="O Rei do Cupim" className="mx-auto mb-5 h-16 w-16 object-contain" />
-            <h1 className="text-3xl font-black text-[#c5a059] uppercase">Área da equipe</h1>
-            <p className="text-gray-400 mt-2 text-sm">Acesso administrativo protegido</p>
-        </div>
-
-        <div className="space-y-4">
-            <input
-            type="email"
-            placeholder="E-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-black text-white p-4 rounded-xl border border-gray-700 focus:border-[#c5a059] outline-none transition-colors"
-            />
-            <input
-            type="password"
-            placeholder="Senha"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-black text-white p-4 rounded-xl border border-gray-700 focus:border-[#c5a059] outline-none transition-colors"
-            />
-        </div>
-
-        <button 
-            disabled={loading}
-            className="w-full bg-[#c5a059] hover:bg-[#b08d45] text-black font-black uppercase tracking-wider p-4 rounded-xl mt-8 transition-transform hover:scale-105 shadow-lg disabled:opacity-50"
-        >
-            {loading ? 'Validando...' : 'ENTRAR'}
-        </button>
-      </form>
-    </div>
+    <main className="admin-login-page">
+      <section className="admin-login-brand">
+        <Link href="/" aria-label="Voltar ao site"><Image src="/logo.png" alt="" width={70} height={70} /><span>O Rei do Cupim</span></Link>
+        <div><span>Área restrita</span><h1>Controle claro.<br /><em>Operação simples.</em></h1><p>Clientes, recompensas, equipe e resultados organizados em um só lugar.</p></div>
+      </section>
+      <section className="admin-login-form-side">
+        <form onSubmit={handleLogin} className="admin-login-form">
+          <div><span>Administração</span><h2>Entre no painel</h2><p>Use o e-mail autorizado da empresa.</p></div>
+          {error && <p className="admin-login-error" role="alert">{error}</p>}
+          <label>E-mail<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required placeholder="seuemail@empresa.com.br" /></label>
+          <label>Senha<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required placeholder="Sua senha" /></label>
+          <button disabled={loading}>{loading ? 'Verificando…' : 'Entrar no painel'}<span aria-hidden="true">→</span></button>
+          <Link href="/">← Voltar ao site</Link>
+        </form>
+      </section>
+    </main>
   );
 }

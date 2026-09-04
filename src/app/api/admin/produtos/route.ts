@@ -79,7 +79,6 @@ export async function PUT(request: NextRequest) {
     }
 
     const updates = filtrarCampos(validacao.data);
-    updates.atualizado_em = new Date().toISOString();
 
     // Garantir formato correto do path da imagem
     if (updates.imagem_url && !updates.imagem_url.startsWith('/'))
@@ -130,8 +129,6 @@ export async function POST(request: NextRequest) {
 
     const produto = filtrarCampos(validacao.data);
 
-    produto.criado_em = new Date().toISOString();
-    produto.atualizado_em = new Date().toISOString();
     produto.ativo = produto.ativo ?? true;
     produto.destaque = produto.destaque ?? false;
 

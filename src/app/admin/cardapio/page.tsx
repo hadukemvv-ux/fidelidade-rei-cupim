@@ -2,11 +2,22 @@
 import { fetchAdmin } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 
+type Produto = {
+  id?: number;
+  nome?: string;
+  descricao?: string;
+  imagem_url?: string;
+  custo_em_pontos?: number;
+  custo_pontos?: number;
+  categoria?: string;
+  destaque?: boolean;
+};
+
 export default function AdminCardapio() {
-  const [produtos, setProdutos] = useState<any[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [produtoEditando, setProdutoEditando] = useState<any>(null);
+  const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null);
 
   useEffect(() => {
     fetchProdutos();
@@ -19,7 +30,7 @@ export default function AdminCardapio() {
     setLoading(false);
   }
 
-  async function toggleDestaque(produto: any) {
+  async function toggleDestaque(produto: Produto) {
     const novoStatus = !produto.destaque;
 
     setProdutos(prev =>
@@ -37,16 +48,17 @@ export default function AdminCardapio() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data?.error || 'Nao foi possivel atualizar o destaque.');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setProdutos(prev =>
         prev.map(p => p.id === produto.id ? { ...p, destaque: produto.destaque } : p)
       );
-      alert(error?.message || 'Erro ao atualizar destaque.');
+      alert(error instanceof Error ? error.message : 'Erro ao atualizar destaque.');
     }
   }
 
   async function salvarProduto(e: React.FormEvent) {
     e.preventDefault();
+    if (!produtoEditando) return;
     const isNew = !produtoEditando.id;
     const method = isNew ? 'POST' : 'PUT';
 
@@ -64,8 +76,8 @@ export default function AdminCardapio() {
 
       setModalOpen(false);
       fetchProdutos();
-    } catch (error: any) {
-      alert(error?.message || 'Erro ao salvar produto.');
+    } catch (error: unknown) {
+      alert(error instanceof Error ? error.message : 'Erro ao salvar produto.');
     }
   }
 
@@ -109,6 +121,7 @@ export default function AdminCardapio() {
                 {produto.imagem_url ? (
                   <img
                     src={produto.imagem_url}
+                    alt={produto.nome || 'Produto resgatável'}
                     className="w-full h-full object-cover opacity-80"
                   />
                 ) : (
@@ -141,9 +154,11 @@ export default function AdminCardapio() {
                 <div className="flex items-center justify-between pt-4 border-t border-zinc-700">
 
                   {/* PROMOÇÃO */}
-                  <div
+                  <button
                     onClick={() => toggleDestaque(produto)}
-                    className="flex items-center gap-2 cursor-pointer select-none"
+                    className="flex items-center gap-2 cursor-pointer select-none bg-transparent border-0"
+                    aria-pressed={Boolean(produto.destaque)}
+                    aria-label={`${produto.destaque ? 'Remover' : 'Adicionar'} ${produto.nome} dos destaques`}
                   >
                     <div
                       className={`w-10 h-6 rounded-full p-1 transition-colors ${
@@ -159,7 +174,7 @@ export default function AdminCardapio() {
                     <span className="text-xs font-bold">
                       {produto.destaque ? 'Promoção' : 'Normal'}
                     </span>
-                  </div>
+                  </button>
 
                   {/* EDITAR */}
                   <button
@@ -178,7 +193,7 @@ export default function AdminCardapio() {
       )}
 
       {/* MODAL */}
-      {modalOpen && (
+      {modalOpen && produtoEditando && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="bg-zinc-800 p-6 rounded-xl w-full max-w-lg border border-zinc-700">
 

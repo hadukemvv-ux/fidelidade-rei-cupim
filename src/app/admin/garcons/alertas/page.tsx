@@ -201,7 +201,7 @@ export default function AlertasGarconsPage() {
               {/* Botões */}
               <div className="mt-4 flex gap-3">
                 <Link
-                  href={`/admin/garcons?id=${g.id}`}
+                  href={`/admin/garcons/${g.id}`}
                   className="flex-1 py-3 bg-gray-700 text-center text-sm rounded-lg hover:bg-gray-600"
                 >
                   Ver Perfil

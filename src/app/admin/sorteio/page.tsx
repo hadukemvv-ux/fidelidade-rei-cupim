@@ -11,6 +11,7 @@ export default function SorteioAdminPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [rodando, setRodando] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [sorteio, setSorteio] = useState<any>(null);
   const [ganhadores, setGanhadores] = useState<any[]>([]);
@@ -76,6 +77,7 @@ export default function SorteioAdminPage() {
   // ===================== SALVAR SORTEIO =====================
   async function salvar() {
     setSaving(true);
+    setFeedback(null);
 
     try {
       const body = {
@@ -92,15 +94,15 @@ export default function SorteioAdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-
-      if (!res.ok) {
-        console.error("Erro ao salvar sorteio:", await res.text());
-      }
+      const json = await res.json();
+      if (!res.ok || !json?.ok) throw new Error(json?.error || 'Não foi possível salvar o sorteio.');
 
       await carregarSorteio();
+      setFeedback({ type: 'success', text: 'Sorteio salvo com sucesso.' });
 
     } catch (error) {
       console.error("Erro ao salvar sorteio:", error);
+      setFeedback({ type: 'error', text: error instanceof Error ? error.message : 'Não foi possível salvar o sorteio.' });
     } finally {
       setSaving(false);
     }
@@ -158,6 +160,8 @@ export default function SorteioAdminPage() {
         <h1 className="text-3xl font-black text-[#c5a059]">Controle de Sorteios</h1>
         <p className="text-gray-400">Gerencie prêmio, data e histórico do sorteio.</p>
       </div>
+
+      {feedback && <div className={`admin-notice ${feedback.type === 'error' ? 'error' : ''}`} role="status"><strong>{feedback.type === 'error' ? 'Não foi possível salvar.' : 'Alterações confirmadas.'}</strong><span>{feedback.text}</span></div>}
 
       <SorteioCard
         titulo={titulo}

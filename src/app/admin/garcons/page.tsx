@@ -3,12 +3,19 @@ import { fetchAdmin } from '@/lib/adminFetch';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+type Garcom = {
+  id: number;
+  nome: string;
+  codigo_prefixo: string;
+  total_giros?: number;
+};
+
 export default function AdminGarconsPage() {
-  const [garcons, setGarcons] = useState<any[]>([]);
+  const [garcons, setGarcons] = useState<Garcom[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Estados para Edição/Criação
-  const [editando, setEditando] = useState<any>(null);
+  const [editando, setEditando] = useState<Garcom | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
 
   // Campos do Formulário
@@ -34,7 +41,7 @@ export default function AdminGarconsPage() {
     }
   }
 
-  function abrirModal(garcom?: any) {
+  function abrirModal(garcom?: Garcom) {
       if (garcom) {
           setEditando(garcom);
           setFormNome(garcom.nome);
@@ -70,9 +77,9 @@ export default function AdminGarconsPage() {
           setModalAberto(false);
           carregarGarcons();
           alert('Sucesso! Garçom salvo. ✅');
-      } catch (e: any) {
+      } catch (e: unknown) {
           console.error(e);
-          alert(`ERRO: ${e.message}`);
+          alert(`ERRO: ${e instanceof Error ? e.message : 'Não foi possível salvar.'}`);
       }
   }
 
@@ -80,11 +87,13 @@ export default function AdminGarconsPage() {
       if (!confirm('Tem certeza? Isso vai ZERAR o contador de giros de TODOS os garçons.')) return;
       
       try {
-          await fetchAdmin('/api/admin/garcons/reset', { method: 'POST' });
+          const response = await fetchAdmin('/api/admin/garcons/reset', { method: 'POST' });
+          const json = await response.json();
+          if (!response.ok || !json?.ok) throw new Error(json?.error || 'Não foi possível zerar o ranking.');
           alert('Ranking resetado com sucesso! 🏁');
           carregarGarcons();
       } catch (e) {
-          alert('Erro ao resetar.');
+          alert(e instanceof Error ? e.message : 'Erro ao resetar.');
       }
   }
 

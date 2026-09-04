@@ -5,7 +5,6 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { validarDados } from '@/lib/validations';
 import {
   successResponse,
-  errorResponse,
   validationErrorResponse,
   getRequestId,
   logInfo,
@@ -39,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await supabaseAdmin
       .from('garcons')
-      .select('id, nome, codigo_prefixo, total_giros, ativo, criado_em, atualizado_em')
+      .select('id, nome, codigo_prefixo, total_giros, ativo')
       .eq('ativo', true)
       .order('total_giros', { ascending: false });
 
@@ -93,10 +92,8 @@ export async function POST(request: NextRequest) {
         codigo_prefixo,
         total_giros: 0,
         ativo: true,
-        criado_em: new Date().toISOString(),
-        atualizado_em: new Date().toISOString(),
       })
-      .select('id, nome, codigo_prefixo, total_giros, ativo, criado_em, atualizado_em')
+      .select('id, nome, codigo_prefixo, total_giros, ativo')
       .single();
 
     if (error) {
@@ -158,7 +155,6 @@ export async function PUT(request: NextRequest) {
       .update({
         nome,
         codigo_prefixo,
-        atualizado_em: new Date().toISOString(),
       })
       .eq('id', id);
 

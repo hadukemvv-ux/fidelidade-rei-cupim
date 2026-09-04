@@ -49,6 +49,16 @@ export async function GET(request: NextRequest) {
       return handleApiError(creditosError, '/api/admin/dashboard', requestId);
     }
 
+    const { count: clientesAniversario, error: birthdayError } = await supabaseAdmin
+      .from('base_clientes_saipos')
+      .select('*', { count: 'exact', head: true })
+      .eq('aceita_whatsapp_aniversario', true);
+
+    if (birthdayError) {
+      logError('/api/admin/dashboard', birthdayError as Error, { requestId });
+      return handleApiError(birthdayError, '/api/admin/dashboard', requestId);
+    }
+
     const pontosDistribuidosLegado = entradas?.reduce((s, e) => s + Number(e.valor || 0), 0) || 0;
     const pontosDistribuidosAtomicos = creditosAtomicos?.reduce(
       (s, e) => s + Number(e.pontos_gerados || 0),
@@ -105,6 +115,7 @@ export async function GET(request: NextRequest) {
       saldoPontosAtivos: pontosDistribuidos - pontosResgatados,
       totalResgates: totalResgates || 0,
       cashbackDistribuido,
+      clientesAniversario: clientesAniversario || 0,
       timestamp: new Date().toISOString(),
     };
 

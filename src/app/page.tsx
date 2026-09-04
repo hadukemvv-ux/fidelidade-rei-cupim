@@ -6,11 +6,11 @@ import { useState } from 'react';
 import { getAllNivelThresholds, type NivelFidelidade } from '@/lib/fidelidade-rules';
 
 const levels = getAllNivelThresholds();
-const levelCopy: Record<NivelFidelidade, { label: string; text: string }> = {
-  BRONZE: { label: 'Sua porta de entrada', text: 'Cadastre-se grátis e já comece a acumular pontos e tickets.' },
-  PRATA: { label: 'A chama cresceu', text: 'Mais pontos, cashback e duas chances na roleta a cada R$ 100.' },
-  OURO: { label: 'Cliente da casa', text: 'Quatro pontos por real e recompensas ainda mais rápidas.' },
-  REI: { label: 'O topo da brasa', text: 'O maior retorno do clube para quem sempre volta.' },
+const levelNames: Record<NivelFidelidade, string> = {
+  BRONZE: 'Brasa',
+  PRATA: 'Chama',
+  OURO: 'Nobre',
+  REI: 'Majestade',
 };
 
 const dishes = [
@@ -26,6 +26,10 @@ function money(value: number) {
 
 function percent(value: number) {
   return `${(value * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
+}
+
+function benefitPercent(value: number) {
+  return `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
 }
 
 export default function Home() {
@@ -80,32 +84,46 @@ export default function Home() {
 
       <section className="levels-section section-pad" aria-labelledby="levels-title">
         <div className="section-heading light-heading">
-          <p className="kicker">Uma jornada em quatro níveis</p>
+          <p className="kicker">Quatro níveis de vantagens</p>
           <h2 id="levels-title">Sua fidelidade<br /><em>vale mais.</em></h2>
-          <p className="section-intro">Seu nível acompanha o total de compras elegíveis dos últimos 90 dias.</p>
+          <p className="section-intro">Seu nível considera suas compras dos últimos 90 dias.</p>
         </div>
 
         <div className="level-tabs" role="tablist" aria-label="Níveis do programa">
           {levels.map((item) => (
             <button key={item.nivel} type="button" role="tab" aria-selected={selectedLevel === item.nivel} aria-controls="level-panel" onClick={() => setSelectedLevel(item.nivel)}>
-              <small>{item.nivel}</small><strong>{item.nome}</strong>
+              <strong>{levelNames[item.nivel]}</strong>
             </button>
           ))}
         </div>
 
         <div className="level-panel" id="level-panel" role="tabpanel">
           <div className="level-overview">
-            <p>{levelCopy[level.nivel].label}</p>
-            <h3>{level.nome}</h3>
-            <span>{level.min === 0 ? 'Começa no cadastro' : `A partir de ${money(level.min)} em 90 dias`}</span>
-            <p className="level-description">{levelCopy[level.nivel].text}</p>
+            <p>Seu nível</p>
+            <h3>{levelNames[level.nivel]}</h3>
+            <span>{level.min === 0 ? 'Começa no cadastro' : `A partir de ${money(level.min)} em compras`}</span>
           </div>
           <div className="level-metrics">
-            <article><strong>{level.beneficio.pontos}x</strong><span>pontos por real</span></article>
-            <article><strong>{percent(level.beneficio.cashback)}</strong><span>de cashback</span></article>
-            <article><strong>{level.beneficio.tickets}</strong><span>{level.beneficio.tickets === 1 ? 'ticket' : 'tickets'} a cada R$ 100</span></article>
+            <article>
+              <strong>{benefitPercent(level.beneficio.pontos)}</strong>
+              <span>em produtos</span>
+              <b>{level.beneficio.pontos} {level.beneficio.pontos === 1 ? 'ponto' : 'pontos'} por real</b>
+            </article>
+            <article>
+              <strong>{percent(level.beneficio.cashback)}</strong>
+              <span>cashback em desconto</span>
+            </article>
+            <article className="total-benefit">
+              <strong>{benefitPercent(level.beneficio.pontos + level.beneficio.cashback * 100)}</strong>
+              <span>vantagem total</span>
+              <b>sem contar o sorteio</b>
+            </article>
           </div>
-          <p className="points-note">100 pontos valem R$ 1 em produtos. A compra usa os benefícios do nível que você tinha antes dela.</p>
+          <div className="ticket-soon">
+            <strong>{level.beneficio.tickets}</strong>
+            <span><b>{level.beneficio.tickets === 1 ? 'Ticket de sorteio' : 'Tickets de sorteio'} a cada R$ 100</b><small>Em breve — já pode ir acumulando</small></span>
+          </div>
+          <p className="points-note">100 pontos = R$ 1 em produtos. Vantagem total = pontos + cashback.</p>
         </div>
       </section>
 

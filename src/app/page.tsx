@@ -1,237 +1,151 @@
 'use client';
-import Link from 'next/link';
+
 import Image from 'next/image';
+import Link from 'next/link';
 import { useState } from 'react';
 import { getAllNivelThresholds, type NivelFidelidade } from '@/lib/fidelidade-rules';
 
-const apresentacaoPorNivel: Record<NivelFidelidade, { emoji: string; descricao: string }> = {
-  BRONZE: { emoji: '🥉', descricao: 'Nível inicial. Comece a pontuar agora!' },
-  PRATA: { emoji: '🥈', descricao: 'Mais benefícios para quem volta sempre.' },
-  OURO: { emoji: '🥇', descricao: 'Recompensas reforçadas para clientes frequentes.' },
-  REI: { emoji: '👑', descricao: 'A realeza: o máximo de retorno do programa.' },
+const levels = getAllNivelThresholds();
+const levelCopy: Record<NivelFidelidade, { label: string; text: string }> = {
+  BRONZE: { label: 'Sua porta de entrada', text: 'Cadastre-se grátis e já comece a acumular pontos e tickets.' },
+  PRATA: { label: 'A chama cresceu', text: 'Mais pontos, cashback e duas chances na roleta a cada R$ 100.' },
+  OURO: { label: 'Cliente da casa', text: 'Quatro pontos por real e recompensas ainda mais rápidas.' },
+  REI: { label: 'O topo da brasa', text: 'O maior retorno do clube para quem sempre volta.' },
 };
 
-const beneficios = Object.fromEntries(
-  getAllNivelThresholds().map((nivel) => [
-    nivel.nivel,
-    {
-      multiplicador: `${nivel.beneficio.pontos}x`,
-      cashback: `${(nivel.beneficio.cashback * 100).toFixed(2).replace('.', ',')}%`,
-      tickets: `${nivel.beneficio.tickets} a cada R$ 100`,
-      emoji: apresentacaoPorNivel[nivel.nivel].emoji,
-      nome: nivel.nome,
-      descricao: apresentacaoPorNivel[nivel.nivel].descricao,
-      meta: nivel.min === 0
-        ? 'Cadastro grátis'
-        : `Acumular R$ ${nivel.min} em compras elegíveis`,
-    },
-  ])
-) as Record<NivelFidelidade, {
-  multiplicador: string;
-  cashback: string;
-  tickets: string;
-  emoji: string;
-  nome: string;
-  descricao: string;
-  meta: string;
-}>;
+const dishes = [
+  { src: '/images/home/espetinhos.webp', name: 'Espetinhos Gourmet', tag: 'Da brasa' },
+  { src: '/images/home/feijao-verde.webp', name: 'Feijão Verde do Rei', tag: 'Da casa' },
+  { src: '/images/home/caranguejada.webp', name: 'Caranguejada do Rei', tag: 'Especial' },
+  { src: '/images/home/burgers.webp', name: 'Burgers do Rei', tag: 'Favorito' },
+];
+
+function money(value: number) {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 });
+}
+
+function percent(value: number) {
+  return `${(value * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
+}
 
 export default function Home() {
-  const [nivelSelecionado, setNivelSelecionado] = useState<NivelFidelidade>('BRONZE');
-  const beneficioAtual = beneficios[nivelSelecionado];
+  const [selectedLevel, setSelectedLevel] = useState<NivelFidelidade>('BRONZE');
+  const level = levels.find((item) => item.nivel === selectedLevel) ?? levels[0];
 
   return (
-    <div className="min-h-screen bg-[#280404] text-white font-sans">
-      {/* Header */}
-      <header className="pt-12 pb-6 flex flex-col items-center justify-center">
-        <div className="relative w-48 h-48 mb-4">
-          <Image
-            src="/logo.png"
-            alt="Logo Rei do Cupim"
-            fill
-            sizes="192px"
-            className="w-full h-full object-contain"
-          />
-        </div>
+    <main className="home-shell">
+      <section className="hero" aria-labelledby="hero-title">
+        <Image src="/images/home/hero-cupim.webp" alt="Cupim assado na brasa servido com acompanhamento" fill priority sizes="100vw" className="hero-photo" />
+        <div className="hero-shade" />
 
-        <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-center">
-          <span className="text-[#c5a059]">👑</span>
-          <span className="bg-gradient-to-r from-[#c5a059] via-white to-[#c5a059] bg-clip-text text-transparent">
-            CLUBE REI DO CUPIM
-          </span>
-          <span className="text-[#c5a059]">🔪</span>
-        </h1>
-
-        <div className="w-32 h-1 bg-[#e31e24] mt-4 shadow-[0_0_10px_#e31e24]"></div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="max-w-4xl mx-auto text-center px-6 py-10">
-        <p className="text-xl md:text-2xl text-zinc-300 font-medium italic leading-relaxed">
-          Transforme seu churrasco em <span className="text-[#c5a059] font-bold">experiências, descontos e prêmios</span>.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-6 justify-center mt-12">
-          <Link
-            href="/cadastro"
-            className="bg-[#e31e24] hover:bg-[#c1191f] text-white font-black py-5 px-12 rounded-sm text-lg transition-all shadow-[6px_6px_0px_#c5a059] active:translate-x-1 active:translate-y-1 active:shadow-none"
-          >
-            QUERO ME CADASTRAR
+        <header className="hero-header">
+          <Link href="/" className="brand" aria-label="O Rei do Cupim — início">
+            <Image src="/logo.png" alt="" width={54} height={54} priority />
+            <span><small>CHURRASCARIA</small><strong>O Rei do Cupim</strong></span>
           </Link>
+          <Link href="/resgate" className="header-login">Já sou cliente</Link>
+        </header>
 
-          <Link
-            href="/resgate"
-            className="bg-transparent hover:bg-[#4d0808]/50 text-[#c5a059] border-2 border-[#c5a059] font-bold py-5 px-12 rounded-sm text-lg transition-all"
-          >
-            CONSULTAR PONTOS
-          </Link>
+        <div className="hero-content">
+          <p className="eyebrow"><span /> Clube de vantagens</p>
+          <h1 id="hero-title">Seu sabor de sempre.<br /><em>Agora rende mais.</em></h1>
+          <p className="hero-copy">Coma bem, acumule pontos e transforme cada visita em novas recompensas.</p>
+          <div className="hero-actions">
+            <Link href="/cadastro" className="button button-primary">Entrar para o clube <span aria-hidden="true">→</span></Link>
+            <Link href="/resgate" className="button button-ghost">Consultar meus pontos</Link>
+          </div>
+          <div className="hero-proof"><strong>Cadastro grátis</strong><span>Você pontua desde a primeira compra</span></div>
+        </div>
+
+        <a className="scroll-cue" href="#como-funciona" aria-label="Ver como funciona"><span>Descubra o clube</span><i aria-hidden="true">↓</i></a>
+      </section>
+
+      <div className="benefit-ribbon" aria-label="Benefícios do clube">
+        <div><span>Pontos</span><i>•</i><span>Cashback</span><i>•</i><span>Roleta de prêmios</span><i>•</i><span>Recompensas</span></div>
+      </div>
+
+      <section id="como-funciona" className="how-section section-pad">
+        <div className="section-heading dark-heading">
+          <p className="kicker">Feito para quem sempre volta</p>
+          <h2>Quanto mais sabor,<br /><em>mais benefícios.</em></h2>
+          <p className="section-intro">Sem cartão para carregar. Suas compras constroem seu nível e deixam a próxima recompensa mais perto.</p>
+        </div>
+
+        <ol className="steps">
+          <li><span>01</span><div><h3>Entre para o clube</h3><p>Faça seu cadastro gratuito em poucos instantes.</p></div></li>
+          <li><span>02</span><div><h3>Compre e acumule</h3><p>Suas compras elegíveis viram pontos, cashback e tickets.</p></div></li>
+          <li><span>03</span><div><h3>Aproveite</h3><p>Troque seus pontos e use suas chances na roleta.</p></div></li>
+        </ol>
+      </section>
+
+      <section className="levels-section section-pad" aria-labelledby="levels-title">
+        <div className="section-heading light-heading">
+          <p className="kicker">Uma jornada em quatro níveis</p>
+          <h2 id="levels-title">Sua fidelidade<br /><em>vale mais.</em></h2>
+          <p className="section-intro">Seu nível acompanha o total de compras elegíveis dos últimos 90 dias.</p>
+        </div>
+
+        <div className="level-tabs" role="tablist" aria-label="Níveis do programa">
+          {levels.map((item) => (
+            <button key={item.nivel} type="button" role="tab" aria-selected={selectedLevel === item.nivel} aria-controls="level-panel" onClick={() => setSelectedLevel(item.nivel)}>
+              <small>{item.nivel}</small><strong>{item.nome}</strong>
+            </button>
+          ))}
+        </div>
+
+        <div className="level-panel" id="level-panel" role="tabpanel">
+          <div className="level-overview">
+            <p>{levelCopy[level.nivel].label}</p>
+            <h3>{level.nome}</h3>
+            <span>{level.min === 0 ? 'Começa no cadastro' : `A partir de ${money(level.min)} em 90 dias`}</span>
+            <p className="level-description">{levelCopy[level.nivel].text}</p>
+          </div>
+          <div className="level-metrics">
+            <article><strong>{level.beneficio.pontos}x</strong><span>pontos por real</span></article>
+            <article><strong>{percent(level.beneficio.cashback)}</strong><span>de cashback</span></article>
+            <article><strong>{level.beneficio.tickets}</strong><span>{level.beneficio.tickets === 1 ? 'ticket' : 'tickets'} a cada R$ 100</span></article>
+          </div>
+          <p className="points-note">100 pontos valem R$ 1 em produtos. A compra usa os benefícios do nível que você tinha antes dela.</p>
         </div>
       </section>
 
-      {/* Benefícios - Nível Selecionado */}
-      <section className="max-w-6xl mx-auto py-16 px-6">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl font-bold text-white uppercase tracking-[0.2em] mb-3">
-            Conheça os Níveis
-          </h2>
-          <p className="text-zinc-300 text-sm">
-            Seu nível considera o gasto elegível registrado pelo programa.
-          </p>
-          
-          <div className="mt-8 mb-4">
-             <span className="text-5xl animate-bounce inline-block">{beneficioAtual.emoji}</span>
-             <h3 className="text-[#c5a059] font-black text-3xl mt-2">{beneficioAtual.nome}</h3>
-          </div>
-          
-          <p className="text-zinc-200 text-lg font-medium">{beneficioAtual.descricao}</p>
-          <div className="mt-2 inline-block bg-[#1a0a0a] px-4 py-1 rounded text-xs text-zinc-400 border border-zinc-800">
-             Como alcançar: <span className="text-white font-bold">{beneficioAtual.meta}</span>
-          </div>
+      <section className="food-section section-pad" aria-labelledby="food-title">
+        <div className="food-heading">
+          <p className="kicker">Direto da nossa cozinha</p>
+          <h2 id="food-title">Tem recompensa.<br /><em>Tem comida de verdade.</em></h2>
         </div>
-
-        {/* Seleção de Níveis (Abas) */}
-        <div className="mb-8">
-          <div className="flex flex-wrap justify-center gap-2 md:gap-4">
-            {Object.entries(beneficios).map(([key, nivel]) => (
-              <button
-                key={key}
-                onClick={() => setNivelSelecionado(key as NivelFidelidade)}
-                className={`px-4 py-2 md:px-6 md:py-3 rounded-full font-bold text-xs md:text-sm transition-all transform hover:scale-105 ${
-                  nivelSelecionado === key
-                    ? 'bg-[#c5a059] text-[#280404] shadow-[0_0_15px_#c5a059] scale-105'
-                    : 'bg-[#4d0808] border border-[#c5a059]/50 text-[#c5a059] hover:bg-[#c5a059]/20'
-                }`}
-              >
-                {nivel.emoji} {nivel.nome}
-              </button>
-            ))}
-          </div>
+        <div className="food-grid">
+          {dishes.map((dish, index) => (
+            <article className={`dish-card dish-${index + 1}`} key={dish.name}>
+              <Image src={dish.src} alt={dish.name} fill sizes="(max-width: 699px) 88vw, 45vw" />
+              <div><span>{dish.tag}</span><h3>{dish.name}</h3></div>
+            </article>
+          ))}
         </div>
-
-        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-          {/* Pontos */}
-          <div className="bg-[#4d0808] border-l-4 border-[#c5a059] p-6 md:p-8 rounded-r-xl shadow-xl">
-            <h3 className="text-4xl md:text-5xl font-black text-white mb-1">{beneficioAtual.multiplicador}</h3>
-            <p className="text-[#c5a059] font-bold text-xs uppercase tracking-widest">Pontos por Real</p>
-            <p className="mt-4 text-zinc-200/80 text-sm">
-              Use seus pontos para resgatar <span className="text-white font-bold">Pratos Deliciosos</span> ou <span className="text-white font-bold">Entrega Grátis</span>.
-            </p>
-          </div>
-
-          {/* Cashback */}
-          <div className="bg-[#4d0808] border-l-4 border-[#e31e24] p-6 md:p-8 rounded-r-xl shadow-xl">
-            <h3 className="text-4xl md:text-5xl font-black text-white mb-1">{beneficioAtual.cashback}</h3>
-            <p className="text-[#e31e24] font-bold text-xs uppercase tracking-widest">Cashback</p>
-            <p className="mt-4 text-zinc-200/80 text-sm">
-              Acumule saldo para descontos de <span className="font-bold text-white">R$ 5, R$ 10 ou R$ 15</span> na sua conta.
-            </p>
-          </div>
-
-          {/* Tickets */}
-          <div className="bg-[#4d0808] border-l-4 border-[#c5a059] p-6 md:p-8 rounded-r-xl shadow-xl">
-            <h3 className="text-4xl md:text-5xl font-black text-white mb-1">{beneficioAtual.tickets.split(' ')[0]}</h3>
-            <p className="text-[#c5a059] font-bold text-xs uppercase tracking-widest">Tickets da Roleta</p>
-            <p className="mt-4 text-zinc-200/80 text-sm">
-              Ganhe <span className="font-bold text-white">{beneficioAtual.tickets}</span> gastos para girar a roleta de prêmios.
-            </p>
-          </div>
-        </div>
-
-        {/* Banner do Rei */}
-        {nivelSelecionado === 'REI' && (
-          <div className="mt-12 bg-gradient-to-r from-[#c5a059] to-[#e31e24] border-4 border-[#c5a059] rounded-xl p-8 text-center shadow-[0_0_30px_#c5a059] animate-pulse relative overflow-hidden">
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-            <div className="relative z-10">
-                <h3 className="text-2xl md:text-4xl font-black text-[#280404] mb-2 uppercase italic transform -skew-x-12">
-                    👑 Vossa Majestade!
-                </h3>
-                <p className="text-[#280404] font-bold text-lg">
-                    7 pontos por real, 3% de cashback e 10 tickets a cada R$ 100 em compras.
-                </p>
-            </div>
-          </div>
-        )}
       </section>
 
-      {/* CTA Final */}
-      <section className="max-w-6xl mx-auto px-6 pb-16">
-        <div className="bg-[#4d0808] border border-black/20 rounded-xl p-8 md:p-10 text-center shadow-xl">
-          <h3 className="text-2xl md:text-3xl font-black text-white mb-3 tracking-tight">
-            Deu fome? Peça agora!
-          </h3>
-          <p className="text-zinc-200/80 text-sm mb-8">
-            Acumule pontos automaticamente pedindo pelo Delivery ou benefícios no Salão.
-          </p>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            <a
-              href="https://wa.me/5585988257044"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group bg-[#280404] hover:bg-[#1a0a0a] border border-[#c5a059]/40 hover:border-[#c5a059] rounded-lg px-6 py-5 transition-all flex items-center justify-center gap-3"
-            >
-              <span className="font-black text-[#c5a059] group-hover:text-white transition-colors">WhatsApp</span>
-            </a>
-
-            <a
-              href="https://www.instagram.com/oreidocupim_/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group bg-[#280404] hover:bg-[#1a0a0a] border border-[#c5a059]/40 hover:border-[#c5a059] rounded-lg px-6 py-5 transition-all flex items-center justify-center gap-3"
-            >
-              <span className="font-black text-[#c5a059] group-hover:text-white transition-colors">Instagram</span>
-            </a>
-
-            <a
-              href="https://www.ifood.com.br/delivery/fortaleza-ce/churrascaria-o-rei-do-cupim-henrique-jorge/d4fc2476-227b-4fe1-87be-85a88bf5fee4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group bg-[#280404] hover:bg-[#1a0a0a] border border-[#c5a059]/40 hover:border-[#c5a059] rounded-lg px-6 py-5 transition-all flex items-center justify-center gap-3"
-            >
-              <span className="font-black text-[#c5a059] group-hover:text-white transition-colors">iFood</span>
-            </a>
+      <section className="final-cta">
+        <Image src="/images/home/espetinhos.webp" alt="Espetinhos gourmet assados" fill sizes="100vw" />
+        <div className="final-shade" />
+        <div className="final-content">
+          <Image src="/logo.png" alt="" width={72} height={72} />
+          <p className="kicker">A brasa já está acesa</p>
+          <h2>Seu próximo pedido<br /><em>já pode valer pontos.</em></h2>
+          <div className="final-actions">
+            <Link href="/cadastro" className="button button-primary">Quero fazer parte <span aria-hidden="true">→</span></Link>
+            <a href="https://wa.me/5585988257044" target="_blank" rel="noopener noreferrer" className="text-link">Pedir pelo WhatsApp</a>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-10 px-6 border-t border-[#4d0808]/50 text-center bg-[#1a0a0a]">
-  <p className="text-[#c5a059] italic font-medium">Sua Majestade em Qualidade e Sabor!</p>
-
-  <div className="mt-4 text-[10px] text-zinc-600 uppercase tracking-[0.2em]">
-    Fortaleza • Ceará
-  </div>
-
-  {/* BOTÃO ADMIN */}
-  <div className="mt-6">
-    <Link
-      href="/admin"
-      className="text-xs text-[#c5a059] opacity-40 hover:opacity-100 transition-all underline"
-    >
-      Área Administrativa
-    </Link>
-  </div>
-</footer>
-    </div>
+      <footer className="site-footer">
+        <div className="footer-brand"><Image src="/logo.png" alt="" width={42} height={42} /><span><strong>O Rei do Cupim</strong><small>Fortaleza · Ceará</small></span></div>
+        <nav aria-label="Links do rodapé">
+          <a href="https://www.instagram.com/oreidocupim_/" target="_blank" rel="noopener noreferrer">Instagram</a>
+          <a href="https://www.ifood.com.br/delivery/fortaleza-ce/churrascaria-o-rei-do-cupim-henrique-jorge/d4fc2476-227b-4fe1-87be-85a88bf5fee4" target="_blank" rel="noopener noreferrer">iFood</a>
+          <Link href="/admin">Área administrativa</Link>
+        </nav>
+      </footer>
+    </main>
   );
 }

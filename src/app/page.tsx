@@ -47,7 +47,19 @@ export default function Home() {
             <Image src="/logo.png" alt="" width={54} height={54} priority />
             <span><small>CHURRASCARIA</small><strong>O Rei do Cupim</strong></span>
           </Link>
-          <Link href="/resgate" className="header-login">Já sou cliente</Link>
+          <div className="header-actions">
+            <nav className="header-socials" aria-label="Pedidos e redes sociais">
+              <a className="header-social header-ifood" href="https://www.ifood.com.br/delivery/fortaleza-ce/churrascaria-o-rei-do-cupim-henrique-jorge/d4fc2476-227b-4fe1-87be-85a88bf5fee4?utm_medium=share" target="_blank" rel="noopener noreferrer" aria-label="Pedir no iFood" title="iFood">iFood</a>
+              <a className="header-social header-food99" href="https://oia.99app.com/dlp9/RQpH0q" target="_blank" rel="noopener noreferrer" aria-label="Pedir no 99Food" title="99Food">99</a>
+              <a className="header-social header-whatsapp" href="https://wa.me/5585988257044" target="_blank" rel="noopener noreferrer" aria-label="Pedir pelo WhatsApp" title="WhatsApp">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.4 8.4 0 0 1-12.4 7.4L4 20.2l1.1-4a8.4 8.4 0 1 1 15.4-4.4Z"/><path d="M9 8.1c.3-.3.6-.2.8.1l.8 1.8c.1.3 0 .5-.2.7l-.6.6c.7 1.4 1.8 2.5 3.2 3.2l.6-.7c.2-.2.4-.3.7-.2l1.8.8c.3.1.4.4.3.7-.2 1-1.1 1.6-2.1 1.6-3.5 0-7.1-3.6-7.1-7.1 0-.6.3-1.2.8-1.5Z"/></svg>
+              </a>
+              <a className="header-social header-instagram" href="https://www.instagram.com/oreidocupim_/" target="_blank" rel="noopener noreferrer" aria-label="Ver Instagram" title="Instagram">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.4" cy="6.7" r="1" className="fill"/></svg>
+              </a>
+            </nav>
+            <Link href="/resgate" className="header-login"><span className="login-long">Já sou cliente</span><span className="login-short">Entrar</span></Link>
+          </div>
         </header>
 
         <div className="hero-content">
@@ -80,6 +92,21 @@ export default function Home() {
           <li><span>02</span><div><h3>Compre e acumule</h3><p>Suas compras elegíveis viram pontos, cashback e tickets.</p></div></li>
           <li><span>03</span><div><h3>Aproveite</h3><p>Troque seus pontos e use suas chances na roleta.</p></div></li>
         </ol>
+      </section>
+
+      <section className="video-section section-pad" aria-labelledby="video-title">
+        <div className="video-copy">
+          <p className="kicker">Ao vivo da nossa brasa</p>
+          <h2 id="video-title">O ponto certo.<br /><em>Bem diante dos olhos.</em></h2>
+          <p>Cupim na chapa, cortado na hora. É daqui que começa o sabor que também vira recompensa.</p>
+        </div>
+        <div className="video-frame">
+          <video autoPlay muted loop playsInline preload="metadata" poster="/video/corte-na-brasa-poster.jpg" aria-label="Cupim sendo cortado na chapa">
+            <source src="/video/corte-na-brasa.webm" type="video/webm" />
+            <source src="/video/corte-na-brasa.mp4" type="video/mp4" />
+          </video>
+          <div className="video-stamp" aria-hidden="true"><span>Na brasa</span><strong>DO JEITO DO REI</strong></div>
+        </div>
       </section>
 
       <section className="levels-section section-pad" aria-labelledby="levels-title">

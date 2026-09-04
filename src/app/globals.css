@@ -35,8 +35,19 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 .brand span { display: grid; }
 .brand small { font-size: .61rem; letter-spacing: .22em; line-height: 1.2; color: var(--cream); }
 .brand strong { font-size: 1rem; line-height: 1.2; letter-spacing: -.03em; }
+.header-actions { display: flex; align-items: center; gap: .55rem; }
+.header-socials { display: flex; align-items: center; gap: .3rem; }
+.header-social { display: grid; place-items: center; width: 2rem; height: 2rem; border: 1px solid rgba(255,255,255,.34); border-radius: 50%; color: var(--white); font-size: .65rem; font-weight: 1000; line-height: 1; transition: transform .2s ease, border-color .2s ease, background .2s ease; }
+.header-social:hover { transform: translateY(-2px); border-color: var(--white); }
+.header-social svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.header-social svg .fill { fill: currentColor; stroke: none; }
+.header-ifood { background: #ea1d2c; border-color: #ea1d2c; letter-spacing: -.08em; }
+.header-food99 { background: #ffd426; border-color: #ffd426; color: #17120b; font-size: .7rem; }
+.header-whatsapp { background: #20b759; border-color: #20b759; }
+.header-instagram { background: linear-gradient(145deg, #7438fa, #ed245f 55%, #ffb31a); border-color: rgba(255,255,255,.45); }
 .header-login { padding: .7rem .85rem; border: 1px solid rgba(255,255,255,.36); border-radius: 999px; font-size: .82rem; font-weight: 700; transition: background .25s ease, border-color .25s ease; }
 .header-login:hover { background: rgba(255,255,255,.12); border-color: var(--white); }
+.login-short { display: none; }
 .hero-content { width: min(100%, 46rem); margin-top: auto; padding: 4.5rem 1.25rem 6.25rem; animation: rise-in .85s .28s both; }
 .eyebrow { display: flex; align-items: center; gap: .6rem; margin: 0 0 1rem; color: var(--cream); font-size: .76rem; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
 .eyebrow span { width: 2rem; height: 2px; background: var(--ember); box-shadow: 0 0 12px rgba(240,43,31,.8); }
@@ -67,6 +78,21 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 .steps > li > span { color: var(--ember-dark); font-family: var(--font-display); font-size: 1.8rem; }
 .steps h3 { margin: 0 0 .35rem; font-size: 1.15rem; text-transform: uppercase; }
 .steps p { margin: 0; color: #6c5951; font-size: .97rem; line-height: 1.5; }
+
+.video-section { position: relative; display: grid; gap: 2.5rem; overflow: hidden; background: #2a1712; }
+.video-section::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 20% 25%, rgba(240,43,31,.22), transparent 27%), linear-gradient(145deg, transparent 0 55%, rgba(255,255,255,.025) 55% 56%, transparent 56%); }
+.video-section > * { position: relative; }
+.video-copy { align-self: center; }
+.video-copy .kicker { color: var(--gold); }
+.video-copy h2 { max-width: 9ch; margin: 0; font-family: var(--font-display); font-size: clamp(3.4rem, 13vw, 7.2rem); line-height: .88; letter-spacing: -.02em; text-transform: uppercase; text-wrap: balance; }
+.video-copy h2 em { color: var(--ember); font-style: normal; }
+.video-copy > p:last-child { max-width: 30rem; margin: 1.4rem 0 0; color: rgba(255,253,248,.72); font-size: 1rem; line-height: 1.6; }
+.video-frame { position: relative; width: min(100%, 30rem); aspect-ratio: 9 / 13; justify-self: center; overflow: hidden; border: 1px solid rgba(255,255,255,.16); background: #0c0706; box-shadow: 0 28px 70px rgba(0,0,0,.35); }
+.video-frame::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
+.video-frame video { width: 100%; height: 100%; display: block; object-fit: cover; object-position: 50% 52%; }
+.video-stamp { position: absolute; right: 1rem; bottom: 1rem; display: grid; gap: .15rem; padding: .7rem .8rem; background: rgba(19,11,9,.76); border-left: 3px solid var(--ember); backdrop-filter: blur(8px); }
+.video-stamp span { color: var(--gold); font-family: var(--font-display); font-size: 1.45rem; line-height: 1; text-transform: uppercase; }
+.video-stamp strong { font-size: .58rem; letter-spacing: .16em; }
 
 .levels-section { position: relative; background: var(--ink); }
 .levels-section::before { content: ""; position: absolute; inset: 0; opacity: .24; pointer-events: none; background: radial-gradient(circle at 84% 16%, rgba(240,43,31,.42), transparent 26%), linear-gradient(115deg, transparent 0 48%, rgba(255,255,255,.025) 48% 49%, transparent 49% 100%); }
@@ -262,6 +288,9 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
   .brand img { width: 3.25rem; height: 3.25rem; }
   .brand small { font-size: .68rem; }
   .brand strong { font-size: 1.2rem; }
+  .header-actions { gap: .9rem; }
+  .header-socials { gap: .42rem; }
+  .header-social { width: 2.2rem; height: 2.2rem; }
   .header-login { padding: .78rem 1.25rem; font-size: .9rem; }
   .hero-content { margin-left: clamp(2rem, 7vw, 8rem); padding: 5rem 0 7.5rem; }
   .hero-actions, .final-actions { grid-template-columns: max-content max-content; align-items: center; }
@@ -272,6 +301,9 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
   .how-section { display: grid; grid-template-columns: minmax(18rem, .9fr) minmax(24rem, 1.1fr); align-items: end; gap: 7vw; }
   .steps { margin: 0; }
   .steps li { grid-template-columns: 4rem 1fr; padding: 1.7rem 0; }
+  .video-section { grid-template-columns: minmax(20rem, .95fr) minmax(21rem, .75fr); align-items: center; gap: 8vw; }
+  .video-frame { width: min(100%, 34rem); aspect-ratio: 3 / 4; justify-self: end; }
+  .video-frame video { object-position: 50% 58%; }
   .level-tabs { grid-template-columns: repeat(4, 1fr); gap: .7rem; }
   .level-tabs button { padding: 1rem 1.15rem; }
   .level-panel { display: grid; grid-template-columns: minmax(16rem, .85fr) minmax(26rem, 1.15fr); gap: 3rem; padding: 2.5rem; }
@@ -293,6 +325,17 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
   .portal-page > main { padding-bottom: 7rem; }
   .portal-page > main > div { padding: 2.25rem; }
   .account-page > main { padding-top: 3rem; }
+}
+
+@media (max-width: 520px) {
+  .hero-header { gap: .55rem; }
+  .brand span { display: none; }
+  .header-actions { gap: .4rem; }
+  .header-socials { gap: .22rem; }
+  .header-social { width: 1.85rem; height: 1.85rem; }
+  .header-login { padding: .58rem .7rem; }
+  .login-long { display: none; }
+  .login-short { display: inline; }
 }
 
 @media (min-width: 1100px) {

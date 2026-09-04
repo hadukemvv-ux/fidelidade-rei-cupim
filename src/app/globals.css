@@ -530,6 +530,66 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
   .club-modal-backdrop { align-items: center; }
 }
 
+/* Cadastro: promessa clara, poucos campos e recompensa imediata */
+.signup-page { min-height: 100svh; background: var(--ink); color: white; }
+.signup-promise { position: relative; min-height: 42svh; overflow: hidden; }
+.signup-promise > img { object-fit: cover; object-position: 50% 58%; }
+.signup-promise-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(19,11,9,.2), rgba(19,11,9,.92)); }
+.signup-brand { position: absolute; z-index: 2; top: 1rem; left: 1rem; display: flex; align-items: center; gap: .65rem; color: white; font-weight: 900; }
+.signup-brand img { width: 3rem; height: 3rem; object-fit: contain; }
+.signup-promise-copy { position: relative; z-index: 1; display: flex; min-height: 42svh; flex-direction: column; justify-content: flex-end; padding: 5rem 1.15rem 1.4rem; }
+.signup-promise-copy > span, .signup-form-heading > span { color: var(--gold); font-size: .76rem; font-weight: 900; letter-spacing: .16em; text-transform: uppercase; }
+.signup-promise-copy h1 { max-width: 12ch; margin: .7rem 0 1rem; font-family: var(--font-display); font-size: clamp(3.15rem, 14vw, 7rem); line-height: .86; text-transform: uppercase; }
+.signup-promise-copy h1 em { color: var(--ember); font-style: normal; }
+.signup-promise-copy > p { max-width: 36rem; margin: 0; color: rgba(255,255,255,.78); font-size: 1rem; line-height: 1.55; }
+.signup-benefits { display: none; }
+.signup-form-side { padding: 0 1rem 3rem; background: radial-gradient(circle at 100% 0, rgba(240,43,31,.14), transparent 24%), var(--ink); }
+.signup-mobile-offer { display: grid; gap: .2rem; margin: 0 0 1rem; padding: 1rem; border-left: 4px solid var(--ember); background: rgba(240,43,31,.11); }
+.signup-mobile-offer strong { color: white; font-size: .9rem; text-transform: uppercase; }
+.signup-mobile-offer span { color: rgba(255,255,255,.65); font-size: .82rem; }
+.signup-form-wrap { width: 100%; padding: 1.25rem; border: 1px solid rgba(255,255,255,.14); background: rgba(40,24,20,.9); box-shadow: 0 24px 70px rgba(0,0,0,.3); }
+.signup-form-heading h2 { margin: .65rem 0 .75rem; font-family: var(--font-display); font-size: clamp(2.8rem, 12vw, 4.8rem); line-height: .88; text-transform: uppercase; }
+.signup-form-heading p { margin: 0 0 1.4rem; color: rgba(255,255,255,.67); font-size: .95rem; line-height: 1.55; }
+.signup-feedback { margin: 0 0 1rem; padding: .9rem 1rem; border-left: 3px solid; font-size: .9rem; line-height: 1.45; }
+.signup-feedback.success { border-color: #41d68a; background: rgba(65,214,138,.1); color: #c8f8df; }
+.signup-feedback.error { border-color: #ff5549; background: rgba(255,85,73,.1); color: #ffd0cc; }
+.signup-form { display: grid; gap: 1rem; }
+.signup-field label { display: block; margin: 0 0 .45rem; color: var(--gold); font-size: .76rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.signup-field input { width: 100%; min-height: 3.5rem; padding: .8rem 1rem; border: 1px solid rgba(255,255,255,.19); border-radius: 0; outline: 0; background: #100807; color: white; font-size: 1rem; transition: border-color .2s ease, box-shadow .2s ease; }
+.signup-field input:focus { border-color: var(--ember); box-shadow: 0 0 0 3px rgba(240,43,31,.14); }
+.signup-phone { display: grid; grid-template-columns: auto 1fr; align-items: center; border: 1px solid rgba(255,255,255,.19); background: #100807; }
+.signup-phone:focus-within { border-color: var(--ember); box-shadow: 0 0 0 3px rgba(240,43,31,.14); }
+.signup-phone > span { padding: 0 .8rem; color: rgba(255,255,255,.55); border-right: 1px solid rgba(255,255,255,.14); }
+.signup-phone input { border: 0; box-shadow: none !important; }
+.signup-pin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+.signup-page .otp-panel { margin-top: .2rem; border-radius: 0 !important; background: rgba(16,8,7,.72) !important; }
+.signup-page .otp-panel p { font-size: .88rem; line-height: 1.5; }
+.signup-submit { display: flex; min-height: 3.75rem; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 1.1rem; border: 0; background: var(--ember); color: white; cursor: pointer; font-size: .92rem; font-weight: 900; text-transform: uppercase; transition: transform .18s ease, filter .18s ease; }
+.signup-submit b { font-size: 1.4rem; }
+.signup-submit:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.signup-submit:active { transform: scale(.98); }
+.signup-submit:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+.signup-rule { margin: 0; color: rgba(255,255,255,.48); font-size: .76rem; line-height: 1.45; }
+.signup-links { display: flex; justify-content: space-between; gap: 1rem; padding-top: .4rem; }
+.signup-links a { color: rgba(255,255,255,.64); font-size: .85rem; border-bottom: 1px solid rgba(255,255,255,.22); }
+
+@media (min-width: 900px) {
+  .signup-page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(31rem, 1.05fr); }
+  .signup-promise { position: sticky; top: 0; min-height: 100svh; }
+  .signup-promise-shade { background: linear-gradient(180deg, rgba(19,11,9,.18), rgba(19,11,9,.92)); }
+  .signup-brand { top: 1.7rem; left: 2rem; }
+  .signup-promise-copy { min-height: 100svh; padding: 7rem 2rem 2.4rem; }
+  .signup-promise-copy h1 { font-size: clamp(4rem, 6.3vw, 7rem); }
+  .signup-benefits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: 2rem; background: rgba(255,255,255,.16); }
+  .signup-benefits div { display: grid; align-content: start; gap: .35rem; min-height: 7.5rem; padding: 1rem; background: rgba(19,11,9,.72); backdrop-filter: blur(10px); }
+  .signup-benefits strong { color: var(--ember); font-family: var(--font-display); font-size: 2.4rem; line-height: 1; }
+  .signup-benefits span { color: rgba(255,255,255,.7); font-size: .72rem; font-weight: 800; line-height: 1.35; text-transform: uppercase; }
+  .signup-form-side { display: grid; min-height: 100svh; place-items: center; padding: 3rem clamp(2rem, 5vw, 5rem); }
+  .signup-mobile-offer { display: none; }
+  .signup-form-wrap { max-width: 39rem; padding: clamp(1.6rem, 3vw, 2.5rem); }
+  .signup-form-heading h2 { font-size: 4.6rem; }
+}
+
 @keyframes club-breathe { to { transform: scale(1.08); filter: drop-shadow(0 0 18px rgba(240,43,31,.5)); } }
 @keyframes club-fade { from { opacity: 0; } }
 @keyframes club-sheet { from { opacity: 0; transform: translateY(24px) scale(.98); } }

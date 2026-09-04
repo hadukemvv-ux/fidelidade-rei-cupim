@@ -7,6 +7,7 @@ import { hashPin, isLegacyAutomaticPin, verifyPin } from '@/lib/pin';
 import { attachCustomerSession } from '@/lib/customerSession';
 import { clearOtpGrant, consumeOtpGrant } from '@/lib/whatsappOtp';
 import { isPreCadastro } from '@/lib/customerRegistration';
+import { BONUS_CADASTRO_PONTOS } from '@/lib/fidelidade-rules';
 
 function iso() {
   return new Date().toISOString();
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
         return errorResponse('Confirme o código enviado ao seu WhatsApp antes de cadastrar.', 'unauthorized', 403, requestId);
       }
 
-      const bonus = data_nascimento ? 200 : 0;
+      const bonus = BONUS_CADASTRO_PONTOS;
       const { data: novo, error: insertError } = await supabaseAdmin
         .from('base_clientes_saipos')
         .insert({
@@ -141,6 +142,7 @@ export async function POST(req: NextRequest) {
         const updateData: Record<string, unknown> = {
           atualizado_em: iso(),
           telefone_verificado_em: iso(),
+          pontos: Number(cliente.pontos || 0) + BONUS_CADASTRO_PONTOS,
         };
 
         if (!cliente.nome || cliente.nome === 'Cliente Novo (Roleta)') {
@@ -168,6 +170,8 @@ export async function POST(req: NextRequest) {
           return handleApiError(updateError, '/api/cadastro', requestId);
         }
 
+        await registrarExtrato(cliente.id, BONUS_CADASTRO_PONTOS, 'Bônus de Cadastro');
+
         logInfo('/api/cadastro', 'Pré-cadastro completado', {
           telefone: `****${telefone.slice(-4)}`,
           requestId,
@@ -176,6 +180,7 @@ export async function POST(req: NextRequest) {
         return attachCustomerSession(clearOtpGrant(successResponse({
           atualizado: true,
           message: 'Cadastro completado com sucesso!',
+          bonus: BONUS_CADASTRO_PONTOS,
         })), telefone);
       }
 

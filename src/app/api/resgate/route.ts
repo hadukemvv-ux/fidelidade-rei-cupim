@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { calcularProgressaoNivel, CUSTO_ENTREGA_GRATIS_PONTOS } from '@/lib/fidelidade-rules';
+import { calcularProgressaoNivel, CUSTO_ENTREGA_GRATIS_PONTOS, INTERVALO_ENTREGA_GRATIS_DIAS } from '@/lib/fidelidade-rules';
 import { validarDados, ResgateSchema, type ResgateValidation } from '@/lib/validations';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError, checkRateLimit } from '@/lib/api-utils';
 import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
@@ -193,6 +193,18 @@ export async function POST(req: NextRequest) {
 
     // ===== VALIDAR TIPO E CALCULAR CUSTO =====
     if (tipo === 'frete') {
+      const inicioIntervalo = new Date(Date.now() - INTERVALO_ENTREGA_GRATIS_DIAS * 24 * 60 * 60 * 1000).toISOString();
+      const { data: entregasRecentes, error: entregaError } = await supabaseAdmin
+        .from('resgates')
+        .select('id')
+        .eq('telefone', telefone)
+        .eq('tipo', 'frete')
+        .gte('criado_em', inicioIntervalo)
+        .limit(1);
+      if (entregaError) return handleApiError(entregaError, '/api/resgate', requestId);
+      if (entregasRecentes?.length) {
+        return errorResponse(`A entrega grátis pode ser usada uma vez a cada ${INTERVALO_ENTREGA_GRATIS_DIAS} dias.`, 'validation_error');
+      }
       custoPontos = CUSTO_ENTREGA_GRATIS_PONTOS;
       nomePremio = 'Taxa de entrega grátis';
 

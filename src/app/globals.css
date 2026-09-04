@@ -562,6 +562,21 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 .signup-phone > span { padding: 0 .8rem; color: rgba(255,255,255,.55); border-right: 1px solid rgba(255,255,255,.14); }
 .signup-phone input { border: 0; box-shadow: none !important; }
 .signup-pin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+.signup-birthday { border: 1px solid rgba(255,255,255,.15); background: rgba(16,8,7,.55); }
+.signup-birthday summary { min-height: 4.2rem; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .75rem; padding: .85rem 1rem; cursor: pointer; list-style: none; }
+.signup-birthday summary::-webkit-details-marker { display: none; }
+.signup-birthday summary > span { font-size: 1.3rem; }
+.signup-birthday summary div { display: grid; gap: .15rem; }
+.signup-birthday summary strong { color: white; font-size: .88rem; }
+.signup-birthday summary small { color: rgba(255,255,255,.52); font-size: .74rem; }
+.signup-birthday summary > b { color: var(--ember); font-size: 1.35rem; transition: transform .2s ease; }
+.signup-birthday[open] summary > b { transform: rotate(45deg); }
+.signup-birthday-content { display: grid; gap: .8rem; padding: .2rem 1rem 1rem; border-top: 1px solid rgba(255,255,255,.1); }
+.signup-birthday-content .signup-field { padding-top: .9rem; }
+.signup-consent { display: grid; grid-template-columns: 1.2rem 1fr; gap: .65rem; align-items: start; color: rgba(255,255,255,.72); font-size: .78rem; line-height: 1.45; cursor: pointer; }
+.signup-consent input { width: 1.1rem; height: 1.1rem; margin-top: .1rem; accent-color: var(--ember); }
+.signup-consent input:disabled + span { opacity: .45; }
+.signup-birthday-content > p { margin: 0; color: rgba(255,255,255,.4); font-size: .7rem; line-height: 1.4; }
 .signup-page .otp-panel { margin-top: .2rem; border-radius: 0 !important; background: rgba(16,8,7,.72) !important; }
 .signup-page .otp-panel p { font-size: .88rem; line-height: 1.5; }
 .signup-submit { display: flex; min-height: 3.75rem; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 1.1rem; border: 0; background: var(--ember); color: white; cursor: pointer; font-size: .92rem; font-weight: 900; text-transform: uppercase; transition: transform .18s ease, filter .18s ease; }

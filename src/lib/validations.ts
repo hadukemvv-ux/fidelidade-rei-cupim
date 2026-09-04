@@ -14,6 +14,7 @@ export const ClienteSchema = z.object({
   nome: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres').max(255),
   email: z.string().email('Email inválido').optional().nullable(),
   data_nascimento: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data deve estar em formato YYYY-MM-DD').optional().nullable(),
+  aceita_whatsapp_aniversario: z.boolean().optional().default(false),
   cpf: z.string().regex(/^\d{11}$/, 'CPF deve ter 11 dígitos').optional().nullable(),
   pin: z.string().regex(/^\d{4}$/, 'PIN deve ter 4 dígitos').optional(),
 });

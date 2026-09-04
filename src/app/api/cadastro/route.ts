@@ -49,7 +49,8 @@ export async function POST(req: NextRequest) {
       return validationErrorResponse(validacao.error);
     }
 
-    const { telefone, nome, email, data_nascimento, pin } = validacao.data;
+    const { telefone, nome, email, data_nascimento, aceita_whatsapp_aniversario, pin } = validacao.data;
+    const consentimentoAniversario = Boolean(data_nascimento && aceita_whatsapp_aniversario);
 
     logInfo('/api/cadastro', 'Iniciando cadastro', {
       telefone: `****${telefone.slice(-4)}`,
@@ -94,6 +95,8 @@ export async function POST(req: NextRequest) {
           telefone,
           pin_hash,
           data_nascimento: data_nascimento || null,
+          aceita_whatsapp_aniversario: consentimentoAniversario,
+          aceite_whatsapp_aniversario_em: consentimentoAniversario ? iso() : null,
           telefone_verificado_em: iso(),
           pontos: bonus,
           cashback: 0,
@@ -154,6 +157,10 @@ export async function POST(req: NextRequest) {
         if (!cliente.data_nascimento) {
           updateData.data_nascimento = data_nascimento || null;
         }
+        if (consentimentoAniversario) {
+          updateData.aceita_whatsapp_aniversario = true;
+          updateData.aceite_whatsapp_aniversario_em = iso();
+        }
         if (!cliente.pin_hash || isLegacyAutomaticPin(telefone, cliente.pin_hash)) {
           updateData.pin_hash = novoPinHash;
         }
@@ -197,7 +204,7 @@ export async function POST(req: NextRequest) {
         return errorResponse('Este número já tem cadastro. Nome não pode ser alterado.', 'validation_error');
       }
 
-      if (cliente.data_nascimento && cliente.data_nascimento !== data_nascimento) {
+      if (data_nascimento && cliente.data_nascimento && cliente.data_nascimento !== data_nascimento) {
         return errorResponse('Data de nascimento não pode ser alterada', 'validation_error');
       }
 

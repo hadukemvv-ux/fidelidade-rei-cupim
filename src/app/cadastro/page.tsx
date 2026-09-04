@@ -26,6 +26,8 @@ export default function CadastroPage() {
   const [telefone, setTelefone] = useState('');
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
+  const [dataNascimento, setDataNascimento] = useState('');
+  const [aceitaAniversario, setAceitaAniversario] = useState(false);
   const [whatsappVerificado, setWhatsappVerificado] = useState(false);
 
   // CONTROLE
@@ -74,6 +76,9 @@ export default function CadastroPage() {
     if (!pinsMatch)
       return setFeedback({ type: 'error', text: 'Os PINs não coincidem.' });
 
+    if (dataNascimento && !aceitaAniversario)
+      return setFeedback({ type: 'error', text: 'Para receber a surpresa, autorize as mensagens de aniversário — ou deixe a data em branco.' });
+
     if (!whatsappVerificado)
       return setFeedback({ type: 'error', text: 'Confirme o código enviado ao seu WhatsApp.' });
 
@@ -88,6 +93,8 @@ export default function CadastroPage() {
           nome: nome.trim(),
           telefone: telefoneDigits,
           pin: pinDigits,
+          data_nascimento: dataNascimento || null,
+          aceita_whatsapp_aniversario: Boolean(dataNascimento && aceitaAniversario),
         }),
       });
 
@@ -147,7 +154,7 @@ export default function CadastroPage() {
           <div className="signup-benefits" aria-label="Benefícios do clube">
             <div><strong>200</strong><span>pontos na entrada</span></div>
             <div><strong>+</strong><span>pontos e cashback</span></div>
-            <div><strong>30</strong><span>dias para liberar outra entrega</span></div>
+            <div><strong>🎁</strong><span>surpresa no aniversário</span></div>
           </div>
         </div>
       </section>
@@ -164,6 +171,14 @@ export default function CadastroPage() {
               <div className="signup-field"><label htmlFor="signup-pin">Crie seu PIN</label><input id="signup-pin" value={pin} onChange={(event) => setPin(onlyDigits(event.target.value).slice(0, 4))} inputMode="numeric" autoComplete="new-password" type="password" maxLength={4} placeholder="4 dígitos" /></div>
               <div className="signup-field"><label htmlFor="signup-pin-confirm">Repita o PIN</label><input id="signup-pin-confirm" value={confirmPin} onChange={(event) => setConfirmPin(onlyDigits(event.target.value).slice(0, 4))} inputMode="numeric" autoComplete="new-password" type="password" maxLength={4} placeholder="4 dígitos" /></div>
             </div>
+            <details className="signup-birthday">
+              <summary><span>🎁</span><div><strong>Quer uma surpresa no aniversário?</strong><small>Opcional — não interfere nos seus 200 pontos.</small></div><b aria-hidden="true">+</b></summary>
+              <div className="signup-birthday-content">
+                <div className="signup-field"><label htmlFor="signup-birthday">Data de nascimento</label><input id="signup-birthday" type="date" value={dataNascimento} max={new Date().toISOString().slice(0, 10)} onChange={(event) => { setDataNascimento(event.target.value); if (!event.target.value) setAceitaAniversario(false); }} /></div>
+                <label className="signup-consent"><input type="checkbox" checked={aceitaAniversario} disabled={!dataNascimento} onChange={(event) => setAceitaAniversario(event.target.checked)} /><span>Aceito receber pelo WhatsApp uma surpresa uma semana antes e um lembrete no dia do meu aniversário. Posso cancelar quando quiser.</span></label>
+                <p>Sem propaganda toda hora. Essa autorização vale apenas para a campanha de aniversário.</p>
+              </div>
+            </details>
             <WhatsappOtpVerification telefone={telefoneDigits} proposito="cadastro" onVerified={setWhatsappVerificado} />
             <button type="submit" disabled={loading || !whatsappVerificado} className="signup-submit"><span>{loading ? 'Criando seu clube...' : 'Quero meus 200 pontos'}</span><b aria-hidden="true">→</b></button>
             <p className="signup-rule">A entrega grátis vale para pedidos diretos, conforme disponibilidade e área atendida, e pode ser resgatada uma vez a cada 30 dias.</p>

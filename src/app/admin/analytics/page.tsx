@@ -1,289 +1,205 @@
 'use client';
 
 import { fetchAdmin } from '@/lib/adminFetch';
-import { useEffect, useState } from 'react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
+import { useEffect, useMemo, useState } from 'react';
 
-type Periodo = '7d' | '30d' | '90d';
-type SerieDia = { dia: string; total: number };
-type SerieValorDia = { dia: string; valor: number };
-type SerieProduto = { name: string; value: number };
-
+type Preset = '7d' | '30d' | '90d' | 'custom';
 type AnalyticsPayload = {
+  periodo?: { inicio: string; fim: string };
   clientesPeriodo?: Array<{ atualizado_em?: string }>;
   pontosEntrada?: Array<{ criado_em?: string; valor?: number }>;
   pontosSaida?: Array<{ criado_em?: string; valor?: number }>;
   resgatesPeriodo?: Array<{ criado_em?: string; tipo?: string; premio_nome?: string | null; valor?: number }>;
   giros?: Array<{ data_hora?: string }>;
+  base?: { total: number; contasComPin: number; registrosTeste: number };
+  whatsapp?: { otpAtivo: boolean; convidadosBeta: number; verificacoesConcluidas: number };
 };
 
-const CHART_COLORS = ['#c5a059', '#e31e24', '#ffdd57', '#7dd3fc', '#86efac', '#a78bfa'];
+const today = () => new Date().toISOString().slice(0, 10);
+const daysAgo = (days: number) => {
+  const value = new Date();
+  value.setDate(value.getDate() - days);
+  return value.toISOString().slice(0, 10);
+};
 
 export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
-  const [periodo, setPeriodo] = useState<Periodo>('7d');
-
-  const [kpis, setKpis] = useState({
-    clientesNovos: 0,
-    pontosDistribuidos: 0,
-    pontosResgatados: 0,
-    cashbackDistribuido: 0,
-    girosRoleta: 0,
-    resgates: 0,
-  });
-
-  const [grafClientes, setGrafClientes] = useState<SerieDia[]>([]);
-  const [grafPontos, setGrafPontos] = useState<SerieValorDia[]>([]);
-  const [grafResgates, setGrafResgates] = useState<SerieDia[]>([]);
-  const [grafRoleta, setGrafRoleta] = useState<SerieDia[]>([]);
-  const [grafProdutos, setGrafProdutos] = useState<SerieProduto[]>([]);
+  const [preset, setPreset] = useState<Preset>('30d');
+  const [inicio, setInicio] = useState(daysAgo(30));
+  const [fim, setFim] = useState(today());
+  const [appliedRange, setAppliedRange] = useState({ inicio: daysAgo(30), fim: today() });
+  const [data, setData] = useState<AnalyticsPayload>({});
 
   useEffect(() => {
-    async function carregarAnalytics() {
+    let active = true;
+
+    async function load() {
       setLoading(true);
       setErro(null);
-
       try {
-        const res = await fetchAdmin('/api/admin/analytics', {
+        const periodo = preset === 'custom' ? appliedRange : preset;
+        const response = await fetchAdmin('/api/admin/analytics', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ periodo }),
           cache: 'no-store',
         });
-
-        const json = await res.json();
-        const payload: AnalyticsPayload = (json?.data ?? json) || {};
-
-        if (!res.ok || !json?.ok) {
-          throw new Error(json?.error || 'Falha ao carregar analytics.');
-        }
-
-        const clientesPeriodo = payload.clientesPeriodo || [];
-        const pontosEntrada = payload.pontosEntrada || [];
-        const pontosSaida = payload.pontosSaida || [];
-        const resgatesPeriodo = payload.resgatesPeriodo || [];
-        const giros = payload.giros || [];
-
-        setKpis({
-          clientesNovos: clientesPeriodo.length,
-          pontosDistribuidos: somarValores(pontosEntrada, 'valor'),
-          pontosResgatados: somarValores(pontosSaida, 'valor'),
-          cashbackDistribuido: Number(
-            resgatesPeriodo
-              .filter((item) => item?.tipo === 'cashback')
-              .reduce((acc, item) => acc + Number(item?.valor || 0), 0)
-              .toFixed(2)
-          ),
-          girosRoleta: giros.length,
-          resgates: resgatesPeriodo.length,
-        });
-
-        setGrafClientes(mapearContagemPorDia(clientesPeriodo, 'atualizado_em'));
-        setGrafPontos(mapearSomaPorDia(pontosEntrada, 'criado_em', 'valor'));
-        setGrafResgates(mapearContagemPorDia(resgatesPeriodo, 'criado_em'));
-        setGrafRoleta(mapearContagemPorDia(giros, 'data_hora'));
-        setGrafProdutos(mapearProdutos(resgatesPeriodo));
-      } catch (error) {
-        setErro(error instanceof Error ? error.message : 'Erro ao carregar analytics.');
+        const json = await response.json();
+        if (!response.ok || !json?.ok) throw new Error(json?.error || 'Não foi possível carregar o relatório.');
+        if (active) setData((json.data ?? json) || {});
+      } catch (cause) {
+        if (active) setErro(cause instanceof Error ? cause.message : 'Não foi possível carregar o relatório.');
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }
 
-    carregarAnalytics();
-  }, [periodo]);
+    load();
+    return () => { active = false; };
+  }, [preset, appliedRange]);
 
-  if (loading) {
-    return <div className="text-[#c5a059] text-xl">Carregando analytics...</div>;
+  const summary = useMemo(() => {
+    const entradas = sum(data.pontosEntrada);
+    const saidas = sum(data.pontosSaida);
+    const resgates = data.resgatesPeriodo || [];
+    const cashback = resgates
+      .filter((item) => item.tipo === 'cashback')
+      .reduce((total, item) => total + Number(item.valor || 0), 0);
+    const products = new Map<string, number>();
+    resgates.filter((item) => item.tipo === 'produto').forEach((item) => {
+      const name = item.premio_nome?.trim() || 'Produto sem nome';
+      products.set(name, (products.get(name) || 0) + 1);
+    });
+
+    return {
+      clientes: data.clientesPeriodo?.length || 0,
+      entradas,
+      saidas,
+      saldo: entradas - saidas,
+      resgates: resgates.length,
+      cashback,
+      giros: data.giros?.length || 0,
+      products: [...products.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5),
+    };
+  }, [data]);
+
+  const periodLabel = data.periodo
+    ? `${formatDate(data.periodo.inicio)} a ${formatDate(data.periodo.fim)}`
+    : 'Período selecionado';
+
+  function applyCustomRange() {
+    if (!inicio || !fim || inicio > fim) {
+      setErro('Escolha uma data inicial anterior à data final.');
+      return;
+    }
+    setAppliedRange({ inicio, fim });
   }
 
-  if (erro) {
-    return <div className="text-red-400">{erro}</div>;
-  }
-
   return (
-    <div className="space-y-16">
-      <div className="flex gap-3">
-        {(['7d', '30d', '90d'] as Periodo[]).map((p) => (
-          <button
-            key={p}
-            onClick={() => setPeriodo(p)}
-            className={`
-              px-4 py-2 rounded-lg text-sm font-bold border
-              ${
-                periodo === p
-                  ? 'bg-[#c5a059] text-black border-[#c5a059]'
-                  : 'bg-gray-800 text-gray-300 border-gray-700'
-              }
-            `}
-          >
-            {p === '7d' ? '7 dias' : p === '30d' ? '30 dias' : '90 dias'}
-          </button>
-        ))}
+    <div className="admin-report">
+      <section className="admin-report-filter" aria-label="Período do relatório">
+        <label>
+          <span>Período</span>
+          <select value={preset} onChange={(event) => setPreset(event.target.value as Preset)}>
+            <option value="7d">Últimos 7 dias</option>
+            <option value="30d">Últimos 30 dias</option>
+            <option value="90d">Últimos 90 dias</option>
+            <option value="custom">Escolher datas</option>
+          </select>
+        </label>
+
+        {preset === 'custom' && (
+          <div className="admin-date-range">
+            <label><span>De</span><input type="date" value={inicio} max={fim} onChange={(event) => setInicio(event.target.value)} /></label>
+            <label><span>Até</span><input type="date" value={fim} min={inicio} max={today()} onChange={(event) => setFim(event.target.value)} /></label>
+            <button type="button" onClick={applyCustomRange}>Atualizar</button>
+          </div>
+        )}
+
+        <p>{loading ? 'Atualizando…' : periodLabel}</p>
+      </section>
+
+      {erro && <div className="admin-notice error"><strong>Não foi possível atualizar o relatório.</strong><span>{erro}</span></div>}
+
+      <section aria-labelledby="report-summary-title">
+        <div className="admin-section-title">
+          <div><span>Resumo</span><h2 id="report-summary-title">O que aconteceu no período</h2></div>
+        </div>
+        <div className="admin-kpi-grid admin-report-kpis" aria-busy={loading}>
+          <Metric label="Clientes movimentados" value={summary.clientes} note="Cadastros ou dados atualizados" />
+          <Metric label="Pontos creditados" value={summary.entradas} note="Compras e ajustes registrados" />
+          <Metric label="Resgates realizados" value={summary.resgates} note={`${summary.saidas.toLocaleString('pt-BR')} pontos utilizados`} />
+          <Metric label="Giros da roleta" value={summary.giros} note="Participações registradas" />
+        </div>
+      </section>
+
+      <div className="admin-report-grid">
+        <section className="admin-report-card">
+          <div className="admin-section-title"><div><span>Benefícios</span><h2>Movimento do programa</h2></div></div>
+          <dl className="admin-definition-list">
+            <Row label="Pontos que entraram" value={summary.entradas.toLocaleString('pt-BR')} />
+            <Row label="Pontos utilizados" value={summary.saidas.toLocaleString('pt-BR')} />
+            <Row label="Saldo do período" value={`${summary.saldo >= 0 ? '+' : ''}${summary.saldo.toLocaleString('pt-BR')}`} strong />
+            <Row label="Cashback utilizado" value={money(summary.cashback)} />
+          </dl>
+        </section>
+
+        <section className="admin-report-card">
+          <div className="admin-section-title"><div><span>Preferências</span><h2>Produtos mais resgatados</h2></div></div>
+          {summary.products.length ? (
+            <ol className="admin-ranking">
+              {summary.products.map(([name, total], index) => <li key={name}><b>{index + 1}</b><span>{name}</span><strong>{total}</strong></li>)}
+            </ol>
+          ) : <div className="admin-compact-empty">Nenhum produto resgatado neste período.</div>}
+        </section>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <KPI titulo="Clientes Novos" valor={kpis.clientesNovos} cor="white" />
-        <KPI titulo="Pontos Distribuidos" valor={kpis.pontosDistribuidos} cor="#c5a059" />
-        <KPI titulo="Pontos Resgatados" valor={kpis.pontosResgatados} cor="#e31e24" />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <KPI titulo="Resgates" valor={kpis.resgates} cor="#86efac" />
-        <KPI titulo="Cashback Distribuido" valor={kpis.cashbackDistribuido} cor="#7dd3fc" />
-        <KPI titulo="Giros da Roleta" valor={kpis.girosRoleta} cor="#a78bfa" />
-      </div>
-
-      <Section titulo="Clientes Novos por Dia">
-        <GraficoLinha dados={grafClientes} dataKey="total" />
-      </Section>
-
-      <Section titulo="Pontos Distribuidos por Dia">
-        <GraficoLinha dados={grafPontos} dataKey="valor" />
-      </Section>
-
-      <Section titulo="Resgates por Dia">
-        <GraficoLinha dados={grafResgates} dataKey="total" />
-      </Section>
-
-      <Section titulo="Giros da Roleta por Dia">
-        <GraficoBar dados={grafRoleta} dataKey="total" />
-      </Section>
-
-      <Section titulo="Ranking de Produtos">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie data={grafProdutos} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
-              {grafProdutos.map((_, i) => (
-                <Cell key={`cell-${i}`} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip />
-          </PieChart>
-        </ResponsiveContainer>
-      </Section>
+      <section className="admin-pilot-card">
+        <div>
+          <span>Piloto controlado</span>
+          <h2>Teste com 10 clientes reais</h2>
+          <p>A base da Saipos permanece preservada. Somente os telefones convidados poderão usar o OTP durante o piloto.</p>
+        </div>
+        <div className="admin-pilot-stats">
+          <article><span>Base Saipos</span><strong>{number(data.base?.total)}</strong><small>Não são contas de teste</small></article>
+          <article><span>Contas com PIN</span><strong>{number(data.base?.contasComPin)}</strong><small>Já concluíram cadastro</small></article>
+          <article className="warning"><span>Dados fictícios</span><strong>{number(data.base?.registrosTeste)}</strong><small>Identificados, ainda preservados</small></article>
+          <article className={data.whatsapp?.otpAtivo ? 'success' : ''}>
+            <span>WhatsApp OTP</span>
+            <strong>{data.whatsapp?.otpAtivo ? 'Ativo' : 'Aguardando'}</strong>
+            <small>{number(data.whatsapp?.convidadosBeta)} de 10 convidados configurados</small>
+          </article>
+        </div>
+        <footer>
+          <span><i className={data.whatsapp?.otpAtivo ? 'ready' : 'waiting'} />Confirmação de número: {data.whatsapp?.otpAtivo ? 'liberada para o piloto' : 'será ativada após configurar o novo número'}</span>
+          <span><i className="waiting" />Bot de mensagens: em preparação, ainda não envia nada</span>
+        </footer>
+      </section>
     </div>
   );
 }
 
-function somarValores<T extends Record<string, unknown>>(rows: T[], valueField: string) {
-  return rows.reduce((sum, row) => sum + Number(row?.[valueField] || 0), 0);
+function sum(rows: AnalyticsPayload['pontosEntrada'] | AnalyticsPayload['pontosSaida']) {
+  return (rows || []).reduce((total, item) => total + Number(item.valor || 0), 0);
 }
 
-function mapearContagemPorDia<T extends Record<string, unknown>>(rows: T[], dateField: string): SerieDia[] {
-  const mapa: Record<string, number> = {};
-
-  rows.forEach((row) => {
-    const raw = row?.[dateField];
-    if (!raw || typeof raw !== 'string') return;
-
-    const dia = raw.substring(0, 10);
-    mapa[dia] = (mapa[dia] || 0) + 1;
-  });
-
-  return Object.entries(mapa)
-    .map(([dia, total]) => ({ dia, total }))
-    .sort((a, b) => a.dia.localeCompare(b.dia));
+function number(value?: number) {
+  return typeof value === 'number' ? value.toLocaleString('pt-BR') : '—';
 }
 
-function mapearSomaPorDia<T extends Record<string, unknown>>(
-  rows: T[],
-  dateField: string,
-  valueField: string
-): SerieValorDia[] {
-  const mapa: Record<string, number> = {};
-
-  rows.forEach((row) => {
-    const raw = row?.[dateField];
-    if (!raw || typeof raw !== 'string') return;
-
-    const dia = raw.substring(0, 10);
-    const valor = Number(row?.[valueField] || 0);
-    mapa[dia] = (mapa[dia] || 0) + valor;
-  });
-
-  return Object.entries(mapa)
-    .map(([dia, valor]) => ({ dia, valor }))
-    .sort((a, b) => a.dia.localeCompare(b.dia));
+function money(value: number) {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-function mapearProdutos(
-  rows: Array<{ tipo?: string; premio_nome?: string | null }>
-): SerieProduto[] {
-  const mapa: Record<string, number> = {};
-
-  rows.forEach((row) => {
-    if (row?.tipo !== 'produto') return;
-    const nome = (row?.premio_nome || 'Produto').trim();
-    mapa[nome] = (mapa[nome] || 0) + 1;
-  });
-
-  return Object.entries(mapa).map(([name, value]) => ({ name, value }));
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString('pt-BR', { timeZone: 'America/Fortaleza' });
 }
 
-type KPIProps = { titulo: string; valor: number; cor: string };
-function KPI({ titulo, valor, cor }: KPIProps) {
-  return (
-    <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-xl">
-      <p className="text-gray-400 text-xs uppercase font-bold mb-1">{titulo}</p>
-      <p className="text-4xl font-black" style={{ color: cor }}>
-        {Number(valor || 0).toLocaleString()}
-      </p>
-    </div>
-  );
+function Metric({ label, value, note }: { label: string; value: number; note: string }) {
+  return <article><span>{label}</span><strong>{value.toLocaleString('pt-BR')}</strong><small>{note}</small></article>;
 }
 
-type SectionProps = { titulo: string; children: React.ReactNode };
-function Section({ titulo, children }: SectionProps) {
-  return (
-    <div>
-      <h2 className="text-xl font-bold mb-4 text-[#c5a059]">{titulo}</h2>
-      <div className="bg-gray-800 p-6 rounded-xl border border-gray-700" style={{ height: 350 }}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-type ChartProps = { dados: Array<{ dia: string; [key: string]: string | number }>; dataKey: string };
-function GraficoLinha({ dados, dataKey }: ChartProps) {
-  return (
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={dados}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="dia" />
-        <YAxis />
-        <Tooltip />
-        <Line type="monotone" dataKey={dataKey} stroke="#c5a059" strokeWidth={3} />
-      </LineChart>
-    </ResponsiveContainer>
-  );
-}
-
-function GraficoBar({ dados, dataKey }: ChartProps) {
-  return (
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={dados}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="dia" />
-        <YAxis />
-        <Tooltip />
-        <Bar dataKey={dataKey} fill="#c5a059" />
-      </BarChart>
-    </ResponsiveContainer>
-  );
+function Row({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+  return <div><dt>{label}</dt><dd className={strong ? 'admin-emphasis' : undefined}>{value}</dd></div>;
 }

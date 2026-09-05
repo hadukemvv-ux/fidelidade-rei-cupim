@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { validarDados } from '@/lib/validations';
+import { isOtpEnabled } from '@/lib/whatsappOtp';
 import {
   successResponse,
   validationErrorResponse,
@@ -50,8 +51,11 @@ export async function POST(request: NextRequest) {
     if (periodo === '90d') inicio.setDate(hoje.getDate() - 90);
 
     if (periodo && typeof periodo === 'object' && periodo.inicio && periodo.fim) {
-      inicio = new Date(periodo.inicio);
-      hoje.setTime(new Date(periodo.fim).getTime());
+      inicio = new Date(`${periodo.inicio}T00:00:00-03:00`);
+      hoje.setTime(new Date(`${periodo.fim}T23:59:59.999-03:00`).getTime());
+      if (Number.isNaN(inicio.getTime()) || Number.isNaN(hoje.getTime()) || inicio > hoje) {
+        return validationErrorResponse('Período inválido.');
+      }
     }
 
     const inicioISO = inicio.toISOString();
@@ -111,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     const { data: resgatesPeriodo, error: resgateError } = await supabaseAdmin
       .from('resgates')
-      .select('id, criado_em, tipo, produto_id, premio_nome')
+      .select('id, criado_em, tipo, produto_id, premio_nome, valor')
       .gte('criado_em', inicioISO)
       .lte('criado_em', fimISO);
 
@@ -131,6 +135,24 @@ export async function POST(request: NextRequest) {
       return handleApiError(girosError, '/api/admin/analytics', requestId);
     }
 
+    const [baseTotal, contasComPin, registrosTeste, verificacoesConcluidas] = await Promise.all([
+      supabaseAdmin.from('base_clientes_saipos').select('id', { count: 'exact', head: true }),
+      supabaseAdmin.from('base_clientes_saipos').select('id', { count: 'exact', head: true }).not('pin_hash', 'is', null).neq('pin_hash', ''),
+      supabaseAdmin.from('base_clientes_saipos').select('id', { count: 'exact', head: true }).or('nome.ilike.Cliente Teste %,email.ilike.%@teste.com'),
+      supabaseAdmin.from('otp_verificacoes').select('id', { count: 'exact', head: true }).eq('status', 'verificado'),
+    ]);
+
+    const countError = baseTotal.error || contasComPin.error || registrosTeste.error || verificacoesConcluidas.error;
+    if (countError) {
+      logError('/api/admin/analytics', countError as Error, { requestId });
+      return handleApiError(countError, '/api/admin/analytics', requestId);
+    }
+
+    const convidadosBeta = (process.env.WHATSAPP_OTP_BETA_PHONES || '')
+      .split(',')
+      .map((phone) => phone.trim())
+      .filter(Boolean).length;
+
     return successResponse({
       periodo: { inicio: inicioISO, fim: fimISO },
       clientesPeriodo: clientesPeriodo || [],
@@ -144,6 +166,16 @@ export async function POST(request: NextRequest) {
       pontosSaida: pontosSaida || [],
       resgatesPeriodo: resgatesPeriodo || [],
       giros: giros || [],
+      base: {
+        total: baseTotal.count || 0,
+        contasComPin: contasComPin.count || 0,
+        registrosTeste: registrosTeste.count || 0,
+      },
+      whatsapp: {
+        otpAtivo: isOtpEnabled(),
+        convidadosBeta,
+        verificacoesConcluidas: verificacoesConcluidas.count || 0,
+      },
     });
   } catch (error) {
     logError('/api/admin/analytics', error instanceof Error ? error : new Error(String(error)), {

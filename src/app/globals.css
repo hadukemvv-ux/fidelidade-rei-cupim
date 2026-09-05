@@ -450,6 +450,77 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 .admin-pagination button:disabled { opacity: .4; }
 .admin-pagination span { min-width: 4.5rem; color: #756862; font-size: .78rem; text-align: center; }
 
+.admin-rewards { display: grid; gap: 1rem; }
+.admin-notice.success { border-color: #16864f; background: #edf9f2; }
+.admin-delivery-rule { display: grid; gap: 1rem; padding: 1.15rem; overflow: hidden; border: 1px solid #342a26; border-radius: .55rem; background: radial-gradient(circle at 90% 10%, rgba(240,43,31,.2), transparent 30%), #211714; color: white; }
+.admin-delivery-rule > div > span { color: var(--gold); font-size: .68rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.admin-delivery-rule h2 { margin: .35rem 0 .45rem; font-size: 1.35rem; }
+.admin-delivery-rule p { max-width: 48rem; margin: 0; color: rgba(255,255,255,.62); font-size: .8rem; line-height: 1.5; }
+.admin-delivery-rule dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); margin: 0; border: 1px solid rgba(255,255,255,.1); }
+.admin-delivery-rule dl div { padding: .8rem; }
+.admin-delivery-rule dl div + div { border-left: 1px solid rgba(255,255,255,.1); }
+.admin-delivery-rule dt { color: rgba(255,255,255,.46); font-size: .65rem; font-weight: 900; text-transform: uppercase; }
+.admin-delivery-rule dd { margin: .3rem 0 0; color: white; font-size: 1rem; font-weight: 900; }
+.admin-delivery-rule > small { color: rgba(255,255,255,.48); font-size: .7rem; line-height: 1.4; }
+.admin-reward-controls { display: grid; gap: .7rem; padding: 1rem; border: 1px solid #ded7d2; border-radius: .55rem; background: white; }
+.admin-reward-controls label { display: grid; gap: .35rem; }
+.admin-reward-controls label > span, .admin-reward-form-grid label > span { color: #786a64; font-size: .7rem; font-weight: 900; text-transform: uppercase; }
+.admin-reward-controls input, .admin-reward-controls select { min-height: 3rem; padding: .65rem .8rem; }
+.admin-reward-controls > button { min-height: 3rem; padding: .65rem 1rem; border: 0; background: var(--ember); color: white; font-weight: 900; }
+.admin-reward-list { display: grid; gap: .7rem; }
+.admin-reward-list > article { display: grid; gap: .85rem; min-width: 0; padding: .85rem; border: 1px solid #ded7d2; border-radius: .55rem; background: white; box-shadow: 0 5px 20px rgba(46,31,25,.035); }
+.admin-reward-list > article.is-paused { background: #ebe8e5; }
+.admin-reward-image { width: 100%; height: 10rem; display: grid; place-items: center; overflow: hidden; border-radius: .4rem; background: #241b18; color: var(--gold); font-size: 2rem; }
+.admin-reward-image img { width: 100%; height: 100%; object-fit: cover; }
+.admin-reward-copy { min-width: 0; }
+.admin-reward-copy h2 { margin: .45rem 0 .3rem; font-size: 1rem; }
+.admin-reward-copy p { margin: 0; color: #766963; font-size: .76rem; line-height: 1.45; }
+.admin-reward-tags { display: flex; flex-wrap: wrap; gap: .3rem; }
+.admin-reward-tags span { padding: .25rem .4rem; border-radius: .3rem; background: #ece7e3; color: #5d504a; font-size: .63rem; font-weight: 900; text-transform: uppercase; }
+.admin-reward-tags span.published { background: #dff4e8; color: #12683d; }
+.admin-reward-tags span.paused { background: #ddd8d4; color: #635852; }
+.admin-reward-tags span.offer { background: #ffe1dd; color: #a51f18; }
+.admin-reward-cost { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); margin: 0; border-block: 1px solid #e8e2de; }
+.admin-reward-cost div { padding: .7rem .4rem; }
+.admin-reward-cost div + div { border-left: 1px solid #e8e2de; }
+.admin-reward-cost dt { color: #81736d; font-size: .65rem; font-weight: 800; text-transform: uppercase; }
+.admin-reward-cost dd { margin: .28rem 0 0; font-size: .9rem; font-weight: 900; }
+.admin-reward-cost div.offer dd { color: var(--ember-dark); }
+.admin-reward-actions { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .4rem; }
+.admin-reward-actions button { min-height: 2.65rem; padding: .55rem .45rem; border: 0; background: #251b18; color: white; font-size: .7rem; font-weight: 900; }
+.admin-reward-actions button.secondary { border: 1px solid #cfc6c0; background: white; color: #5f534e; }
+.admin-reward-actions button.publish { background: #16864f; }
+.admin-reward-actions button.pause { background: #8a5a16; }
+.admin-reward-actions button:disabled { opacity: .5; }
+.admin-reward-modal-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; align-items: end; padding: .75rem; overflow-y: auto; background: rgba(13,8,7,.72); backdrop-filter: blur(6px); }
+.admin-reward-modal { width: min(100%,42rem); max-height: calc(100svh - 1.5rem); margin: auto; overflow-y: auto; border-radius: .65rem; background: white; box-shadow: 0 25px 80px rgba(0,0,0,.35); }
+.admin-reward-modal > header { position: sticky; z-index: 2; top: 0; display: flex; align-items: start; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; border-bottom: 1px solid #e4ded9; background: rgba(255,255,255,.96); }
+.admin-reward-modal header span { color: var(--ember-dark); font-size: .65rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.admin-reward-modal header h2 { margin: .25rem 0 0; font-size: 1.2rem; }
+.admin-reward-modal header button { width: 2.3rem; height: 2.3rem; border: 1px solid #d6cfca; background: white; color: #382c28; font-size: 1.4rem; }
+.admin-reward-modal form { display: grid; gap: 1rem; padding: 1rem 1.1rem 1.2rem; }
+.admin-reward-form-grid { display: grid; gap: .8rem; }
+.admin-reward-form-grid label { display: grid; gap: .35rem; }
+.admin-reward-form-grid input, .admin-reward-form-grid select, .admin-reward-form-grid textarea { width: 100%; min-height: 3rem; padding: .65rem .75rem; }
+.admin-reward-form-grid textarea { resize: vertical; }
+.admin-reward-form-grid small { color: #81736d; font-size: .68rem; }
+.admin-reward-preview { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); border: 1px solid #ded7d2; background: #f6f3f1; }
+.admin-reward-preview div { padding: .8rem; }
+.admin-reward-preview div + div { border-left: 1px solid #ded7d2; }
+.admin-reward-preview span, .admin-reward-preview strong { display: block; }
+.admin-reward-preview span { color: #776963; font-size: .66rem; font-weight: 900; text-transform: uppercase; }
+.admin-reward-preview strong { margin-top: .3rem; font-size: 1.15rem; }
+.admin-reward-preview .offer strong { color: var(--ember-dark); }
+.admin-reward-switches { display: grid; gap: .55rem; }
+.admin-reward-switches label { display: grid; grid-template-columns: auto 1fr; gap: .7rem; align-items: start; padding: .8rem; border: 1px solid #ded7d2; border-radius: .4rem; cursor: pointer; }
+.admin-reward-switches input { width: 1.15rem; height: 1.15rem; margin-top: .1rem; accent-color: var(--ember); }
+.admin-reward-switches span { display: grid; gap: .2rem; }
+.admin-reward-switches strong { font-size: .8rem; }
+.admin-reward-switches small { color: #81736d; font-size: .7rem; line-height: 1.4; }
+.admin-reward-modal footer { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; }
+.admin-reward-modal footer button { min-height: 3rem; padding: .65rem; border: 0; background: var(--ember); color: white; font-weight: 900; }
+.admin-reward-modal footer button.secondary { border: 1px solid #cfc6c0; background: white; color: #5f534e; }
+
 .admin-login-page { min-height: 100svh; display: grid; background: #17110f; }
 .admin-login-brand { position: relative; min-height: 34svh; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; padding: 1rem 1.15rem 2.2rem; background: radial-gradient(circle at 15% 10%, rgba(240,43,31,.32), transparent 35%), #211714; }
 .admin-login-brand::after { content: "REI"; position: absolute; right: -1rem; bottom: -3rem; color: rgba(255,255,255,.025); font-family: var(--font-display); font-size: 14rem; line-height: 1; }
@@ -491,6 +562,16 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
   .admin-client-values { border: 0; }
   .admin-client-meta { padding-left: 1rem; border-left: 1px solid #ebe6e2; }
   .admin-client-list > article > button { min-width: 9.8rem; }
+  .admin-delivery-rule { grid-template-columns: minmax(18rem,1fr) minmax(15rem,.5fr); align-items: center; }
+  .admin-delivery-rule > small { grid-column: 1 / -1; }
+  .admin-reward-controls { grid-template-columns: minmax(18rem,1fr) minmax(13rem,.4fr) auto; align-items: end; }
+  .admin-reward-list > article { grid-template-columns: 6.5rem minmax(14rem,1.2fr) minmax(12rem,.7fr) minmax(15rem,auto); align-items: center; }
+  .admin-reward-image { width: 6.5rem; height: 6.5rem; }
+  .admin-reward-cost { border: 0; }
+  .admin-reward-actions { min-width: 15rem; }
+  .admin-reward-form-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .admin-reward-form-grid .wide { grid-column: 1 / -1; }
+  .admin-reward-switches { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .admin-login-page { grid-template-columns: 1fr 1fr; }
   .admin-login-brand { min-height: 100svh; padding: 2rem clamp(2rem,5vw,5rem) 4rem; }
   .admin-login-form-side { padding: 3rem; }

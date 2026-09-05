@@ -23,8 +23,8 @@ const CAMPOS_VALIDOS = [
   'ativo'
 ];
 
-function filtrarCampos(body: any) {
-  const permitido: any = {};
+function filtrarCampos(body: Record<string, unknown>) {
+  const permitido: Record<string, unknown> = {};
   for (const key of CAMPOS_VALIDOS) {
     if (body[key] !== undefined) permitido[key] = body[key];
   }
@@ -55,6 +55,37 @@ const ProdutoPostSchema = z.object({
 type ProdutoPutInput = z.infer<typeof ProdutoPutSchema>;
 type ProdutoPostInput = z.infer<typeof ProdutoPostSchema>;
 
+function normalizarImagem(value: unknown) {
+  if (value === null || value === undefined) return value;
+  const imagem = String(value).trim();
+  if (!imagem) return null;
+  if (/^https?:\/\//i.test(imagem)) return imagem;
+  return imagem.startsWith('/') ? imagem : `/${imagem}`;
+}
+
+// ================================
+// GET — Listar catálogo completo
+// ================================
+export async function GET(request: NextRequest) {
+  const requestId = getRequestId(request);
+  const authError = await validateAdminAuth(request, new URL(request.url));
+  if (authError) return authError;
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('produtos_loja')
+      .select('id, nome, descricao, imagem_url, custo_em_pontos, categoria, destaque, ativo')
+      .order('ativo', { ascending: false })
+      .order('destaque', { ascending: false })
+      .order('custo_em_pontos', { ascending: true });
+
+    if (error) return handleApiError(error, '/api/admin/produtos', requestId);
+    return successResponse({ produtos: data || [] });
+  } catch (error) {
+    return handleApiError(error, '/api/admin/produtos', requestId);
+  }
+}
+
 // ================================
 // PUT — Atualizar produto
 // ================================
@@ -80,9 +111,7 @@ export async function PUT(request: NextRequest) {
 
     const updates = filtrarCampos(validacao.data);
 
-    // Garantir formato correto do path da imagem
-    if (updates.imagem_url && !updates.imagem_url.startsWith('/'))
-      updates.imagem_url = '/' + updates.imagem_url;
+    if (updates.imagem_url !== undefined) updates.imagem_url = normalizarImagem(updates.imagem_url);
 
     const { data, error } = await supabaseAdmin
       .from('produtos_loja')
@@ -129,13 +158,13 @@ export async function POST(request: NextRequest) {
 
     const produto = filtrarCampos(validacao.data);
 
-    produto.ativo = produto.ativo ?? true;
+    // Recompensas novas começam pausadas para evitar publicação acidental.
+    produto.ativo = produto.ativo ?? false;
     produto.destaque = produto.destaque ?? false;
 
     if (!produto.categoria) produto.categoria = 'geral';
 
-    if (produto.imagem_url && !produto.imagem_url.startsWith('/'))
-      produto.imagem_url = '/' + produto.imagem_url;
+    if (produto.imagem_url !== undefined) produto.imagem_url = normalizarImagem(produto.imagem_url);
 
     const { data, error } = await supabaseAdmin
       .from('produtos_loja')

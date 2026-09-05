@@ -1,289 +1,180 @@
 'use client';
-import { fetchAdmin } from '@/lib/adminFetch';
-import { useState, useEffect } from 'react';
+/* eslint-disable @next/next/no-img-element -- Admin previews may use user-configured external URLs. */
 
-type Produto = {
-  id?: number;
-  nome?: string;
-  descricao?: string;
-  imagem_url?: string;
-  custo_em_pontos?: number;
-  custo_pontos?: number;
-  categoria?: string;
-  destaque?: boolean;
-};
+import { useEffect, useMemo, useState } from 'react';
+import { fetchAdmin } from '@/lib/adminFetch';
+import { CUSTO_ENTREGA_GRATIS_PONTOS, INTERVALO_ENTREGA_GRATIS_DIAS } from '@/lib/fidelidade-rules';
+
+type Produto = { id?: number; nome: string; descricao: string; imagem_url: string; custo_em_pontos: number; categoria: string; destaque: boolean; ativo: boolean };
+type StatusFilter = 'todos' | 'ativos' | 'pausados' | 'ofertas';
+
+const emptyProduct: Produto = { nome: '', descricao: '', imagem_url: '', custo_em_pontos: 0, categoria: 'prato', destaque: false, ativo: false };
+const categoryLabels: Record<string, string> = { prato: 'Prato', bebida: 'Bebida', sobremesa: 'Sobremesa', acompanhamento: 'Acompanhamento', beneficio: 'Benefício', geral: 'Geral' };
 
 export default function AdminCardapio() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<StatusFilter>('todos');
+  const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  useEffect(() => {
-    fetchProdutos();
-  }, []);
+  useEffect(() => { loadProducts(); }, []);
 
-  async function fetchProdutos() {
-    const res = await fetch('/api/produtos');
-    const data = await res.json();
-    setProdutos(Array.isArray(data) ? data : []);
-    setLoading(false);
-  }
-
-  async function toggleDestaque(produto: Produto) {
-    const novoStatus = !produto.destaque;
-
-    setProdutos(prev =>
-      prev.map(p => p.id === produto.id ? { ...p, destaque: novoStatus } : p)
-    );
-
+  async function loadProducts() {
+    setLoading(true);
     try {
-      const res = await fetchAdmin('/api/admin/produtos', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: produto.id, destaque: novoStatus })
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || 'Nao foi possivel atualizar o destaque.');
-      }
-    } catch (error: unknown) {
-      setProdutos(prev =>
-        prev.map(p => p.id === produto.id ? { ...p, destaque: produto.destaque } : p)
-      );
-      alert(error instanceof Error ? error.message : 'Erro ao atualizar destaque.');
-    }
+      const response = await fetchAdmin('/api/admin/produtos', { cache: 'no-store' });
+      const json = await response.json();
+      if (!response.ok || !json?.ok) throw new Error(json?.error || 'Não foi possível carregar as recompensas.');
+      setProdutos((json.data?.produtos || []).map(normalizeProduct));
+    } catch (cause) {
+      setNotice({ type: 'error', text: cause instanceof Error ? cause.message : 'Não foi possível carregar as recompensas.' });
+    } finally { setLoading(false); }
   }
 
-  async function salvarProduto(e: React.FormEvent) {
-    e.preventDefault();
+  const summary = useMemo(() => ({
+    total: produtos.length,
+    active: produtos.filter((item) => item.ativo).length,
+    paused: produtos.filter((item) => !item.ativo).length,
+    offers: produtos.filter((item) => item.ativo && item.destaque).length,
+  }), [produtos]);
+
+  const filteredProducts = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase('pt-BR');
+    return produtos.filter((item) => {
+      if (filter === 'ativos' && !item.ativo) return false;
+      if (filter === 'pausados' && item.ativo) return false;
+      if (filter === 'ofertas' && (!item.ativo || !item.destaque)) return false;
+      return !query || `${item.nome} ${item.descricao} ${item.categoria}`.toLocaleLowerCase('pt-BR').includes(query);
+    });
+  }, [produtos, search, filter]);
+
+  async function updateProduct(product: Produto, updates: Partial<Produto>, successText: string) {
+    if (!product.id) return;
+    setUpdatingId(product.id);
+    setNotice(null);
+    try {
+      const response = await fetchAdmin('/api/admin/produtos', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: product.id, ...updates }) });
+      const json = await response.json();
+      if (!response.ok || !json?.ok) throw new Error(json?.error || 'Não foi possível atualizar a recompensa.');
+      setProdutos((current) => current.map((item) => item.id === product.id ? { ...item, ...json.data.produto } : item));
+      setNotice({ type: 'success', text: successText });
+    } catch (cause) {
+      setNotice({ type: 'error', text: cause instanceof Error ? cause.message : 'Não foi possível atualizar a recompensa.' });
+    } finally { setUpdatingId(null); }
+  }
+
+  function toggleActive(product: Produto) {
+    const next = !product.ativo;
+    const message = next ? `Publicar “${product.nome}” agora? Ela aparecerá imediatamente para os clientes.` : `Pausar “${product.nome}”? Ela deixará de aparecer para os clientes, mas não será apagada.`;
+    if (!window.confirm(message)) return;
+    updateProduct(product, { ativo: next }, next ? 'Recompensa publicada.' : 'Recompensa pausada.');
+  }
+
+  function toggleOffer(product: Produto) {
+    const next = !product.destaque;
+    const discounted = Math.floor(Number(product.custo_em_pontos || 0) * .5);
+    const message = next ? `Ativar oferta de 50% em “${product.nome}”? O cliente passará a pagar ${points(discounted)} enquanto a oferta estiver ativa.` : `Encerrar a oferta de “${product.nome}”? O preço voltará para ${points(product.custo_em_pontos)}.`;
+    if (!window.confirm(message)) return;
+    updateProduct(product, { destaque: next }, next ? 'Oferta de 50% ativada.' : 'Oferta encerrada.');
+  }
+
+  async function saveProduct(event: React.FormEvent) {
+    event.preventDefault();
     if (!produtoEditando) return;
-    const isNew = !produtoEditando.id;
-    const method = isNew ? 'POST' : 'PUT';
-
+    setSaving(true);
+    setNotice(null);
     try {
-      const res = await fetchAdmin('/api/admin/produtos', {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(produtoEditando)
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error || 'Nao foi possivel salvar o produto.');
-      }
-
+      const isNew = !produtoEditando.id;
+      const response = await fetchAdmin('/api/admin/produtos', { method: isNew ? 'POST' : 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(produtoEditando) });
+      const json = await response.json();
+      if (!response.ok || !json?.ok) throw new Error(json?.error || 'Não foi possível salvar a recompensa.');
       setModalOpen(false);
-      fetchProdutos();
-    } catch (error: unknown) {
-      alert(error instanceof Error ? error.message : 'Erro ao salvar produto.');
-    }
+      setProdutoEditando(null);
+      setNotice({ type: 'success', text: isNew ? 'Recompensa criada como rascunho.' : 'Recompensa atualizada.' });
+      await loadProducts();
+    } catch (cause) {
+      setNotice({ type: 'error', text: cause instanceof Error ? cause.message : 'Não foi possível salvar a recompensa.' });
+    } finally { setSaving(false); }
   }
 
-  return (
-    <div className="space-y-12">
+  return <div className="admin-rewards">
+    <section className="admin-client-summary" aria-label="Resumo das recompensas">
+      <Summary label="Catálogo" value={summary.total} note="Sem exclusões automáticas" />
+      <Summary label="Publicadas" value={summary.active} note="Visíveis para clientes" accent />
+      <Summary label="Pausadas" value={summary.paused} note="Guardadas para depois" />
+      <Summary label="Ofertas 50%" value={summary.offers} note="Ativas neste momento" warning />
+    </section>
 
-      {/* TÍTULO */}
-      <div>
-        <h1 className="text-3xl font-black text-[#c5a059]">Gestão de Cardápio</h1>
-        <p className="text-zinc-400">Controle total dos produtos resgatáveis por pontos.</p>
-      </div>
+    <section className="admin-delivery-rule">
+      <div><span>Benefício fixo de entrada</span><h2>Taxa de entrega grátis</h2><p>O bônus do cadastro paga a primeira entrega. Depois, cada cliente só pode repetir o benefício quando completar o intervalo.</p></div>
+      <dl><div><dt>Custo</dt><dd>{points(CUSTO_ENTREGA_GRATIS_PONTOS)}</dd></div><div><dt>Intervalo</dt><dd>{INTERVALO_ENTREGA_GRATIS_DIAS} dias</dd></div></dl>
+      <small>Esta regra está protegida no sistema e não é alterada ao editar os produtos abaixo.</small>
+    </section>
 
-      {/* BOTÃO NOVO PRODUTO */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => { setProdutoEditando({}); setModalOpen(true); }}
-          className="bg-[#e31e24] hover:bg-[#c1191f] text-white font-bold px-6 py-2 rounded-lg"
-        >
-          + Novo Produto
-        </button>
-      </div>
+    {notice && <div className={`admin-notice ${notice.type === 'error' ? 'error' : 'success'}`} role="status"><strong>{notice.type === 'error' ? 'Ação não concluída' : 'Tudo certo'}</strong><span>{notice.text}</span></div>}
 
-      {/* GRID DE PRODUTOS */}
-      {loading ? (
-        <p>Carregando cardápio...</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <section className="admin-reward-controls" aria-label="Pesquisa e filtros">
+      <label><span>Buscar recompensa</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome, descrição ou categoria" /></label>
+      <label><span>Mostrar</span><select value={filter} onChange={(event) => setFilter(event.target.value as StatusFilter)}><option value="todos">Todo o catálogo</option><option value="ativos">Somente publicadas</option><option value="pausados">Somente pausadas</option><option value="ofertas">Ofertas de 50%</option></select></label>
+      <button type="button" onClick={() => { setProdutoEditando({ ...emptyProduct }); setModalOpen(true); }}>+ Nova recompensa</button>
+    </section>
 
-          {Array.isArray(produtos) && produtos.map(produto => (
-            <div
-              key={produto.id}
-              className={`bg-zinc-800 rounded-xl overflow-hidden border ${
-                produto.destaque
-                  ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]'
-                  : 'border-zinc-700'
-              }`}
-            >
+    <div className="admin-client-result-bar"><span><strong>{filteredProducts.length}</strong> {filteredProducts.length === 1 ? 'recompensa encontrada' : 'recompensas encontradas'}</span><span>Novas recompensas começam pausadas</span></div>
 
-              {/* Imagem */}
-              <div className="h-40 bg-black/50 relative">
-                {produto.imagem_url ? (
-                  <img
-                    src={produto.imagem_url}
-                    alt={produto.nome || 'Produto resgatável'}
-                    className="w-full h-full object-cover opacity-80"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl">
-                    🥘
-                  </div>
-                )}
+    {loading ? <div className="admin-loading">Carregando recompensas…</div> : filteredProducts.length === 0 ? <div className="admin-empty"><strong>Nenhuma recompensa encontrada.</strong><span>Altere o filtro ou procure por outro termo.</span></div> : <section className="admin-reward-list" aria-label="Catálogo de recompensas">
+      {filteredProducts.map((product) => {
+        const normalCost = Number(product.custo_em_pontos || 0);
+        const customerCost = product.destaque ? Math.floor(normalCost * .5) : normalCost;
+        const busy = updatingId === product.id;
+        return <article key={product.id} className={!product.ativo ? 'is-paused' : ''}>
+          <div className="admin-reward-image">{product.imagem_url ? <img src={product.imagem_url} alt="" /* Admin preview may use user-configured external URLs. */ /> : <span aria-hidden="true">★</span>}</div>
+          <div className="admin-reward-copy"><div className="admin-reward-tags"><span>{categoryLabels[product.categoria] || product.categoria || 'Geral'}</span><span className={product.ativo ? 'published' : 'paused'}>{product.ativo ? 'Publicada' : 'Pausada'}</span>{product.destaque && <span className="offer">Oferta 50%</span>}</div><h2>{product.nome || 'Sem nome'}</h2><p>{product.descricao || 'Sem descrição.'}</p></div>
+          <dl className="admin-reward-cost"><div><dt>Preço normal</dt><dd>{points(normalCost)}</dd></div><div className={product.destaque ? 'offer' : ''}><dt>Cliente paga</dt><dd>{points(customerCost)}</dd></div></dl>
+          <div className="admin-reward-actions"><button type="button" className="secondary" onClick={() => { setProdutoEditando({ ...product }); setModalOpen(true); }} disabled={busy}>Editar</button><button type="button" className={product.destaque ? 'secondary' : ''} onClick={() => toggleOffer(product)} disabled={busy}>{busy ? 'Salvando…' : product.destaque ? 'Encerrar 50%' : 'Ativar 50%'}</button><button type="button" className={product.ativo ? 'pause' : 'publish'} onClick={() => toggleActive(product)} disabled={busy}>{busy ? 'Salvando…' : product.ativo ? 'Pausar' : 'Publicar'}</button></div>
+        </article>;
+      })}
+    </section>}
 
-                {produto.destaque && (
-                  <div className="absolute top-2 right-2 bg-green-600 text-white text-xs font-bold px-2 py-1 rounded">
-                    EM PROMOÇÃO
-                  </div>
-                )}
-              </div>
+    <div className="admin-notice"><strong>Nada é apagado nesta tela.</strong><span>“Pausar” apenas esconde a recompensa dos clientes. “Oferta 50%” reduz pela metade o custo cobrado no site e no servidor.</span></div>
 
-              {/* Conteúdo */}
-              <div className="p-4">
-                <div className="flex justify-between mb-2">
-                  <h3 className="font-bold text-lg">{produto.nome}</h3>
-                  <span className="text-[#c5a059] font-bold text-sm">
-                    {produto.custo_pontos || produto.custo_em_pontos} pts
-                  </span>
-                </div>
-
-                <p className="text-xs text-zinc-400 mb-4 h-10 overflow-hidden">
-                  {produto.descricao}
-                </p>
-
-                {/* Controles */}
-                <div className="flex items-center justify-between pt-4 border-t border-zinc-700">
-
-                  {/* PROMOÇÃO */}
-                  <button
-                    onClick={() => toggleDestaque(produto)}
-                    className="flex items-center gap-2 cursor-pointer select-none bg-transparent border-0"
-                    aria-pressed={Boolean(produto.destaque)}
-                    aria-label={`${produto.destaque ? 'Remover' : 'Adicionar'} ${produto.nome} dos destaques`}
-                  >
-                    <div
-                      className={`w-10 h-6 rounded-full p-1 transition-colors ${
-                        produto.destaque ? 'bg-green-500' : 'bg-zinc-600'
-                      }`}
-                    >
-                      <div
-                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                          produto.destaque ? 'translate-x-4' : 'translate-x-0'
-                        }`}
-                      ></div>
-                    </div>
-                    <span className="text-xs font-bold">
-                      {produto.destaque ? 'Promoção' : 'Normal'}
-                    </span>
-                  </button>
-
-                  {/* EDITAR */}
-                  <button
-                    onClick={() => { setProdutoEditando(produto); setModalOpen(true); }}
-                    className="text-sm bg-zinc-700 hover:bg-zinc-600 px-3 py-1 rounded transition-colors"
-                  >
-                    ✏️ Editar
-                  </button>
-
-                </div>
-              </div>
-            </div>
-          ))}
-
+    {modalOpen && produtoEditando && <div className="admin-reward-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setModalOpen(false); }}><section className="admin-reward-modal" role="dialog" aria-modal="true" aria-labelledby="reward-dialog-title">
+      <header><div><span>{produtoEditando.id ? 'Editar catálogo' : 'Nova recompensa'}</span><h2 id="reward-dialog-title">{produtoEditando.id ? produtoEditando.nome : 'Criar recompensa'}</h2></div><button type="button" onClick={() => setModalOpen(false)} disabled={saving} aria-label="Fechar">×</button></header>
+      <form onSubmit={saveProduct}>
+        <div className="admin-reward-form-grid">
+          <label className="wide"><span>Nome</span><input value={produtoEditando.nome} onChange={(event) => setProdutoEditando({ ...produtoEditando, nome: event.target.value })} required maxLength={255} /></label>
+          <label className="wide"><span>Descrição curta</span><textarea value={produtoEditando.descricao} onChange={(event) => setProdutoEditando({ ...produtoEditando, descricao: event.target.value })} maxLength={1000} rows={3} /></label>
+          <label><span>Preço normal em pontos</span><input type="number" min="1" step="1" value={produtoEditando.custo_em_pontos || ''} onChange={(event) => setProdutoEditando({ ...produtoEditando, custo_em_pontos: Number(event.target.value) })} required /></label>
+          <label><span>Categoria</span><select value={produtoEditando.categoria} onChange={(event) => setProdutoEditando({ ...produtoEditando, categoria: event.target.value })}><option value="prato">Prato</option><option value="bebida">Bebida</option><option value="sobremesa">Sobremesa</option><option value="acompanhamento">Acompanhamento</option><option value="beneficio">Benefício</option><option value="geral">Geral</option></select></label>
+          <label className="wide"><span>Imagem</span><input value={produtoEditando.imagem_url} onChange={(event) => setProdutoEditando({ ...produtoEditando, imagem_url: event.target.value })} placeholder="/produtos/foto.jpg ou https://…" maxLength={2048} /><small>Use uma imagem do site ou um endereço público começando com https://.</small></label>
         </div>
-      )}
+        <section className="admin-reward-preview"><div><span>Preço normal</span><strong>{points(produtoEditando.custo_em_pontos)}</strong></div><div className={produtoEditando.destaque ? 'offer' : ''}><span>Cliente pagará</span><strong>{points(produtoEditando.destaque ? Math.floor(produtoEditando.custo_em_pontos * .5) : produtoEditando.custo_em_pontos)}</strong></div></section>
+        <div className="admin-reward-switches"><label><input type="checkbox" checked={produtoEditando.destaque} onChange={(event) => setProdutoEditando({ ...produtoEditando, destaque: event.target.checked })} /><span><strong>Oferta de 50%</strong><small>Reduz imediatamente o custo para o cliente quando publicada.</small></span></label><label><input type="checkbox" checked={produtoEditando.ativo} onChange={(event) => setProdutoEditando({ ...produtoEditando, ativo: event.target.checked })} /><span><strong>Publicar para clientes</strong><small>Desmarcado, fica salvo como rascunho.</small></span></label></div>
+        <footer><button type="button" className="secondary" onClick={() => setModalOpen(false)} disabled={saving}>Cancelar</button><button type="submit" disabled={saving}>{saving ? 'Salvando…' : produtoEditando.id ? 'Salvar alterações' : produtoEditando.ativo ? 'Criar e publicar' : 'Salvar rascunho'}</button></footer>
+      </form>
+    </section></div>}
+  </div>;
+}
 
-      {/* MODAL */}
-      {modalOpen && produtoEditando && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-800 p-6 rounded-xl w-full max-w-lg border border-zinc-700">
+function Summary({ label, value, note, accent, warning }: { label: string; value: number; note: string; accent?: boolean; warning?: boolean }) {
+  return <article className={accent ? 'accent' : warning ? 'warning' : ''}><span>{label}</span><strong>{value.toLocaleString('pt-BR')}</strong><small>{note}</small></article>;
+}
 
-            <h2 className="text-xl font-bold text-[#c5a059] mb-4">
-              {produtoEditando.id ? 'Editar Produto' : 'Novo Produto'}
-            </h2>
+function points(value: number) { return `${Number(value || 0).toLocaleString('pt-BR')} pts`; }
 
-            <form onSubmit={salvarProduto} className="space-y-4">
-
-              <div>
-                <label className="block text-xs uppercase text-zinc-500 mb-1">Nome</label>
-                <input
-                  value={produtoEditando.nome || ''}
-                  onChange={e => setProdutoEditando({ ...produtoEditando, nome: e.target.value })}
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase text-zinc-500 mb-1">Descrição</label>
-                <textarea
-                  value={produtoEditando.descricao || ''}
-                  onChange={e => setProdutoEditando({ ...produtoEditando, descricao: e.target.value })}
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white h-20"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase text-zinc-500 mb-1">Custo em Pontos</label>
-                <input
-                  type="number"
-                  value={produtoEditando.custo_em_pontos || produtoEditando.custo_pontos || ''}
-                  onChange={e =>
-                    setProdutoEditando({
-                      ...produtoEditando,
-                      custo_em_pontos: Number(e.target.value)
-                    })
-                  }
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase text-zinc-500 mb-1">Categoria</label>
-                <select
-                  value={produtoEditando.categoria || 'geral'}
-                  onChange={e => setProdutoEditando({ ...produtoEditando, categoria: e.target.value })}
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white"
-                >
-                  <option value="prato">Prato</option>
-                  <option value="bebida">Bebida</option>
-                  <option value="sobremesa">Sobremesa</option>
-                  <option value="acompanhamento">Acompanhamento</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase text-zinc-500 mb-1">Imagem</label>
-                <input
-                  value={produtoEditando.imagem_url || ''}
-                  onChange={e => setProdutoEditando({ ...produtoEditando, imagem_url: e.target.value })}
-                  placeholder="/produtos/file.png"
-                  className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-white"
-                />
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="flex-1 py-3 text-zinc-400 hover:text-white"
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  type="submit"
-                  className="flex-1 bg-[#e31e24] font-bold rounded py-3 hover:bg-[#c1191f]"
-                >
-                  Salvar
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      )}
-
-    </div>
-  );
+function normalizeProduct(value: Partial<Produto>): Produto {
+  return {
+    id: value.id,
+    nome: value.nome || '',
+    descricao: value.descricao || '',
+    imagem_url: value.imagem_url || '',
+    custo_em_pontos: Number(value.custo_em_pontos || 0),
+    categoria: value.categoria || 'geral',
+    destaque: Boolean(value.destaque),
+    ativo: Boolean(value.ativo),
+  };
 }

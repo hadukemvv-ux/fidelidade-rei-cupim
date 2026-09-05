@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { sortearPremioPorPeso, type NivelRoleta } from '@/lib/roleta-rules';
 
 export const dynamic = 'force-dynamic';
 
@@ -202,27 +203,10 @@ export async function POST(req: Request) {
 
     if (!premios) throw new Error('Sem prêmios cadastrados.');
 
-    const urna: Array<(typeof premios)[number]> = [];
-
-    premios.forEach(premio => {
-      if (premio.nome.toLowerCase().includes('playstation')) return;
-
-      let chance = premio.probabilidade || 1;
-
-      if (premio.tipo === 'nada') {
-        if (sufixo === 2) chance = Math.max(1, Math.floor(chance * 0.7));
-        if (sufixo === 3) chance = Math.max(1, Math.floor(chance * 0.4));
-      } else {
-        if (sufixo === 2) chance = Math.floor(chance * 1.5);
-        if (sufixo === 3) chance = Math.floor(chance * 2.5);
-      }
-
-      for (let i = 0; i < chance; i++) urna.push(premio);
-    });
-
-    if (urna.length === 0) urna.push(premios[0]);
-
-    const premioSorteado = urna[Math.floor(Math.random() * urna.length)];
+    const randomBuffer = new Uint32Array(1);
+    crypto.getRandomValues(randomBuffer);
+    const premioSorteado = sortearPremioPorPeso(premios, sufixo as NivelRoleta, randomBuffer[0] / 2 ** 32);
+    if (!premioSorteado) throw new Error('Sem prêmios elegíveis para esta roleta.');
     let ehNovo = false;
 
     // GARANTIR QUE O CLIENTE EXISTE SEMPRE (PRIMEIRA AÇÃO)

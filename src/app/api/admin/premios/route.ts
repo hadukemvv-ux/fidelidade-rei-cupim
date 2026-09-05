@@ -23,6 +23,7 @@ const PremioUpdateSchema = z.object({
   probabilidade: z.coerce.number().int().min(0).max(100000).optional(),
   ativo: z.boolean().optional(),
   valor: z.coerce.number().min(0).optional(),
+  participa_roleta: z.boolean().optional(),
 });
 
 type PremioUpdateInput = z.infer<typeof PremioUpdateSchema>;
@@ -75,23 +76,39 @@ export async function PUT(request: NextRequest) {
       return errorResponse('Nenhum campo valido para atualizar', 'validation_error');
     }
 
+    const { data: atual, error: atualError } = await supabaseAdmin
+      .from('premios_roleta')
+      .select('nome')
+      .eq('id', id)
+      .maybeSingle();
+    if (atualError) return handleApiError(atualError, '/api/admin/premios', requestId);
+    if (!atual) return errorResponse('Prêmio não encontrado', 'not_found', 404, requestId);
+
+    // A sátira do PlayStation é sempre visual e nunca entra no sorteio real.
+    if (/playstation/i.test(atual.nome || '') || /playstation/i.test(updateData.nome || '')) {
+      updateData.participa_roleta = false;
+    }
+
     logInfo('/api/admin/premios', 'Atualizando premio da roleta', {
       id,
       campos: Object.keys(updateData),
       requestId,
     });
 
-    const { error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('premios_roleta')
       .update(updateData)
-      .eq('id', id);
+      .eq('id', id)
+      .select('*')
+      .maybeSingle();
 
     if (error) {
       logError('/api/admin/premios', error as Error, { id, requestId });
       return handleApiError(error, '/api/admin/premios', requestId);
     }
 
-    return successResponse({ atualizado: true, id });
+    if (!data) return errorResponse('Prêmio não encontrado', 'not_found', 404, requestId);
+    return successResponse({ premio: data });
   } catch (error) {
     logError('/api/admin/premios', error instanceof Error ? error : new Error(String(error)), {
       requestId,

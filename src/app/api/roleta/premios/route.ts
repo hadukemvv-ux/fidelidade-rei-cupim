@@ -18,8 +18,10 @@ export async function GET() {
     }
 
     // 2. Se não tiver nada, retorna array vazio (o front avisa)
+    // Itens especiais podem aparecer como sátira visual mesmo com chance real zero.
     return NextResponse.json(premios || []);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    console.error('[GET /api/roleta/premios]', error);
     return NextResponse.json({ error: 'Erro ao buscar prêmios.' }, { status: 500 });
   }
 }

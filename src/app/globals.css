@@ -521,6 +521,50 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 .admin-reward-modal footer button { min-height: 3rem; padding: .65rem; border: 0; background: var(--ember); color: white; font-weight: 900; }
 .admin-reward-modal footer button.secondary { border: 1px solid #cfc6c0; background: white; color: #5f534e; }
 
+.admin-wheel { display: grid; gap: 1rem; }
+.admin-wheel-overview { display: grid; gap: 1rem; padding: 1.15rem; border-radius: .55rem; background: radial-gradient(circle at 92% 12%, rgba(240,43,31,.22), transparent 30%), #211714; color: white; }
+.admin-wheel-overview > div:first-child > span { color: var(--gold); font-size: .68rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.admin-wheel-overview h2 { margin: .35rem 0 .3rem; font-size: 1.45rem; }
+.admin-wheel-overview p { margin: 0; color: rgba(255,255,255,.58); font-size: .78rem; }
+.admin-wheel-levels { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .35rem; }
+.admin-wheel-levels button { min-height: 2.75rem; border: 1px solid rgba(255,255,255,.17); background: transparent; color: rgba(255,255,255,.65); font-size: .76rem; font-weight: 900; }
+.admin-wheel-levels button.active { border-color: var(--ember); background: var(--ember); color: white; }
+.admin-wheel-overview > dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); margin: 0; border: 1px solid rgba(255,255,255,.1); }
+.admin-wheel-overview > dl div { padding: .8rem; }
+.admin-wheel-overview > dl div + div { border-left: 1px solid rgba(255,255,255,.1); }
+.admin-wheel-overview dt { color: rgba(255,255,255,.48); font-size: .65rem; font-weight: 900; text-transform: uppercase; }
+.admin-wheel-overview dd { margin: .3rem 0 0; color: white; font-size: 1.35rem; font-weight: 900; }
+.admin-wheel-help { display: grid; gap: .2rem; padding: .9rem 1rem; border-left: 4px solid #4d71ba; background: #eef4ff; color: #4d596f; }
+.admin-wheel-help strong { color: #293952; font-size: .82rem; }
+.admin-wheel-help span { font-size: .76rem; line-height: 1.45; }
+.admin-wheel-list { display: grid; gap: .7rem; }
+.admin-wheel-list > article { display: grid; gap: .85rem; min-width: 0; padding: 1rem; border: 1px solid #ded7d2; border-radius: .55rem; background: white; box-shadow: 0 5px 20px rgba(46,31,25,.035); }
+.admin-wheel-list > article.is-paused { background: #ebe8e5; }
+.admin-wheel-list > article.is-reserved { border-color: #e0b773; box-shadow: inset 4px 0 #c98015; }
+.admin-wheel-identity { display: grid; grid-template-columns: 3.3rem minmax(0,1fr); gap: .75rem; align-items: start; }
+.admin-wheel-identity > label input { width: 3.3rem; height: 3.3rem; padding: .35rem; text-align: center; font-size: 1.55rem; }
+.admin-wheel-identity > div { min-width: 0; }
+.admin-wheel-identity > div > label, .admin-wheel-message, .admin-wheel-settings > label:not(.check) { display: grid; gap: .3rem; }
+.admin-wheel-identity label > span, .admin-wheel-message > span, .admin-wheel-settings label > span { color: #786a64; font-size: .66rem; font-weight: 900; text-transform: uppercase; }
+.admin-wheel-identity > div > label { margin-top: .45rem; }
+.admin-wheel-identity > div > label input { width: 100%; min-height: 2.65rem; padding: .55rem .7rem; font-weight: 900; }
+.admin-wheel-message input, .admin-wheel-settings input[type="number"] { width: 100%; min-height: 2.7rem; padding: .55rem .7rem; }
+.admin-wheel-settings { display: grid; grid-template-columns: minmax(6rem,.7fr) repeat(2,minmax(0,1fr)); gap: .5rem; align-items: end; }
+.admin-wheel-settings .check { min-height: 2.7rem; display: flex; align-items: center; gap: .45rem; padding: .55rem .65rem; border: 1px solid #ded7d2; background: #faf8f6; cursor: pointer; }
+.admin-wheel-settings .check input { width: 1rem; height: 1rem; accent-color: var(--ember); }
+.admin-wheel-settings .check span { line-height: 1.2; }
+.admin-wheel-odds { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); margin: 0; border-block: 1px solid #e8e2de; }
+.admin-wheel-odds div { padding: .65rem .35rem; }
+.admin-wheel-odds div + div { border-left: 1px solid #e8e2de; }
+.admin-wheel-odds dt { color: #81736d; font-size: .64rem; font-weight: 900; text-transform: uppercase; }
+.admin-wheel-odds dd { margin: .25rem 0 0; font-size: .88rem; font-weight: 900; }
+.admin-wheel-list footer { display: flex; align-items: center; justify-content: space-between; gap: .7rem; }
+.admin-wheel-list footer > span { color: #81736d; font-size: .68rem; }
+.admin-wheel-list footer > div { display: flex; gap: .4rem; }
+.admin-wheel-list footer button { min-height: 2.6rem; padding: .55rem .85rem; border: 0; background: var(--ember); color: white; font-size: .72rem; font-weight: 900; }
+.admin-wheel-list footer button.secondary { border: 1px solid #cfc6c0; background: white; color: #5f534e; }
+.admin-wheel-list footer button:disabled { opacity: .42; }
+
 .admin-login-page { min-height: 100svh; display: grid; background: #17110f; }
 .admin-login-brand { position: relative; min-height: 34svh; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; padding: 1rem 1.15rem 2.2rem; background: radial-gradient(circle at 15% 10%, rgba(240,43,31,.32), transparent 35%), #211714; }
 .admin-login-brand::after { content: "REI"; position: absolute; right: -1rem; bottom: -3rem; color: rgba(255,255,255,.025); font-family: var(--font-display); font-size: 14rem; line-height: 1; }
@@ -572,6 +616,8 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
   .admin-reward-form-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .admin-reward-form-grid .wide { grid-column: 1 / -1; }
   .admin-reward-switches { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .admin-wheel-overview { grid-template-columns: minmax(16rem,1fr) minmax(15rem,.65fr) minmax(16rem,.7fr); align-items: center; }
+  .admin-wheel-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .admin-login-page { grid-template-columns: 1fr 1fr; }
   .admin-login-brand { min-height: 100svh; padding: 2rem clamp(2rem,5vw,5rem) 4rem; }
   .admin-login-form-side { padding: 3rem; }

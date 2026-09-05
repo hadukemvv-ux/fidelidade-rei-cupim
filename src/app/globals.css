@@ -405,6 +405,51 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 .admin-pilot-card footer i { width: .48rem; height: .48rem; flex: 0 0 auto; border-radius: 50%; background: #d99a31; }
 .admin-pilot-card footer i.ready { background: #39b978; }
 
+.admin-clients { display: grid; gap: 1rem; }
+.admin-client-summary { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .65rem; }
+.admin-client-summary article { min-width: 0; padding: .9rem 1rem; border: 1px solid #ded7d2; border-radius: .55rem; background: white; }
+.admin-client-summary span, .admin-client-summary small { display: block; }
+.admin-client-summary span { color: #786a64; font-size: .75rem; font-weight: 900; text-transform: uppercase; }
+.admin-client-summary strong { display: block; margin: .45rem 0 .3rem; font-size: clamp(1.5rem, 5vw, 2rem); line-height: 1; }
+.admin-client-summary small { color: #81736d; font-size: .75rem; }
+.admin-client-summary article.accent { border-color: #eda39d; background: #fff1ef; }
+.admin-client-summary article.accent strong { color: var(--ember-dark); }
+.admin-client-summary article.warning strong { color: #9a5b09; }
+.admin-client-controls { display: grid; gap: .7rem; padding: 1rem; border: 1px solid #ded7d2; border-radius: .55rem; background: white; }
+.admin-client-controls label { display: grid; gap: .35rem; }
+.admin-client-controls label > span { color: #786a64; font-size: .75rem; font-weight: 900; text-transform: uppercase; }
+.admin-client-controls input, .admin-client-controls select { min-height: 3rem; padding: .65rem .8rem; font-size: .9rem; }
+.admin-client-controls > button { min-height: 3rem; padding: .65rem 1rem; border: 1px solid #cfc6c0; background: #251b18; color: white; font-weight: 900; }
+.admin-client-result-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; color: #756862; font-size: .8rem; }
+.admin-client-result-bar strong { color: #241b18; }
+.admin-client-list { display: grid; gap: .65rem; }
+.admin-client-list > article { display: grid; gap: .85rem; min-width: 0; padding: 1rem; border: 1px solid #ded7d2; border-radius: .55rem; background: white; box-shadow: 0 5px 20px rgba(46,31,25,.035); }
+.admin-client-list > article.is-pilot { border-color: #ef7770; box-shadow: inset 4px 0 var(--ember); }
+.admin-client-identity { display: grid; grid-template-columns: 2.7rem minmax(0,1fr); gap: .7rem; align-items: start; min-width: 0; }
+.admin-client-avatar { display: grid; width: 2.7rem; height: 2.7rem; place-items: center; border-radius: 50%; background: #251b18; color: white; font-size: .8rem; font-weight: 900; }
+.admin-client-identity h2 { overflow: hidden; margin: 0 0 .22rem; font-size: 1rem; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.admin-client-identity p { overflow: hidden; margin: 0; color: #766963; font-size: .78rem; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+.admin-client-tags { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .55rem; }
+.admin-client-tags span { padding: .27rem .42rem; border-radius: .3rem; background: #ece7e3; color: #5d504a; font-size: .68rem; font-weight: 900; text-transform: uppercase; }
+.admin-client-tags span.success { background: #dff4e8; color: #12683d; }
+.admin-client-tags span.pilot { background: #ffe1dd; color: #a51f18; }
+.admin-client-tags span.warning { background: #fff0c9; color: #81500c; }
+.admin-client-values { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); margin: 0; border-block: 1px solid #ebe6e2; }
+.admin-client-values div { min-width: 0; padding: .7rem .35rem; border-right: 1px solid #ebe6e2; }
+.admin-client-values div:last-child { border-right: 0; }
+.admin-client-values dt { color: #81736d; font-size: .68rem; font-weight: 800; text-transform: uppercase; }
+.admin-client-values dd { overflow: hidden; margin: .28rem 0 0; font-size: .84rem; font-weight: 900; text-overflow: ellipsis; }
+.admin-client-meta { display: grid; gap: .4rem; color: #5f534e; font-size: .76rem; }
+.admin-client-meta span { display: flex; justify-content: space-between; gap: 1rem; }
+.admin-client-meta b { color: #81736d; font-weight: 700; }
+.admin-client-list > article > button { min-height: 2.75rem; padding: .6rem .8rem; border: 0; background: var(--ember); color: white; font-size: .8rem; font-weight: 900; }
+.admin-client-list > article > button.remove { border: 1px solid #cfc6c0; background: white; color: #6b5e58; }
+.admin-client-list > article > button:disabled { cursor: not-allowed; opacity: .45; }
+.admin-pagination { display: flex; align-items: center; justify-content: center; gap: .7rem; }
+.admin-pagination button { min-height: 2.75rem; padding: .55rem .8rem; border: 1px solid #cfc6c0; background: white; color: #352925; font-weight: 900; }
+.admin-pagination button:disabled { opacity: .4; }
+.admin-pagination span { min-width: 4.5rem; color: #756862; font-size: .78rem; text-align: center; }
+
 .admin-login-page { min-height: 100svh; display: grid; background: #17110f; }
 .admin-login-brand { position: relative; min-height: 34svh; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; padding: 1rem 1.15rem 2.2rem; background: radial-gradient(circle at 15% 10%, rgba(240,43,31,.32), transparent 35%), #211714; }
 .admin-login-brand::after { content: "REI"; position: absolute; right: -1rem; bottom: -3rem; color: rgba(255,255,255,.025); font-family: var(--font-display); font-size: 14rem; line-height: 1; }
@@ -440,6 +485,12 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
   .admin-pilot-stats { grid-template-columns: repeat(4, minmax(0,1fr)); }
   .admin-pilot-stats article { border-right: 1px solid rgba(255,255,255,.09); border-bottom: 0; }
   .admin-pilot-stats article:last-child { border-right: 0; }
+  .admin-client-summary { grid-template-columns: repeat(4, minmax(0,1fr)); }
+  .admin-client-controls { grid-template-columns: minmax(18rem,1fr) minmax(13rem,.4fr) auto; align-items: end; }
+  .admin-client-list > article { grid-template-columns: minmax(16rem,1.3fr) minmax(18rem,1fr) minmax(14rem,.8fr) auto; align-items: center; }
+  .admin-client-values { border: 0; }
+  .admin-client-meta { padding-left: 1rem; border-left: 1px solid #ebe6e2; }
+  .admin-client-list > article > button { min-width: 9.8rem; }
   .admin-login-page { grid-template-columns: 1fr 1fr; }
   .admin-login-brand { min-height: 100svh; padding: 2rem clamp(2rem,5vw,5rem) 4rem; }
   .admin-login-form-side { padding: 3rem; }

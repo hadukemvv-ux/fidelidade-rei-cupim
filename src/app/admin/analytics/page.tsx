@@ -11,7 +11,7 @@ type AnalyticsPayload = {
   pontosSaida?: Array<{ criado_em?: string; valor?: number }>;
   resgatesPeriodo?: Array<{ criado_em?: string; tipo?: string; premio_nome?: string | null; valor?: number }>;
   giros?: Array<{ data_hora?: string }>;
-  base?: { total: number; contasComPin: number; registrosTeste: number };
+  base?: { total: number; cadastrosSeguros: number; registrosTeste: number };
   whatsapp?: { otpAtivo: boolean; convidadosBeta: number; verificacoesConcluidas: number };
 };
 
@@ -163,7 +163,7 @@ export default function AnalyticsPage() {
         </div>
         <div className="admin-pilot-stats">
           <article><span>Base Saipos</span><strong>{number(data.base?.total)}</strong><small>Não são contas de teste</small></article>
-          <article><span>Contas com PIN</span><strong>{number(data.base?.contasComPin)}</strong><small>Já concluíram cadastro</small></article>
+          <article><span>Cadastros seguros</span><strong>{number(data.base?.cadastrosSeguros)}</strong><small>PIN no formato atual</small></article>
           <article className="warning"><span>Dados fictícios</span><strong>{number(data.base?.registrosTeste)}</strong><small>Identificados, ainda preservados</small></article>
           <article className={data.whatsapp?.otpAtivo ? 'success' : ''}>
             <span>WhatsApp OTP</span>

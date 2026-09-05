@@ -137,8 +137,8 @@ export async function POST(request: NextRequest) {
 
     const [baseTotal, contasComPin, registrosTeste, verificacoesConcluidas] = await Promise.all([
       supabaseAdmin.from('base_clientes_saipos').select('id', { count: 'exact', head: true }),
-      supabaseAdmin.from('base_clientes_saipos').select('id', { count: 'exact', head: true }).not('pin_hash', 'is', null).neq('pin_hash', ''),
-      supabaseAdmin.from('base_clientes_saipos').select('id', { count: 'exact', head: true }).or('nome.ilike.Cliente Teste %,email.ilike.%@teste.com'),
+      supabaseAdmin.from('base_clientes_saipos').select('id', { count: 'exact', head: true }).like('pin_hash', 'scrypt$%'),
+      supabaseAdmin.from('base_clientes_saipos').select('id', { count: 'exact', head: true }).or('nome.ilike.Cliente Teste %,email.ilike.%@teste.com,email.ilike.%@example.com'),
       supabaseAdmin.from('otp_verificacoes').select('id', { count: 'exact', head: true }).eq('status', 'verificado'),
     ]);
 
@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
       giros: giros || [],
       base: {
         total: baseTotal.count || 0,
-        contasComPin: contasComPin.count || 0,
+        cadastrosSeguros: contasComPin.count || 0,
         registrosTeste: registrosTeste.count || 0,
       },
       whatsapp: {

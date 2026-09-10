@@ -81,7 +81,7 @@ export async function POST(request: Request) {
   const email = parsed.data.email.toLowerCase();
 
   const { data: invite, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-    data: { nome }, emailRedirectTo: new URL("/login", request.url).toString(),
+    data: { nome }, redirectTo: new URL("/login", request.url).toString(),
   });
   if (inviteError || !invite.user) {
     return NextResponse.json({ error: inviteError?.message || "Não foi possível enviar o convite." }, { status: 400 });

@@ -35,6 +35,22 @@ export type VendaSaipos = {
   created_at?: unknown;
 };
 
+/** Extrai o telefone de uma venda no formato local brasileiro, quando presente. */
+export function telefoneDaVendaSaipos(venda: VendaSaipos) {
+  const bruto = venda.customer?.phone;
+  const informado = Array.isArray(bruto)
+    ? bruto[0] || null
+    : typeof bruto === 'string'
+      ? bruto
+      : typeof venda.customer_phone === 'string'
+        ? venda.customer_phone
+        : typeof venda.telefone === 'string'
+          ? venda.telefone
+          : null;
+  const digitos = typeof informado === 'string' ? informado.replace(/\D/g, '').slice(-11) : '';
+  return digitos.length >= 10 ? digitos : null;
+}
+
 export class SaiposApiError extends Error {
   readonly status: number;
   readonly detalhes: string;

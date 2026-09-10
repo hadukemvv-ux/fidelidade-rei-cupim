@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import type { VendaSaipos } from "@/lib/saipos";
+import { telefoneDaVendaSaipos, type VendaSaipos } from "@/lib/saipos";
 
 export type ProcessarVendaResult =
   | { status: "processada"; idSale: number; credito: Record<string, unknown> }
@@ -75,20 +75,7 @@ export async function processarVenda(venda: VendaSaipos): Promise<ProcessarVenda
   const cpfRaw = venda.customer?.cpf_cnpj || venda.customer_cpf;
   const cpfDigits = typeof cpfRaw === "string" ? cpfRaw.replace(/\D/g, "") : "";
   const cpf = cpfDigits.length >= 11 ? cpfDigits : null;
-  const telefoneRaw = venda.customer?.phone;
-  const telefoneInformado = Array.isArray(telefoneRaw)
-    ? telefoneRaw[0] || null
-    : typeof telefoneRaw === "string"
-      ? telefoneRaw
-      : typeof venda.customer_phone === "string"
-        ? venda.customer_phone
-        : typeof venda.telefone === "string"
-          ? venda.telefone
-          : null;
-  const telefoneDigits = typeof telefoneInformado === "string"
-    ? telefoneInformado.replace(/\D/g, "").slice(-11)
-    : "";
-  const telefone = telefoneDigits.length >= 10 ? telefoneDigits : null;
+  const telefone = telefoneDaVendaSaipos(venda);
   const nome = typeof venda.customer?.name === "string" && venda.customer.name.trim()
     ? venda.customer.name.trim()
     : "Cliente";

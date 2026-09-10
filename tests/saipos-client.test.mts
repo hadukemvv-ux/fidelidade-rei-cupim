@@ -6,6 +6,7 @@ import {
   periodoDiaSaoPaulo,
   periodoUltimosDiasSaoPaulo,
   SaiposApiError,
+  telefoneDaVendaSaipos,
 } from '../src/lib/saipos.ts';
 
 const periodo = {
@@ -96,4 +97,10 @@ test('rejeita datas e intervalos fora do limite seguro', () => {
   assert.throws(() => periodoDiaSaoPaulo('2026-02-30'));
   assert.throws(() => periodoUltimosDiasSaoPaulo(0));
   assert.throws(() => periodoUltimosDiasSaoPaulo(91));
+});
+
+test('normaliza o telefone presente em formatos diferentes da Saipos', () => {
+  assert.equal(telefoneDaVendaSaipos({ customer: { phone: '+55 (85) 99983-8637' } }), '85999838637');
+  assert.equal(telefoneDaVendaSaipos({ customer_phone: '85 99983-8637' }), '85999838637');
+  assert.equal(telefoneDaVendaSaipos({ telefone: 'sem telefone' }), null);
 });

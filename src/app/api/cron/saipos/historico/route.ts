@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { buscarTodasVendasSaipos, periodoUltimosDiasSaoPaulo, SaiposApiError } from '@/lib/saipos';
+import { buscarTodasVendasSaipos, periodoUltimosDiasSaoPaulo, SaiposApiError, telefoneDaVendaSaipos } from '@/lib/saipos';
 import { processarVenda } from '../processarVenda'; // IMPORTAÇÃO CORRETA
 
 export const dynamic = 'force-dynamic';
@@ -43,6 +43,11 @@ export async function GET(request: NextRequest) {
     const dias = url.searchParams.get("dias");
     const inicioRaw = url.searchParams.get("inicio");
     const fimRaw = url.searchParams.get("fim");
+    const telefoneRaw = url.searchParams.get("telefone");
+    const telefone = telefoneRaw?.replace(/\D/g, '').slice(-11) || null;
+    if (telefoneRaw && (!telefone || telefone.length < 10)) {
+      return NextResponse.json({ erro: 'Telefone inválido para o filtro de importação.' }, { status: 400 });
+    }
 
     let inicio: string;
     let fim: string;
@@ -71,7 +76,12 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const vendas = await buscarTodasVendasSaipos({ inicio, fim, pageSize: 200 });
+    const vendasRecebidas = await buscarTodasVendasSaipos({ inicio, fim, pageSize: 200 });
+    // A Saipos não aceita filtro por telefone nesta consulta. Filtramos antes de
+    // processar para que um teste individual não crie nem altere outros clientes.
+    const vendas = telefone
+      ? vendasRecebidas.filter((venda) => telefoneDaVendaSaipos(venda) === telefone)
+      : vendasRecebidas;
     let falhas = 0;
 
     // ===============================
@@ -94,6 +104,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       sucesso: true,
+      filtro_telefone: telefone ? `***${telefone.slice(-4)}` : null,
+      vendas_recebidas_da_saipos: vendasRecebidas.length,
       vendas_recebidas: vendas.length,
       falhas,
       periodo: { inicio, fim }

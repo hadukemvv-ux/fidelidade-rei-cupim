@@ -30,6 +30,7 @@ const navigation: Array<{ label: string; items: NavItem[] }> = [
   ] },
   { label: 'Operação', items: [
     { href: '/admin/garcons', icon: '♟', label: 'Garçons', hint: 'Cadastros e desempenho' },
+    { href: '/caixa', icon: '▣', label: 'Validar cupom', hint: 'Uso no balcão e delivery' },
     { href: '/admin/operadores', icon: '♙', label: 'Acessos', hint: 'Caixa, gestão e admin' },
     { href: '/admin/auditoria', icon: '◷', label: 'Auditoria', hint: 'Quem fez cada ação' },
     { href: '/admin/garcons/alertas', icon: '!', label: 'Segurança', hint: 'Alertas e bloqueios' },

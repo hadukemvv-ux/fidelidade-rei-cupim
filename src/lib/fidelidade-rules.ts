@@ -5,7 +5,8 @@ export interface BeneficioNivel { pontos: number; cashback: number; tickets: num
 
 export const BONUS_CADASTRO_PONTOS = 200;
 export const CUSTO_ENTREGA_GRATIS_PONTOS = 200;
-export const INTERVALO_ENTREGA_GRATIS_DIAS = 30;
+/** Duas utilizações mensais no máximo, com intervalo simples e transparente de 14 dias. */
+export const INTERVALO_ENTREGA_GRATIS_DIAS = 14;
 export interface NivelInfo {
   nivel: NivelFidelidade;
   nome: string;

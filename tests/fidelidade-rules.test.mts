@@ -12,10 +12,10 @@ import {
   getNivelPorGasto,
 } from '../src/lib/fidelidade-rules.ts';
 
-test('bônus inicial libera uma entrega, com recorrência mensal controlada', () => {
+test('bônus inicial libera uma entrega, com recorrência controlada a cada 14 dias', () => {
   assert.equal(BONUS_CADASTRO_PONTOS, 200);
   assert.equal(CUSTO_ENTREGA_GRATIS_PONTOS, BONUS_CADASTRO_PONTOS);
-  assert.equal(INTERVALO_ENTREGA_GRATIS_DIAS, 30);
+  assert.equal(INTERVALO_ENTREGA_GRATIS_DIAS, 14);
 });
 
 test('classifica corretamente todos os limites de nível', () => {

@@ -459,6 +459,11 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 .admin-operators button:disabled { opacity: .55; cursor: wait; }
 .admin-inline-check { display: inline-flex; align-items: center; gap: .45rem; font-weight: 700; }
 .admin-empty { margin: 0; padding: 1rem; border: 1px dashed #d8d0ca; color: #6c5d55; }
+.admin-operator-invite form { display: grid; grid-template-columns: 1fr 1fr minmax(11rem, .8fr) auto; gap: .75rem; align-items: end; padding: 1rem; border: 1px solid #ded7d2; background: white; }
+.admin-operator-invite label { display: grid; gap: .35rem; color: #63534c; font-size: .73rem; font-weight: 800; }
+.admin-operator-invite input, .admin-operator-invite select { min-height: 2.45rem; padding: .5rem .6rem; border: 1px solid #d8d0ca; border-radius: .4rem; background: white; font: inherit; }
+.admin-operator-invite small { color: #74645c; }
+@media (max-width: 760px) { .admin-operator-invite form { grid-template-columns: 1fr; } }
 .admin-delivery-rule { display: grid; gap: 1rem; padding: 1.15rem; overflow: hidden; border: 1px solid #342a26; border-radius: .55rem; background: radial-gradient(circle at 90% 10%, rgba(240,43,31,.2), transparent 30%), #211714; color: white; }
 .admin-delivery-rule > div > span { color: var(--gold); font-size: .68rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .admin-delivery-rule h2 { margin: .35rem 0 .45rem; font-size: 1.35rem; }

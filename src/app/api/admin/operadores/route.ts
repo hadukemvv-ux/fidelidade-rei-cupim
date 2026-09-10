@@ -12,6 +12,12 @@ const OperatorSchema = z.object({
   ativo: z.boolean(),
 });
 
+const InviteSchema = z.object({
+  nome: z.string().trim().min(3).max(120),
+  email: z.string().trim().email().max(255),
+  papel: z.enum(["gestor", "caixa"]),
+});
+
 async function actorFromRequest(request: Request) {
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
   if (!token) return null;
@@ -62,4 +68,35 @@ export async function PUT(request: Request) {
   });
 
   return NextResponse.json({ ok: true });
+}
+
+/** Cria uma conta por convite: o funcionário escolhe a própria senha pelo e-mail. */
+export async function POST(request: Request) {
+  const denied = await validateAdminAuth(request, new URL(request.url));
+  if (denied) return denied;
+
+  const parsed = InviteSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Informe nome, e-mail e função válidos." }, { status: 400 });
+  const { nome, papel } = parsed.data;
+  const email = parsed.data.email.toLowerCase();
+
+  const { data: invite, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+    data: { nome }, emailRedirectTo: new URL("/login", request.url).toString(),
+  });
+  if (inviteError || !invite.user) {
+    return NextResponse.json({ error: inviteError?.message || "Não foi possível enviar o convite." }, { status: 400 });
+  }
+
+  const { error: profileError } = await supabaseAdmin.from("perfis_operacionais").upsert({
+    user_id: invite.user.id, nome, email, papel, ativo: true, atualizado_em: new Date().toISOString(),
+  });
+  if (profileError) return NextResponse.json({ error: "Convite enviado, mas a permissão não pôde ser salva." }, { status: 500 });
+
+  const actor = await actorFromRequest(request);
+  await supabaseAdmin.from("administracao_eventos").insert({
+    entidade: "operador", entidade_id: invite.user.id, acao: "convite_enviado",
+    actor_user_id: actor?.id || null, actor_email: actor?.email || null,
+    detalhes: { nome, email, papel },
+  });
+  return NextResponse.json({ ok: true, message: `Convite enviado para ${email}.` }, { status: 201 });
 }

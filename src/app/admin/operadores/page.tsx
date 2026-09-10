@@ -35,6 +35,19 @@ export default function OperadoresPage() {
     finally { setSaving(null); }
   }
 
+  async function remove(operator: Operator) {
+    if (operator.papel === 'superadmin') { setNotice('A administração total não pode ser excluída por esta tela.'); return; }
+    if (!window.confirm(`Excluir o acesso de ${operator.nome}? Esta ação remove a conta de teste e a permissão. A auditoria será preservada.`)) return;
+    setSaving(operator.user_id); setNotice('');
+    try {
+      const response = await fetchAdmin('/api/admin/operadores', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: operator.user_id, confirmar: true }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Não foi possível excluir o acesso.');
+      setNotice(data.message); await load();
+    } catch (error) { setNotice(error instanceof Error ? error.message : 'Não foi possível excluir o acesso.'); }
+    finally { setSaving(null); }
+  }
+
   function update(userId: string, change: Partial<Operator>) { setOperators((current) => current.map((operator) => operator.user_id === userId ? { ...operator, ...change } : operator)); }
   function prepare(account: Account) { setOperators((current) => [...current, { user_id: account.user_id, email: account.email, nome: account.email.split('@')[0], papel: 'caixa', ativo: true, atualizado_em: new Date().toISOString() }]); setAccounts((current) => current.filter((item) => item.user_id !== account.user_id)); }
   async function sendInvite(event: React.FormEvent) {
@@ -53,7 +66,7 @@ export default function OperadoresPage() {
     <section className="admin-operator-invite"><div className="admin-section-title"><div><span>Novo funcionário</span><h2>Enviar convite de acesso</h2></div></div><form onSubmit={sendInvite}><label><span>Nome</span><input value={invite.nome} onChange={(event) => setInvite({ ...invite, nome: event.target.value })} required minLength={3} placeholder="Nome da pessoa" /></label><label><span>E-mail de trabalho</span><input type="email" value={invite.email} onChange={(event) => setInvite({ ...invite, email: event.target.value })} required placeholder="nome@empresa.com" /></label><label><span>Função inicial</span><select value={invite.papel} onChange={(event) => setInvite({ ...invite, papel: event.target.value as 'gestor' | 'caixa' })}><option value="caixa">Caixa — valida cupons</option><option value="gestor">Gestão — operação e relatórios</option></select></label><button disabled={inviting}>{inviting ? 'Enviando…' : 'Enviar convite'}</button></form><small>O convite é registrado na auditoria. Não enviamos senha: cada pessoa cria a sua pelo e-mail.</small></section>
     <section><div className="admin-section-title"><div><span>Permissões</span><h2>Equipe de operação</h2></div></div>
       <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pessoa</th><th>Permissão</th><th>Status</th><th /></tr></thead><tbody>
-        {operators.map((operator) => <tr key={operator.user_id}><td><strong>{operator.nome}</strong><small>{operator.email}</small></td><td><select value={operator.papel} onChange={(event) => update(operator.user_id, { papel: event.target.value as Operator['papel'] })}>{Object.entries(roleLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></td><td><label className="admin-inline-check"><input type="checkbox" checked={operator.ativo} onChange={(event) => update(operator.user_id, { ativo: event.target.checked })} /> {operator.ativo ? 'Ativo' : 'Suspenso'}</label></td><td><button onClick={() => save(operator)} disabled={saving === operator.user_id}>{saving === operator.user_id ? 'Salvando…' : 'Salvar'}</button></td></tr>)}
+        {operators.map((operator) => <tr key={operator.user_id}><td><strong>{operator.nome}</strong><small>{operator.email}</small></td><td><select value={operator.papel} onChange={(event) => update(operator.user_id, { papel: event.target.value as Operator['papel'] })}>{Object.entries(roleLabel).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></td><td><label className="admin-inline-check"><input type="checkbox" checked={operator.ativo} onChange={(event) => update(operator.user_id, { ativo: event.target.checked })} /> {operator.ativo ? 'Ativo' : 'Suspenso'}</label></td><td><button onClick={() => save(operator)} disabled={saving === operator.user_id}>{saving === operator.user_id ? 'Salvando…' : 'Salvar'}</button>{operator.papel !== 'superadmin' && <button className="admin-danger-button" onClick={() => remove(operator)} disabled={saving === operator.user_id}>Excluir</button>}</td></tr>)}
         {!operators.length && <tr><td colSpan={4}>Ainda não há permissões definidas.</td></tr>}
       </tbody></table></div>
     </section>

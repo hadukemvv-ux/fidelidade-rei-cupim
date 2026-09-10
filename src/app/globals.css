@@ -973,3 +973,8 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 @keyframes club-breathe { to { transform: scale(1.08); filter: drop-shadow(0 0 18px rgba(240,43,31,.5)); } }
 @keyframes club-fade { from { opacity: 0; } }
 @keyframes club-sheet { from { opacity: 0; transform: translateY(24px) scale(.98); } }
+.admin-danger-button {
+  margin-left: 0.5rem;
+  background: #991b1b !important;
+  color: #fff !important;
+}

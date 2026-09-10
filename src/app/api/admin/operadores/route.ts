@@ -18,6 +18,11 @@ const InviteSchema = z.object({
   papel: z.enum(["gestor", "caixa"]),
 });
 
+const DeleteSchema = z.object({
+  user_id: z.string().uuid(),
+  confirmar: z.literal(true),
+});
+
 async function actorFromRequest(request: Request) {
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
   if (!token) return null;
@@ -99,4 +104,38 @@ export async function POST(request: Request) {
     detalhes: { nome, email, papel },
   });
   return NextResponse.json({ ok: true, message: `Convite enviado para ${email}.` }, { status: 201 });
+}
+
+/** Exclui somente acessos operacionais de teste; a auditoria permanece preservada. */
+export async function DELETE(request: Request) {
+  const denied = await validateAdminAuth(request, new URL(request.url));
+  if (denied) return denied;
+
+  const parsed = DeleteSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Confirmação de exclusão inválida." }, { status: 400 });
+
+  const { user_id } = parsed.data;
+  const actor = await actorFromRequest(request);
+  if (actor?.id === user_id) return NextResponse.json({ error: "Não é permitido excluir o próprio acesso." }, { status: 400 });
+
+  const { data: profile, error: profileError } = await supabaseAdmin
+    .from("perfis_operacionais")
+    .select("nome, email, papel")
+    .eq("user_id", user_id)
+    .maybeSingle();
+  if (profileError || !profile) return NextResponse.json({ error: "Esta conta não é um acesso operacional gerenciado." }, { status: 404 });
+  if (profile.papel === "superadmin") return NextResponse.json({ error: "A administração total não pode ser excluída por esta tela." }, { status: 400 });
+
+  const { data: authLookup } = await supabaseAdmin.auth.admin.getUserById(user_id);
+  if (!authLookup.user) return NextResponse.json({ error: "A conta escolhida não existe mais." }, { status: 404 });
+
+  await supabaseAdmin.from("administracao_eventos").insert({
+    entidade: "operador", entidade_id: user_id, acao: "usuario_excluido_para_teste",
+    actor_user_id: actor?.id || null, actor_email: actor?.email || null,
+    detalhes: { nome: profile.nome, email: profile.email, papel: profile.papel, motivo: "exclusao_confirmada_no_painel", auditoria_preservada: true },
+  });
+
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(user_id);
+  if (error) return NextResponse.json({ error: "Não foi possível excluir o acesso." }, { status: 500 });
+  return NextResponse.json({ ok: true, message: `Acesso de ${profile.email} excluído; o registro de auditoria foi preservado.` });
 }

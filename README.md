@@ -47,6 +47,9 @@ Para operacao e testes:
 Roadmap:
 - `docs/ROADMAP.md`
 
+Auditoria, continuidade e plano de retomada:
+- `docs/AUDITORIA_E_CONTINUIDADE_2026-09-10.md`
+
 Regras atuais do programa:
 - `docs/REGRAS-FIDELIDADE.md`
 

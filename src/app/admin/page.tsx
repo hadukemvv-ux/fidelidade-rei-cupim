@@ -16,6 +16,7 @@ const sections = [
   { href: '/admin/cardapio', icon: '★', title: 'Alterar recompensas', description: 'Cadastre produtos, ajuste o custo em pontos e escolha os destaques.', action: 'Gerenciar recompensas' },
   { href: '/admin/analytics', icon: '▥', title: 'Acompanhar resultados', description: 'Veja cadastros, pontos, resgates e roleta nos últimos 7, 30 ou 90 dias.', action: 'Ver relatórios' },
   { href: '/admin/garcons', icon: '♟', title: 'Gerenciar equipe', description: 'Cadastre garçons, confira o ranking e investigue atividades suspeitas.', action: 'Abrir equipe' },
+  { href: '/admin/operadores', icon: '♙', title: 'Controlar acessos', description: 'Libere, altere ou suspenda as permissões de caixa, gestão e administração.', action: 'Abrir acessos' },
 ];
 
 export default function AdminHome() {

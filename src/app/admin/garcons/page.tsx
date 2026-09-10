@@ -8,6 +8,7 @@ type Garcom = {
   nome: string;
   codigo_prefixo: string;
   total_giros?: number;
+  ativo?: boolean;
 };
 
 export default function AdminGarconsPage() {
@@ -57,7 +58,7 @@ export default function AdminGarconsPage() {
   async function salvarGarcom() {
       if (!formNome || !formCodigo) return alert('Preencha nome e código!');
       
-      const payload = { nome: formNome, codigo_prefixo: formCodigo };
+      const payload = { nome: formNome, codigo_prefixo: formCodigo, ...(editando ? { ativo: editando.ativo !== false } : {}) };
       const metodo = editando ? 'PUT' : 'POST';
       const url = editando ? `/api/admin/garcons?id=${editando.id}` : '/api/admin/garcons';
 
@@ -123,7 +124,7 @@ export default function AdminGarconsPage() {
           {loading ? (
               <p className="text-center text-gray-500 animate-pulse">Carregando equipe...</p>
           ) : garcons.map((g, index) => (
-              <div key={g.id} className="bg-gray-800 border border-gray-700 p-6 rounded-xl flex items-center justify-between hover:border-[#c5a059] transition-colors group">
+              <div key={g.id} className={`bg-gray-800 border border-gray-700 p-6 rounded-xl flex items-center justify-between hover:border-[#c5a059] transition-colors group ${g.ativo === false ? 'opacity-60' : ''}`}>
                   
                   <div className="flex items-center gap-6">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-xl border-2 ${
@@ -144,6 +145,7 @@ export default function AdminGarconsPage() {
                               <span className="text-xs text-gray-500">
                                   Senhas: {g.codigo_prefixo}01, {g.codigo_prefixo}02, {g.codigo_prefixo}03
                               </span>
+                              <span className={`text-xs font-bold ${g.ativo === false ? 'text-red-400' : 'text-green-400'}`}>{g.ativo === false ? 'Suspenso' : 'Ativo'}</span>
                           </div>
                       </div>
                   </div>
@@ -186,6 +188,7 @@ export default function AdminGarconsPage() {
                           <input value={formCodigo} onChange={e => setFormCodigo(e.target.value.replace(/\D/g, '').slice(0, 2))} className="w-full bg-black border border-gray-700 rounded p-3 text-white focus:border-[#c5a059] outline-none text-center text-xl tracking-widest" placeholder="Ex: 10" />
                           <p className="text-xs text-gray-500 mt-2">Esse garçom usará as senhas: {formCodigo || 'XX'}01, {formCodigo || 'XX'}02, {formCodigo || 'XX'}03.</p>
                       </div>
+                      {editando && <label className="flex items-center gap-2 text-sm text-gray-300"><input type="checkbox" checked={editando.ativo !== false} onChange={e => setEditando({ ...editando, ativo: e.target.checked })} /> Garçom ativo para usar a roleta</label>}
                   </div>
 
                   <div className="flex gap-3 mt-8">

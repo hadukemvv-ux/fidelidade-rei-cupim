@@ -29,7 +29,9 @@ const navigation: Array<{ label: string; items: NavItem[] }> = [
     { href: '/admin/sorteio', icon: '◇', label: 'Sorteios', hint: 'Configuração e resultados' },
   ] },
   { label: 'Operação', items: [
-    { href: '/admin/garcons', icon: '♟', label: 'Equipe', hint: 'Garçons e desempenho' },
+    { href: '/admin/garcons', icon: '♟', label: 'Garçons', hint: 'Cadastros e desempenho' },
+    { href: '/admin/operadores', icon: '♙', label: 'Acessos', hint: 'Caixa, gestão e admin' },
+    { href: '/admin/auditoria', icon: '◷', label: 'Auditoria', hint: 'Quem fez cada ação' },
     { href: '/admin/garcons/alertas', icon: '!', label: 'Segurança', hint: 'Alertas e bloqueios' },
     { href: '/admin/importar', icon: '⇧', label: 'Importação', hint: 'Clientes da Saipos' },
   ] },
@@ -47,6 +49,8 @@ const pageInfo: Record<string, { title: string; description: string }> = {
   '/admin/sorteio/resumo': { title: 'Resumo do sorteio', description: 'Consulte os números de um sorteio específico.' },
   '/admin/sorteio/ganhadores': { title: 'Ganhadores', description: 'Histórico dos resultados já realizados.' },
   '/admin/garcons': { title: 'Equipe', description: 'Cadastre garçons e acompanhe o uso da roleta.' },
+  '/admin/operadores': { title: 'Acessos da equipe', description: 'Defina o que cada pessoa pode fazer no sistema.' },
+  '/admin/auditoria': { title: 'Auditoria', description: 'Acompanhe liberações, validações e ações administrativas.' },
   '/admin/garcons/alertas': { title: 'Segurança', description: 'Revise atividades suspeitas e desbloqueios.' },
   '/admin/importar': { title: 'Importação', description: 'Atualize a base de clientes com uma planilha da Saipos.' },
 };

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { registrarAuditoriaAdmin } from '@/lib/adminAudit';
 import { validarDados } from '@/lib/validations';
 import {
   successResponse,
@@ -18,6 +19,8 @@ const GarcomSchema = z.object({
   nome: z.string().trim().min(3, 'Nome deve ter pelo menos 3 caracteres').max(255),
   codigo_prefixo: z.string().regex(/^\d{2}$/, 'Codigo prefixo deve ter 2 digitos'),
 });
+
+const GarcomUpdateSchema = GarcomSchema.extend({ ativo: z.boolean().optional() });
 
 type GarcomInput = z.infer<typeof GarcomSchema>;
 
@@ -39,7 +42,6 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabaseAdmin
       .from('garcons')
       .select('id, nome, codigo_prefixo, total_giros, ativo')
-      .eq('ativo', true)
       .order('total_giros', { ascending: false });
 
     if (error) {
@@ -105,6 +107,7 @@ export async function POST(request: NextRequest) {
       return handleApiError(error, '/api/admin/garcons', requestId);
     }
 
+    await registrarAuditoriaAdmin(request, 'garcom', data.id, 'garcom_criado', { nome, codigo_prefixo });
     return successResponse({
       message: 'Garcom criado com sucesso',
       garcom: data,
@@ -134,14 +137,14 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const bodyValidacao = validarDados<GarcomInput>(GarcomSchema, body);
+    const bodyValidacao = validarDados<GarcomInput & { ativo?: boolean }>(GarcomUpdateSchema, body);
 
     if (!bodyValidacao.ok) {
       return validationErrorResponse(bodyValidacao.error);
     }
 
     const { id } = queryValidacao.data;
-    const { nome, codigo_prefixo } = bodyValidacao.data;
+    const { nome, codigo_prefixo, ativo } = bodyValidacao.data;
 
     logInfo('/api/admin/garcons', 'Atualizando garcom', {
       id,
@@ -152,10 +155,7 @@ export async function PUT(request: NextRequest) {
 
     const { error } = await supabaseAdmin
       .from('garcons')
-      .update({
-        nome,
-        codigo_prefixo,
-      })
+      .update({ nome, codigo_prefixo, ...(typeof ativo === 'boolean' ? { ativo } : {}) })
       .eq('id', id);
 
     if (error) {
@@ -166,6 +166,7 @@ export async function PUT(request: NextRequest) {
       return handleApiError(error, '/api/admin/garcons', requestId);
     }
 
+    await registrarAuditoriaAdmin(request, 'garcom', id, ativo === false ? 'garcom_suspenso' : ativo === true ? 'garcom_reativado' : 'garcom_atualizado', { nome, codigo_prefixo, ativo });
     return successResponse({ atualizado: true, id });
   } catch (error) {
     logError('/api/admin/garcons', error instanceof Error ? error : new Error(String(error)), {

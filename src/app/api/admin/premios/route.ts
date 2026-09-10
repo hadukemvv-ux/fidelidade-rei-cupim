@@ -24,6 +24,11 @@ const PremioUpdateSchema = z.object({
   ativo: z.boolean().optional(),
   valor: z.coerce.number().min(0).optional(),
   participa_roleta: z.boolean().optional(),
+  canal_uso: z.enum(['presencial', 'delivery', 'ambos']).optional(),
+  custo_estimado: z.coerce.number().min(0).optional(),
+  expira_em_dias: z.coerce.number().int().min(1).max(90).optional(),
+  pesos_nivel: z.array(z.coerce.number().int().min(0).max(100000)).length(5).optional(),
+  descricao_operacional: z.string().max(1000).optional().nullable(),
 });
 
 type PremioUpdateInput = z.infer<typeof PremioUpdateSchema>;

@@ -1,6 +1,22 @@
 # Auditoria e continuidade — Clube Cupim
 
-Atualizado em 10/09/2026. Este é o ponto de retomada oficial do projeto.
+Atualizado em 11/09/2026. Este é o ponto de retomada oficial do projeto.
+
+## Progresso de segurança — 11/09/2026
+
+1. Next.js e `eslint-config-next` foram atualizados de `16.1.2` para `16.3.4`.
+   A auditoria de dependências caiu de **7 alertas (1 crítico, 5 altos e 1 moderado)**
+   para **2 altos**, ambos ligados à importação de planilhas: `xlsx` e a dependência
+   indireta `ws`. Não existe correção automática para `xlsx`; a importação continua
+   restrita a superadmin e deve ser substituída ou isolada antes da abertura pública.
+2. A roleta legada foi desligada de fato: `/roleta` agora informa que a V2 está em
+   preparação e `POST /api/roleta/girar` responde `503`. Portanto, ninguém consegue
+   mais distribuir prêmios pelo desenho antigo, mesmo chamando a API diretamente.
+3. A configuração duplicada `next.config.js` foi removida; `next.config.ts` é a única
+   fonte de configuração do framework.
+4. Testes unitários: **30 aprovados**. Checagem de tipos: **aprovada**. A compilação
+   completa local foi iniciada após a atualização, mas ficou excepcionalmente lenta
+   nesta máquina; confirmar o deploy `Ready` na Vercel continua obrigatório após o push.
 
 ## Leitura executiva
 
@@ -20,7 +36,7 @@ Não houve alteração de dados de clientes nesta auditoria. A única mudança p
 | Roleta | Vermelho | A página pública ainda usa rotas e regras antigas; V2 está apenas preparada no painel/admin e no banco. |
 | WhatsApp/OTP | Amarelo | Arquitetura e limites existem, porém a implementação atual ainda usa Twilio Verify e está desativada. |
 | LGPD e documentos legais | Vermelho | Há base técnica parcial, mas faltam política de privacidade, registro de tratamento, atendimento de direitos e retenção. |
-| Dependências | Vermelho | `npm audit --omit=dev` encontrou 1 crítica e 5 altas; Next.js 16.1.2 precisa ser atualizado antes da próxima abertura pública. |
+| Dependências | Amarelo | Next.js foi atualizado para 16.3.4. Restam 2 alertas altos ligados a `xlsx`/`ws`; a importação deve ser isolada ou substituída antes da abertura pública. |
 
 ## O que já foi feito
 
@@ -78,10 +94,8 @@ O primeiro ramo existe em boa parte. O segundo **ainda não está implementado d
 
 ### P0 — corrigir antes de abrir ao público
 
-1. **Dependência Next.js vulnerável.** `next` está fixado em `16.1.2`; o `npm audit --omit=dev` reportou vulnerabilidades críticas e altas, com correção disponível em `16.3.4`. Atualizar lockfile e dependências, executar build/testes e revisar o deploy é prioridade absoluta.
-2. **Roleta pública antiga permite operação fora do desenho aprovado.** `src/app/roleta/page.tsx` e `src/app/api/roleta/girar/route.ts` usam senha de garçom de quatro dígitos, níveis 1–3, dados pessoais em logs e sorteio legado. Ela não usa os cinco níveis, QR por comanda, consentimento LGPD, cupons V2 nem a autorização de caixa aprovada. Manter a rota fora de divulgação até ser substituída ou bloqueada por feature flag.
-3. **Sorteio semanal legado não é transacional.** `src/app/api/cron/sorteio/route.ts` escolhe com `Math.random`, grava ganhador, conclui sorteio e zera tickets em etapas separadas. Uma falha ou execução paralela pode criar inconsistência. Não habilitar sorteios com prêmio real sem RPC transacional, trava e trilha de auditoria.
-4. **Biblioteca `xlsx` possui alertas altos sem correção automática disponível.** Ela é usada em importação. Importações devem ficar restritas a superadmin, com tamanho/formato limitado, sanitização e substituição planejada por biblioteca mantida ou parsing isolado.
+1. **Sorteio semanal legado não é transacional.** `src/app/api/cron/sorteio/route.ts` escolhe com `Math.random`, grava ganhador, conclui sorteio e zera tickets em etapas separadas. Uma falha ou execução paralela pode criar inconsistência. Não habilitar sorteios com prêmio real sem RPC transacional, trava e trilha de auditoria.
+2. **Biblioteca `xlsx` possui alertas altos sem correção automática disponível.** Ela é usada em importação. Importações devem ficar restritas a superadmin, com tamanho/formato limitado, sanitização e substituição planejada por biblioteca mantida ou parsing isolado. A auditoria atual também aponta `ws` transitivo; avaliar atualização da cadeia ou remoção da importação.
 
 ### P1 — corrigir no próximo ciclo
 
@@ -212,4 +226,3 @@ O sistema trata dados pessoais: nome, telefone, e-mail, aniversário, histórico
 - Último deploy observado: commit `ba1afb2`, status Ready.
 - Auditoria de dependências: 7 vulnerabilidades em produção (1 crítica, 5 altas, 1 moderada); a maior concentração está em Next.js `16.1.2`.
 - A sessão do painel Supabase expirou durante esta auditoria; não foi feita nenhuma alteração adicional em ambiente externo.
-

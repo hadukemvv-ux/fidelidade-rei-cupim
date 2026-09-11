@@ -17,6 +17,10 @@ Atualizado em 11/09/2026. Este é o ponto de retomada oficial do projeto.
 4. Testes unitários: **30 aprovados**. Checagem de tipos: **aprovada**. A compilação
    completa local ficou excepcionalmente lenta nesta máquina após a atualização, mas o
    deploy de produção do commit `82138b6` foi confirmado como **Ready** na Vercel.
+5. A migração `202609110001_sessoes_roleta_v2.sql` foi aplicada no Supabase. Ela cria
+   as tabelas privadas `roleta_sessoes` e `roleta_giros`, com RLS, token opaco em hash,
+   expiração, nível e valor de comanda mantidos no servidor. Não publicou a V2 nem
+   ativou prêmios; é somente a fundação auditável para QR e giro único.
 
 ## Leitura executiva
 

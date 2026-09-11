@@ -15,8 +15,8 @@ Atualizado em 11/09/2026. Este é o ponto de retomada oficial do projeto.
 3. A configuração duplicada `next.config.js` foi removida; `next.config.ts` é a única
    fonte de configuração do framework.
 4. Testes unitários: **30 aprovados**. Checagem de tipos: **aprovada**. A compilação
-   completa local foi iniciada após a atualização, mas ficou excepcionalmente lenta
-   nesta máquina; confirmar o deploy `Ready` na Vercel continua obrigatório após o push.
+   completa local ficou excepcionalmente lenta nesta máquina após a atualização, mas o
+   deploy de produção do commit `82138b6` foi confirmado como **Ready** na Vercel.
 
 ## Leitura executiva
 
@@ -28,8 +28,8 @@ Não houve alteração de dados de clientes nesta auditoria. A única mudança p
 
 | Frente | Estado | Observação |
 | --- | --- | --- |
-| Código e GitHub | Verde | `main` no commit `ba1afb2`; cópia completa no GitHub. |
-| Vercel | Verde | Último deploy do commit `ba1afb2` foi confirmado como `Ready`. |
+| Código e GitHub | Verde | `main` no commit `82138b6`; cópia completa no GitHub. |
+| Vercel | Verde | Deploy de produção do commit `82138b6` confirmado como `Ready`. |
 | Supabase | Amarelo | Migrações de recuperação, cupom, auditoria e preparação V2 foram aplicadas; precisa de inventário e backup recorrente. |
 | Fidelidade e Saipos | Amarelo | Motor de venda é idempotente; falta validação controlada com dados reais e política de retenção. |
 | Operação de caixa | Amarelo | Validação atômica de cupons novos existe; o validador legado ainda deve ser descontinuado. |
@@ -223,6 +223,6 @@ O sistema trata dados pessoais: nome, telefone, e-mail, aniversário, histórico
 
 - Teste unitário anterior: 30 testes aprovados.
 - Checagem de tipos anterior: sem erro.
-- Último deploy observado: commit `ba1afb2`, status Ready.
-- Auditoria de dependências: 7 vulnerabilidades em produção (1 crítica, 5 altas, 1 moderada); a maior concentração está em Next.js `16.1.2`.
+- Último deploy observado: commit `82138b6`, status Ready.
+- Auditoria de dependências após atualização: 2 vulnerabilidades altas (`xlsx` e `ws` transitivo), sem vulnerabilidades críticas ou moderadas.
 - A sessão do painel Supabase expirou durante esta auditoria; não foi feita nenhuma alteração adicional em ambiente externo.

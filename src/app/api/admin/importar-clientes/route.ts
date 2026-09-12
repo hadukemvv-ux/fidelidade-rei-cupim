@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { requireOperationalActor } from '@/lib/operationalAuth';
 import { validarDados } from '@/lib/validations';
 import {
   successResponse,
@@ -15,7 +15,9 @@ import {
 export const dynamic = 'force-dynamic';
 
 const ImportarClientesSchema = z.object({
-  rows: z.array(z.record(z.string(), z.unknown())).min(1, 'Planilha sem linhas para importar'),
+  rows: z.array(z.record(z.string(), z.unknown()))
+    .min(1, 'Planilha sem linhas para importar')
+    .max(2000, 'A importação aceita no máximo 2.000 linhas por vez'),
 });
 
 type ImportarClientesInput = z.infer<typeof ImportarClientesSchema>;
@@ -82,8 +84,13 @@ function parseDataParaISO(value: unknown): string | null {
 export async function POST(req: NextRequest) {
   const requestId = getRequestId(req);
 
-  const authError = await validateAdminAuth(req, new URL(req.url));
-  if (authError) return authError;
+  const contentLength = Number(req.headers.get('content-length') || 0);
+  if (Number.isFinite(contentLength) && contentLength > 2 * 1024 * 1024) {
+    return validationErrorResponse('O arquivo é maior que o limite de 2 MB. Divida a planilha em partes menores.');
+  }
+
+  const actor = await requireOperationalActor(req, 'superadmin');
+  if (actor instanceof Response) return actor;
 
   try {
     const body = await req.json();
@@ -102,6 +109,7 @@ export async function POST(req: NextRequest) {
 
     logInfo('/api/admin/importar-clientes', 'Iniciando importacao de clientes', {
       total_linhas: rows.length,
+      superadmin_id: actor.userId,
       requestId,
     });
 
@@ -219,6 +227,7 @@ export async function POST(req: NextRequest) {
       novos,
       atualizados,
       ignorados,
+      superadmin_id: actor.userId,
       requestId,
     });
 

@@ -104,6 +104,7 @@ O primeiro ramo existe em boa parte. No segundo, a sessão/QR seguro já existe;
 
 1. **Sorteio semanal legado não é transacional.** `src/app/api/cron/sorteio/route.ts` escolhe com `Math.random`, grava ganhador, conclui sorteio e zera tickets em etapas separadas. Uma falha ou execução paralela pode criar inconsistência. Não habilitar sorteios com prêmio real sem RPC transacional, trava e trilha de auditoria.
 2. **Biblioteca `xlsx` possui alertas altos sem correção automática disponível.** Ela é usada em importação. Importações devem ficar restritas a superadmin, com tamanho/formato limitado, sanitização e substituição planejada por biblioteca mantida ou parsing isolado. A auditoria atual também aponta `ws` transitivo; avaliar atualização da cadeia ou remoção da importação.
+   A partir de 12/09, a rota exige perfil operacional `superadmin` e limita cada envio a 2 MB e 2.000 linhas; a substituição da biblioteca permanece necessária antes da abertura pública.
 
 ### P1 — corrigir no próximo ciclo
 

@@ -63,7 +63,7 @@ Decisão após a resposta:
 
 ## Próximas prioridades independentes da Saipos
 
-1. Restringir importação de planilha a superadmin, com tamanho/linhas/formato limitados, e planejar substituição de `xlsx` (alertas altos conhecidos).
+1. [x] Restringir importação de planilha a superadmin, com limite de 2 MB e 2.000 linhas por envio. Planejar a substituição de `xlsx` (alertas altos conhecidos) continua pendente.
 2. Definir matriz única de permissões: superadmin, gestor e caixa por ação, não apenas por tela.
 3. Consolidar cupom novo e remover o caminho legado quando o teste de caixa for concluído.
 4. Criar política de privacidade, preferência de marketing/opt-out e plano de retenção com revisão jurídica.

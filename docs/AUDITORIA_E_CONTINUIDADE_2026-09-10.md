@@ -23,7 +23,12 @@ Atualizado em 12/09/2026. Este é o ponto de retomada oficial do projeto.
    ativou prêmios; é somente a fundação auditável para QR e giro único.
 6. O commit `02133d1` acrescentou a tela operacional `/caixa/roleta`, que cria QR
    temporário usando as sessões V2. A publicação da V2 e todos os prêmios continuam
-   desligados. A tela pública, o giro e a emissão de cupom V2 ainda não existem.
+   desligados. A tela pública, o giro e a emissão de cupom foram concluídos depois,
+   mantendo a V2 bloqueada até a validação de venda e o piloto.
+7. A migração `202609120002_giro_roleta_v2_atomico.sql` foi aplicada em 12/09/2026.
+   Ela adiciona giro único atômico, cupom, prêmio ponderado por nível e registro de
+   consentimento. A página cliente está em `/roleta/v2`; `v2_publicada` segue falsa
+   e `v2_modo_teste` segue verdadeiro, portanto nenhum prêmio real pode ser liberado.
 
 ## Leitura executiva
 
@@ -98,7 +103,7 @@ Venda paga confirmada pela Saipos -> sessão de roleta V2 -> QR temporário
                                   -> conclusão de cadastro + benefício inicial
 ```
 
-O primeiro ramo existe em boa parte. No segundo, a sessão/QR seguro já existe; ainda faltam a confirmação automática de venda paga, o telefone/consentimento, giro único, cupom V2 e página pública. A foto de comanda não será usada como prova única: ela pode ser adulterada ou reutilizada. A consulta formal à Saipos está em `docs/SAIPOS_VALIDACAO_COMANDA.md`.
+O primeiro ramo existe em boa parte. No segundo, sessão/QR seguro, telefone/consentimento, giro único, página pública e cupom V2 já existem. Ainda falta a confirmação automática de venda paga e a rota operacional final da caixa. A foto de comanda não será usada como prova única: ela pode ser adulterada ou reutilizada. A consulta formal à Saipos está em `docs/SAIPOS_VALIDACAO_COMANDA.md`.
 
 ## Achados da auditoria
 

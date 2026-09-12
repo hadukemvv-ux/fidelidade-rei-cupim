@@ -28,6 +28,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 - [x] Uso de cupom novo atômico e auditado para a operação de caixa.
 - [x] Roleta V1 desligada na página pública e na API; prêmios V2 e publicação permanecem desativados.
 - [x] Sessões QR V2 privadas: token aleatório armazenado somente como hash, expiração curta, nível/valor no servidor e trilha de operador.
+- [x] Página cliente V2 e giro atômico no Supabase: telefone, consentimento opcional, prêmio por nível, cupom seguro e uso único do QR. V2 fechada e em modo de teste.
 - [x] Tela `/caixa/roleta` para gerar QR temporário, ainda bloqueada enquanto a V2 não for publicada.
 - [x] Next.js atualizado para `16.3.4`; última checagem de tipos aprovada e `30/30` testes unitários aprovados.
 
@@ -45,10 +46,10 @@ Venda paga na Saipos -> confirmação automática no sistema -> nível da compra
 
 - [x] Fundação de sessão e QR seguro.
 - [ ] Fonte automática e confiável da venda paga. **Bloqueada pela resposta da Saipos.**
-- [ ] Página pública `/roleta/v2` que lê uma sessão sem expor dados sensíveis.
-- [ ] Registro de telefone, consentimento opcional e giro único idempotente.
-- [ ] Seleção de prêmio criptograficamente segura, regras por cinco níveis e custo estimado.
-- [ ] Emissão de cupom V2 com dias úteis, feriados, canal e expiração.
+- [x] Página pública `/roleta/v2` que lê uma sessão sem expor dados sensíveis.
+- [x] Registro de telefone, consentimento opcional e giro único atômico.
+- [x] Seleção de prêmio no servidor, ponderada pelos cinco níveis e custo estimado.
+- [x] Emissão de cupom V2 com dias úteis, feriados, canal e expiração.
 - [ ] Tela/rota de caixa para consulta, confirmação, recusa e auditoria do cupom V2.
 - [ ] Piloto fechado com compras reais antes de publicar a V2.
 
@@ -70,6 +71,7 @@ Decisão após a resposta:
 4. Criar política de privacidade, preferência de marketing/opt-out e plano de retenção com revisão jurídica.
 5. Criar backup/restauração testável do Supabase e alertas de cron.
 6. Escolher WhatsApp Business Platform/Cloud API ou BSP oficial; não automatizar WhatsApp pessoal.
+7. Depois do piloto V2, remover telas, rotas e tabelas legadas que não forem mais referenciadas. O plano está em `docs/LIMPEZA_DO_LEGADO.md`.
 
 ## Critério para abrir ao público
 

@@ -11,7 +11,7 @@ Sistema de fidelidade para restaurante com:
 - Código recuperado e versionado no GitHub; cada push em `main` dispara deploy automático na Vercel.
 - Última base publicada no Git: gerador operacional de QR temporário da Roleta V2. A V2 continua **desativada** até o fluxo completo passar por testes e aprovação comercial.
 - TypeScript: sem erros na última verificação. Testes unitários: `30/30` aprovados.
-- Roleta: a V1 foi bloqueada; já existem sessões seguras de QR, com token opaco, hash no banco, expiração e auditoria. Ainda faltam a tela pública V2, o giro único, a emissão de cupom e a validação automática da venda.
+- Roleta: a V1 foi bloqueada. A V2 já possui sessão QR segura, tela pública por QR, giro único atômico no banco, prêmio ponderado por nível, cupom e consentimento opcional. Ela continua fechada e em modo de teste até a validação da venda pela Saipos e o piloto operacional.
 - Saipos: o fluxo de validação imediata de comanda está em espera pela confirmação técnica da Saipos. Veja `docs/SAIPOS_VALIDACAO_COMANDA.md` antes de ativar qualquer operação baseada em foto.
 
 ## Inicio rapido
@@ -53,6 +53,9 @@ Roadmap vivo, com estado de cada frente:
 
 Pergunta pronta e contrato técnico necessário com a Saipos:
 - `docs/SAIPOS_VALIDACAO_COMANDA.md`
+
+Plano para substituir e remover as partes antigas, sem compatibilidade desnecessária:
+- `docs/LIMPEZA_DO_LEGADO.md`
 
 Regras atuais do programa:
 - `docs/REGRAS-FIDELIDADE.md`

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 type Session = { nivel: number; expira_em: string };
@@ -13,7 +13,7 @@ type Result = {
 
 const levelNames = ["", "Brasa", "Chama", "Nobre", "Rei", "Lenda"];
 
-export default function RoletaV2Page() {
+function RoletaV2Content() {
   const params = useSearchParams();
   const token = params?.get("token") || "";
   const [session, setSession] = useState<Session | null>(null);
@@ -80,5 +80,13 @@ export default function RoletaV2Page() {
         {result && <section className="mt-8"><span className="text-6xl" aria-hidden>{result.premio.emoji}</span><p className="mt-4 text-sm font-bold uppercase tracking-[0.18em] text-[#c5a059]">Você ganhou</p><h2 className="mt-2 text-3xl font-black">{result.premio.nome}</h2><p className="mt-3 text-zinc-300">{result.premio.descricao_vitoria}</p><div className="mt-6 rounded-2xl border border-[#c5a059]/40 bg-[#311414] p-5"><span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Código do benefício</span><strong className="mt-2 block break-all text-2xl tracking-wider text-[#f4ce83]">{result.cupom}</strong><p className="mt-3 text-sm text-zinc-300">Apresente este código no caixa ou no atendimento até {new Date(result.expira_em).toLocaleDateString("pt-BR")}.</p>{result.modo_teste && <p className="mt-3 rounded-lg bg-amber-950/60 p-3 text-sm text-amber-100">Modo de teste: este benefício não pode ser usado na operação real.</p>}</div></section>}
       </section>
     </main>
+  );
+}
+
+export default function RoletaV2Page() {
+  return (
+    <Suspense fallback={<main className="operations-page min-h-screen bg-[#280404] p-10 text-center text-white">Preparando a roleta...</main>}>
+      <RoletaV2Content />
+    </Suspense>
   );
 }

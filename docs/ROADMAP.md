@@ -31,6 +31,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 - [x] Página cliente V2 e giro atômico no Supabase: telefone, consentimento opcional, prêmio por nível, cupom seguro e uso único do QR. V2 fechada e em modo de teste.
 - [x] Tela `/caixa/roleta` para gerar QR temporário, ainda bloqueada enquanto a V2 não for publicada.
 - [x] Execução do giro concedida somente ao `service_role` no Supabase; navegador e usuários comuns seguem sem acesso à função.
+- [x] No piloto manual, somente gestor/superadmin pode gerar QR; o sistema calcula a faixa pelo valor (Brasa: até R$ 99,99; Chama: R$ 100–249,99; Nobre: R$ 250–399,99; Rei: R$ 400–499,99; Lenda: R$ 500+).
 - [x] Next.js atualizado para `16.3.4`; última checagem de tipos aprovada e `30/30` testes unitários aprovados.
 
 ## Em andamento
@@ -52,6 +53,7 @@ Venda paga na Saipos -> confirmação automática no sistema -> nível da compra
 - [x] Seleção de prêmio no servidor, ponderada pelos cinco níveis e custo estimado.
 - [x] Emissão de cupom V2 com dias úteis, feriados, canal e expiração.
 - [x] Tela/rota de caixa para consulta, confirmação e auditoria do cupom V2; a recusa ainda será desenhada com motivo obrigatório.
+- [x] Geração manual do QR protegida para piloto: sem escolha manual de nível e sem permissão para perfil `caixa` emitir prêmio.
 - [ ] Piloto fechado com compras reais antes de publicar a V2.
 
 ### Saipos — dependência em espera

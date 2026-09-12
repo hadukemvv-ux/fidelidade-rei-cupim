@@ -32,6 +32,9 @@ Atualizado em 12/09/2026. Este é o ponto de retomada oficial do projeto.
 8. A permissão de execução de `girar_roleta_v2` foi conferida e concedida somente ao
    papel interno `service_role` em 12/09/2026. A verificação retornou `true`; os
    papéis de navegador (`anon` e `authenticated`) continuam revogados.
+9. Durante o piloto sem confirmação automática da Saipos, a geração manual de QR
+   exige papel `gestor` ou `superadmin`. O nível da roleta não é escolhível pela
+   equipe: é calculado pelo valor da compra nas cinco faixas documentadas no roadmap.
 
 ## Leitura executiva
 

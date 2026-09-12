@@ -24,6 +24,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 - [x] Projeto Supabase correto identificado: `asjoubgoccbvftyggunz`.
 - [x] Migrações de base, cupons auditáveis, perfis operacionais/auditoria e preparação da Roleta V2 aplicadas.
 - [x] Papéis `superadmin`, `gestor` e `caixa`, com tela de operadores, convite/suspensão e exclusão segura de usuário de teste.
+- [x] Gestão de acessos é exclusiva de `superadmin`; catálogo de prêmios pode ser consultado por gestor, mas só superadmin o altera, com evento de auditoria.
 - [x] Uso de cupom novo atômico e auditado para a operação de caixa.
 - [x] Roleta V1 desligada na página pública e na API; prêmios V2 e publicação permanecem desativados.
 - [x] Sessões QR V2 privadas: token aleatório armazenado somente como hash, expiração curta, nível/valor no servidor e trilha de operador.
@@ -64,7 +65,7 @@ Decisão após a resposta:
 ## Próximas prioridades independentes da Saipos
 
 1. [x] Restringir importação de planilha a superadmin, com limite de 2 MB e 2.000 linhas por envio. Planejar a substituição de `xlsx` (alertas altos conhecidos) continua pendente.
-2. Definir matriz única de permissões: superadmin, gestor e caixa por ação, não apenas por tela.
+2. Completar a matriz única de permissões: gestão de acessos e alteração de prêmios já usam papéis operacionais; faltam os demais endpoints administrativos sensíveis.
 3. Consolidar cupom novo e remover o caminho legado quando o teste de caixa for concluído.
 4. Criar política de privacidade, preferência de marketing/opt-out e plano de retenção com revisão jurídica.
 5. Criar backup/restauração testável do Supabase e alertas de cron.

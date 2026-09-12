@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { validateAdminAuth } from "@/app/api/_utils/validateAdminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireOperationalActor } from "@/lib/operationalAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -23,16 +23,9 @@ const DeleteSchema = z.object({
   confirmar: z.literal(true),
 });
 
-async function actorFromRequest(request: Request) {
-  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
-  if (!token) return null;
-  const { data } = await supabaseAdmin.auth.getUser(token);
-  return data.user ? { id: data.user.id, email: data.user.email || null } : null;
-}
-
 export async function GET(request: Request) {
-  const denied = await validateAdminAuth(request, new URL(request.url));
-  if (denied) return denied;
+  const actor = await requireOperationalActor(request, "superadmin");
+  if (actor instanceof Response) return actor;
 
   const [{ data: profiles, error: profileError }, { data: authData, error: authError }] = await Promise.all([
     supabaseAdmin.from("perfis_operacionais").select("user_id, nome, email, papel, ativo, criado_em, atualizado_em").order("nome"),
@@ -50,8 +43,8 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const denied = await validateAdminAuth(request, new URL(request.url));
-  if (denied) return denied;
+  const actor = await requireOperationalActor(request, "superadmin");
+  if (actor instanceof Response) return actor;
 
   const parsed = OperatorSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Dados de acesso inválidos." }, { status: 400 });
@@ -65,10 +58,9 @@ export async function PUT(request: Request) {
   const { error } = await supabaseAdmin.from("perfis_operacionais").upsert({ user_id, nome, email, papel, ativo, atualizado_em: new Date().toISOString() });
   if (error) return NextResponse.json({ error: "Não foi possível salvar o acesso." }, { status: 500 });
 
-  const actor = await actorFromRequest(request);
   await supabaseAdmin.from("administracao_eventos").insert({
     entidade: "operador", entidade_id: user_id, acao: previous ? "acesso_atualizado" : "acesso_liberado",
-    actor_user_id: actor?.id || null, actor_email: actor?.email || null,
+    actor_user_id: actor.userId, actor_email: actor.email,
     detalhes: { antes: previous, depois: { nome, papel, ativo, email } },
   });
 
@@ -77,8 +69,8 @@ export async function PUT(request: Request) {
 
 /** Cria uma conta por convite: o funcionário escolhe a própria senha pelo e-mail. */
 export async function POST(request: Request) {
-  const denied = await validateAdminAuth(request, new URL(request.url));
-  if (denied) return denied;
+  const actor = await requireOperationalActor(request, "superadmin");
+  if (actor instanceof Response) return actor;
 
   const parsed = InviteSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Informe nome, e-mail e função válidos." }, { status: 400 });
@@ -97,10 +89,9 @@ export async function POST(request: Request) {
   });
   if (profileError) return NextResponse.json({ error: "Convite enviado, mas a permissão não pôde ser salva." }, { status: 500 });
 
-  const actor = await actorFromRequest(request);
   await supabaseAdmin.from("administracao_eventos").insert({
     entidade: "operador", entidade_id: invite.user.id, acao: "convite_enviado",
-    actor_user_id: actor?.id || null, actor_email: actor?.email || null,
+    actor_user_id: actor.userId, actor_email: actor.email,
     detalhes: { nome, email, papel },
   });
   return NextResponse.json({ ok: true, message: `Convite enviado para ${email}.` }, { status: 201 });
@@ -108,15 +99,14 @@ export async function POST(request: Request) {
 
 /** Exclui somente acessos operacionais de teste; a auditoria permanece preservada. */
 export async function DELETE(request: Request) {
-  const denied = await validateAdminAuth(request, new URL(request.url));
-  if (denied) return denied;
+  const actor = await requireOperationalActor(request, "superadmin");
+  if (actor instanceof Response) return actor;
 
   const parsed = DeleteSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Confirmação de exclusão inválida." }, { status: 400 });
 
   const { user_id } = parsed.data;
-  const actor = await actorFromRequest(request);
-  if (actor?.id === user_id) return NextResponse.json({ error: "Não é permitido excluir o próprio acesso." }, { status: 400 });
+  if (actor.userId === user_id) return NextResponse.json({ error: "Não é permitido excluir o próprio acesso." }, { status: 400 });
 
   const { data: profile, error: profileError } = await supabaseAdmin
     .from("perfis_operacionais")
@@ -131,7 +121,7 @@ export async function DELETE(request: Request) {
 
   await supabaseAdmin.from("administracao_eventos").insert({
     entidade: "operador", entidade_id: user_id, acao: "usuario_excluido_para_teste",
-    actor_user_id: actor?.id || null, actor_email: actor?.email || null,
+    actor_user_id: actor.userId, actor_email: actor.email,
     detalhes: { nome: profile.nome, email: profile.email, papel: profile.papel, motivo: "exclusao_confirmada_no_painel", auditoria_preservada: true },
   });
 

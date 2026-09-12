@@ -74,6 +74,7 @@ Não houve alteração de dados de clientes nesta auditoria. A única mudança p
 3. Exclusão preserva auditoria e não permite apagar a própria conta nem o superadmin.
 4. Tela `/admin/auditoria` une eventos de administração e operação de cupons.
 5. A tela `/caixa` exige sessão de perfil operacional para consultar e usar cupom novo.
+6. Gestão de operadores exige `superadmin`. O catálogo de prêmios exige ao menos `gestor` para leitura e `superadmin` para alteração; alterações registram antes/depois na auditoria administrativa.
 
 ### Segurança já presente
 
@@ -109,7 +110,7 @@ O primeiro ramo existe em boa parte. No segundo, a sessão/QR seguro já existe;
 ### P1 — corrigir no próximo ciclo
 
 1. **Dois sistemas de cupom coexistem.** O novo fluxo está em `cupons_promocionais` e `/api/cupons/*`; o legado usa `resgates` e `/api/validar`. O validador legado faz leitura e baixa separadas, sem a mesma atomicidade/auditoria do novo. Definir uma data de migração e retirar o caminho legado da operação.
-2. **Administração e permissões não estão unificadas.** A maior parte de `/api/admin/*` aceita admin por allowlist/JWT, enquanto a operação de caixa usa `perfis_operacionais`. É preciso formalizar matriz de permissões por ação: quem cria garçom, altera prêmio, emite cupom, consulta PII, cancela cupom e exporta dados.
+2. **Administração e permissões não estão totalmente unificadas.** Gestão de operadores e alteração de prêmio já usam `perfis_operacionais`; a maior parte de `/api/admin/*` ainda aceita admin por allowlist/JWT. É preciso migrar ações restantes por matriz: quem cria garçom, emite/cancela cupom, consulta PII e exporta dados.
 3. **Auditoria não cobre todos os efeitos sensíveis.** A nova área de operadores e cupons registra ações, porém mudanças de prêmio, catálogo, garçom, importação, sorteio e execução de cron ainda não têm trilha imutável uniforme.
 4. **A função de expirar pontos está propositalmente desativada.** O cron retorna `skipped`; isso é seguro contra perda de pontos, mas as regras comerciais precisam refletir que não existe expiração enquanto não houver ledger por lote.
 5. **Backup e restauração não são rotina documentada.** GitHub não é backup de dados. Criar backup periódico do Supabase e testar restauração em ambiente separado.

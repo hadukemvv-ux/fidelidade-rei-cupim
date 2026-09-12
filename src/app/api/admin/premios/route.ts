@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { requireOperationalActor } from '@/lib/operationalAuth';
 import { validarDados } from '@/lib/validations';
 import {
   successResponse,
@@ -36,8 +36,8 @@ type PremioUpdateInput = z.infer<typeof PremioUpdateSchema>;
 export async function GET(request: NextRequest) {
   const requestId = getRequestId(request);
 
-  const authError = await validateAdminAuth(request, new URL(request.url));
-  if (authError) return authError;
+  const actor = await requireOperationalActor(request, 'gestor');
+  if (actor instanceof Response) return actor;
 
   try {
     logInfo('/api/admin/premios', 'Listando premios da roleta', { requestId });
@@ -64,8 +64,8 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const requestId = getRequestId(request);
 
-  const authError = await validateAdminAuth(request, new URL(request.url));
-  if (authError) return authError;
+  const actor = await requireOperationalActor(request, 'superadmin');
+  if (actor instanceof Response) return actor;
 
   try {
     const body = await request.json();
@@ -83,7 +83,7 @@ export async function PUT(request: NextRequest) {
 
     const { data: atual, error: atualError } = await supabaseAdmin
       .from('premios_roleta')
-      .select('nome')
+      .select('nome, ativo, canal_uso, custo_estimado, expira_em_dias, pesos_nivel, descricao_operacional')
       .eq('id', id)
       .maybeSingle();
     if (atualError) return handleApiError(atualError, '/api/admin/premios', requestId);
@@ -97,6 +97,7 @@ export async function PUT(request: NextRequest) {
     logInfo('/api/admin/premios', 'Atualizando premio da roleta', {
       id,
       campos: Object.keys(updateData),
+      superadmin_id: actor.userId,
       requestId,
     });
 
@@ -113,6 +114,30 @@ export async function PUT(request: NextRequest) {
     }
 
     if (!data) return errorResponse('Prêmio não encontrado', 'not_found', 404, requestId);
+
+    const { error: auditError } = await supabaseAdmin.from('administracao_eventos').insert({
+      entidade: 'configuracao',
+      entidade_id: `premio:${id}`,
+      acao: 'premio_roleta_atualizado',
+      actor_user_id: actor.userId,
+      actor_email: actor.email,
+      detalhes: {
+        premio_id: id,
+        nome: data.nome,
+        campos_alterados: Object.keys(updateData),
+        antes: atual,
+        depois: {
+          ativo: data.ativo,
+          canal_uso: data.canal_uso,
+          custo_estimado: data.custo_estimado,
+          expira_em_dias: data.expira_em_dias,
+          pesos_nivel: data.pesos_nivel,
+          descricao_operacional: data.descricao_operacional,
+        },
+      },
+    });
+    if (auditError) logError('/api/admin/premios', auditError as Error, { id, requestId, etapa: 'auditoria' });
+
     return successResponse({ premio: data });
   } catch (error) {
     logError('/api/admin/premios', error instanceof Error ? error : new Error(String(error)), {

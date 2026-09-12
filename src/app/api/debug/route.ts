@@ -1,22 +1,10 @@
-    import { NextResponse } from 'next/server';
-    import { supabaseAdmin } from '@/lib/supabaseAdmin';
-    import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
+import { NextResponse } from 'next/server';
 
-    export async function GET(request: Request) {
-      const authError = await validateAdminAuth(request, new URL(request.url));
-      if (authError) return authError;
-      try {
-        const { data, error } = await supabaseAdmin
-          .from('resgates')
-          .select('*')
-          .limit(5);
-
-        return NextResponse.json({ 
-          status: 'Debug', 
-          dados: data, 
-          erro: error 
-        });
-      } catch (e: any) {
-        return NextResponse.json({ erro: e.message });
-      }
-    }
+/**
+ * A antiga rota de depuração expunha registros completos de resgate para qualquer
+ * sessão administrativa. Diagnósticos operacionais devem usar `/admin/auditoria`
+ * e logs sem dados pessoais; esta rota não deve voltar a retornar dados reais.
+ */
+export async function GET() {
+  return NextResponse.json({ error: 'Rota não disponível.' }, { status: 404 });
+}

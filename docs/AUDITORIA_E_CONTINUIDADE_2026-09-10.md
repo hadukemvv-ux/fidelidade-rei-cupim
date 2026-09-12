@@ -75,6 +75,7 @@ Não houve alteração de dados de clientes nesta auditoria. A única mudança p
 4. Tela `/admin/auditoria` une eventos de administração e operação de cupons.
 5. A tela `/caixa` exige sessão de perfil operacional para consultar e usar cupom novo.
 6. Gestão de operadores exige `superadmin`. O catálogo de prêmios exige ao menos `gestor` para leitura e `superadmin` para alteração; alterações registram antes/depois na auditoria administrativa.
+7. A rota legada `/api/debug`, que retornava registros completos de resgate, foi desativada. Diagnósticos devem usar a auditoria administrativa e logs sem dados pessoais.
 
 ### Segurança já presente
 

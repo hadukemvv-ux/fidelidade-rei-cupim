@@ -3,6 +3,7 @@
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -48,7 +49,7 @@ export default function CaixaPage() {
     finally { setLoading(false); }
   }
 
-  return <main className="min-h-screen bg-stone-950 px-4 py-8 text-white"><section className="mx-auto grid max-w-xl gap-5 rounded-2xl border border-amber-500/40 bg-stone-900 p-6 shadow-2xl"><header><span className="text-xs font-bold uppercase tracking-[.2em] text-amber-400">O Rei do Cupim · operação</span><h1 className="mt-2 text-3xl font-black">Validar cupom</h1><p className="mt-2 text-sm text-stone-300">Leia o QR do cliente ou digite o código recebido no WhatsApp.</p></header>
+  return <main className="min-h-screen bg-stone-950 px-4 py-8 text-white"><section className="mx-auto grid max-w-xl gap-5 rounded-2xl border border-amber-500/40 bg-stone-900 p-6 shadow-2xl"><header><span className="text-xs font-bold uppercase tracking-[.2em] text-amber-400">O Rei do Cupim · operação</span><h1 className="mt-2 text-3xl font-black">Validar cupom</h1><p className="mt-2 text-sm text-stone-300">Leia o QR do cliente ou digite o código recebido no WhatsApp.</p><Link href="/caixa/roleta" className="mt-4 inline-flex rounded-lg border border-amber-400 px-3 py-2 text-sm font-black text-amber-300">Gerar QR da Roleta V2</Link></header>
     {!coupon && !scannerOpen && <button onClick={() => setScannerOpen(true)} className="rounded-xl bg-amber-500 py-4 font-black text-stone-950">Abrir câmera para ler QR</button>}
     {scannerOpen && <div className="overflow-hidden rounded-xl border-2 border-amber-400 bg-black"><Scanner onScan={(items) => { const raw = items[0]?.rawValue; if (raw) consult(raw); }} onError={() => setFeedback({ type: 'error', text: 'Não foi possível abrir a câmera. Digite o código.' })} styles={{ container: { width: '100%', aspectRatio: '1 / 1' } }} /><button onClick={() => setScannerOpen(false)} className="w-full bg-stone-800 py-3 text-sm font-bold">Fechar câmera</button></div>}
     <div className="flex gap-2"><input value={code} onChange={(event) => setCode(event.target.value.toUpperCase())} placeholder="Código do cupom" className="min-w-0 flex-1 rounded-lg border border-stone-600 bg-stone-950 px-3 py-3 text-center font-mono tracking-widest outline-none focus:border-amber-400" /><button onClick={() => consult()} disabled={loading} className="rounded-lg bg-blue-600 px-4 font-bold disabled:opacity-50">Consultar</button></div>

@@ -6,12 +6,13 @@ Sistema de fidelidade para restaurante com:
 - Area admin protegida por sessao
 - Crons de sincronizacao e expiracao
 
-## Estado atual
+## Estado atual (12/09/2026)
 
-- Build: passando
-- TypeScript: sem erros
-- Suite de integracao: `17/17` testes aprovados
-- Deploy: push em `main` publica na Vercel automaticamente
+- Código recuperado e versionado no GitHub; cada push em `main` dispara deploy automático na Vercel.
+- Última base publicada no Git: gerador operacional de QR temporário da Roleta V2. A V2 continua **desativada** até o fluxo completo passar por testes e aprovação comercial.
+- TypeScript: sem erros na última verificação. Testes unitários: `30/30` aprovados.
+- Roleta: a V1 foi bloqueada; já existem sessões seguras de QR, com token opaco, hash no banco, expiração e auditoria. Ainda faltam a tela pública V2, o giro único, a emissão de cupom e a validação automática da venda.
+- Saipos: o fluxo de validação imediata de comanda está em espera pela confirmação técnica da Saipos. Veja `docs/SAIPOS_VALIDACAO_COMANDA.md` antes de ativar qualquer operação baseada em foto.
 
 ## Inicio rapido
 
@@ -38,17 +39,20 @@ node tests/saipos-integration.js
 
 ## Documentacao oficial do projeto
 
+Ponto oficial de retomada, auditoria e checklist de abertura:
+- `docs/AUDITORIA_E_CONTINUIDADE_2026-09-10.md`
+
 Para iniciantes:
 - `docs/GUIA-INICIANTE.md`
 
 Para operacao e testes:
 - `docs/GUIA-OPERACAO-E-TESTES.md`
 
-Roadmap:
+Roadmap vivo, com estado de cada frente:
 - `docs/ROADMAP.md`
 
-Auditoria, continuidade e plano de retomada:
-- `docs/AUDITORIA_E_CONTINUIDADE_2026-09-10.md`
+Pergunta pronta e contrato técnico necessário com a Saipos:
+- `docs/SAIPOS_VALIDACAO_COMANDA.md`
 
 Regras atuais do programa:
 - `docs/REGRAS-FIDELIDADE.md`

@@ -1,6 +1,6 @@
 # Auditoria e continuidade — Clube Cupim
 
-Atualizado em 11/09/2026. Este é o ponto de retomada oficial do projeto.
+Atualizado em 12/09/2026. Este é o ponto de retomada oficial do projeto.
 
 ## Progresso de segurança — 11/09/2026
 
@@ -21,10 +21,13 @@ Atualizado em 11/09/2026. Este é o ponto de retomada oficial do projeto.
    as tabelas privadas `roleta_sessoes` e `roleta_giros`, com RLS, token opaco em hash,
    expiração, nível e valor de comanda mantidos no servidor. Não publicou a V2 nem
    ativou prêmios; é somente a fundação auditável para QR e giro único.
+6. O commit `02133d1` acrescentou a tela operacional `/caixa/roleta`, que cria QR
+   temporário usando as sessões V2. A publicação da V2 e todos os prêmios continuam
+   desligados. A tela pública, o giro e a emissão de cupom V2 ainda não existem.
 
 ## Leitura executiva
 
-O projeto foi recuperado do GitHub e está publicado na Vercel. A base de fidelidade, os acessos operacionais, a validação de cupom e a preparação da Roleta V2 existem, mas o produto **não deve ser aberto ao público ainda**. A maior razão é que a rota pública `/roleta` continua usando o fluxo legado, que não equivale ao desenho V2 aprovado.
+O projeto foi recuperado do GitHub e está publicado na Vercel. A base de fidelidade, os acessos operacionais, a validação de cupom e a preparação da Roleta V2 existem, mas o produto **não deve ser aberto ao público ainda**. A Roleta V1 está bloqueada; a V2 ainda não tem fluxo público completo nem uma fonte automática aprovada para provar que a venda foi paga.
 
 Não houve alteração de dados de clientes nesta auditoria. A única mudança produzida por este ciclo é esta documentação de continuidade.
 
@@ -32,12 +35,12 @@ Não houve alteração de dados de clientes nesta auditoria. A única mudança p
 
 | Frente | Estado | Observação |
 | --- | --- | --- |
-| Código e GitHub | Verde | `main` no commit `82138b6`; cópia completa no GitHub. |
-| Vercel | Verde | Deploy de produção do commit `82138b6` confirmado como `Ready`. |
+| Código e GitHub | Verde | `main` no commit `02133d1`; cópia completa no GitHub. |
+| Vercel | Verde | Último deploy inspecionado do commit `82138b6` estava `Ready`; pushes posteriores devem ser confirmados no painel antes de operação. |
 | Supabase | Amarelo | Migrações de recuperação, cupom, auditoria e preparação V2 foram aplicadas; precisa de inventário e backup recorrente. |
 | Fidelidade e Saipos | Amarelo | Motor de venda é idempotente; falta validação controlada com dados reais e política de retenção. |
 | Operação de caixa | Amarelo | Validação atômica de cupons novos existe; o validador legado ainda deve ser descontinuado. |
-| Roleta | Vermelho | A página pública ainda usa rotas e regras antigas; V2 está apenas preparada no painel/admin e no banco. |
+| Roleta | Amarelo | V1 está bloqueada; sessão QR V2 e gerador operacional existem, mas falta fluxo público, giro/cupom e validação segura da venda. |
 | WhatsApp/OTP | Amarelo | Arquitetura e limites existem, porém a implementação atual ainda usa Twilio Verify e está desativada. |
 | LGPD e documentos legais | Vermelho | Há base técnica parcial, mas faltam política de privacidade, registro de tratamento, atendimento de direitos e retenção. |
 | Dependências | Amarelo | Next.js foi atualizado para 16.3.4. Restam 2 alertas altos ligados a `xlsx`/`ws`; a importação deve ser isolada ou substituída antes da abertura pública. |
@@ -87,12 +90,13 @@ Não houve alteração de dados de clientes nesta auditoria. A única mudança p
 Venda Saipos -> crédito idempotente -> saldo/nível/tickets
                                   -> resgate clássico (já funciona, mas precisa revisão de cupom)
 
-Comanda/QR do garçom -> sessão de roleta V2 -> telefone + consentimento opcional
-                     -> prêmio/cupom V2 -> caixa/gestor valida -> auditoria
-                     -> conclusão de cadastro + benefício inicial
+Venda paga confirmada pela Saipos -> sessão de roleta V2 -> QR temporário
+                                  -> telefone + consentimento opcional
+                                  -> prêmio/cupom V2 -> caixa/gestor valida -> auditoria
+                                  -> conclusão de cadastro + benefício inicial
 ```
 
-O primeiro ramo existe em boa parte. O segundo **ainda não está implementado de ponta a ponta**: o QR seguro, a sessão de mesa, o consentimento de marketing, a emissão de cupom V2 e a página pública V2 ainda precisam substituir a Roleta legada.
+O primeiro ramo existe em boa parte. No segundo, a sessão/QR seguro já existe; ainda faltam a confirmação automática de venda paga, o telefone/consentimento, giro único, cupom V2 e página pública. A foto de comanda não será usada como prova única: ela pode ser adulterada ou reutilizada. A consulta formal à Saipos está em `docs/SAIPOS_VALIDACAO_COMANDA.md`.
 
 ## Achados da auditoria
 
@@ -115,7 +119,7 @@ O primeiro ramo existe em boa parte. O segundo **ainda não está implementado d
 1. A rota pública `/api/resgate/check` revela se um telefone possui cadastro. Reduzir enumeração: resposta neutra ou desafio/OTP antes de detalhar estado.
 2. A Roleta legada registra telefone e IP brutos em `garcons_logs`; migrar para hashes com segredo rotacionável e prazo curto de retenção.
 3. Há dois arquivos de configuração Next (`next.config.ts` e `next.config.js`). Manter apenas um após validar qual é carregado, evitando comportamento ambíguo.
-4. Alguns documentos antigos mencionam 17/21 testes e Twilio como próximo foco. O estado atual tem 30 testes unitários, V2 em preparação e decisão pendente sobre provedor oficial de WhatsApp. A documentação precisa ser consolidada.
+4. Alguns documentos históricos mencionam 17/21 testes e Twilio como próximo foco. O estado vigente é `30/30` testes unitários, V2 em desenvolvimento e decisão pendente sobre provedor oficial de WhatsApp. `README.md`, `docs/ROADMAP.md` e este arquivo são as fontes atuais.
 5. Logs de API ainda podem levar contexto sensível a logs da Vercel. Adotar catálogo de campos permitidos e nunca registrar telefone, e-mail, CPF, PIN, token, cupom completo ou payload bruto Saipos.
 6. Falta proteção de borda contra abuso distribuído (Turnstile/WAF/rate limit distribuído) para cadastro, PIN, roleta e OTP.
 
@@ -153,9 +157,9 @@ O sistema trata dados pessoais: nome, telefone, e-mail, aniversário, histórico
 
 ### Fase B — Roleta V2 segura
 
-1. Criar sessão de comanda/mesa assinada, curta e de uso único, gerada pelo garçom autorizado.
-2. QR deve carregar somente identificador opaco; valor, nível e prêmio elegível ficam no servidor.
-3. Implementar cinco níveis definidos por regras comerciais aprovadas e armazenar o snapshot da compra/sessão.
+1. **Concluído:** criar sessão de QR curta e de uso único, gerada por operador; QR contém somente token opaco e o banco armazena hash, nível e valor.
+2. Confirmar com a Saipos webhook de venda paga ou consulta individual confiável; sem isso, não liberar automaticamente por foto.
+3. Implementar cinco níveis definidos por regra comercial e armazenar o snapshot da venda/sessão.
 4. Tela cliente: telefone, aviso de privacidade, opt-in opcional de marketing e uma única escolha clara de jogo.
 5. Gerar cupom V2 com código aleatório forte, hash no banco, validade de 14 dias, dias úteis e feriados configuráveis.
 6. Liberar somente validação autenticada por `caixa`, `gestor` ou `superadmin`; registrar consulta, recusa e uso.
@@ -227,6 +231,6 @@ O sistema trata dados pessoais: nome, telefone, e-mail, aniversário, histórico
 
 - Teste unitário anterior: 30 testes aprovados.
 - Checagem de tipos anterior: sem erro.
-- Último deploy observado: commit `82138b6`, status Ready.
+- Último deploy observado: commit `82138b6`, status Ready. O Git está no commit `02133d1`; confirmar o deploy correspondente no painel Vercel antes de abrir operação.
 - Auditoria de dependências após atualização: 2 vulnerabilidades altas (`xlsx` e `ws` transitivo), sem vulnerabilidades críticas ou moderadas.
 - A sessão do painel Supabase expirou durante esta auditoria; não foi feita nenhuma alteração adicional em ambiente externo.

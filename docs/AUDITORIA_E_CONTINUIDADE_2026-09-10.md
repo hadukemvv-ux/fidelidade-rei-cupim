@@ -29,6 +29,9 @@ Atualizado em 12/09/2026. Este é o ponto de retomada oficial do projeto.
    Ela adiciona giro único atômico, cupom, prêmio ponderado por nível e registro de
    consentimento. A página cliente está em `/roleta/v2`; `v2_publicada` segue falsa
    e `v2_modo_teste` segue verdadeiro, portanto nenhum prêmio real pode ser liberado.
+8. A permissão de execução de `girar_roleta_v2` foi conferida e concedida somente ao
+   papel interno `service_role` em 12/09/2026. A verificação retornou `true`; os
+   papéis de navegador (`anon` e `authenticated`) continuam revogados.
 
 ## Leitura executiva
 
@@ -42,10 +45,10 @@ Não houve alteração de dados de clientes nesta auditoria. A única mudança p
 | --- | --- | --- |
 | Código e GitHub | Verde | `main` contém a recuperação, Roleta V2 com giro atômico e endurecimento da importação; cópia completa no GitHub. |
 | Vercel | Verde | Deploy de produção do commit `8191c64` verificado como `Ready` em 12/09/2026. |
-| Supabase | Amarelo | Migrações de recuperação, cupom, auditoria e preparação V2 foram aplicadas; precisa de inventário e backup recorrente. |
+| Supabase | Amarelo | Migrações de recuperação, cupom, auditoria e V2 foram aplicadas; o giro é exclusivo do servidor. Falta inventário e backup recorrente. |
 | Fidelidade e Saipos | Amarelo | Motor de venda é idempotente; falta validação controlada com dados reais e política de retenção. |
 | Operação de caixa | Amarelo | Validação atômica de cupons novos existe; o validador legado ainda deve ser descontinuado. |
-| Roleta | Amarelo | V1 está bloqueada; sessão QR V2 e gerador operacional existem, mas falta fluxo público, giro/cupom e validação segura da venda. |
+| Roleta | Amarelo | V1 está bloqueada; QR, página pública, giro/cupom e caixa V2 existem. Falta validação segura da venda e piloto fechado. |
 | WhatsApp/OTP | Amarelo | Arquitetura e limites existem, porém a implementação atual ainda usa Twilio Verify e está desativada. |
 | LGPD e documentos legais | Vermelho | Há base técnica parcial, mas faltam política de privacidade, registro de tratamento, atendimento de direitos e retenção. |
 | Dependências | Amarelo | Next.js foi atualizado para 16.3.4. Restam 2 alertas altos ligados a `xlsx`/`ws`; a importação deve ser isolada ou substituída antes da abertura pública. |

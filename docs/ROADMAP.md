@@ -14,7 +14,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 | Base de fidelidade/Saipos | Parcial | Confirmar contrato de venda paga, cancelamento e consulta imediata com a Saipos. |
 | Operadores e auditoria | Parcial | Unificar permissões finas e cobrir toda ação sensível em auditoria. |
 | Cupons da operação | Parcial | Retirar gradualmente o validador legado e testar o fluxo novo com a caixa. |
-| Roleta V2 | Em desenvolvimento | Construir fluxo público, giro único e cupom após definir validação da venda. |
+| Roleta V2 | Pronta para piloto fechado | Validar uma venda paga por fonte confiável e testar ponta a ponta. |
 | WhatsApp OTP | Preparado, desligado | Escolher provedor oficial após adquirir o número comercial. |
 | LGPD e operação pública | Pendente | Política, preferências, opt-out, retenção e revisão jurídica. |
 
@@ -30,6 +30,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 - [x] Sessões QR V2 privadas: token aleatório armazenado somente como hash, expiração curta, nível/valor no servidor e trilha de operador.
 - [x] Página cliente V2 e giro atômico no Supabase: telefone, consentimento opcional, prêmio por nível, cupom seguro e uso único do QR. V2 fechada e em modo de teste.
 - [x] Tela `/caixa/roleta` para gerar QR temporário, ainda bloqueada enquanto a V2 não for publicada.
+- [x] Execução do giro concedida somente ao `service_role` no Supabase; navegador e usuários comuns seguem sem acesso à função.
 - [x] Next.js atualizado para `16.3.4`; última checagem de tipos aprovada e `30/30` testes unitários aprovados.
 
 ## Em andamento
@@ -50,7 +51,7 @@ Venda paga na Saipos -> confirmação automática no sistema -> nível da compra
 - [x] Registro de telefone, consentimento opcional e giro único atômico.
 - [x] Seleção de prêmio no servidor, ponderada pelos cinco níveis e custo estimado.
 - [x] Emissão de cupom V2 com dias úteis, feriados, canal e expiração.
-- [ ] Tela/rota de caixa para consulta, confirmação, recusa e auditoria do cupom V2.
+- [x] Tela/rota de caixa para consulta, confirmação e auditoria do cupom V2; a recusa ainda será desenhada com motivo obrigatório.
 - [ ] Piloto fechado com compras reais antes de publicar a V2.
 
 ### Saipos — dependência em espera

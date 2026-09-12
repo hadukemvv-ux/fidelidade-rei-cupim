@@ -40,8 +40,8 @@ Não houve alteração de dados de clientes nesta auditoria. A única mudança p
 
 | Frente | Estado | Observação |
 | --- | --- | --- |
-| Código e GitHub | Verde | `main` contém a recuperação, Roleta V2 inicial e endurecimento da importação; cópia completa no GitHub. |
-| Vercel | Verde | Deploy de produção do commit `d080305` verificado como `Ready` em 12/09/2026. |
+| Código e GitHub | Verde | `main` contém a recuperação, Roleta V2 com giro atômico e endurecimento da importação; cópia completa no GitHub. |
+| Vercel | Verde | Deploy de produção do commit `8191c64` verificado como `Ready` em 12/09/2026. |
 | Supabase | Amarelo | Migrações de recuperação, cupom, auditoria e preparação V2 foram aplicadas; precisa de inventário e backup recorrente. |
 | Fidelidade e Saipos | Amarelo | Motor de venda é idempotente; falta validação controlada com dados reais e política de retenção. |
 | Operação de caixa | Amarelo | Validação atômica de cupons novos existe; o validador legado ainda deve ser descontinuado. |
@@ -239,6 +239,6 @@ O sistema trata dados pessoais: nome, telefone, e-mail, aniversário, histórico
 
 - Teste unitário anterior: 30 testes aprovados.
 - Checagem de tipos anterior: sem erro.
-- Último deploy observado: commit `d080305`, status `Ready` na Vercel em 12/09/2026, após a restrição da importação a superadmin.
+- O primeiro deploy da página V2 (`80cbb34`) falhou no prerender porque a leitura do QR precisava de `Suspense`; o commit `8191c64` corrigiu isso e foi confirmado como `Ready` na Vercel em 12/09/2026.
 - Auditoria de dependências após atualização: 2 vulnerabilidades altas (`xlsx` e `ws` transitivo), sem vulnerabilidades críticas ou moderadas.
 - A sessão do painel Supabase expirou durante esta auditoria; não foi feita nenhuma alteração adicional em ambiente externo.

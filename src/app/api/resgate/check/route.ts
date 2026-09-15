@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { isPreCadastro } from '@/lib/customerRegistration';
+import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 
 function onlyDigits(v: string) {
   return v.replace(/\D/g, '');
@@ -8,6 +9,8 @@ function onlyDigits(v: string) {
 
 export async function POST(req: Request) {
   try {
+    const blocked = await bloquearSeContencaoAtiva();
+    if (blocked) return blocked;
     const body = await req.json();
     const telefone = onlyDigits(body?.telefone || '');
 

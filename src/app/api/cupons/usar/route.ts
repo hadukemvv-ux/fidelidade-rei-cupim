@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { requireOperationalActor } from "@/lib/operationalAuth";
+import { bloquearSeContencaoAtiva } from "@/lib/operationalContainment";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,8 @@ const getIpHash = (request: Request) => crypto.createHash("sha256")
   .digest("hex");
 
 export async function POST(request: Request) {
+  const blocked = await bloquearSeContencaoAtiva();
+  if (blocked) return blocked;
   const actor = await requireOperationalActor(request, "caixa");
   if (actor instanceof NextResponse) return actor;
 

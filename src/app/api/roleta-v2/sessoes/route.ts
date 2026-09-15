@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireOperationalActor } from "@/lib/operationalAuth";
 import { getFaixaRoletaV2 } from "@/lib/roleta-v2-rules";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { bloquearSeContencaoAtiva } from "@/lib/operationalContainment";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,8 @@ const hashToken = (token: string) => crypto.createHash("sha256").update(token).d
 
 /** Cria um QR de uso único. O token retornado é opaco e expira em minutos. */
 export async function POST(request: Request) {
+  const blocked = await bloquearSeContencaoAtiva();
+  if (blocked) return blocked;
   // Enquanto não existe confirmação automática da Saipos, gerar QR manual é
   // uma exceção de piloto aprovada por gestor. Caixa continua somente validando
   // cupons; isso reduz o risco de premiação por valor ou nível inventados.

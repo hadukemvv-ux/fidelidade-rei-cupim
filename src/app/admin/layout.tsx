@@ -26,7 +26,6 @@ const navigation: Array<{ label: string; items: NavItem[] }> = [
   { label: 'Programa de fidelidade', items: [
     { href: '/admin/cardapio', icon: '★', label: 'Recompensas', hint: 'Produtos e pontos' },
     { href: '/admin/roleta', icon: '↻', label: 'Roleta', hint: 'Prêmios e chances' },
-    { href: '/admin/sorteio', icon: '◇', label: 'Sorteios', hint: 'Configuração e resultados' },
   ] },
   { label: 'Operação', items: [
     { href: '/admin/garcons', icon: '♟', label: 'Garçons', hint: 'Cadastros e desempenho' },
@@ -34,6 +33,7 @@ const navigation: Array<{ label: string; items: NavItem[] }> = [
     { href: '/admin/operadores', icon: '♙', label: 'Acessos', hint: 'Caixa, gestão e admin' },
     { href: '/admin/auditoria', icon: '◷', label: 'Auditoria', hint: 'Quem fez cada ação' },
     { href: '/admin/garcons/alertas', icon: '!', label: 'Segurança', hint: 'Alertas e bloqueios' },
+    { href: '/admin/seguranca', icon: '⛨', label: 'Privacidade', hint: 'Incidentes e contenção' },
     { href: '/admin/importar', icon: '⇧', label: 'Importação', hint: 'Clientes da Saipos' },
   ] },
 ];
@@ -53,15 +53,9 @@ const pageInfo: Record<string, { title: string; description: string }> = {
   '/admin/operadores': { title: 'Acessos da equipe', description: 'Defina o que cada pessoa pode fazer no sistema.' },
   '/admin/auditoria': { title: 'Auditoria', description: 'Acompanhe liberações, validações e ações administrativas.' },
   '/admin/garcons/alertas': { title: 'Segurança', description: 'Revise atividades suspeitas e desbloqueios.' },
+  '/admin/seguranca': { title: 'Privacidade e incidentes', description: 'Contenha riscos, preserve evidências e acompanhe a investigação.' },
   '/admin/importar': { title: 'Importação', description: 'Atualize a base de clientes com uma planilha da Saipos.' },
 };
-
-const raffleNavigation = [
-  { href: '/admin/sorteio', label: 'Configuração' },
-  { href: '/admin/sorteio/previsao', label: 'Participantes' },
-  { href: '/admin/sorteio/resumo', label: 'Resumo' },
-  { href: '/admin/sorteio/ganhadores', label: 'Ganhadores' },
-];
 
 function isActive(pathname: string, href: string) {
   if (href === '/admin') return pathname === href;
@@ -141,7 +135,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <main className="admin-main">
         <header className="admin-page-header"><div><span>Administração</span><h1>{currentPage.title}</h1><p>{currentPage.description}</p></div><Link href="/" target="_blank">Ver site ↗</Link></header>
-        {pathname.startsWith('/admin/sorteio') && <nav className="admin-subnav" aria-label="Seções dos sorteios">{raffleNavigation.map((item) => <Link key={item.href} href={item.href} className={pathname === item.href ? 'active' : ''}>{item.label}</Link>)}</nav>}
         <div className="admin-content">{children}</div>
       </main>
     </div>

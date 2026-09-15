@@ -7,6 +7,7 @@ import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
 import { attachCustomerSession, getCustomerSessionFromRequest } from '@/lib/customerSession';
 import { hashPin, verifyPin } from '@/lib/pin';
 import { isPreCadastro } from '@/lib/customerRegistration';
+import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 
 // =========================
 // HELPERS
@@ -40,7 +41,6 @@ async function buscarSnapshot(telefone: string) {
     },
     pontos: Number(cliente.pontos || 0),
     cashback: Number(cliente.cashback || 0),
-    tickets: Number(cliente.tickets || 0),
     nivel: {
       atual: progressao.nivel,
       proximo: progressao.proximoNivel,
@@ -52,6 +52,8 @@ async function buscarSnapshot(telefone: string) {
 }
 
 export async function GET(req: NextRequest) {
+  const blocked = await bloquearSeContencaoAtiva();
+  if (blocked) return blocked;
   const session = getCustomerSessionFromRequest(req);
   if (!session) return errorResponse('Sessão não encontrada.', 'unauthorized', 401);
 
@@ -71,6 +73,8 @@ export async function POST(req: NextRequest) {
   const requestId = getRequestId(req);
   
   try {
+    const blocked = await bloquearSeContencaoAtiva();
+    if (blocked) return blocked;
     const body = await req.json();
     
     // Validar entrada com Zod
@@ -103,7 +107,7 @@ export async function POST(req: NextRequest) {
     // 1. Buscar cliente
     const { data: cliente, error: clienteError } = await supabaseAdmin
       .from('base_clientes_saipos')
-      .select('*')
+      .select('id, nome, email, telefone, data_nascimento, gasto_90_dias, total_gasto, pontos, cashback, nivel, pin_hash')
       .eq('telefone', telefone)
       .maybeSingle();
 

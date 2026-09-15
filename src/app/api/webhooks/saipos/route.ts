@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { processarVenda } from '@/app/api/cron/saipos/processarVenda';
+import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 
 export async function POST(request: Request) {
   const secret = process.env.SAIPOS_TOKEN;
@@ -11,6 +12,9 @@ export async function POST(request: Request) {
   if (provided !== secret) {
     return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
   }
+
+  const blocked = await bloquearSeContencaoAtiva();
+  if (blocked) return blocked;
 
   try {
     const body = await request.json();

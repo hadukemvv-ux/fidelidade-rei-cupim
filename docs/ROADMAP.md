@@ -16,7 +16,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 | Cupons da operação | Parcial | Retirar gradualmente o validador legado e testar o fluxo novo com a caixa. |
 | Roleta V2 | Pronta para piloto fechado | Validar uma venda paga por fonte confiável e testar ponta a ponta. |
 | WhatsApp OTP | Preparado, desligado | Escolher provedor oficial após adquirir o número comercial. |
-| LGPD e operação pública | Pendente | Política, preferências, opt-out, retenção e revisão jurídica. |
+| LGPD e operação pública | Em andamento | Contenção inicial, inventário, preferências, retenção, backup e revisão jurídica. |
 
 ## Concluído
 
@@ -71,8 +71,8 @@ Decisão após a resposta:
 1. [x] Restringir importação de planilha a superadmin, com limite de 2 MB e 2.000 linhas por envio. Planejar a substituição de `xlsx` (alertas altos conhecidos) continua pendente.
 2. Completar a matriz única de permissões: gestão de acessos e alteração de prêmios já usam papéis operacionais; faltam os demais endpoints administrativos sensíveis.
 3. Consolidar cupom novo e remover o caminho legado quando o teste de caixa for concluído.
-4. Criar política de privacidade, preferência de marketing/opt-out e plano de retenção com revisão jurídica.
-5. Criar backup/restauração testável do Supabase e alertas de cron.
+4. [Em andamento] Criar política de privacidade, preferência de marketing/opt-out e plano de retenção. A central de incidente, modo de contenção e bloqueio de rotas críticas já foram preparados; o checkpoint está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`.
+5. [Em andamento] Criar backup/restauração testável do Supabase e alertas de cron.
 6. Escolher WhatsApp Business Platform/Cloud API ou BSP oficial; não automatizar WhatsApp pessoal.
 7. Depois do piloto V2, remover telas, rotas e tabelas legadas que não forem mais referenciadas. O plano está em `docs/LIMPEZA_DO_LEGADO.md`.
 
@@ -87,6 +87,7 @@ Nada de roleta ou campanha real antes de todos os itens abaixo:
 - [ ] Revisão jurídica da ação promocional baseada em prêmios aleatórios.
 - [ ] Backup e restauração do Supabase validados.
 - [ ] Dois acessos reais de caixa e um de gestor, todos individuais, configurados.
+- [ ] Botão de contenção e procedimento de incidente testados em ambiente controlado.
 
 ## Rotina de cada alteração
 

@@ -10,6 +10,7 @@ import {
   sendWhatsAppOtp,
 } from '@/lib/whatsappOtp';
 import { isPreCadastro } from '@/lib/customerRegistration';
+import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 
 const schema = z.object({
   telefone: z.string(),
@@ -26,6 +27,8 @@ export async function POST(request: Request) {
   let reservationId: string | null = null;
 
   try {
+    const blocked = await bloquearSeContencaoAtiva();
+    if (blocked) return blocked;
     if (!isOtpEnabled()) {
       return errorResponse('A verificação por WhatsApp ainda não está liberada.', 'error', 503, requestId);
     }

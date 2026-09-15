@@ -12,7 +12,7 @@ type DashboardStats = {
 };
 
 const sections = [
-  { href: '/admin/clientes', icon: '◎', title: 'Encontrar um cliente', description: 'Consulte telefone, nível, pontos, cashback, tickets e última compra.', action: 'Abrir clientes' },
+  { href: '/admin/clientes', icon: '◎', title: 'Encontrar um cliente', description: 'Consulte telefone, nível, pontos, cashback e última compra.', action: 'Abrir clientes' },
   { href: '/admin/cardapio', icon: '★', title: 'Alterar recompensas', description: 'Cadastre produtos, ajuste o custo em pontos e escolha os destaques.', action: 'Gerenciar recompensas' },
   { href: '/admin/analytics', icon: '▥', title: 'Acompanhar resultados', description: 'Veja cadastros, pontos, resgates e roleta nos últimos 7, 30 ou 90 dias.', action: 'Ver relatórios' },
   { href: '/admin/garcons', icon: '♟', title: 'Gerenciar equipe', description: 'Cadastre garçons, confira o ranking e investigue atividades suspeitas.', action: 'Abrir equipe' },
@@ -61,7 +61,7 @@ export default function AdminHome() {
       <section className="admin-status-grid" aria-label="Situação das integrações">
         <article><div><span className="status-dot ready" />Integração automática</div><h3>Saipos</h3><p>As vendas devem entrar automaticamente. A importação manual de vendas continua bloqueada para evitar duplicidade.</p><Link href="/admin/importar">Abrir importação de clientes →</Link></article>
         <article><div><span className="status-dot waiting" />Aguardando configuração</div><h3>WhatsApp de aniversário</h3><p>A data e a autorização já são registradas. O envio automático será ativado somente depois da integração do novo número.</p></article>
-        <article><div><span className="status-dot attention" />Ações sensíveis</div><h3>Sorteios e segurança</h3><p>Rodar sorteio, zerar ranking e desbloquear usuário alteram dados. Essas ações continuam exigindo confirmação.</p><Link href="/admin/sorteio">Abrir sorteios →</Link></article>
+        <article><div><span className="status-dot attention" />Sorteios pausados</div><h3>Pontos e segurança</h3><p>O Clube não realiza sorteios nem usa tickets por enquanto. A prioridade é concluir privacidade, acessos e operação segura.</p><Link href="/admin/roleta">Ver preparação da Roleta V2 →</Link></article>
       </section>
     </div>
   );

@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     // Buscar cliente na tabela principal (otimizado - select específico)
     const { data: cliente, error } = await supabaseAdmin
       .from('base_clientes_saipos')
-      .select('id, nome, email, data_nascimento, telefone, total_gasto, gasto_90_dias, pontos, cashback, tickets')
+      .select('id, nome, email, data_nascimento, telefone, total_gasto, gasto_90_dias, pontos, cashback')
       .eq('telefone', telefone)
       .single();
 
@@ -77,7 +77,6 @@ export async function GET(request: NextRequest) {
       },
       pontos: Number(cliente.pontos || 0),
       cashback: Number(cliente.cashback || 0),
-      tickets: Number(cliente.tickets || 0),
       nivel: {
         atual: progresso.nivel,
         proximo: progresso.proximoNivel,

@@ -8,6 +8,7 @@ import { attachCustomerSession } from '@/lib/customerSession';
 import { clearOtpGrant, consumeOtpGrant } from '@/lib/whatsappOtp';
 import { isPreCadastro } from '@/lib/customerRegistration';
 import { BONUS_CADASTRO_PONTOS } from '@/lib/fidelidade-rules';
+import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 
 function iso() {
   return new Date().toISOString();
@@ -41,6 +42,8 @@ export async function POST(req: NextRequest) {
   const requestId = getRequestId(req);
 
   try {
+    const blocked = await bloquearSeContencaoAtiva();
+    if (blocked) return blocked;
     const body = await req.json();
 
     // ===== 1. VALIDAÇÃO COM ZOD =====
@@ -236,31 +239,20 @@ export async function POST(req: NextRequest) {
     // ===== CASO 3: DUPLICADOS =====
     const authError = await validateCustomerAuth(req, telefone);
     if (authError) return authError;
-    // Se houver múltiplos clientes, unificar (manter o primeiro)
-    const ids = encontrados.map((c) => c.id);
-    const paraExcluir = ids.slice(1);
-
-    const { error: deleteError } = await supabaseAdmin
-      .from('base_clientes_saipos')
-      .delete()
-      .in('id', paraExcluir);
-
-    if (deleteError) {
-      logError('/api/cadastro', deleteError as Error, {
-        requestId,
-      });
-      return handleApiError(deleteError, '/api/cadastro', requestId);
-    }
-
-    logInfo('/api/cadastro', `Unificados ${paraExcluir.length} clientes duplicados`, {
+    // Nunca apagar ou unir pessoas automaticamente: o registro pode ter saldo,
+    // compras, consentimentos ou informação fiscal associada. A correção exige
+    // procedimento administrativo auditado, ainda a ser implantado.
+    logError('/api/cadastro', new Error('Cadastro duplicado requer revisão administrativa'), {
       telefone: `****${telefone.slice(-4)}`,
+      quantidade: encontrados.length,
       requestId,
     });
-
-    return successResponse({
-      unificado: true,
-      message: 'Cadastros unificados. Faça login novamente.',
-    });
+    return errorResponse(
+      'Encontramos mais de um cadastro para este telefone. Fale com a equipe para revisão segura.',
+      'validation_error',
+      409,
+      requestId,
+    );
 
   } catch (error) {
     logError('/api/cadastro', error instanceof Error ? error : new Error(String(error)), {

@@ -8,6 +8,7 @@ import {
   privateIdentifier,
   verifyWhatsAppOtp,
 } from '@/lib/whatsappOtp';
+import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 
 const schema = z.object({
   telefone: z.string(),
@@ -19,6 +20,8 @@ const schema = z.object({
 export async function POST(request: Request) {
   const requestId = getRequestId(request);
   try {
+    const blocked = await bloquearSeContencaoAtiva();
+    if (blocked) return blocked;
     const parsed = schema.safeParse(await request.json());
     if (!parsed.success) return errorResponse('Código ou solicitação inválidos.', 'validation_error', 400, requestId);
 

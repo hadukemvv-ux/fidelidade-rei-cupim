@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { bloquearSeContencaoAtiva } from "@/lib/operationalContainment";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,8 @@ const createCouponCode = () => `CUPIM-${crypto.randomBytes(6).toString("hex").to
 
 /** Gira uma única vez. A escolha de prêmio e o consumo da sessão acontecem juntos no banco. */
 export async function POST(request: NextRequest) {
+  const blocked = await bloquearSeContencaoAtiva();
+  if (blocked) return blocked;
   const parsed = RequestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Informe um telefone e QR válidos." }, { status: 400 });
 

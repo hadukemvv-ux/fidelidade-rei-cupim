@@ -6,6 +6,7 @@ import {
   SaiposApiError,
 } from '@/lib/saipos';
 import { processarVenda } from './processarVenda'; // MOTOR ÚNICO
+import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +43,9 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    const blocked = await bloquearSeContencaoAtiva();
+    if (blocked) return blocked;
 
     // Reconsulta hoje e os dois dias anteriores. Como o crédito é idempotente,
     // essa sobreposição recupera uma eventual indisponibilidade do cron anterior.

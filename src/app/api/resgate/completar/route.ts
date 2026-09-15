@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { validateCustomerAuth } from '@/app/api/_utils/validateCustomerAuth';
 import { hashPin } from '@/lib/pin';
 import { isPreCadastro } from '@/lib/customerRegistration';
+import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 
 function onlyDigits(v: string) {
   return v.replace(/\D/g, '');
@@ -43,13 +44,14 @@ async function buscarSnapshot(telefone: string) {
     data_nascimento: cliente.data_nascimento,
     pontos: cliente.pontos,
     cashback: cliente.cashback,
-    tickets: cliente.tickets,
     cadastro_completo: !isPreCadastro(cliente),
   };
 }
 
 export async function POST(req: Request) {
   try {
+    const blocked = await bloquearSeContencaoAtiva();
+    if (blocked) return blocked;
     const body = await req.json();
 
     const telefone = onlyDigits(body?.telefone || '');

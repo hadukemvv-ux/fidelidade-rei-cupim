@@ -6,6 +6,7 @@ import {
   periodoUltimosDiasSaoPaulo,
   SaiposApiError,
 } from '@/lib/saipos';
+import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,9 @@ export async function GET(req: NextRequest) {
         { status: 401 }
       );
     }
+
+    const blocked = await bloquearSeContencaoAtiva();
+    if (blocked) return blocked;
 
     const { searchParams } = new URL(req.url);
 

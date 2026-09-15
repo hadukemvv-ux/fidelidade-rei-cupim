@@ -7,23 +7,19 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { CUSTO_ENTREGA_GRATIS_PONTOS, INTERVALO_ENTREGA_GRATIS_DIAS } from '@/lib/fidelidade-rules';
 
 type Feedback = { type: 'success' | 'error'; text: string } | null;
-type ClubSection = 'recompensas' | 'cashback' | 'sorteio';
+type ClubSection = 'recompensas' | 'cashback';
 type CustomerData = {
   cliente: { nome: string; telefone: string };
   pontos: number;
   cashback: number;
-  tickets: number;
   nivel: { atual: string; proximo: string | null; progresso: number; faltamReais: number; multiplicadorAtual: number };
 };
 type Product = { id: number; nome: string; descricao?: string | null; imagem_url?: string | null; custo_em_pontos: number; destaque?: boolean; ativo?: boolean; categoria?: string | null };
-type Draw = { titulo: string; imagem_url?: string | null; data_sorteio?: string | null };
-type Winner = { id: number | string; nome?: string; nome_cliente?: string; created_at?: string; criado_em?: string };
 type PendingReward = { tipo: 'produto' | 'frete' | 'cashback'; nome: string; custo: string; valorDesconto?: number; produtoId?: number };
 
 const sections: Array<{ id: ClubSection; label: string }> = [
   { id: 'recompensas', label: 'Recompensas' },
   { id: 'cashback', label: 'Cashback' },
-  { id: 'sorteio', label: 'Sorteio' },
 ];
 
 const levelNames: Record<string, string> = { BRONZE: 'Brasa', PRATA: 'Chama', OURO: 'Nobre', REI: 'Majestade' };
@@ -36,8 +32,6 @@ function formatPhoneBR(value: string) {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 function formatMoney(value: number) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
-function firstName(name: string) { return name.trim().split(/\s+/)[0] || 'Cliente'; }
-
 export default function ResgatePage() {
   const [telefone, setTelefone] = useState('');
   const [pin, setPin] = useState('');
@@ -48,8 +42,6 @@ export default function ResgatePage() {
   const [dadosCliente, setDadosCliente] = useState<CustomerData | null>(null);
   const [cupom, setCupom] = useState<string | null>(null);
   const [produtos, setProdutos] = useState<Product[]>([]);
-  const [premio, setPremio] = useState<Draw | null>(null);
-  const [ganhadores, setGanhadores] = useState<Winner[]>([]);
   const [filtroCategoria, setFiltroCategoria] = useState('todos');
   const [activeSection, setActiveSection] = useState<ClubSection>('recompensas');
   const [pendingReward, setPendingReward] = useState<PendingReward | null>(null);
@@ -60,17 +52,9 @@ export default function ResgatePage() {
     .filter((product) => filtroCategoria === 'todos' ? true : filtroCategoria === 'destaque' ? product.destaque : product.categoria === filtroCategoria), [produtos, filtroCategoria]);
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/sorteio/ganhadores').then((response) => response.json()),
-      fetch('/api/produtos').then((response) => response.json()),
-      fetch('/api/sorteio/atual').then((response) => response.json()),
-    ]).then(([winnersResponse, productsResponse, drawResponse]) => {
-      const winners = winnersResponse?.data ?? winnersResponse;
+    fetch('/api/produtos').then((response) => response.json()).then((productsResponse) => {
       const products = productsResponse?.data ?? productsResponse;
-      const draw = drawResponse?.data ?? drawResponse;
-      setGanhadores(winners?.ganhadores || []);
       setProdutos(Array.isArray(products) ? products : products?.produtos || []);
-      setPremio(draw?.sorteio || null);
     }).catch(() => setFeedback({ type: 'error', text: 'Não foi possível carregar todas as recompensas agora.' }));
 
     fetch('/api/resgate')
@@ -195,7 +179,6 @@ export default function ResgatePage() {
         <section className="club-balances" aria-label="Seus saldos">
           <article className="balance-card balance-points"><span>Pontos</span><strong>{dadosCliente.pontos.toLocaleString('pt-BR')}</strong><small>{dadosCliente.nivel?.multiplicadorAtual || 1}x por real</small></article>
           <article className="balance-card balance-cash"><span>Cashback</span><strong>{formatMoney(Number(dadosCliente.cashback))}</strong><small>para usar em desconto</small></article>
-          <article className="balance-card balance-tickets"><span>Tickets</span><strong>{dadosCliente.tickets.toLocaleString('pt-BR')}</strong><small>sorteio em breve</small></article>
         </section>
         <nav className="club-section-tabs" aria-label="Áreas do clube">{sections.map((section) => <button key={section.id} type="button" className={activeSection === section.id ? 'active' : ''} onClick={() => setActiveSection(section.id)}>{section.label}</button>)}</nav>
 
@@ -213,7 +196,6 @@ export default function ResgatePage() {
 
         {activeSection === 'cashback' && <section className="club-cashback" aria-labelledby="cashback-title"><div className="club-section-heading"><div><p>Desconto imediato</p><h2 id="cashback-title">Seu cashback vira economia.</h2></div></div><div className="cashback-options">{[5, 10, 15].map((value) => { const available = Number(dadosCliente.cashback) >= value; return <button type="button" key={value} disabled={!available || loading} onClick={() => setPendingReward({ tipo: 'cashback', valorDesconto: value, nome: `Desconto de ${formatMoney(value)}`, custo: `${formatMoney(value)} do cashback` })}><span>Desconto</span><strong>{formatMoney(value)}</strong><small>{available ? 'Toque para usar' : 'Saldo insuficiente'}</small></button>; })}</div></section>}
 
-        {activeSection === 'sorteio' && <section className="club-draw" aria-labelledby="draw-title"><div className="club-section-heading"><div><p>Suas chances</p><h2 id="draw-title">Cada ticket pode virar história.</h2></div></div><div className="draw-layout"><article className="draw-ticket"><span>Você já acumulou</span><strong>{dadosCliente.tickets}</strong><b>{dadosCliente.tickets === 1 ? 'ticket de sorteio' : 'tickets de sorteio'}</b><small>Continue acumulando. O sorteio será liberado em breve.</small></article>{premio && <article className="draw-prize">{premio.imagem_url && <img src={premio.imagem_url} alt={premio.titulo} />}<div><span>Próximo prêmio</span><h3>{premio.titulo}</h3>{premio.data_sorteio && <p>{new Date(`${premio.data_sorteio}T12:00:00`).toLocaleDateString('pt-BR')}</p>}</div></article>}</div>{ganhadores.length > 0 && <div className="winner-strip"><span>Últimos ganhadores</span>{ganhadores.slice(0, 4).map((winner) => <article key={winner.id}><i>{firstName(winner.nome || winner.nome_cliente || 'Cliente').slice(0, 1)}</i><div><strong>{winner.nome || winner.nome_cliente || 'Cliente do clube'}</strong><small>{new Date(winner.created_at || winner.criado_em || '').toLocaleDateString('pt-BR')}</small></div></article>)}</div>}</section>}
       </main>
 
       {pendingReward && <div className="club-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPendingReward(null); }}><section className="club-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title"><span className="modal-kicker">Confirmar resgate</span><h2 id="confirm-title">{pendingReward.nome}</h2><p>Serão usados <strong>{pendingReward.custo}</strong>. Depois, mostre o cupom no caixa.</p>{!pin && <div className="modal-pin"><label htmlFor="confirm-pin">Confirme seu PIN</label><input id="confirm-pin" value={pin} onChange={(event) => setPin(onlyDigits(event.target.value).slice(0, 4))} inputMode="numeric" type="password" maxLength={4} placeholder="••••" autoFocus /></div>}<button type="button" className="club-main-button" onClick={confirmarResgate} disabled={loading || pin.length !== 4}>{loading ? 'Preparando...' : 'Sim, quero resgatar'}</button><button type="button" className="modal-cancel" onClick={() => setPendingReward(null)}>Agora não</button></section></div>}

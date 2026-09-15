@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { bloquearSeContencaoAtiva } from "@/lib/operationalContainment";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,8 @@ const tokenIsValid = (token: string | null): token is string => Boolean(token &&
 
 /** Consulta pública mínima de um QR V2: nunca retorna valor, mesa ou dados de operação. */
 export async function GET(request: NextRequest) {
+  const blocked = await bloquearSeContencaoAtiva();
+  if (blocked) return blocked;
   const token = new URL(request.url).searchParams.get("token");
   if (!tokenIsValid(token)) return NextResponse.json({ error: "QR inválido." }, { status: 400 });
 

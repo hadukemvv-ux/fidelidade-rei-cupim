@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { buscarTodasVendasSaipos, periodoUltimosDiasSaoPaulo, SaiposApiError, telefoneDaVendaSaipos } from '@/lib/saipos';
 import { processarVenda } from '../processarVenda'; // IMPORTAÇÃO CORRETA
+import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +38,9 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    const blocked = await bloquearSeContencaoAtiva();
+    if (blocked) return blocked;
 
     const url = new URL(request.url);
 

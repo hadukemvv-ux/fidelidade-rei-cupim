@@ -53,6 +53,9 @@ Para operacao e testes:
 Para privacidade, contenção e resposta a incidentes:
 - `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`
 
+Para testar as preferências do cliente e o modo de contenção sem depender de outra pessoa:
+- `docs/GUIA_TESTE_PRIVACIDADE_E_CONTENCAO.md`
+
 Roadmap vivo, com estado de cada frente:
 - `docs/ROADMAP.md`
 

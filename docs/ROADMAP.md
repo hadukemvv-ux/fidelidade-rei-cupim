@@ -75,7 +75,7 @@ Decisão após a resposta:
 1. [x] Restringir importação de planilha a superadmin, com limite de 2 MB e 2.000 linhas por envio. Planejar a substituição de `xlsx` (alertas altos conhecidos) continua pendente.
 2. Completar a matriz única de permissões: gestão de acessos e alteração de prêmios já usam papéis operacionais; faltam os demais endpoints administrativos sensíveis.
 3. Consolidar cupom novo e remover o caminho legado quando o teste de caixa for concluído.
-4. [Em andamento] Completar preferência de marketing/opt-out, canal de direitos e plano de retenção. O aviso público, a central de incidente, o modo de contenção e o bloqueio de rotas críticas já foram preparados; o checkpoint está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`.
+4. [Em andamento] Preferência de marketing/opt-out do cliente implementada: o portal permite revogar WhatsApp promocional ou aniversário, com evidência e auditoria. Falta testar ponta a ponta, definir canal formal de direitos e fechar o plano de retenção. O aviso público, a central de incidente, o modo de contenção e o bloqueio de rotas críticas já foram preparados; o checkpoint está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`.
 5. [Em andamento] Criar backup/restauração testável do Supabase e alertas de cron.
 6. Escolher WhatsApp Business Platform/Cloud API ou BSP oficial; não automatizar WhatsApp pessoal.
 7. Depois do piloto V2, remover telas, rotas e tabelas legadas que não forem mais referenciadas. O plano está em `docs/LIMPEZA_DO_LEGADO.md`.

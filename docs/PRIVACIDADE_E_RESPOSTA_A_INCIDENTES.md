@@ -29,7 +29,7 @@ documento e do `docs/ROADMAP.md`.
 | Autenticação | Hash do PIN, sessão, confirmação do telefone | Proteger conta e impedir acesso indevido | Cliente/sistema | PIN não pode ser exposto |
 | Fidelidade | Pontos, cashback, nível, compras elegíveis, resgates e cupons | Operar o Clube e prevenir duplicidade | Saipos/sistema | Em revisão |
 | Aniversário | Data de nascimento e aceite específico | Benefício de aniversário, se ativado | Cliente | Opcional; campanha desligada |
-| Marketing | Finalidade, versão do texto, canal, data e hashes técnicos | Provar opt-in/opt-out de comunicação | Cliente/sistema | Opt-out ainda pendente |
+| Marketing | Finalidade, versão do texto, canal, data e hashes técnicos | Provar opt-in/opt-out de comunicação | Cliente/sistema | Opt-out implementado; teste ponta a ponta pendente |
 | Segurança | Hashes de telefone/IP em OTP, logs operacionais e eventos de auditoria | Limites, fraude, investigação e prestação de contas | Sistema/equipe | Definir prazo de retenção |
 
 Não importar para o Clube sem finalidade aprovada: dados de cartão ou pagamento,
@@ -151,4 +151,6 @@ as rotas bloqueadas realmente param e que a reabertura é auditada.
 - [x] Migração da central privada de incidentes aplicada no Supabase em 14/09/2026; tabelas, RLS e funções de ativação/reabertura confirmadas.
 - [x] Painel de contenção, registro de incidente e bloqueio de rotas críticas implementados localmente.
 - [x] Aviso público de privacidade adicionado em `/privacidade`, com vínculo no site e no cadastro.
+- [x] Migração `202609150001_preferencias_marketing_cliente.sql` aplicada no Supabase em 15/09/2026: consentimentos de marketing passam a sincronizar o estado atual, e o cliente autenticado pode revogar marketing ou aniversário no portal.
 - [ ] Testar contenção e reabertura controladas após o deploy, sem dados de clientes.
+- [ ] Testar revogação de marketing/aniversário com conta de teste e confirmar a evidência no banco antes de qualquer comunicação real.

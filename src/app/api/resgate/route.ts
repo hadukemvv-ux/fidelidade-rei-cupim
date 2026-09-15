@@ -23,7 +23,7 @@ function gerarCodigoCupom() {
 async function buscarSnapshot(telefone: string) {
   const { data: cliente } = await supabaseAdmin
     .from('base_clientes_saipos')
-    .select('*')
+    .select('nome, telefone, email, data_nascimento, gasto_90_dias, total_gasto, pontos, cashback, nivel, marketing_opt_in, marketing_opt_in_em, marketing_opt_out_em, aceita_whatsapp_aniversario, aceite_whatsapp_aniversario_em')
     .eq('telefone', telefone)
     .maybeSingle();
 
@@ -47,6 +47,13 @@ async function buscarSnapshot(telefone: string) {
       progresso: progressao.progresso?.percentual ?? 100,
       faltamReais: progressao.progresso?.gastoFaltante ?? 0,
       multiplicadorAtual: progressao.beneficio.pontos,
+    },
+    preferencias: {
+      marketingWhatsapp: Boolean(cliente.marketing_opt_in),
+      marketingConcedidoEm: cliente.marketing_opt_in_em || null,
+      marketingRevogadoEm: cliente.marketing_opt_out_em || null,
+      aniversarioWhatsapp: Boolean(cliente.aceita_whatsapp_aniversario),
+      aniversarioConcedidoEm: cliente.aceite_whatsapp_aniversario_em || null,
     },
   };
 }

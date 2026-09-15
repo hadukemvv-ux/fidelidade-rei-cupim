@@ -7,12 +7,19 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { CUSTO_ENTREGA_GRATIS_PONTOS, INTERVALO_ENTREGA_GRATIS_DIAS } from '@/lib/fidelidade-rules';
 
 type Feedback = { type: 'success' | 'error'; text: string } | null;
-type ClubSection = 'recompensas' | 'cashback';
+type ClubSection = 'recompensas' | 'cashback' | 'privacidade';
 type CustomerData = {
   cliente: { nome: string; telefone: string };
   pontos: number;
   cashback: number;
   nivel: { atual: string; proximo: string | null; progresso: number; faltamReais: number; multiplicadorAtual: number };
+  preferencias: {
+    marketingWhatsapp: boolean;
+    marketingConcedidoEm: string | null;
+    marketingRevogadoEm: string | null;
+    aniversarioWhatsapp: boolean;
+    aniversarioConcedidoEm: string | null;
+  };
 };
 type Product = { id: number; nome: string; descricao?: string | null; imagem_url?: string | null; custo_em_pontos: number; destaque?: boolean; ativo?: boolean; categoria?: string | null };
 type PendingReward = { tipo: 'produto' | 'frete' | 'cashback'; nome: string; custo: string; valorDesconto?: number; produtoId?: number };
@@ -20,6 +27,7 @@ type PendingReward = { tipo: 'produto' | 'frete' | 'cashback'; nome: string; cus
 const sections: Array<{ id: ClubSection; label: string }> = [
   { id: 'recompensas', label: 'Recompensas' },
   { id: 'cashback', label: 'Cashback' },
+  { id: 'privacidade', label: 'Privacidade' },
 ];
 
 const levelNames: Record<string, string> = { BRONZE: 'Brasa', PRATA: 'Chama', OURO: 'Nobre', REI: 'Majestade' };
@@ -48,6 +56,7 @@ export default function ResgatePage() {
   const [filtroCategoria, setFiltroCategoria] = useState('todos');
   const [activeSection, setActiveSection] = useState<ClubSection>('recompensas');
   const [pendingReward, setPendingReward] = useState<PendingReward | null>(null);
+  const [preferenceSaving, setPreferenceSaving] = useState<ClubSection | null>(null);
 
   const telefoneDigits = useMemo(() => onlyDigits(telefone), [telefone]);
   const visibleProducts = useMemo(() => produtos
@@ -131,6 +140,26 @@ export default function ResgatePage() {
     setDadosCliente(null); setTelefone(''); setPin(''); setPinLiberado(false); setCupom(null);
   }
 
+  async function revogarComunicacao(tipo: 'marketing' | 'aniversario') {
+    setFeedback(null);
+    setPreferenceSaving('privacidade');
+    try {
+      const response = await fetch('/api/privacidade/preferencias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ revogar: tipo }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body?.ok) throw new Error(body?.error || 'Não foi possível atualizar sua preferência.');
+      setDadosCliente((atual) => atual ? { ...atual, preferencias: body.data.preferencias } : atual);
+      setFeedback({ type: 'success', text: tipo === 'marketing' ? 'Promoções por WhatsApp foram desativadas.' : 'As mensagens de aniversário foram desativadas.' });
+    } catch (error) {
+      setFeedback({ type: 'error', text: error instanceof Error ? error.message : 'Não foi possível atualizar sua preferência.' });
+    } finally {
+      setPreferenceSaving(null);
+    }
+  }
+
   if (restoringSession) return <main className="club-loading" aria-live="polite"><Image src="/logo.png" alt="" width={76} height={76} priority /><span>Acendendo a brasa...</span></main>;
 
   if (!dadosCliente) {
@@ -198,6 +227,8 @@ export default function ResgatePage() {
         )}
 
         {activeSection === 'cashback' && <section className="club-cashback" aria-labelledby="cashback-title"><div className="club-section-heading"><div><p>Desconto imediato</p><h2 id="cashback-title">Seu cashback vira economia.</h2></div></div><div className="cashback-options">{[5, 10, 15].map((value) => { const available = Number(dadosCliente.cashback) >= value; return <button type="button" key={value} disabled={!available || loading} onClick={() => setPendingReward({ tipo: 'cashback', valorDesconto: value, nome: `Desconto de ${formatMoney(value)}`, custo: `${formatMoney(value)} do cashback` })}><span>Desconto</span><strong>{formatMoney(value)}</strong><small>{available ? 'Toque para usar' : 'Saldo insuficiente'}</small></button>; })}</div></section>}
+
+        {activeSection === 'privacidade' && <section className="club-store" aria-labelledby="privacy-title"><div className="club-section-heading"><div><p>Seus dados, suas escolhas</p><h2 id="privacy-title">Preferências de comunicação.</h2></div></div><div className="grid gap-4 md:grid-cols-2"><article className="rounded-2xl border border-stone-200 bg-white p-5 text-stone-700 shadow-sm"><span className="text-xs font-black uppercase tracking-wider text-stone-500">Promoções e cupons</span><h3 className="mt-2 text-lg font-black text-stone-900">WhatsApp de ofertas</h3><p className="mt-2 text-sm leading-6">{dadosCliente.preferencias.marketingWhatsapp ? 'Você autorizou o recebimento de promoções pelo WhatsApp.' : 'Você não recebe promoções pelo WhatsApp.'}</p>{dadosCliente.preferencias.marketingWhatsapp && <button className="mt-4 rounded-lg border border-red-200 px-3 py-2 text-sm font-bold text-red-700 disabled:opacity-50" type="button" onClick={() => revogarComunicacao('marketing')} disabled={preferenceSaving === 'privacidade'}>{preferenceSaving === 'privacidade' ? 'Atualizando...' : 'Não quero mais receber'}</button>}</article><article className="rounded-2xl border border-stone-200 bg-white p-5 text-stone-700 shadow-sm"><span className="text-xs font-black uppercase tracking-wider text-stone-500">Aniversário</span><h3 className="mt-2 text-lg font-black text-stone-900">Surpresa de aniversário</h3><p className="mt-2 text-sm leading-6">{dadosCliente.preferencias.aniversarioWhatsapp ? 'Você autorizou os lembretes da campanha de aniversário.' : 'Você não recebe mensagens da campanha de aniversário.'}</p>{dadosCliente.preferencias.aniversarioWhatsapp && <button className="mt-4 rounded-lg border border-red-200 px-3 py-2 text-sm font-bold text-red-700 disabled:opacity-50" type="button" onClick={() => revogarComunicacao('aniversario')} disabled={preferenceSaving === 'privacidade'}>{preferenceSaving === 'privacidade' ? 'Atualizando...' : 'Desativar aniversário'}</button>}</article></div><p className="mt-6 text-sm leading-6 text-stone-500">A retirada da autorização não altera seus pontos, cashback ou benefícios já conquistados. <Link className="font-bold text-[#a51c19] underline underline-offset-2" href="/privacidade">Leia o aviso de privacidade</Link>.</p></section>}
 
       </main>
 

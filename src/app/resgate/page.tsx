@@ -32,6 +32,9 @@ function formatPhoneBR(value: string) {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 function formatMoney(value: number) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+function firstName(value: string) {
+  return value.trim().split(/\s+/)[0] || 'Cliente';
+}
 export default function ResgatePage() {
   const [telefone, setTelefone] = useState('');
   const [pin, setPin] = useState('');

@@ -6,14 +6,15 @@ Sistema de fidelidade para restaurante com:
 - Area admin protegida por sessao
 - Crons de sincronizacao e expiracao
 
-## Estado atual (14/09/2026)
+## Estado atual (15/09/2026)
 
 - Código recuperado e versionado no GitHub; cada push em `main` dispara deploy automático na Vercel.
 - Última base publicada no Git: Roleta V2 com giro atômico e permissão explícita somente para o servidor. A V2 continua **desativada** até o fluxo completo passar por testes e aprovação comercial.
-- TypeScript: sem erros na última verificação. Testes unitários: `30/30` aprovados.
+- TypeScript e lint: sem erros na última verificação. Testes unitários: `32/32` aprovados.
 - Roleta: a V1 foi bloqueada. A V2 já possui sessão QR segura, tela pública por QR, giro único atômico no banco, prêmio ponderado por nível, cupom e consentimento opcional. Ela continua fechada e em modo de teste até a validação da venda pela Saipos e o piloto operacional.
 - Saipos: o fluxo de validação imediata de comanda está em espera pela confirmação técnica da Saipos. Veja `docs/SAIPOS_VALIDACAO_COMANDA.md` antes de ativar qualquer operação baseada em foto.
-- Sorteios legados estão pausados: não há cron de sorteio e tickets não representam entrada ou promessa futura. O plano de privacidade, contenção e resposta a incidentes está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`.
+- Sorteios legados estão pausados: não há cron de sorteio e tickets não representam entrada ou promessa futura. O plano de privacidade, contenção e resposta a incidentes está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`; o aviso público está em `/privacidade`.
+- Último deploy confirmado como `Ready` na Vercel: commit `63ed036` (15/09/2026). O commit anterior `fd476c1` contém o modo de contenção e a pausa segura do sorteio.
 
 ## Inicio rapido
 

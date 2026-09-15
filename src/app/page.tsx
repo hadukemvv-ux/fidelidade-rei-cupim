@@ -235,6 +235,7 @@ export default function Home() {
         <nav aria-label="Links do rodapé">
           <a href="https://www.instagram.com/oreidocupim_/" target="_blank" rel="noopener noreferrer">Instagram</a>
           <a href="https://www.ifood.com.br/delivery/fortaleza-ce/churrascaria-o-rei-do-cupim-henrique-jorge/d4fc2476-227b-4fe1-87be-85a88bf5fee4" target="_blank" rel="noopener noreferrer">iFood</a>
+          <Link href="/privacidade">Privacidade</Link>
           <Link href="/admin">Área administrativa</Link>
         </nav>
       </footer>

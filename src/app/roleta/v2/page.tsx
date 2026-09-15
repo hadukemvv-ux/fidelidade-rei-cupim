@@ -73,7 +73,7 @@ function RoletaV2Content() {
             <div className="rounded-2xl bg-[#311414] p-4 text-center"><span className="text-sm text-zinc-300">Sua compra liberou o nível</span><strong className="mt-1 block text-2xl text-[#eabf67]">{levelNames[session.nivel] || "Clube"}</strong></div>
             <label className="block"><span className="mb-2 block text-sm font-bold">Seu WhatsApp</span><input required inputMode="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="(85) 99999-9999" className="w-full rounded-xl border border-zinc-600 bg-zinc-950 px-4 py-3 text-lg outline-none focus:border-[#c5a059]" /></label>
             <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-white/5 p-4 text-sm text-zinc-200"><input className="mt-1 size-4" type="checkbox" checked={marketing} onChange={(event) => setMarketing(event.target.checked)} /><span>Quero receber promoções e cupons pelo WhatsApp. É opcional e posso cancelar quando quiser.</span></label>
-            <p className="text-xs leading-relaxed text-zinc-400">Seu telefone é usado para registrar o prêmio e evitar mais de um giro por QR. O giro é único.</p>
+            <p className="text-xs leading-relaxed text-zinc-400">Seu telefone é usado para registrar o prêmio e evitar mais de um giro por QR. O giro é único. <a className="font-bold text-[#f4ce83] underline underline-offset-2" href="/privacidade">Como tratamos seus dados</a>.</p>
             <button className="w-full rounded-xl bg-[#e31e24] py-4 text-lg font-black transition hover:bg-[#c1191f] disabled:opacity-60" type="submit" disabled={loading}>Girar a roleta</button>
           </form>
         )}

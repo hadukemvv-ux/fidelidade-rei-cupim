@@ -181,8 +181,8 @@ export default function CadastroPage() {
             </details>
             <WhatsappOtpVerification telefone={telefoneDigits} proposito="cadastro" onVerified={setWhatsappVerificado} />
             <button type="submit" disabled={loading || !whatsappVerificado} className="signup-submit"><span>{loading ? 'Criando seu clube...' : 'Quero meus 200 pontos'}</span><b aria-hidden="true">→</b></button>
-            <p className="signup-rule">A entrega grátis vale para pedidos diretos, conforme disponibilidade e área atendida, e pode ser resgatada uma vez a cada 30 dias.</p>
-            <div className="signup-links"><Link href="/">Voltar ao início</Link><Link href="/resgate">Já sou cliente →</Link></div>
+            <p className="signup-rule">A entrega grátis vale para pedidos diretos, conforme disponibilidade e área atendida, e pode ser resgatada uma vez a cada 14 dias.</p>
+            <div className="signup-links"><Link href="/">Voltar ao início</Link><Link href="/privacidade">Privacidade</Link><Link href="/resgate">Já sou cliente →</Link></div>
           </form>
         </div>
       </section>

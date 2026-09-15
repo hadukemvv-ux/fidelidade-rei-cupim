@@ -1,6 +1,6 @@
 # Privacidade e resposta a incidentes — Clube Cupim
 
-Atualizado em 14/09/2026. Este documento é a referência de continuidade para
+Atualizado em 15/09/2026. Este documento é a referência de continuidade para
 privacidade, segurança e resposta a incidentes. Não substitui aconselhamento
 jurídico, contábil ou contratual.
 
@@ -47,8 +47,10 @@ O cadastro deve pedir só o necessário e explicar antes do envio:
 4. Marketing: caixa separada, desmarcada, com texto versionado e saída simples.
 5. Pontos e resgates não podem depender de autorizar marketing.
 
-Antes de abertura pública, publicar Política de Privacidade, Regras do Clube e
-canal de contato para acesso, correção, exclusão quando cabível e descadastro.
+O aviso de privacidade está publicado em `/privacidade`, com canal inicial pelo
+WhatsApp oficial. Antes de abertura pública, revisar juridicamente o aviso,
+publicar as Regras do Clube e colocar em operação o canal verificável para
+acesso, correção, exclusão quando cabível e descadastro.
 
 ## Papéis e acesso mínimo
 
@@ -136,7 +138,7 @@ as rotas bloqueadas realmente param e que a reabertura é auditada.
 - [ ] Monitoramento, plano de incidente e botão de contenção testados.
 - [ ] Piloto fechado da Roleta V2 concluído sem prêmio real.
 
-## Checkpoint técnico — 14/09/2026
+## Checkpoint técnico — 15/09/2026
 
 - [x] Cron de sorteio removido da configuração Vercel no código.
 - [x] Endpoints públicos de sorteio passam a responder `410` sem expor dados.
@@ -145,7 +147,8 @@ as rotas bloqueadas realmente param e que a reabertura é auditada.
 - [x] Migração para congelar novos tickets criada localmente.
 - [x] Cadastro duplicado deixa de excluir registros automaticamente.
 - [x] Migração de congelamento aplicada no Supabase em 14/09/2026; execução confirmada com sucesso no SQL Editor.
-- [ ] Subir este checkpoint ao GitHub e confirmar deploy Ready na Vercel.
+- [x] Checkpoint `fd476c1` enviado ao GitHub; deploy posterior `63ed036` confirmado `Ready` na Vercel em 15/09/2026.
 - [x] Migração da central privada de incidentes aplicada no Supabase em 14/09/2026; tabelas, RLS e funções de ativação/reabertura confirmadas.
 - [x] Painel de contenção, registro de incidente e bloqueio de rotas críticas implementados localmente.
+- [x] Aviso público de privacidade adicionado em `/privacidade`, com vínculo no site e no cadastro.
 - [ ] Testar contenção e reabertura controladas após o deploy, sem dados de clientes.

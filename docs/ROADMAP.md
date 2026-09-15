@@ -1,6 +1,6 @@
 # Roadmap do Projeto Fidelidade
 
-Atualizado em 12/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
+Atualizado em 15/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
 
 ## Objetivo
 
@@ -32,7 +32,11 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 - [x] Tela `/caixa/roleta` para gerar QR temporário, ainda bloqueada enquanto a V2 não for publicada.
 - [x] Execução do giro concedida somente ao `service_role` no Supabase; navegador e usuários comuns seguem sem acesso à função.
 - [x] No piloto manual, somente gestor/superadmin pode gerar QR; o sistema calcula a faixa pelo valor (Brasa: até R$ 99,99; Chama: R$ 100–249,99; Nobre: R$ 250–399,99; Rei: R$ 400–499,99; Lenda: R$ 500+).
-- [x] Next.js atualizado para `16.3.4`; última checagem de tipos aprovada e `30/30` testes unitários aprovados.
+- [x] Next.js atualizado para `16.3.4`; última checagem de tipos aprovada e `32/32` testes unitários aprovados.
+- [x] Sorteio legado integralmente pausado: cron, telas e rotas públicas/administrativas respondem sem expor histórico ou dados pessoais; novos tickets estão congelados no banco.
+- [x] Central de incidente para superadmin, modo de contenção auditado e bloqueio das rotas públicas críticas implementados e aplicados no Supabase.
+- [x] Aviso de privacidade público disponível em `/privacidade`, vinculado ao site e ao cadastro; ainda requer revisão jurídica e tabela final de retenção antes do lançamento.
+- [x] Erro de build da página de resgate identificado e corrigido; deploy `63ed036` confirmado como `Ready` na Vercel em 15/09/2026.
 
 ## Em andamento
 
@@ -71,7 +75,7 @@ Decisão após a resposta:
 1. [x] Restringir importação de planilha a superadmin, com limite de 2 MB e 2.000 linhas por envio. Planejar a substituição de `xlsx` (alertas altos conhecidos) continua pendente.
 2. Completar a matriz única de permissões: gestão de acessos e alteração de prêmios já usam papéis operacionais; faltam os demais endpoints administrativos sensíveis.
 3. Consolidar cupom novo e remover o caminho legado quando o teste de caixa for concluído.
-4. [Em andamento] Criar política de privacidade, preferência de marketing/opt-out e plano de retenção. A central de incidente, modo de contenção e bloqueio de rotas críticas já foram preparados; o checkpoint está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`.
+4. [Em andamento] Completar preferência de marketing/opt-out, canal de direitos e plano de retenção. O aviso público, a central de incidente, o modo de contenção e o bloqueio de rotas críticas já foram preparados; o checkpoint está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`.
 5. [Em andamento] Criar backup/restauração testável do Supabase e alertas de cron.
 6. Escolher WhatsApp Business Platform/Cloud API ou BSP oficial; não automatizar WhatsApp pessoal.
 7. Depois do piloto V2, remover telas, rotas e tabelas legadas que não forem mais referenciadas. O plano está em `docs/LIMPEZA_DO_LEGADO.md`.

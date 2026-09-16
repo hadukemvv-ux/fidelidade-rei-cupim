@@ -75,23 +75,11 @@ export default function ResgatePage() {
       .finally(() => setRestoringSession(false));
   }, []);
 
-  async function verificarCadastro() {
+  function verificarCadastro() {
     setFeedback(null);
     if (telefoneDigits.length !== 11) return setFeedback({ type: 'error', text: 'Digite seu WhatsApp com DDD.' });
-    setLoading(true);
-    try {
-      const response = await fetch('/api/resgate/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ telefone: telefoneDigits }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Não foi possível verificar este número.');
-      if (data.status === 'novo' || data.status === 'pre_cadastro') {
-        window.location.href = `/cadastro?telefone=${telefoneDigits}`;
-        return;
-      }
-      setPinLiberado(true);
-      setFeedback({ type: 'success', text: 'Tudo certo. Agora digite seu PIN.' });
-    } catch (error) {
-      setFeedback({ type: 'error', text: error instanceof Error ? error.message : 'Erro ao verificar.' });
-    } finally { setLoading(false); }
+    setPinLiberado(true);
+    setFeedback({ type: 'success', text: 'Digite seu PIN para entrar. Se ainda não participa, faça seu cadastro gratuito.' });
   }
 
   async function fazerLogin() {
@@ -175,7 +163,7 @@ export default function ResgatePage() {
             <label htmlFor="club-phone">WhatsApp com DDD</label>
             <div className="club-field"><span aria-hidden="true">+55</span><input id="club-phone" value={telefone} onChange={(event) => { setTelefone(formatPhoneBR(event.target.value)); setPinLiberado(false); }} inputMode="tel" autoComplete="tel" placeholder="(85) 9 0000-0000" disabled={loading} /></div>
             {!pinLiberado ? (
-              <button type="button" className="club-main-button" onClick={verificarCadastro} disabled={loading}>{loading ? 'Verificando...' : 'Continuar'}<span aria-hidden="true">→</span></button>
+              <button type="button" className="club-main-button" onClick={verificarCadastro} disabled={loading}>Continuar<span aria-hidden="true">→</span></button>
             ) : (
               <div className="club-pin-step">
                 <label htmlFor="club-pin">PIN de 4 dígitos</label>

@@ -8,7 +8,7 @@ const schema = z.object({ cliente_id: z.coerce.number().int().positive() });
 
 export async function POST(request: NextRequest) {
   const requestId = getRequestId(request);
-  const authError = await validateAdminAuth(request, new URL(request.url));
+  const authError = await validateAdminAuth(request, new URL(request.url), 'superadmin');
   if (authError) return authError;
   try {
     const parsed = schema.safeParse(await request.json());
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   const requestId = getRequestId(request);
-  const authError = await validateAdminAuth(request, new URL(request.url));
+  const authError = await validateAdminAuth(request, new URL(request.url), 'superadmin');
   if (authError) return authError;
   try {
     const parsed = schema.safeParse(await request.json());

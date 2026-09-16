@@ -1,27 +1,10 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
-
-export const dynamic = 'force-dynamic'; // Garante que não faça cache
-
 export async function GET() {
-  try {
-    // 1. Busca prêmios ativos ordenados por ID (para manter a posição na roda)
-    const { data: premios, error } = await supabaseAdmin
-      .from('premios_roleta')
-      .select('*')
-      .eq('ativo', true)
-      .order('id', { ascending: true });
-
-    if (error) {
-      console.error("Erro Supabase:", error);
-      throw error;
-    }
-
-    // 2. Se não tiver nada, retorna array vazio (o front avisa)
-    // Itens especiais podem aparecer como sátira visual mesmo com chance real zero.
-    return NextResponse.json(premios || []);
-  } catch (error: unknown) {
-    console.error('[GET /api/roleta/premios]', error);
-    return NextResponse.json({ error: 'Erro ao buscar prêmios.' }, { status: 500 });
-  }
+  return NextResponse.json(
+    {
+      error: 'A roleta anterior está desativada. O piloto V2 permanece fechado.',
+      code: 'LEGACY_ROULETTE_DISABLED',
+    },
+    { status: 410 }
+  );
 }

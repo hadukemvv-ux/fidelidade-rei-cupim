@@ -1,13 +1,22 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { successResponse, errorResponse, validationErrorResponse, getRequestId, logInfo, logError, handleApiError } from '@/lib/api-utils';
-import { validateAdminAuth } from '@/app/api/_utils/validateAdminAuth';
+import { requireOperationalActor } from '@/lib/operationalAuth';
+
+type LegacyRedeemResult = {
+  ok?: boolean;
+  motivo?: string;
+  usado_em?: string;
+  tipo?: string;
+  premio_nome?: string;
+  valor?: number;
+};
 
 export async function POST(request: NextRequest) {
   const requestId = getRequestId(request);
 
-  const authError = await validateAdminAuth(request, new URL(request.url));
-  if (authError) return authError;
+  const actor = await requireOperationalActor(request, 'caixa');
+  if (actor instanceof Response) return actor;
 
   try {
     const body = await request.json();
@@ -33,7 +42,7 @@ export async function POST(request: NextRequest) {
     // ===== BUSCAR CUPOM =====
     const { data: cupom, error } = await supabaseAdmin
       .from('resgates')
-      .select('*')
+      .select('id, premio_nome, tipo, valor, codigo, criado_em, usado_em')
       .eq('codigo', codigo)
       .maybeSingle();
 
@@ -63,7 +72,6 @@ export async function POST(request: NextRequest) {
     // ===== CONSTRUIR DETALHES =====
     const detalhes = {
       descricao: cupom.premio_nome || cupom.tipo || 'Desconto Especial',
-      telefone: cupom.telefone ?? 'Não informado',
       criado_em: cupom.criado_em,
       valor: cupom.valor,
       tipo: cupom.tipo,
@@ -80,30 +88,28 @@ export async function POST(request: NextRequest) {
 
     // ===== AÇÃO: BAIXAR (USAR CUPOM) =====
     if (acao === 'baixar') {
-      const usadoEm = new Date().toISOString();
+      const { data: resultadoRaw, error: updateError } = await supabaseAdmin.rpc('usar_resgate_legado', {
+        p_codigo: codigo,
+        p_actor_user_id: actor.userId,
+        p_actor_email: actor.email,
+        p_origem: 'caixa_legado',
+      });
+      if (updateError) return handleApiError(updateError, '/api/validar', requestId);
 
-      const { error: updateError } = await supabaseAdmin
-        .from('resgates')
-        .update({ usado_em: usadoEm })
-        .eq('id', cupom.id);
-
-      if (updateError) {
-        logError('/api/validar', updateError as Error, {
-          acao: 'baixar',
-          codigo,
-          requestId,
-        });
-        return handleApiError(updateError, '/api/validar', requestId);
+      const resultado = resultadoRaw as LegacyRedeemResult | null;
+      if (!resultado?.ok) {
+        return errorResponse(resultado?.motivo || 'Cupom já utilizado ou indisponível.', 'validation_error', 409);
       }
 
       logInfo('/api/validar', 'Cupom utilizado com sucesso', {
-        codigo,
+        codigo_inicio: codigo.substring(0, 3),
+        actor_user_id: actor.userId,
         requestId,
       });
 
       return successResponse({
         utilizado: true,
-        detalhes: { ...detalhes, usado_em: usadoEm },
+        detalhes: { ...detalhes, usado_em: resultado.usado_em },
       });
     }
 

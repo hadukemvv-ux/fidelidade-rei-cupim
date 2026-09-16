@@ -35,6 +35,19 @@ Responsável: desenvolvimento.
 - [ ] Deploy da Vercel concluído como `Ready`.
 - [ ] Abrir páginas públicas principais sem erro: `/`, `/cadastro`, `/resgate`, `/privacidade`.
 - [ ] Abrir painel autenticado sem loop de login: `/admin`, `/admin/operadores`, `/admin/auditoria`, `/admin/seguranca`.
+- [ ] Confirmar que `CUSTOMER_SESSION_SECRET` existe como Secret na Vercel e que não é igual à chave de serviço.
+
+## 1.1 Hardening de banco e rotas legadas
+
+Execute depois de aplicar `202609160001_hardening_critico_legado.sql`; o roteiro
+com consultas seguras está em `docs/AUDITORIA_TECNICA_2026-09-16.md`.
+
+- [ ] Confirmar que apenas `service_role` executa `usar_cupom_promocional` e `usar_resgate_legado`.
+- [ ] Confirmar que `garcons`, `premios_roleta` e `resgates` não têm política pública permissiva.
+- [ ] Confirmar que `sorteios` está privado e não aceita upload anônimo.
+- [ ] Em navegação anônima, comparar a resposta inicial de dois telefones distintos em `/resgate`: ela não pode revelar se alguém já é cliente.
+- [ ] Com conta `caixa`, tentar duas baixas paralelas do mesmo cupom de teste e confirmar que somente uma é aceita e auditada.
+- [ ] Ativar contenção em janela controlada e confirmar que redefinição de PIN também é bloqueada.
 
 ## 2. Contas e permissões da equipe
 

@@ -11,8 +11,8 @@ export const OTP_GRANT_COOKIE = 'fidelidade_otp_grant';
 const OTP_GRANT_SECONDS = 10 * 60;
 
 function requiredSecret() {
-  const secret = process.env.CUSTOMER_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!secret) throw new Error('Segredo do servidor não configurado.');
+  const secret = process.env.CUSTOMER_SESSION_SECRET;
+  if (!secret) throw new Error('CUSTOMER_SESSION_SECRET não configurado.');
   return secret;
 }
 

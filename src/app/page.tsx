@@ -77,7 +77,7 @@ export default function Home() {
       </section>
 
       <div className="benefit-ribbon" aria-label="Benefícios do clube">
-        <div><span>Pontos</span><i>•</i><span>Cashback</span><i>•</i><span>Roleta de prêmios</span><i>•</i><span>Recompensas</span></div>
+        <div><span>Pontos</span><i>•</i><span>Cashback</span><i>•</i><span>Benefícios</span><i>•</i><span>Recompensas</span></div>
       </div>
 
       <section id="como-funciona" className="how-section section-pad">
@@ -89,8 +89,8 @@ export default function Home() {
 
         <ol className="steps">
           <li><span>01</span><div><h3>Entre para o clube</h3><p>Faça seu cadastro gratuito em poucos instantes.</p></div></li>
-          <li><span>02</span><div><h3>Compre e acumule</h3><p>Suas compras elegíveis viram pontos, cashback e tickets.</p></div></li>
-          <li><span>03</span><div><h3>Aproveite</h3><p>Troque seus pontos e use suas chances na roleta.</p></div></li>
+          <li><span>02</span><div><h3>Compre e acumule</h3><p>Suas compras elegíveis viram pontos e cashback.</p></div></li>
+          <li><span>03</span><div><h3>Aproveite</h3><p>Troque seus pontos por benefícios e acompanhe as novidades do Clube.</p></div></li>
         </ol>
       </section>
 
@@ -142,13 +142,8 @@ export default function Home() {
             </article>
             <article className="total-benefit">
               <strong>{benefitPercent(level.beneficio.pontos + level.beneficio.cashback * 100)}</strong>
-              <span>vantagem total</span>
-              <b>sem contar o sorteio</b>
+              <span>vantagem em pontos e cashback</span>
             </article>
-          </div>
-          <div className="ticket-soon">
-            <strong>{level.beneficio.tickets}</strong>
-            <span><b>{level.beneficio.tickets === 1 ? 'Ticket de sorteio' : 'Tickets de sorteio'} a cada R$ 100</b><small>Em breve — já pode ir acumulando</small></span>
           </div>
           <p className="points-note">100 pontos = R$ 1 em produtos. Vantagem total = pontos + cashback.</p>
         </div>

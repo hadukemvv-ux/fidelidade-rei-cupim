@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const requestId = getRequestId(request);
 
-  const authError = await validateAdminAuth(request, new URL(request.url));
+  const authError = await validateAdminAuth(request, new URL(request.url), 'superadmin');
   if (authError) return authError;
 
   try {
@@ -145,7 +145,7 @@ export async function PUT(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const requestId = getRequestId(request);
 
-  const authError = await validateAdminAuth(request, new URL(request.url));
+  const authError = await validateAdminAuth(request, new URL(request.url), 'superadmin');
   if (authError) return authError;
 
   try {

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import crypto from 'node:crypto';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { calcularProgressaoNivel, CUSTO_ENTREGA_GRATIS_PONTOS, INTERVALO_ENTREGA_GRATIS_DIAS } from '@/lib/fidelidade-rules';
 import { validarDados, ResgateSchema, type ResgateValidation } from '@/lib/validations';
@@ -14,7 +15,7 @@ import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 // =========================
 
 function gerarCodigoCupom() {
-  return 'CUP' + Math.random().toString(36).slice(2, 8).toUpperCase();
+  return `CUP-${crypto.randomBytes(8).toString('hex').toUpperCase()}`;
 }
 
 // =========================
@@ -126,19 +127,16 @@ export async function POST(req: NextRequest) {
     }
 
     if (!cliente) {
-      return errorResponse('Cliente não encontrado', 'not_found');
+      return errorResponse('Telefone ou PIN inválido. Se ainda não participa, faça seu cadastro.', 'unauthorized', 401);
     }
 
     // 2. DETECÇÃO PRÉ-CADASTRO
     const preCadastro = isPreCadastro(cliente);
 
     if (preCadastro) {
-      // Pré-cadastro nunca pode consultar saldo nem resgatar antes de comprovar o telefone.
-      return successResponse({
-        ok: true,
-        pre_cadastro: true,
-        motivo: 'Seu cadastro foi iniciado pela Roleta. Para acessar sua conta, finalize seus dados.',
-      });
+      // Não confirmamos a existência de um pré-cadastro antes da verificação de
+      // posse do telefone. O CTA público de cadastro segue disponível na tela.
+      return errorResponse('Telefone ou PIN inválido. Se ainda não participa, faça seu cadastro.', 'unauthorized', 401);
     }
 
     // 3. VALIDAR PIN (para clientes completos)

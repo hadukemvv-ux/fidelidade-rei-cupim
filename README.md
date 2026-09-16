@@ -1,7 +1,7 @@
 # Projeto Fidelidade (SAIPOS + Supabase + Next.js)
 
 Sistema de fidelidade para restaurante com:
-- Pontos, cashback e tickets por compra
+- Pontos, cashback e benefícios por compra
 - Integracao com SAIPOS (webhook + cron)
 - Area admin protegida por sessao
 - Crons de sincronizacao e expiracao
@@ -10,7 +10,8 @@ Sistema de fidelidade para restaurante com:
 
 - Código recuperado e versionado no GitHub; cada push em `main` dispara deploy automático na Vercel.
 - Última base publicada no Git: Roleta V2 com giro atômico e permissão explícita somente para o servidor. A V2 continua **desativada** até o fluxo completo passar por testes e aprovação comercial.
-- TypeScript e lint: sem erros na última verificação. Testes unitários: `32/32` aprovados.
+- TypeScript e testes unitários: `32/32` aprovados na última verificação. O lint global ainda possui pendências no legado pausado; não é critério de abertura enquanto não for corrigido e reexecutado.
+- Endurecimento crítico em 16/09: a migração `202609160001_hardening_critico_legado.sql` foi aplicada e verificada no Supabase; ela bloqueia RPC/tabelas/bucket legados ao navegador e transforma a baixa de cupom antigo em operação atômica auditável.
 - Roleta: a V1 foi bloqueada. A V2 já possui sessão QR segura, tela pública por QR, giro único atômico no banco, prêmio ponderado por nível, cupom e consentimento opcional. Ela continua fechada e em modo de teste até a validação da venda pela Saipos e o piloto operacional.
 - Saipos: o fluxo de validação imediata de comanda está em espera pela confirmação técnica da Saipos. Veja `docs/SAIPOS_VALIDACAO_COMANDA.md` antes de ativar qualquer operação baseada em foto.
 - Sorteios legados estão pausados: não há cron de sorteio e tickets não representam entrada ou promessa futura. O plano de privacidade, contenção e resposta a incidentes está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`; o aviso público está em `/privacidade`.
@@ -44,6 +45,9 @@ node tests/saipos-integration.js
 
 Ponto oficial de retomada, auditoria e checklist de abertura:
 - `docs/AUDITORIA_E_CONTINUIDADE_2026-09-10.md`
+
+Auditoria técnica mais recente e checkpoint das correções de segurança:
+- `docs/AUDITORIA_TECNICA_2026-09-16.md`
 
 Para iniciantes:
 - `docs/GUIA-INICIANTE.md`
@@ -88,16 +92,15 @@ Documentacao historica (manter como referencia):
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SAIPOS_TOKEN`
 - `SAIPOS_ID`
-- `ADMIN_SECRET_TOKEN` (opcional, fallback legado)
-- `ADMIN_ALLOWED_EMAILS` (opcional, recomendado)
+- `CUSTOMER_SESSION_SECRET` (obrigatório e independente da chave de serviço)
 - `ADMIN_TEST_EMAIL` e `ADMIN_TEST_PASSWORD` (opcional, recomendado para testes)
 - `CRON_SECRET`
 
 ## Seguranca basica
 
-- Admin API usa `Authorization: Bearer <JWT da sessao Supabase>`
-- Para restringir admin por e-mail, configure `ADMIN_ALLOWED_EMAILS=email1@dominio.com,email2@dominio.com`
-- Para a suite local, prefira `ADMIN_TEST_EMAIL` e `ADMIN_TEST_PASSWORD` de um usuario admin valido
+- Admin API usa `Authorization: Bearer <JWT da sessao Supabase>` e confere o papel ativo em `perfis_operacionais` (`caixa`, `gestor` ou `superadmin`)
+- Não use allowlist de e-mail nem token administrativo compartilhado; cadastre, suspenda e audite a equipe em `/admin/operadores`
+- Para a suite local, prefira `ADMIN_TEST_EMAIL` e `ADMIN_TEST_PASSWORD` de um usuário de teste com papel operacional válido
 - Cron API usa `Authorization: Bearer <CRON_SECRET>`
 - Webhook SAIPOS usa `x-auth-token: <SAIPOS_TOKEN>`
 - Nunca commitar `.env.local`

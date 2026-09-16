@@ -15,7 +15,7 @@ function onlyDigits(value: string | null | undefined) {
 }
 
 function getSigningKey() {
-  const secret = process.env.CUSTOMER_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const secret = process.env.CUSTOMER_SESSION_SECRET;
   if (!secret) throw new Error('CUSTOMER_SESSION_SECRET não configurado.');
   return crypto.createHash('sha256').update(`fidelidade-customer-session:${secret}`).digest();
 }

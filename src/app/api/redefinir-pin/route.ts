@@ -5,6 +5,7 @@ import { successResponse, errorResponse, validationErrorResponse, getRequestId, 
 import { z } from 'zod';
 import { hashPin, verifyPin } from '@/lib/pin';
 import { clearOtpGrant, consumeOtpGrant } from '@/lib/whatsappOtp';
+import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 
 // Schema para redefinição de PIN
 const RedefinirPinSchema = z.object({
@@ -18,6 +19,8 @@ export async function POST(req: NextRequest) {
   const requestId = getRequestId(req);
 
   try {
+    const blocked = await bloquearSeContencaoAtiva();
+    if (blocked) return blocked;
     const body = await req.json();
 
     // ===== VALIDAR INPUT COM ZOD =====

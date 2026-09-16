@@ -12,7 +12,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 | --- | --- | --- |
 | Recuperação, GitHub e Vercel | Concluído | Manter rotina de commits, deploy e confirmação Ready. |
 | Base de fidelidade/Saipos | Parcial | Confirmar contrato de venda paga, cancelamento e consulta imediata com a Saipos. |
-| Operadores e auditoria | Parcial | Unificar permissões finas e cobrir toda ação sensível em auditoria. |
+| Operadores e auditoria | Em endurecimento | Papéis operacionais substituem token/allowlist legado; aplicar e verificar a migração crítica. |
 | Cupons da operação | Parcial | Retirar gradualmente o validador legado e testar o fluxo novo com a caixa. |
 | Roleta V2 | Pronta para piloto fechado | Validar uma venda paga por fonte confiável e testar ponta a ponta. |
 | WhatsApp OTP | Preparado, desligado | Escolher provedor oficial após adquirir o número comercial. |
@@ -39,6 +39,8 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 - [x] Erro de build da página de resgate identificado e corrigido; deploy `63ed036` confirmado como `Ready` na Vercel em 15/09/2026.
 - [x] Fluxo legado de garçons e seus “alertas” pausados: senhas previsíveis, ranking e leitura de telefone/IP não são mais acessíveis. A navegação passa a apontar para acessos individuais, Roleta V2, auditoria e central de incidentes; o relatório geral passou a contar somente giros V2.
 - [x] Checkpoint `f59fd85` enviado ao GitHub e deploy de produção confirmado como `Ready` na Vercel em 16/09/2026.
+- [x] Código: sessão de cliente deixou de reutilizar a chave de serviço; redefinição de PIN respeita contenção; consulta pública de resgate não enumera cadastro; roleta e sorteio legados ficam indisponíveis.
+- [x] Infraestrutura: `202609160001_hardening_critico_legado.sql` aplicada e verificada no Supabase; `CUSTOMER_SESSION_SECRET` salvo como Secret de Production na Vercel. O próximo deploy em `main` vai consumi-lo.
 
 ## Em andamento
 
@@ -75,7 +77,7 @@ Decisão após a resposta:
 ## Próximas prioridades independentes da Saipos
 
 1. [x] Restringir importação de planilha a superadmin, com limite de 2 MB e 2.000 linhas por envio. Planejar a substituição de `xlsx` (alertas altos conhecidos) continua pendente.
-2. Completar a matriz única de permissões: gestão de acessos e alteração de prêmios já usam papéis operacionais; faltam os demais endpoints administrativos sensíveis.
+2. [Em andamento] Completar a matriz única de permissões: endpoints que antes aceitavam token/allowlist agora exigem papel operacional; falta validar os papéis em produção e cobrir auditoria obrigatória para todos os escritores administrativos.
 3. Consolidar cupom novo e remover o caminho legado quando o teste de caixa for concluído.
 4. [Em andamento] Preferência de marketing/opt-out do cliente implementada: o portal permite revogar WhatsApp promocional ou aniversário, com evidência e auditoria. Falta testar ponta a ponta, definir canal formal de direitos e fechar o plano de retenção. O aviso público, a central de incidente, o modo de contenção e o bloqueio de rotas críticas já foram preparados; o checkpoint está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`.
 5. [Em andamento] Criar backup/restauração testável do Supabase e alertas de cron.

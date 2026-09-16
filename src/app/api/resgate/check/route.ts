@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import { isPreCadastro } from '@/lib/customerRegistration';
 import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 
 function onlyDigits(v: string) {
@@ -21,44 +19,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // Buscar cliente
-    const { data: cliente } = await supabaseAdmin
-      .from('base_clientes_saipos')
-      .select('*')
-      .eq('telefone', telefone)
-      .maybeSingle();
-
-    // 1) Cliente NÃO existe
-    if (!cliente) {
-      return NextResponse.json({
-        ok: true,
-        status: 'novo',
-        cadastro_completo: false,
-        motivo: 'Telefone não encontrado.'
-      });
-    }
-
-    // 2) Cliente existe → verificar se está incompleto
-    if (isPreCadastro(cliente)) {
-      return NextResponse.json({
-        ok: true,
-        status: 'pre_cadastro',
-        cadastro_completo: false,
-        motivo: 'Cadastro incompleto.'
-      });
-    }
-
-    // 3) Cliente existe e cadastro está completo
+    // Não revela se um telefone possui, não possui ou iniciou cadastro. A
+    // confirmação real acontece com PIN ou OTP no fluxo seguinte.
     return NextResponse.json({
       ok: true,
-      status: 'completo',
-      cadastro_completo: true
+      status: 'prosseguir',
     });
 
-  } catch (err: unknown) {
-    console.error('[CHECK ERROR]:', err);
+  } catch {
     return NextResponse.json(
-      { ok: false, status: 'erro', error: err instanceof Error ? err.message : 'Erro interno.' },
+      { ok: false, status: 'erro', error: 'Não foi possível continuar agora.' },
       { status: 500 }
     );
   }

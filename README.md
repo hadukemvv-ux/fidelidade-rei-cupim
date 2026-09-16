@@ -6,7 +6,7 @@ Sistema de fidelidade para restaurante com:
 - Area admin protegida por sessao
 - Crons de sincronizacao e expiracao
 
-## Estado atual (15/09/2026)
+## Estado atual (16/09/2026)
 
 - Código recuperado e versionado no GitHub; cada push em `main` dispara deploy automático na Vercel.
 - Última base publicada no Git: Roleta V2 com giro atômico e permissão explícita somente para o servidor. A V2 continua **desativada** até o fluxo completo passar por testes e aprovação comercial.
@@ -14,6 +14,7 @@ Sistema de fidelidade para restaurante com:
 - Roleta: a V1 foi bloqueada. A V2 já possui sessão QR segura, tela pública por QR, giro único atômico no banco, prêmio ponderado por nível, cupom e consentimento opcional. Ela continua fechada e em modo de teste até a validação da venda pela Saipos e o piloto operacional.
 - Saipos: o fluxo de validação imediata de comanda está em espera pela confirmação técnica da Saipos. Veja `docs/SAIPOS_VALIDACAO_COMANDA.md` antes de ativar qualquer operação baseada em foto.
 - Sorteios legados estão pausados: não há cron de sorteio e tickets não representam entrada ou promessa futura. O plano de privacidade, contenção e resposta a incidentes está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`; o aviso público está em `/privacidade`.
+- O controle antigo de garçons e alertas foi pausado: não existem mais senhas previsíveis, ranking operacional ou telas de rotina expondo telefone/IP. A equipe é administrada em `/admin/operadores`; o fluxo futuro usa QR V2 e auditoria.
 - Último deploy confirmado como `Ready` na Vercel: commit `63ed036` (15/09/2026). O commit anterior `fd476c1` contém o modo de contenção e a pausa segura do sorteio.
 
 ## Inicio rapido
@@ -55,6 +56,9 @@ Para privacidade, contenção e resposta a incidentes:
 
 Para testar as preferências do cliente e o modo de contenção sem depender de outra pessoa:
 - `docs/GUIA_TESTE_PRIVACIDADE_E_CONTENCAO.md`
+
+Roteiro mestre de todos os testes pendentes antes do lançamento:
+- `docs/TESTES_PENDENTES_PRE_LANCAMENTO.md`
 
 Roadmap vivo, com estado de cada frente:
 - `docs/ROADMAP.md`

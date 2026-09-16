@@ -125,10 +125,10 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: giros, error: girosError } = await supabaseAdmin
-      .from('historico_roleta')
-      .select('id, premio_nome, data_hora')
-      .gte('data_hora', inicioISO)
-      .lte('data_hora', fimISO);
+      .from('roleta_giros')
+      .select('id, criado_em')
+      .gte('criado_em', inicioISO)
+      .lte('criado_em', fimISO);
 
     if (girosError) {
       logError('/api/admin/analytics', girosError as Error, { requestId });
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
       ],
       pontosSaida: pontosSaida || [],
       resgatesPeriodo: resgatesPeriodo || [],
-      giros: giros || [],
+      giros: (giros || []).map((giro) => ({ id: giro.id, data_hora: giro.criado_em })),
       base: {
         total: baseTotal.count || 0,
         cadastrosSeguros: contasComPin.count || 0,

@@ -28,11 +28,9 @@ const navigation: Array<{ label: string; items: NavItem[] }> = [
     { href: '/admin/roleta', icon: '↻', label: 'Roleta', hint: 'Prêmios e chances' },
   ] },
   { label: 'Operação', items: [
-    { href: '/admin/garcons', icon: '♟', label: 'Garçons', hint: 'Cadastros e desempenho' },
     { href: '/caixa', icon: '▣', label: 'Validar cupom', hint: 'Uso no balcão e delivery' },
     { href: '/admin/operadores', icon: '♙', label: 'Acessos', hint: 'Caixa, gestão e admin' },
     { href: '/admin/auditoria', icon: '◷', label: 'Auditoria', hint: 'Quem fez cada ação' },
-    { href: '/admin/garcons/alertas', icon: '!', label: 'Segurança', hint: 'Alertas e bloqueios' },
     { href: '/admin/seguranca', icon: '⛨', label: 'Privacidade', hint: 'Incidentes e contenção' },
     { href: '/admin/importar', icon: '⇧', label: 'Importação', hint: 'Clientes da Saipos' },
   ] },
@@ -49,10 +47,10 @@ const pageInfo: Record<string, { title: string; description: string }> = {
   '/admin/sorteio/previsao': { title: 'Previsão do sorteio', description: 'Confira participantes e chances antes de sortear.' },
   '/admin/sorteio/resumo': { title: 'Resumo do sorteio', description: 'Consulte os números de um sorteio específico.' },
   '/admin/sorteio/ganhadores': { title: 'Ganhadores', description: 'Histórico dos resultados já realizados.' },
-  '/admin/garcons': { title: 'Equipe', description: 'Cadastre garçons e acompanhe o uso da roleta.' },
+  '/admin/garcons': { title: 'Equipe — fluxo antigo pausado', description: 'Use contas individuais, Roleta V2 e auditoria para a operação atual.' },
   '/admin/operadores': { title: 'Acessos da equipe', description: 'Defina o que cada pessoa pode fazer no sistema.' },
   '/admin/auditoria': { title: 'Auditoria', description: 'Acompanhe liberações, validações e ações administrativas.' },
-  '/admin/garcons/alertas': { title: 'Segurança', description: 'Revise atividades suspeitas e desbloqueios.' },
+  '/admin/garcons/alertas': { title: 'Alertas antigos pausados', description: 'A segurança operacional agora usa auditoria e contenção de incidentes.' },
   '/admin/seguranca': { title: 'Privacidade e incidentes', description: 'Contenha riscos, preserve evidências e acompanhe a investigação.' },
   '/admin/importar': { title: 'Importação', description: 'Atualize a base de clientes com uma planilha da Saipos.' },
 };
@@ -60,7 +58,6 @@ const pageInfo: Record<string, { title: string; description: string }> = {
 function isActive(pathname: string, href: string) {
   if (href === '/admin') return pathname === href;
   if (href === '/admin/sorteio') return pathname.startsWith('/admin/sorteio');
-  if (href === '/admin/garcons') return pathname === href || /^\/admin\/garcons\/\d+$/.test(pathname);
   return pathname === href;
 }
 
@@ -90,7 +87,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const currentPage = useMemo(() => {
     if (/^\/admin\/garcons\/\d+$/.test(pathname)) {
-      return { title: 'Perfil da equipe', description: 'Histórico, status e atividade deste garçom.' };
+      return { title: 'Perfil antigo indisponível', description: 'A gestão da equipe acontece agora por acessos individuais.' };
     }
     return pageInfo[pathname] || { title: 'Administração', description: 'Clube Rei do Cupim.' };
   }, [pathname]);

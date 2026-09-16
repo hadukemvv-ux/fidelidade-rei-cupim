@@ -1,6 +1,6 @@
 # Privacidade e resposta a incidentes — Clube Cupim
 
-Atualizado em 15/09/2026. Este documento é a referência de continuidade para
+Atualizado em 16/09/2026. Este documento é a referência de continuidade para
 privacidade, segurança e resposta a incidentes. Não substitui aconselhamento
 jurídico, contábil ou contratual.
 
@@ -31,6 +31,14 @@ documento e do `docs/ROADMAP.md`.
 | Aniversário | Data de nascimento e aceite específico | Benefício de aniversário, se ativado | Cliente | Opcional; campanha desligada |
 | Marketing | Finalidade, versão do texto, canal, data e hashes técnicos | Provar opt-in/opt-out de comunicação | Cliente/sistema | Opt-out implementado; teste ponta a ponta pendente |
 | Segurança | Hashes de telefone/IP em OTP, logs operacionais e eventos de auditoria | Limites, fraude, investigação e prestação de contas | Sistema/equipe | Definir prazo de retenção |
+
+### Registros legados isolados
+
+As tabelas antigas `garcons_logs` e `historico_roleta` podem conter telefone e
+IP em formato bruto da primeira versão. Em 16/09/2026, suas telas e APIs foram
+pausadas e respondem `410`; nenhum painel de rotina deve expor esses campos.
+Elas não devem receber dados novos. Antes de remover ou anonimizar qualquer
+registro, aprovar prazo de retenção, criar backup e registrar a decisão.
 
 Não importar para o Clube sem finalidade aprovada: dados de cartão ou pagamento,
 CPF, endereço, observações internas, payload completo da Saipos, imagem de
@@ -152,5 +160,6 @@ as rotas bloqueadas realmente param e que a reabertura é auditada.
 - [x] Painel de contenção, registro de incidente e bloqueio de rotas críticas implementados localmente.
 - [x] Aviso público de privacidade adicionado em `/privacidade`, com vínculo no site e no cadastro.
 - [x] Migração `202609150001_preferencias_marketing_cliente.sql` aplicada no Supabase em 15/09/2026: consentimentos de marketing passam a sincronizar o estado atual, e o cliente autenticado pode revogar marketing ou aniversário no portal.
+- [x] Fluxo antigo de garçons isolado em 16/09/2026: senhas previsíveis e painéis que mostravam telefone/IP foram removidos da operação; tabelas seguem preservadas somente para retenção e limpeza planejada.
 - [ ] Testar contenção e reabertura controladas após o deploy, sem dados de clientes.
 - [ ] Testar revogação de marketing/aniversário com conta de teste e confirmar a evidência no banco antes de qualquer comunicação real.

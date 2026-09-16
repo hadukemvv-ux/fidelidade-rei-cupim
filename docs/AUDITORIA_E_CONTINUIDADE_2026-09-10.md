@@ -1,6 +1,15 @@
 # Auditoria e continuidade — Clube Cupim
 
-Atualizado em 12/09/2026. Este é o ponto de retomada oficial do projeto.
+Atualizado em 16/09/2026. Este é o ponto de retomada oficial do projeto.
+
+## Checkpoint de continuidade — 16/09/2026
+
+1. O controle antigo de garçons foi retirado da operação: dependia de senhas previsíveis, liberava nível manualmente e mostrava telefone/IP em painéis sem critério de segurança confiável. As rotas agora retornam `410`; as telas orientam a equipe para Acessos, Roleta V2, Auditoria e Privacidade.
+2. Nenhuma tabela legada foi apagada. `garcons`, `garcons_logs` e `historico_roleta` ficaram isoladas, sem receber dados pelo fluxo antigo, até a decisão documentada de retenção, backup e limpeza.
+3. O relatório administrativo passou a usar `roleta_giros` da V2, não o histórico da primeira versão.
+4. Foi criado o checklist central `docs/TESTES_PENDENTES_PRE_LANCAMENTO.md`, que separa testes executáveis hoje de itens bloqueados pela Saipos ou pelo futuro provedor oficial de WhatsApp.
+5. Tipos e lint dos arquivos alterados passaram; a suíte unitária permanece em `32/32`. O lint integral ainda possui erros preexistentes em sorteio, importação, financeiro e outros módulos legados, que devem ser tratados em frente própria antes do lançamento.
+6. Checkpoint de código `f59fd85` enviado ao GitHub; deploy de produção foi confirmado como `Ready` na Vercel em 16/09/2026.
 
 ## Progresso de segurança — 11/09/2026
 

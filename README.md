@@ -15,7 +15,7 @@ Sistema de fidelidade para restaurante com:
 - Saipos: o fluxo de validação imediata de comanda está em espera pela confirmação técnica da Saipos. Veja `docs/SAIPOS_VALIDACAO_COMANDA.md` antes de ativar qualquer operação baseada em foto.
 - Sorteios legados estão pausados: não há cron de sorteio e tickets não representam entrada ou promessa futura. O plano de privacidade, contenção e resposta a incidentes está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`; o aviso público está em `/privacidade`.
 - O controle antigo de garçons e alertas foi pausado: não existem mais senhas previsíveis, ranking operacional ou telas de rotina expondo telefone/IP. A equipe é administrada em `/admin/operadores`; o fluxo futuro usa QR V2 e auditoria.
-- Último deploy confirmado como `Ready` na Vercel: commit `63ed036` (15/09/2026). O commit anterior `fd476c1` contém o modo de contenção e a pausa segura do sorteio.
+- O deploy da alteração funcional `f59fd85` foi confirmado como `Ready` na Vercel em 16/09/2026; ele pausou o fluxo legado de garçons e publicou o roteiro mestre de testes. O commit `fd476c1` contém o modo de contenção e a pausa segura do sorteio.
 
 ## Inicio rapido
 

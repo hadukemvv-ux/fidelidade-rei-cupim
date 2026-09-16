@@ -38,6 +38,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 - [x] Aviso de privacidade público disponível em `/privacidade`, vinculado ao site e ao cadastro; ainda requer revisão jurídica e tabela final de retenção antes do lançamento.
 - [x] Erro de build da página de resgate identificado e corrigido; deploy `63ed036` confirmado como `Ready` na Vercel em 15/09/2026.
 - [x] Fluxo legado de garçons e seus “alertas” pausados: senhas previsíveis, ranking e leitura de telefone/IP não são mais acessíveis. A navegação passa a apontar para acessos individuais, Roleta V2, auditoria e central de incidentes; o relatório geral passou a contar somente giros V2.
+- [x] Checkpoint `f59fd85` enviado ao GitHub e deploy de produção confirmado como `Ready` na Vercel em 16/09/2026.
 
 ## Em andamento
 

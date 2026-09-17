@@ -110,3 +110,18 @@ quando houver um caso de teste apropriado. Só então definiremos a regra V2.
   os parâmetros documentados de período e paginação.
 - A próxima tentativa continua sendo estritamente de leitura: nenhum cliente,
   ponto, QR, cupom ou registro interno é criado/alterado.
+
+### Conexão confirmada — 17/09/2026
+
+- Depois da correção, o diagnóstico recebeu uma amostra de **50 vendas** do dia
+  por `GET /v1/search_sales`. A API devolveu, entre outros, identificador de
+  venda, valor, indicador de cancelamento e a estrutura de formas de pagamento.
+- A busca específica pela Mesa 99 retornou zero resultados nessa etapa. Isso
+  **não** autoriza qualquer benefício e não caracteriza divergência: a mesa
+  pode ainda estar aberta, a venda pode só aparecer depois do fechamento, ou o
+  número impresso da mesa pode não ser o identificador retornado em
+  `table_order`.
+- Próximo teste controlado: após o pagamento, consultar a mesma data e comparar
+  a venda real pelo horário, valor e campos `table_order`/`payments`. Registrar
+  qual identificador da API corresponde à mesa visível e qual campo prova que a
+  cobrança foi concluída. Até então, a roleta segue bloqueada para vendas reais.

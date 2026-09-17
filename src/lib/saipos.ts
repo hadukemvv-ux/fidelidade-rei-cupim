@@ -8,7 +8,6 @@ type BuscarVendasOptions = {
   limit?: number;
   offset?: number;
   token?: string;
-  storeId?: string;
   fetchImpl?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
   timeoutMs?: number;
@@ -91,21 +90,21 @@ export async function buscarVendasSaipos({
   limit = 200,
   offset = 0,
   token = process.env.SAIPOS_DATA_API_TOKEN,
-  storeId = process.env.SAIPOS_ID,
   fetchImpl = fetch,
   sleep = esperar,
   timeoutMs = 10_000,
 }: BuscarVendasOptions): Promise<VendaSaipos[]> {
   if (!token) throw new Error('Token da API de Dados Saipos não configurado.');
-  if (!storeId) throw new Error('Identificador da loja Saipos não configurado.');
 
+  // A API oficial de Dados filtra a(s) loja(s) pelo próprio token. `p_store`
+  // não faz parte do contrato documentado de /v1/search_sales e fazia a Saipos
+  // responder 400 mesmo com a credencial válida.
   const params = new URLSearchParams({
     p_date_column_filter: 'shift_date',
     p_filter_date_start: inicio,
     p_filter_date_end: fim,
     p_limit: String(limit),
     p_offset: String(offset),
-    p_store: storeId,
   });
 
   const maxTentativas = 3;

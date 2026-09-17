@@ -31,10 +31,7 @@ Edite ` .env.local ` com:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `SAIPOS_TOKEN`
-- `SAIPOS_ID`
-- `ADMIN_SECRET_TOKEN` (opcional, fallback legado)
-- `ADMIN_ALLOWED_EMAILS` (opcional, recomendado)
+- `SAIPOS_DATA_API_TOKEN` (Secret exclusivo da API de Consulta de Dados)
 - `ADMIN_TEST_EMAIL` e `ADMIN_TEST_PASSWORD` (opcional, recomendado para testes)
 - `CRON_SECRET`
 

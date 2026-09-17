@@ -80,9 +80,8 @@ retornar somente a referência operacional correspondente. A busca percorre no
 máximo 1.000 vendas do dia apenas em memória, sem gravar os dados recebidos.
 
 Antes do teste, a Vercel deve ter `SAIPOS_DATA_API_TOKEN` como Secret em
-Production e `SAIPOS_ID` com o identificador correto da loja. O sistema não
-usa mais um ID de loja padrão, nem reutiliza o token da API de Dados para
-webhook.
+Production. O endpoint oficial de vendas associa a(s) loja(s) ao token, sem o
+parâmetro `p_store`; o sistema não reutiliza esse token para webhook.
 
 ### Resultado registrado — 17/09/2026, Mesa 99 antes do pagamento
 
@@ -100,3 +99,14 @@ Conferir: a venda pelo número/valor, os campos técnicos recebidos (incluindo
 `id_sale`, `canceled`, `updated_at`, `table_order` e `payments`) e o tempo até
 ela aparecer após o pagamento. Repetir depois com uma venda cancelada/estornada
 quando houver um caso de teste apropriado. Só então definiremos a regra V2.
+
+### Segunda tentativa — 17/09/2026, Mesa 99 antes do pagamento
+
+- Com `SAIPOS_DATA_API_TOKEN` salvo como Secret em Production, a mesma consulta
+  passou de **401** para **400**. Isso demonstra que a chave agora é enviada e
+  aceita para autenticação; a falha é de formato da consulta, não de credencial.
+- Revisando a documentação oficial, identificamos que `p_store` não é um filtro
+  aceito por `GET /v1/search_sales`. O conector foi corrigido para enviar apenas
+  os parâmetros documentados de período e paginação.
+- A próxima tentativa continua sendo estritamente de leitura: nenhum cliente,
+  ponto, QR, cupom ou registro interno é criado/alterado.

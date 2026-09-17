@@ -13,9 +13,23 @@ const periodo = {
   inicio: '2026-09-03T00:00:00.000Z',
   fim: '2026-09-03T23:59:59.000Z',
   token: 'token-de-teste',
-  storeId: '62039',
   sleep: async () => {},
 };
+
+test('monta somente os filtros documentados da API de Dados', async () => {
+  let urlConsultada = '';
+  const fetchImpl: typeof fetch = async (input) => {
+    urlConsultada = String(input);
+    return new Response(JSON.stringify([]), { status: 200 });
+  };
+
+  await buscarVendasSaipos({ ...periodo, fetchImpl });
+  const params = new URL(urlConsultada).searchParams;
+  assert.equal(params.get('p_date_column_filter'), 'shift_date');
+  assert.equal(params.get('p_filter_date_start'), periodo.inicio);
+  assert.equal(params.get('p_filter_date_end'), periodo.fim);
+  assert.equal(params.get('p_store'), null);
+});
 
 test('retenta PGRST003 e retorna vendas quando a Saipos se recupera', async () => {
   let chamadas = 0;

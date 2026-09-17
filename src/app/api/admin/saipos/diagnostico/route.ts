@@ -115,9 +115,6 @@ export async function GET(request: NextRequest) {
     if (error instanceof Error && error.message === "Token da API de Dados Saipos não configurado.") {
       return NextResponse.json({ error: "SAIPOS_DATA_API_TOKEN não está configurado como Secret no servidor." }, { status: 503 });
     }
-    if (error instanceof Error && error.message === "Identificador da loja Saipos não configurado.") {
-      return NextResponse.json({ error: "SAIPOS_ID não está configurado no servidor." }, { status: 503 });
-    }
     return NextResponse.json({ error: "Não foi possível executar o diagnóstico Saipos." }, { status: 500 });
   }
 }

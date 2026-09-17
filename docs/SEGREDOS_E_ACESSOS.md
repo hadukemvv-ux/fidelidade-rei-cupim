@@ -8,7 +8,6 @@ segredo entre fornecedores.
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Config | Ambientes necessários | Pública por design; não contém privilégio. |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Config | Ambientes necessários | Pública por design; segurança depende de RLS, não de ocultação. |
-| `SAIPOS_ID` | Config | Production | Identificador operacional, nunca prefixado com `NEXT_PUBLIC_`. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Secret | Production | Servidor somente; jamais logar, expor ao navegador ou reutilizar. |
 | `CUSTOMER_SESSION_SECRET` | Secret | Production | Exclusivo para sessões de cliente, diferente da Service Role. |
 | `CRON_SECRET` | Secret | Production | Exclusivo para chamadas internas de cron. |
@@ -23,6 +22,10 @@ segredo entre fornecedores.
 3. Só após uma resposta válida da Saipos, excluir a Config legada
    `SAIPOS_TOKEN`. A exclusão é uma ação deliberada, registrada e irreversível
    para a configuração antiga.
+
+O endpoint oficial `GET /v1/search_sales` identifica as lojas permitidas pelo
+próprio token. Por isso `SAIPOS_ID` não é usado pelo conector atual e pode ser
+removido da Vercel numa limpeza posterior, depois de um diagnóstico bem-sucedido.
 
 Não revelar, colar em chat, incluir em captura de tela, commitar ou registrar em
 logs qualquer valor Secret. Rotacionar um segredo no fornecedor quando houver

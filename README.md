@@ -96,7 +96,6 @@ Documentação histórica (somente referência; não usar como instrução de op
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SAIPOS_DATA_API_TOKEN` (Secret exclusivo da API de Consulta de Dados)
-- `SAIPOS_ID`
 - `CUSTOMER_SESSION_SECRET` (obrigatório e independente da chave de serviço)
 - `ADMIN_TEST_EMAIL` e `ADMIN_TEST_PASSWORD` (opcional, recomendado para testes)
 - `CRON_SECRET`

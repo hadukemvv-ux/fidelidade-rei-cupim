@@ -41,6 +41,11 @@ npx tsc --noEmit
 node tests/saipos-integration.js
 ```
 
+## Comece por aqui
+
+Antes de retomar o projeto em outro computador ou iniciar uma nova frente, leia:
+- `docs/COMECE_AQUI.md`
+
 ## Documentacao oficial do projeto
 
 Ponto oficial de retomada, auditoria e checklist de abertura:
@@ -79,7 +84,7 @@ Regras atuais do programa:
 Para revisao por outras IAs:
 - `docs/GUIA-PARA-IA-REVIEW.md`
 
-Documentacao historica (manter como referencia):
+Documentação histórica (somente referência; não usar como instrução de operação):
 - `ARQUITETURA.md`
 - `DEPLOYMENT.md`
 - `IMPLEMENTACOES.md`

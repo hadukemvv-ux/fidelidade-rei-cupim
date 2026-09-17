@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabaseAdmin
     .from("comandas_roleta")
-    .select("id, status, mesa_referencia, valor_informado, saipos_sale_id, criado_por_nome, criado_em, revisada_por_nome, revisada_em, motivo_revisao, expira_em")
+    .select("id, status, mesa_referencia, id_pedido_impresso, valor_confirmado, saipos_sale_id, reconciliacao_status, reconciliada_em, reconciliacao_detalhes, criado_por_nome, criado_em, revisada_por_nome, revisada_em, motivo_revisao, expira_em")
     .is("apagada_em", null)
     .order("criado_em", { ascending: false })
     .limit(100);

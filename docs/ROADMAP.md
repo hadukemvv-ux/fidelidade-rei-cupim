@@ -58,6 +58,7 @@ Venda paga na Saipos -> confirmação automática no sistema -> nível da compra
 - [x] Fundação de sessão e QR seguro.
 - [ ] Fonte automática e confiável da venda paga. **Bloqueada pela resposta da Saipos.**
 - [Em preparação] Piloto de comanda com duas evidências: `garcom` envia foto de cabeçalho e de total; o OCR roda no navegador e apenas sugere mesa/data/hora/ID/valor; a confirmação explícita do operador cria QR de teste único. A Saipos entra depois na reconciliação, sem consequência automática. As migrações `202609170001` a `202609170004` precisam ser aplicadas antes do primeiro teste.
+- [Em preparação] Cron isolado de reconciliação: consulta apenas as comandas de QR pendentes dos últimos três dias por `id_sale`, compara ID/total/pagamento/cancelamento e grava `compatível`, `divergente` ou pendente. Ele não cria clientes, pontos, cupons, prêmios ou sanções. O agendamento diário `0 10 * * *` (07:00 BRT) será incluído na Vercel **depois** de aplicar as migrações e fazer um teste manual autenticado.
 - [x] Página pública `/roleta/v2` que lê uma sessão sem expor dados sensíveis.
 - [x] Registro de telefone, consentimento opcional e giro único atômico.
 - [x] Seleção de prêmio no servidor, ponderada pelos cinco níveis e custo estimado.

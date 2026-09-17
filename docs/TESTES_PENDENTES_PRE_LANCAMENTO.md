@@ -153,6 +153,8 @@ comanda.
 - [ ] Confirmar que a URL de visualização expira em cerca de um minuto e que o bucket não é público.
 - [ ] Com a V2 explicitamente em modo de teste, emitir um QR; conferir expiração, giro único e cupom marcado como teste. Não usar esse cupom em venda real.
 - [ ] No turno seguinte, consultar a Saipos por `id_sale` usando o ID impresso, comparar valor, origem e pagamento; registrar a divergência/sucesso apenas como reconciliação, sem punição ou ajuste automático.
+- [ ] Depois de aplicar as migrações, chamar manualmente o cron protegido de reconciliação com uma comanda de teste; confirmar que ele só atualiza o estado de reconciliação e cria auditoria, sem criar cliente, ponto, cupom, prêmio ou sanção.
+- [ ] Só após o teste manual aprovado, configurar a execução diária `0 10 * * *` na Vercel. Em plano Hobby, considere a janela de 10:00–10:59 UTC, não um minuto exato.
 - [ ] Registrar o prazo operacional de 30 dias e implementar/testar a remoção segura das imagens expiradas antes de abrir ao público.
 
 ## 8. WhatsApp e OTP

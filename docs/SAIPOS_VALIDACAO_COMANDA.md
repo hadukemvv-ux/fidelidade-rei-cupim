@@ -75,6 +75,9 @@ reais. Com um token já contratado, um `superadmin` deve abrir `/admin/saipos` e
 consultar o dia de uma venda própria de teste. A tela não grava no Supabase e
 não mostra nome, telefone, CPF, endereço ou payload completo.
 
+Antes do teste, a Vercel deve ter `SAIPOS_TOKEN` como Secret e `SAIPOS_ID` com
+o identificador correto da loja. O sistema não usa mais um ID de loja padrão.
+
 Conferir: a venda pelo número/valor, os campos técnicos recebidos (incluindo
 `id_sale`, `canceled`, `updated_at`, `table_order` e `payments`) e o tempo até
 ela aparecer após o pagamento. Repetir depois com uma venda cancelada/estornada

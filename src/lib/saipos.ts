@@ -91,12 +91,13 @@ export async function buscarVendasSaipos({
   limit = 200,
   offset = 0,
   token = process.env.SAIPOS_TOKEN,
-  storeId = process.env.SAIPOS_ID || '62039',
+  storeId = process.env.SAIPOS_ID,
   fetchImpl = fetch,
   sleep = esperar,
   timeoutMs = 10_000,
 }: BuscarVendasOptions): Promise<VendaSaipos[]> {
   if (!token) throw new Error('Token Saipos não configurado.');
+  if (!storeId) throw new Error('Identificador da loja Saipos não configurado.');
 
   const params = new URLSearchParams({
     p_date_column_filter: 'shift_date',

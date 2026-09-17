@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireOperationalActor } from "@/lib/operationalAuth";
-import { buscarTodasVendasSaipos, buscarVendasSaipos, periodoDiaSaoPaulo, SaiposApiError, type VendaSaipos } from "@/lib/saipos";
+import { buscarTodasVendasSaipos, buscarVendasSaipos, periodoDiaSaoPaulo, SaiposApiError, type ColunaDataSaipos, type VendaSaipos } from "@/lib/saipos";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +84,11 @@ export async function GET(request: NextRequest) {
   const requestedDay = new URL(request.url).searchParams.get("dia");
   const referenceParam = new URL(request.url).searchParams.get("referencia")?.trim() || "";
   const valorParam = new URL(request.url).searchParams.get("valor")?.trim() || "";
+  const colunaDataParam = new URL(request.url).searchParams.get("campo_data") || "shift_date";
+  if (!(["shift_date", "created_at", "updated_at"] as const).includes(colunaDataParam as ColunaDataSaipos)) {
+    return NextResponse.json({ error: "Campo de data Saipos inválido." }, { status: 400 });
+  }
+  const colunaData = colunaDataParam as ColunaDataSaipos;
   if (referenceParam.length > 80) {
     return NextResponse.json({ error: "Mesa ou comanda inválida." }, { status: 400 });
   }
@@ -106,8 +111,8 @@ export async function GET(request: NextRequest) {
     // sem persistência, para retornar somente a venda operacional procurada.
     const precisaBuscaAmpla = Boolean(referenceParam || valorAproximado !== null);
     const vendasConsultadas = precisaBuscaAmpla
-      ? await buscarTodasVendasSaipos({ inicio, fim, pageSize: 200, maxPages: 5 })
-      : await buscarVendasSaipos({ inicio, fim, limit: 50 });
+      ? await buscarTodasVendasSaipos({ inicio, fim, dateColumnFilter: colunaData, pageSize: 200, maxPages: 5 })
+      : await buscarVendasSaipos({ inicio, fim, dateColumnFilter: colunaData, limit: 50 });
     const vendas = vendasConsultadas.filter((sale) => {
       const referenciaCorresponde = !referenceParam || correspondeReferencia(sale, normalizarReferencia(referenceParam));
       // A faixa de R$ 5,00 permite localizar uma venda cujo total foi
@@ -123,6 +128,7 @@ export async function GET(request: NextRequest) {
       modo: "somente_leitura",
       dia,
       periodo: { inicio, fim },
+      campo_data_consultado: colunaData,
       referencia_consultada: referenceParam || null,
       valor_aproximado_consultado: valorAproximado,
       vendas_consultadas: vendasConsultadas.length,

@@ -2,9 +2,13 @@ const SAIPOS_URL = 'https://data.saipos.io/v1/search_sales';
 
 const TRANSIENT_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
 
+export type ColunaDataSaipos = 'shift_date' | 'created_at' | 'updated_at';
+
 type BuscarVendasOptions = {
   inicio: string;
   fim: string;
+  /** Campo temporal oficial usado para o recorte da consulta. */
+  dateColumnFilter?: ColunaDataSaipos;
   limit?: number;
   offset?: number;
   token?: string;
@@ -87,6 +91,7 @@ function temErroTransitorioNoCorpo(body: string) {
 export async function buscarVendasSaipos({
   inicio,
   fim,
+  dateColumnFilter = 'shift_date',
   limit = 200,
   offset = 0,
   token = process.env.SAIPOS_DATA_API_TOKEN,
@@ -100,7 +105,7 @@ export async function buscarVendasSaipos({
   // não faz parte do contrato documentado de /v1/search_sales e fazia a Saipos
   // responder 400 mesmo com a credencial válida.
   const params = new URLSearchParams({
-    p_date_column_filter: 'shift_date',
+    p_date_column_filter: dateColumnFilter,
     p_filter_date_start: inicio,
     p_filter_date_end: fim,
     p_limit: String(limit),

@@ -31,6 +31,17 @@ test('monta somente os filtros documentados da API de Dados', async () => {
   assert.equal(params.get('p_store'), null);
 });
 
+test('permite consultar pela última atualização da venda', async () => {
+  let urlConsultada = '';
+  const fetchImpl: typeof fetch = async (input) => {
+    urlConsultada = String(input);
+    return new Response(JSON.stringify([]), { status: 200 });
+  };
+
+  await buscarVendasSaipos({ ...periodo, dateColumnFilter: 'updated_at', fetchImpl });
+  assert.equal(new URL(urlConsultada).searchParams.get('p_date_column_filter'), 'updated_at');
+});
+
 test('retenta PGRST003 e retorna vendas quando a Saipos se recupera', async () => {
   let chamadas = 0;
   const fetchImpl: typeof fetch = async () => {

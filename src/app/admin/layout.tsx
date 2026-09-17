@@ -29,7 +29,8 @@ const navigation: Array<{ label: string; items: NavItem[] }> = [
   ] },
   { label: 'Operação', items: [
     { href: '/caixa', icon: '▣', label: 'Validar cupom', hint: 'Uso no balcão e delivery' },
-    { href: '/admin/operadores', icon: '♙', label: 'Acessos', hint: 'Caixa, gestão e admin' },
+    { href: '/admin/operadores', icon: '♙', label: 'Acessos', hint: 'Garçom, caixa, gestão e admin' },
+    { href: '/admin/comandas', icon: '▣', label: 'Comandas', hint: 'Fotos pendentes de conferência' },
     { href: '/admin/auditoria', icon: '◷', label: 'Auditoria', hint: 'Quem fez cada ação' },
     { href: '/admin/saipos', icon: '↔', label: 'Saipos', hint: 'Teste seguro da conexão' },
     { href: '/admin/seguranca', icon: '⛨', label: 'Privacidade', hint: 'Incidentes e contenção' },
@@ -50,6 +51,7 @@ const pageInfo: Record<string, { title: string; description: string }> = {
   '/admin/sorteio/ganhadores': { title: 'Ganhadores', description: 'Histórico dos resultados já realizados.' },
   '/admin/garcons': { title: 'Equipe — fluxo antigo pausado', description: 'Use contas individuais, Roleta V2 e auditoria para a operação atual.' },
   '/admin/operadores': { title: 'Acessos da equipe', description: 'Defina o que cada pessoa pode fazer no sistema.' },
+  '/admin/comandas': { title: 'Comandas para conferência', description: 'Fotos privadas aguardando a confirmação da gestão.' },
   '/admin/auditoria': { title: 'Auditoria', description: 'Acompanhe liberações, validações e ações administrativas.' },
   '/admin/saipos': { title: 'Saipos — teste de conexão', description: 'Confirme a API sem criar clientes, pontos ou benefícios.' },
   '/admin/garcons/alertas': { title: 'Alertas antigos pausados', description: 'A segurança operacional agora usa auditoria e contenção de incidentes.' },

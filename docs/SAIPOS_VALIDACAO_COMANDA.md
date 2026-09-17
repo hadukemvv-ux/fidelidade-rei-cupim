@@ -125,3 +125,19 @@ quando houver um caso de teste apropriado. Só então definiremos a regra V2.
   a venda real pelo horário, valor e campos `table_order`/`payments`. Registrar
   qual identificador da API corresponde à mesa visível e qual campo prova que a
   cobrança foi concluída. Até então, a roleta segue bloqueada para vendas reais.
+
+### Pagamento de teste informado — 17/09/2026, Mesa 99
+
+- O responsável informou pagamento por volta de **15:58**, na modalidade
+  “pagamento não cadastrado”, com total aproximado de **R$ 286**.
+- A busca somente-leitura por valor (tolerância de R$ 5) não encontrou venda
+  correspondente no recorte `shift_date`. O diagnóstico foi ampliado para
+  consultar também por `updated_at`, o campo adequado para uma baixa de
+  pagamento; o resultado também foi zero no momento do teste.
+- Isto **não prova que a mesa não foi paga**, nem autoriza concluir que houve
+  erro da Saipos. Pode haver atraso de disponibilidade, valor fora da
+  tolerância, campo/horário de filtro diferente ou referência operacional não
+  exposta pela resposta. O Clube não criou QR, ponto, cupom, cliente ou prêmio.
+- Próxima evidência necessária: identificar, numa venda de teste, o `id_sale`
+  e os valores/status exatos que a Saipos retorna depois da baixa. Até isso
+  ocorrer, QR fica bloqueado.

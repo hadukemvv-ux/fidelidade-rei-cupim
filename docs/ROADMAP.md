@@ -41,6 +41,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 - [x] Checkpoint `f59fd85` enviado ao GitHub e deploy de produção confirmado como `Ready` na Vercel em 16/09/2026.
 - [x] Código: sessão de cliente deixou de reutilizar a chave de serviço; redefinição de PIN respeita contenção; consulta pública de resgate não enumera cadastro; roleta e sorteio legados ficam indisponíveis.
 - [x] Infraestrutura: `202609160001_hardening_critico_legado.sql` aplicada e verificada no Supabase; `CUSTOMER_SESSION_SECRET` salvo como Secret de Production na Vercel. O próximo deploy em `main` vai consumi-lo.
+- [x] Diagnóstico Saipos somente-leitura com token isolado: conexão confirmada e busca por valor/referência/campo temporal, sem persistir vendas ou dados de clientes.
 
 ## Em andamento
 
@@ -56,6 +57,7 @@ Venda paga na Saipos -> confirmação automática no sistema -> nível da compra
 
 - [x] Fundação de sessão e QR seguro.
 - [ ] Fonte automática e confiável da venda paga. **Bloqueada pela resposta da Saipos.**
+- [Em preparação] Foto privada de comanda: `garcom` envia; `gestor`/`superadmin` visualizam e registram análise; `caixa` não libera QR. A migração `202609170001_fluxo_comandas_operacional.sql` precisa ser aplicada antes do primeiro teste.
 - [x] Página pública `/roleta/v2` que lê uma sessão sem expor dados sensíveis.
 - [x] Registro de telefone, consentimento opcional e giro único atômico.
 - [x] Seleção de prêmio no servidor, ponderada pelos cinco níveis e custo estimado.

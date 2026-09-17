@@ -57,6 +57,7 @@ Objetivo: confirmar que cada pessoa opera com uma conta individual e somente den
 - [ ] Aceitar o convite, definir senha e confirmar que o acesso ao painel usa a conta recém-criada.
 - [ ] Criar um operador `caixa`: ele deve conseguir usar o fluxo autorizado de caixa, mas não gerir operadores, prêmios, importação ou segurança.
 - [ ] Criar um operador `gestor`: confirmar acesso somente ao que foi previsto para gestão, sem conceder administração total.
+- [ ] Criar um operador `garcom`: confirmar que ele acessa `/garcom/comanda` e só consegue enviar JPEG/PNG/WebP de até 5 MB com mesa informada; ele não pode consultar a fila, abrir fotos privadas, revisar comandas, emitir QR ou validar cupom.
 - [ ] Suspender uma conta de teste e confirmar que ela perde acesso imediatamente; reativar somente se o teste exigir.
 - [ ] Tentar excluir a própria conta superadmin e confirmar que o sistema recusa.
 - [ ] Conferir em `/admin/auditoria` quem convidou, alterou papel, suspendeu, reativou ou excluiu a conta de teste.
@@ -133,6 +134,19 @@ Depois da resposta:
 - [ ] Testar cancelamento/estorno e verificar a regra aprovada para pontos e cupons já emitidos.
 - [ ] Testar falha temporária do fornecedor: registrar erro, não liberar QR automaticamente e não criar duplicidade ao reprocessar.
 - [ ] Confirmar que uma foto de comanda nunca é prova suficiente para liberação automática.
+
+## 7.1 Foto privada de comanda e separação de funções
+
+Executar depois da migração `202609170001_fluxo_comandas_operacional.sql` e
+somente com uma foto de teste sem documento, cartão, CPF ou dados de cliente.
+
+- [ ] Como `garcom`, abrir `/garcom/comanda`, informar uma mesa de teste e enviar uma imagem permitida. Confirmar que o registro fica `enviada` e que não existe QR, ponto, cupom ou prêmio.
+- [ ] Como `gestor` ou `superadmin`, abrir `/admin/comandas`, ver a foto privada e marcar “Em análise”. Conferir data, remetente e motivo na auditoria.
+- [ ] Como `caixa`, tentar abrir a fila, a foto e a rota de revisão; todas devem recusar o acesso.
+- [ ] Como `garcom`, tentar acessar a fila e a URL de imagem; ambas devem recusar o acesso.
+- [ ] Tentar upload acima de 5 MB, de arquivo não-imagem e de conteúdo incompatível com a extensão/tipo; todos devem ser recusados.
+- [ ] Confirmar que a URL de visualização expira em cerca de um minuto e que o bucket não é público.
+- [ ] Registrar o prazo operacional de 30 dias e implementar/testar a remoção segura das imagens expiradas antes de abrir ao público.
 
 ## 8. WhatsApp e OTP
 

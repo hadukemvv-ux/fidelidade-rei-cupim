@@ -8,14 +8,14 @@ export const dynamic = "force-dynamic";
 const OperatorSchema = z.object({
   user_id: z.string().uuid(),
   nome: z.string().trim().min(3).max(120),
-  papel: z.enum(["superadmin", "gestor", "caixa"]),
+  papel: z.enum(["superadmin", "gestor", "caixa", "garcom"]),
   ativo: z.boolean(),
 });
 
 const InviteSchema = z.object({
   nome: z.string().trim().min(3).max(120),
   email: z.string().trim().email().max(255),
-  papel: z.enum(["gestor", "caixa"]),
+  papel: z.enum(["gestor", "caixa", "garcom"]),
 });
 
 const DeleteSchema = z.object({

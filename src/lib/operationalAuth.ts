@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-export type OperationalRole = "superadmin" | "gestor" | "caixa";
+export type OperationalRole = "superadmin" | "gestor" | "caixa" | "garcom";
 
 export type OperationalActor = {
   userId: string;
@@ -11,6 +11,7 @@ export type OperationalActor = {
 };
 
 const roleRank: Record<OperationalRole, number> = {
+  garcom: 0,
   caixa: 1,
   gestor: 2,
   superadmin: 3,

@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/expirar-pontos",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/reconciliar-comandas-roleta",
+      "schedule": "0 10 * * *"
     }
   ]
 }

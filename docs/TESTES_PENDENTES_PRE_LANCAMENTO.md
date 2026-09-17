@@ -137,10 +137,10 @@ Depois da resposta:
 
 ## 7.1 Piloto: duas fotos, leitura local e QR de teste
 
-Executar depois das migrações `202609170001_fluxo_comandas_operacional.sql` e
-`202609170002` a `202609170004`, somente em modo de teste e com fotos sem
-documento, cartão, CPF ou dados de cliente além do estritamente necessário na
-comanda.
+As migrações `202609170001_fluxo_comandas_operacional.sql` e `202609170002` a
+`202609170004` foram aplicadas e verificadas no Supabase em 17/09/2026. Executar
+somente em modo de teste e com fotos sem documento, cartão, CPF ou dados de
+cliente além do estritamente necessário na comanda.
 
 - [ ] Como `garcom`, abrir `/garcom/comanda`, informar mesa/comanda e selecionar **duas** fotos permitidas: cabeçalho (mesa, abertura e ID) e total (valor e pagamento). Confirmar que o sistema recusa uma única foto.
 - [ ] Acionar “Ler dados das fotos”. Conferir que mesa, data, hora de abertura, ID do pedido e total aparecem apenas como sugestões e corrigir manualmente ao menos um campo no teste.
@@ -154,7 +154,7 @@ comanda.
 - [ ] Com a V2 explicitamente em modo de teste, emitir um QR; conferir expiração, giro único e cupom marcado como teste. Não usar esse cupom em venda real.
 - [ ] No turno seguinte, consultar a Saipos por `id_sale` usando o ID impresso, comparar valor, origem e pagamento; registrar a divergência/sucesso apenas como reconciliação, sem punição ou ajuste automático.
 - [ ] Depois de aplicar as migrações, chamar manualmente o cron protegido de reconciliação com uma comanda de teste; confirmar que ele só atualiza o estado de reconciliação e cria auditoria, sem criar cliente, ponto, cupom, prêmio ou sanção.
-- [ ] Só após o teste manual aprovado, configurar a execução diária `0 10 * * *` na Vercel. Em plano Hobby, considere a janela de 10:00–10:59 UTC, não um minuto exato.
+- [x] Agendamento diário `0 10 * * *` incluído na configuração de implantação em 17/09/2026. Em plano Hobby, considere a janela de 10:00–10:59 UTC, não um minuto exato. Confirmar o primeiro disparo somente depois que o deploy estiver `Ready`.
 - [ ] Registrar o prazo operacional de 30 dias e implementar/testar a remoção segura das imagens expiradas antes de abrir ao público.
 
 ## 8. WhatsApp e OTP

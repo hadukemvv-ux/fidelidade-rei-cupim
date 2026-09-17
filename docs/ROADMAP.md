@@ -14,7 +14,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 | Base de fidelidade/Saipos | Prova de conceito | API é por consulta (pull), sem webhook indicado; validar na prática campos e latência antes de conceder benefícios. |
 | Operadores e auditoria | Em endurecimento | Papéis operacionais substituem token/allowlist legado; aplicar e verificar a migração crítica. |
 | Cupons da operação | Parcial | Retirar gradualmente o validador legado e testar o fluxo novo com a caixa. |
-| Roleta V2 | Piloto operacional em preparação | Aplicar migrações, testar duas fotos/OCR/QR de teste e medir a reconciliação Saipos. |
+| Roleta V2 | Piloto operacional estruturado, ainda fechado | Registrar uma comanda de teste, emitir QR de teste e medir a reconciliação Saipos. |
 | WhatsApp OTP | Preparado, desligado | Escolher provedor oficial após adquirir o número comercial. |
 | LGPD e operação pública | Em andamento | Contenção inicial, inventário, preferências, retenção, backup e revisão jurídica. |
 
@@ -57,8 +57,8 @@ Venda paga na Saipos -> confirmação automática no sistema -> nível da compra
 
 - [x] Fundação de sessão e QR seguro.
 - [ ] Fonte automática e confiável da venda paga. **Bloqueada pela resposta da Saipos.**
-- [Em preparação] Piloto de comanda com duas evidências: `garcom` envia foto de cabeçalho e de total; o OCR roda no navegador e apenas sugere mesa/data/hora/ID/valor; a confirmação explícita do operador cria QR de teste único. A Saipos entra depois na reconciliação, sem consequência automática. As migrações `202609170001` a `202609170004` precisam ser aplicadas antes do primeiro teste.
-- [Em preparação] Cron isolado de reconciliação: consulta apenas as comandas de QR pendentes dos últimos três dias por `id_sale`, compara ID/total/pagamento/cancelamento e grava `compatível`, `divergente` ou pendente. Ele não cria clientes, pontos, cupons, prêmios ou sanções. O agendamento diário `0 10 * * *` (07:00 BRT) será incluído na Vercel **depois** de aplicar as migrações e fazer um teste manual autenticado.
+- [x] Piloto de comanda estruturado no Supabase em 17/09/2026: duas evidências privadas; OCR somente no navegador; campos confirmados pelo operador; ID do pedido impresso único; QR único de teste e trilha de auditoria. A Saipos entra depois na reconciliação, sem consequência automática.
+- [x] Cron isolado de reconciliação preparado para implantação na Vercel: consulta apenas comandas de QR pendentes dos últimos três dias por `id_sale`, compara ID/total/pagamento/cancelamento e grava `compatível`, `divergente` ou pendente. Ele não cria clientes, pontos, cupons, prêmios ou sanções. Agenda: `0 10 * * *` (janela de 07:00–07:59 BRT no Hobby). O primeiro resultado útil depende de uma comanda registrada pelo novo fluxo.
 - [x] Página pública `/roleta/v2` que lê uma sessão sem expor dados sensíveis.
 - [x] Registro de telefone, consentimento opcional e giro único atômico.
 - [x] Seleção de prêmio no servidor, ponderada pelos cinco níveis e custo estimado.

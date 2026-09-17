@@ -24,6 +24,11 @@ function normalizarReferencia(value: unknown) {
     : "";
 }
 
+function valorSeguro(value: unknown) {
+  const valor = Number(value);
+  return Number.isFinite(valor) && valor >= 0 ? valor : null;
+}
+
 /** Procura apenas identificadores operacionais de mesa/comanda, não cliente. */
 function correspondeReferencia(venda: VendaSaipos, referencia: string) {
   const raw = venda as ObjetoSaipos;
@@ -59,7 +64,12 @@ function resumirVenda(venda: VendaSaipos) {
     } : null,
     payments: payments.slice(0, 5).map((payment) => {
       const item = asObject(payment);
-      return item ? { available_fields: Object.keys(item).sort() } : { available_fields: [] };
+      return item ? {
+        payment_amount: valorSeguro(item.payment_amount),
+        desc_store_payment_type: textoSeguro(item.desc_store_payment_type),
+        created_at: textoSeguro(item.created_at),
+        available_fields: Object.keys(item).sort(),
+      } : { payment_amount: null, desc_store_payment_type: null, created_at: null, available_fields: [] };
     }),
     available_fields: Object.keys(raw)
       .filter((field) => !["customer", "customer_phone", "customer_cpf", "telefone"].includes(field))
@@ -73,8 +83,17 @@ export async function GET(request: NextRequest) {
 
   const requestedDay = new URL(request.url).searchParams.get("dia");
   const referenceParam = new URL(request.url).searchParams.get("referencia")?.trim() || "";
+  const valorParam = new URL(request.url).searchParams.get("valor")?.trim() || "";
   if (referenceParam.length > 80) {
     return NextResponse.json({ error: "Mesa ou comanda inválida." }, { status: 400 });
+  }
+  let valorAproximado: number | null = null;
+  if (valorParam) {
+    const valorInformado = Number(valorParam.replace(',', '.'));
+    if (!Number.isFinite(valorInformado) || valorInformado < 0 || valorInformado > 100000) {
+      return NextResponse.json({ error: "Valor aproximado inválido." }, { status: 400 });
+    }
+    valorAproximado = valorInformado;
   }
   const dia = requestedDay || new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
@@ -85,12 +104,19 @@ export async function GET(request: NextRequest) {
     // Sem referência, uma amostra limitada basta para validar token e schema.
     // Com mesa/comanda, percorremos no máximo 1.000 vendas do dia, em memória e
     // sem persistência, para retornar somente a venda operacional procurada.
-    const vendasConsultadas = referenceParam
+    const precisaBuscaAmpla = Boolean(referenceParam || valorAproximado !== null);
+    const vendasConsultadas = precisaBuscaAmpla
       ? await buscarTodasVendasSaipos({ inicio, fim, pageSize: 200, maxPages: 5 })
       : await buscarVendasSaipos({ inicio, fim, limit: 50 });
-    const vendas = referenceParam
-      ? vendasConsultadas.filter((sale) => correspondeReferencia(sale, normalizarReferencia(referenceParam)))
-      : vendasConsultadas;
+    const vendas = vendasConsultadas.filter((sale) => {
+      const referenciaCorresponde = !referenceParam || correspondeReferencia(sale, normalizarReferencia(referenceParam));
+      // A faixa de R$ 5,00 permite localizar uma venda cujo total foi
+      // informado de memória, sem expor dados de clientes ou alterar a venda.
+      const valorCorresponde = valorAproximado === null
+        ? true
+        : Math.abs(Number(sale.total_amount) - valorAproximado) <= 5;
+      return referenciaCorresponde && valorCorresponde;
+    });
 
     return NextResponse.json({
       ok: true,
@@ -98,6 +124,7 @@ export async function GET(request: NextRequest) {
       dia,
       periodo: { inicio, fim },
       referencia_consultada: referenceParam || null,
+      valor_aproximado_consultado: valorAproximado,
       vendas_consultadas: vendasConsultadas.length,
       vendas_encontradas: vendas.length,
       amostras: vendas.slice(0, 10).map(resumirVenda),

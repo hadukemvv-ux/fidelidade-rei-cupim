@@ -7,14 +7,17 @@ type Diagnostic = {
   ok?: boolean;
   dia?: string;
   referencia_consultada?: string | null;
+  valor_aproximado_consultado?: number | null;
   vendas_consultadas?: number;
   vendas_encontradas?: number;
   amostras?: Array<{
     id_sale: number | null;
     total_amount: number | null;
     canceled: string | null;
+    created_at: string | null;
+    updated_at: string | null;
     table_order: { id_store_table: string | null; id_store_order_card: string | null; status: string | null } | null;
-    payments: Array<{ available_fields: string[] }>;
+    payments: Array<{ payment_amount: number | null; desc_store_payment_type: string | null; created_at: string | null; available_fields: string[] }>;
   }>;
   observacao?: string;
   error?: string;
@@ -28,6 +31,7 @@ function todaySaoPaulo() {
 export default function SaiposPage() {
   const [day, setDay] = useState(todaySaoPaulo());
   const [reference, setReference] = useState('');
+  const [amount, setAmount] = useState('');
   const [data, setData] = useState<Diagnostic | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -36,6 +40,7 @@ export default function SaiposPage() {
     try {
       const params = new URLSearchParams({ dia: day });
       if (reference.trim()) params.set('referencia', reference.trim());
+      if (amount.trim()) params.set('valor', amount.trim().replace(',', '.'));
       const response = await fetchAdmin(`/api/admin/saipos/diagnostico?${params}`, { cache: 'no-store' });
       setData(await response.json().catch(() => ({ error: 'Resposta inválida do servidor.' })));
     } catch {
@@ -49,14 +54,15 @@ export default function SaiposPage() {
       <div className="admin-section-title"><div><span>Prova de conceito</span><h2>Consultar um dia</h2></div></div>
       <label><span>Data da venda de teste</span><input type="date" value={day} onChange={(event) => setDay(event.target.value)} /></label>
       <label><span>Mesa ou comanda (opcional)</span><input value={reference} onChange={(event) => setReference(event.target.value)} maxLength={80} placeholder="Ex.: 99" /></label>
+      <label><span>Valor aproximado (opcional)</span><input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" maxLength={12} placeholder="Ex.: 286,00" /></label>
       <button type="button" onClick={diagnose} disabled={loading}>{loading ? 'Consultando…' : 'Consultar Saipos sem alterar dados'}</button>
     </section>
     {data?.error && <section className="admin-notice error"><strong>Consulta não concluída</strong><span>{data.error}{data.status_fornecedor ? ` Código do fornecedor: ${data.status_fornecedor}.` : ''}</span></section>}
     {data?.ok && <>
-      <section className="admin-notice"><strong>Conexão confirmada</strong><span>{data.vendas_encontradas} venda(s) encontrada(s) para {data.referencia_consultada ? `mesa/comanda ${data.referencia_consultada}` : data.dia}. {data.observacao}</span></section>
+      <section className="admin-notice"><strong>Conexão confirmada</strong><span>{data.vendas_encontradas} venda(s) encontrada(s) para {data.referencia_consultada ? `mesa/comanda ${data.referencia_consultada}` : data.valor_aproximado_consultado !== null && data.valor_aproximado_consultado !== undefined ? `valor próximo de R$ ${data.valor_aproximado_consultado.toFixed(2)}` : data.dia}. {data.observacao}</span></section>
       <section>
         <div className="admin-section-title"><div><span>Amostra técnica sem dados pessoais</span><h2>Campos retornados pela Saipos</h2></div></div>
-        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Venda</th><th>Valor</th><th>Cancelada</th><th>Mesa/comanda</th><th>Campos de pagamento</th></tr></thead><tbody>{(data.amostras || []).map((sale, index) => <tr key={`${sale.id_sale}-${index}`}><td>{sale.id_sale ?? '—'}</td><td>{sale.total_amount === null ? '—' : sale.total_amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td><td>{sale.canceled ?? 'não informado'}</td><td>{sale.table_order ? `${sale.table_order.id_store_table || '—'} / ${sale.table_order.id_store_order_card || '—'} (${sale.table_order.status || 'sem status'})` : 'não informado'}</td><td>{sale.payments.length ? sale.payments.flatMap((payment) => payment.available_fields).filter((value, i, all) => all.indexOf(value) === i).join(', ') : 'não informado'}</td></tr>)}{!data.amostras?.length && <tr><td colSpan={5}>Nenhuma venda retornada para esta data.</td></tr>}</tbody></table></div>
+        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Venda</th><th>Valor</th><th>Cancelada</th><th>Mesa/comanda</th><th>Atualizada</th><th>Pagamento</th></tr></thead><tbody>{(data.amostras || []).map((sale, index) => <tr key={`${sale.id_sale}-${index}`}><td>{sale.id_sale ?? '—'}</td><td>{sale.total_amount === null ? '—' : sale.total_amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td><td>{sale.canceled ?? 'não informado'}</td><td>{sale.table_order ? `${sale.table_order.id_store_table || '—'} / ${sale.table_order.id_store_order_card || '—'} (${sale.table_order.status || 'sem status'})` : 'não informado'}</td><td>{sale.updated_at ? new Date(sale.updated_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'}</td><td>{sale.payments.length ? sale.payments.map((payment) => [payment.desc_store_payment_type || 'forma não informada', payment.payment_amount === null ? null : payment.payment_amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })].filter(Boolean).join(' · ')).join(' / ') : 'não informado'}</td></tr>)}{!data.amostras?.length && <tr><td colSpan={6}>Nenhuma venda retornada para esta data.</td></tr>}</tbody></table></div>
       </section>
       <section className="admin-operator-invite"><h2>O que conferir agora</h2><p>Localize a venda de teste pelo número e valor. Veja se há campos de pagamento e o status da mesa/comanda. Compare primeiro uma venda paga; depois, em outro momento, uma venda cancelada ou estornada. Nenhum dado pessoal de cliente é mostrado aqui.</p></section>
     </>}

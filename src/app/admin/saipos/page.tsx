@@ -57,7 +57,7 @@ export default function SaiposPage() {
       <div className="admin-section-title"><div><span>Prova de conceito</span><h2>Consultar um dia</h2></div></div>
       <label><span>Data da venda de teste</span><input type="date" value={day} onChange={(event) => setDay(event.target.value)} /></label>
       <label><span>Usar data da</span><select value={dateField} onChange={(event) => setDateField(event.target.value as typeof dateField)}><option value="shift_date">Venda/turno (padrão)</option><option value="updated_at">Última atualização (pagamento)</option><option value="created_at">Criação da venda</option></select></label>
-      <label><span>Mesa ou comanda (opcional)</span><input value={reference} onChange={(event) => setReference(event.target.value)} maxLength={80} placeholder="Ex.: 99" /></label>
+      <label><span>Mesa, comanda ou ID do pedido (opcional)</span><input value={reference} onChange={(event) => setReference(event.target.value)} maxLength={80} placeholder="Ex.: 99 ou 872482756" /></label>
       <label><span>Valor aproximado (opcional)</span><input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" maxLength={12} placeholder="Ex.: 286,00" /></label>
       <button type="button" onClick={diagnose} disabled={loading}>{loading ? 'Consultando…' : 'Consultar Saipos sem alterar dados'}</button>
     </section>

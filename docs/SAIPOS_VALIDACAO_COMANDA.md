@@ -141,3 +141,18 @@ quando houver um caso de teste apropriado. Só então definiremos a regra V2.
 - Próxima evidência necessária: identificar, numa venda de teste, o `id_sale`
   e os valores/status exatos que a Saipos retorna depois da baixa. Até isso
   ocorrer, QR fica bloqueado.
+
+### Chave confirmada pela comanda impressa — Mesa 99
+
+A foto da comanda fechada revelou que o valor exato era **R$ 274,45** (não o
+valor aproximado informado inicialmente) e que ela imprime o **ID do Pedido
+872482756**. Nova consulta de leitura por `updated_at` e R$ 274,45 retornou
+uma venda não cancelada com o mesmo `id_sale` 872482756 e a forma “Pagamento
+não cadastrado” no mesmo total. A API também retornou atualização às 16:45.
+
+Isso prova que `id_sale` é uma chave de reconciliação promissora, mas **não
+mede a latência**: a primeira consulta usou R$286 e não conseguimos afirmar
+quando a venda apareceu. O próximo teste deve registrar a hora exata do
+fechamento e consultar imediatamente o ID impresso, repetindo em intervalos
+curtos até encontrá-lo. Nenhum QR, ponto, cupom ou prêmio foi criado neste
+diagnóstico.

@@ -1,6 +1,6 @@
 # Roteiro mestre de testes pendentes — pré-lançamento
 
-Atualizado em 16/09/2026. Este é o caderno único para executar testes aos poucos, sem depender da memória e sem usar clientes reais. Ele complementa os guias específicos; quando um teste for concluído, registre data, executor, ambiente, resultado e evidência na seção final.
+Atualizado em 17/09/2026. Este é o caderno único para executar testes aos poucos, sem depender da memória e sem usar clientes reais. Ele complementa os guias específicos; quando um teste for concluído, registre data, executor, ambiente, resultado e evidência na seção final.
 
 > Regra: enquanto a Roleta V2 estiver fechada, nenhum teste deve liberar benefício comercial ou usar dados de clientes reais. Use uma conta e um telefone de teste, e nunca compartilhe PIN, token, QR ou segredo em conversa, planilha ou captura de tela.
 
@@ -135,17 +135,24 @@ Depois da resposta:
 - [ ] Testar falha temporária do fornecedor: registrar erro, não liberar QR automaticamente e não criar duplicidade ao reprocessar.
 - [ ] Confirmar que uma foto de comanda nunca é prova suficiente para liberação automática.
 
-## 7.1 Foto privada de comanda e separação de funções
+## 7.1 Piloto: duas fotos, leitura local e QR de teste
 
-Executar depois da migração `202609170001_fluxo_comandas_operacional.sql` e
-somente com uma foto de teste sem documento, cartão, CPF ou dados de cliente.
+Executar depois das migrações `202609170001_fluxo_comandas_operacional.sql` e
+`202609170002` a `202609170004`, somente em modo de teste e com fotos sem
+documento, cartão, CPF ou dados de cliente além do estritamente necessário na
+comanda.
 
-- [ ] Como `garcom`, abrir `/garcom/comanda`, informar uma mesa de teste e enviar uma imagem permitida. Confirmar que o registro fica `enviada` e que não existe QR, ponto, cupom ou prêmio.
-- [ ] Como `gestor` ou `superadmin`, abrir `/admin/comandas`, ver a foto privada e marcar “Em análise”. Conferir data, remetente e motivo na auditoria.
+- [ ] Como `garcom`, abrir `/garcom/comanda`, informar mesa/comanda e selecionar **duas** fotos permitidas: cabeçalho (mesa, abertura e ID) e total (valor e pagamento). Confirmar que o sistema recusa uma única foto.
+- [ ] Acionar “Ler dados das fotos”. Conferir que mesa, data, hora de abertura, ID do pedido e total aparecem apenas como sugestões e corrigir manualmente ao menos um campo no teste.
+- [ ] Confirmar que o texto integral extraído pelo OCR não é enviado para o banco nem aparece na auditoria; somente as duas imagens privadas e os campos confirmados pelo operador entram no fluxo.
+- [ ] Confirmar que o mesmo ID do pedido não pode emitir dois QR, mesmo com duas fotos novas ou outro operador.
+- [ ] Como `gestor` ou `superadmin`, abrir `/admin/comandas`, ver as duas fotos privadas e a trilha de envio/confirmação. Registrar “Em análise” e conferir data, responsável e motivo na auditoria.
 - [ ] Como `caixa`, tentar abrir a fila, a foto e a rota de revisão; todas devem recusar o acesso.
 - [ ] Como `garcom`, tentar acessar a fila e a URL de imagem; ambas devem recusar o acesso.
 - [ ] Tentar upload acima de 5 MB, de arquivo não-imagem e de conteúdo incompatível com a extensão/tipo; todos devem ser recusados.
 - [ ] Confirmar que a URL de visualização expira em cerca de um minuto e que o bucket não é público.
+- [ ] Com a V2 explicitamente em modo de teste, emitir um QR; conferir expiração, giro único e cupom marcado como teste. Não usar esse cupom em venda real.
+- [ ] No turno seguinte, consultar a Saipos por `id_sale` usando o ID impresso, comparar valor, origem e pagamento; registrar a divergência/sucesso apenas como reconciliação, sem punição ou ajuste automático.
 - [ ] Registrar o prazo operacional de 30 dias e implementar/testar a remoção segura das imagens expiradas antes de abrir ao público.
 
 ## 8. WhatsApp e OTP

@@ -32,35 +32,49 @@ export async function GET(request: Request) {
   return NextResponse.json({ comandas: data || [] });
 }
 
-/** Recebe uma foto da comanda. Ela fica privada e não gera QR automaticamente. */
+function arquivoValido(file: FormDataEntryValue | null): file is File {
+  return file instanceof File && allowed.has(file.type) && file.size > 0 && file.size <= 5 * 1024 * 1024;
+}
+
+async function guardarImagem(image: File, tipo: "cabecalho" | "total") {
+  const extension = image.type === "image/png" ? "png" : image.type === "image/webp" ? "webp" : "jpg";
+  const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}-${tipo}.${extension}`;
+  const bytes = Buffer.from(await image.arrayBuffer());
+  if (!imagemCorrespondeAoTipo(bytes, image.type)) throw new Error("O conteúdo de uma das fotos não corresponde a uma imagem válida.");
+  const { error } = await supabaseAdmin.storage.from("comandas-roleta").upload(path, bytes, {
+    contentType: image.type, upsert: false, cacheControl: "private, max-age=0",
+  });
+  if (error) throw new Error("Não foi possível guardar uma das fotos da comanda.");
+  return path;
+}
+
+/** Recebe duas fotos complementares. Elas ficam privadas e não geram QR automaticamente. */
 export async function POST(request: Request) {
   const actor = await requireOperationalActor(request, "garcom");
   if (actor instanceof NextResponse) return actor;
 
   const form = await request.formData().catch(() => null);
-  const image = form?.get("imagem"); const mesa = String(form?.get("mesa_referencia") || "").trim();
-  if (!(image instanceof File) || !allowed.has(image.type) || image.size === 0 || image.size > 5 * 1024 * 1024) {
-    return NextResponse.json({ error: "Envie uma foto JPEG, PNG ou WebP de até 5 MB." }, { status: 400 });
+  const cabecalho = form?.get("foto_cabecalho") || null; const total = form?.get("foto_total") || null;
+  const mesa = String(form?.get("mesa_referencia") || "").trim();
+  if (!arquivoValido(cabecalho) || !arquivoValido(total)) {
+    return NextResponse.json({ error: "Envie as duas fotos em JPEG, PNG ou WebP, com até 5 MB cada." }, { status: 400 });
   }
   if (!referenciaValida(mesa)) return NextResponse.json({ error: "Informe uma mesa ou referência válida." }, { status: 400 });
 
-  const extension = image.type === "image/png" ? "png" : image.type === "image/webp" ? "webp" : "jpg";
-  const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.${extension}`;
-  const bytes = Buffer.from(await image.arrayBuffer());
-  if (!imagemCorrespondeAoTipo(bytes, image.type)) {
-    return NextResponse.json({ error: "O conteúdo do arquivo não corresponde a uma imagem válida." }, { status: 400 });
-  }
-  const { error: uploadError } = await supabaseAdmin.storage.from("comandas-roleta").upload(path, bytes, {
-    contentType: image.type, upsert: false, cacheControl: "private, max-age=0",
-  });
-  if (uploadError) return NextResponse.json({ error: "Não foi possível guardar a foto da comanda." }, { status: 500 });
+  const paths: string[] = [];
+  try { paths.push(await guardarImagem(cabecalho, "cabecalho"), await guardarImagem(total, "total")); }
+  catch (cause) { if (paths.length) await supabaseAdmin.storage.from("comandas-roleta").remove(paths); return NextResponse.json({ error: cause instanceof Error ? cause.message : "Não foi possível guardar as fotos." }, { status: 500 }); }
 
-  const { data, error } = await supabaseAdmin.from("comandas_roleta").insert({ imagem_path: path, mesa_referencia: mesa, criado_por: actor.userId, criado_por_nome: actor.nome }).select("id, status, mesa_referencia, criado_em").single();
-  if (error) { await supabaseAdmin.storage.from("comandas-roleta").remove([path]); return NextResponse.json({ error: "Não foi possível registrar a comanda." }, { status: 500 }); }
+  const { data, error } = await supabaseAdmin.from("comandas_roleta").insert({ imagem_path: paths[0], mesa_referencia: mesa, criado_por: actor.userId, criado_por_nome: actor.nome }).select("id, status, mesa_referencia, criado_em").single();
+  if (error) { await supabaseAdmin.storage.from("comandas-roleta").remove(paths); return NextResponse.json({ error: "Não foi possível registrar a comanda." }, { status: 500 }); }
+  const { error: imagesError } = await supabaseAdmin.from("comanda_imagens").insert([
+    { comanda_id: data.id, tipo: "cabecalho", imagem_path: paths[0] }, { comanda_id: data.id, tipo: "total", imagem_path: paths[1] },
+  ]);
+  if (imagesError) { await supabaseAdmin.from("comandas_roleta").delete().eq("id", data.id); await supabaseAdmin.storage.from("comandas-roleta").remove(paths); return NextResponse.json({ error: "Não foi possível vincular as fotos à comanda." }, { status: 500 }); }
   await supabaseAdmin.from("administracao_eventos").insert({
     entidade: "comanda", entidade_id: data.id, acao: "foto_enviada",
     actor_user_id: actor.userId, actor_email: actor.email,
-    detalhes: { mesa_referencia: mesa, imagem_privada: true, expira_em: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() },
+    detalhes: { mesa_referencia: mesa, imagens_privadas: 2, expira_em: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() },
   });
   return NextResponse.json({ comanda: data }, { status: 201 });
 }

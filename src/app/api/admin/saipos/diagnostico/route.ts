@@ -33,6 +33,7 @@ function valorSeguro(value: unknown) {
 function correspondeReferencia(venda: VendaSaipos, referencia: string) {
   const raw = venda as ObjetoSaipos;
   const tableOrder = asObject(raw.table_order);
+  if (normalizarReferencia(venda.id_sale) === referencia) return true;
   if (!tableOrder) return false;
 
   return [

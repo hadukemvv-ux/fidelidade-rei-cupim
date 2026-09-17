@@ -1,6 +1,6 @@
 # Roadmap do Projeto Fidelidade
 
-Atualizado em 16/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
+Atualizado em 17/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
 
 ## Objetivo
 
@@ -14,7 +14,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 | Base de fidelidade/Saipos | Prova de conceito | API é por consulta (pull), sem webhook indicado; validar na prática campos e latência antes de conceder benefícios. |
 | Operadores e auditoria | Em endurecimento | Papéis operacionais substituem token/allowlist legado; aplicar e verificar a migração crítica. |
 | Cupons da operação | Parcial | Retirar gradualmente o validador legado e testar o fluxo novo com a caixa. |
-| Roleta V2 | Pronta para piloto fechado | Validar uma venda paga por fonte confiável e testar ponta a ponta. |
+| Roleta V2 | Piloto operacional em preparação | Aplicar migrações, testar duas fotos/OCR/QR de teste e medir a reconciliação Saipos. |
 | WhatsApp OTP | Preparado, desligado | Escolher provedor oficial após adquirir o número comercial. |
 | LGPD e operação pública | Em andamento | Contenção inicial, inventário, preferências, retenção, backup e revisão jurídica. |
 
@@ -57,7 +57,7 @@ Venda paga na Saipos -> confirmação automática no sistema -> nível da compra
 
 - [x] Fundação de sessão e QR seguro.
 - [ ] Fonte automática e confiável da venda paga. **Bloqueada pela resposta da Saipos.**
-- [Em preparação] Foto privada de comanda: `garcom` envia; `gestor`/`superadmin` visualizam e registram análise; `caixa` não libera QR. A migração `202609170001_fluxo_comandas_operacional.sql` precisa ser aplicada antes do primeiro teste.
+- [Em preparação] Piloto de comanda com duas evidências: `garcom` envia foto de cabeçalho e de total; o OCR roda no navegador e apenas sugere mesa/data/hora/ID/valor; a confirmação explícita do operador cria QR de teste único. A Saipos entra depois na reconciliação, sem consequência automática. As migrações `202609170001` a `202609170004` precisam ser aplicadas antes do primeiro teste.
 - [x] Página pública `/roleta/v2` que lê uma sessão sem expor dados sensíveis.
 - [x] Registro de telefone, consentimento opcional e giro único atômico.
 - [x] Seleção de prêmio no servidor, ponderada pelos cinco níveis e custo estimado.
@@ -66,15 +66,15 @@ Venda paga na Saipos -> confirmação automática no sistema -> nível da compra
 - [x] Geração manual do QR protegida para piloto: sem escolha manual de nível e sem permissão para perfil `caixa` emitir prêmio.
 - [ ] Piloto fechado com compras reais antes de publicar a V2.
 
-### Saipos — dependência em espera
+### Saipos — reconciliação em validação
 
-Não executar nem publicar o fluxo baseado apenas em foto de comanda. Foto pode ser alterada ou reutilizada; ela pode servir de apoio visual, mas não como aprovação automática. A pergunta completa e os dados técnicos que precisamos estão em `docs/SAIPOS_VALIDACAO_COMANDA.md`.
+Não publicar o fluxo comercial baseado apenas em foto de comanda. Foto pode ser alterada ou reutilizada; no piloto fechado, ela é evidência privada acompanhada de confirmação do operador e QR sem valor comercial. A pergunta completa e os dados técnicos que precisamos estão em `docs/SAIPOS_VALIDACAO_COMANDA.md`.
 
 Decisão após a resposta:
 
 1. **Webhook de venda paga:** usar como fonte principal, com assinatura e idempotência.
 2. **Consulta individual confiável por pedido/nota:** usar como alternativa imediata sob demanda.
-3. **Somente consulta em lote/noturna:** QR fica pendente até sincronização ou revisão humana; não há liberação automática no salão.
+3. **Somente consulta em lote/noturna:** operar apenas o piloto de QR de teste, fazer reconciliação posterior e não aplicar punição, pontos ou benefício comercial até a regra ser formalmente aprovada.
 
 ## Próximas prioridades independentes da Saipos
 

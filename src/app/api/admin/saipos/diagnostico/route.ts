@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireOperationalActor } from "@/lib/operationalAuth";
-import { buscarVendasSaipos, periodoDiaSaoPaulo, SaiposApiError, type VendaSaipos } from "@/lib/saipos";
+import { buscarTodasVendasSaipos, buscarVendasSaipos, periodoDiaSaoPaulo, SaiposApiError, type VendaSaipos } from "@/lib/saipos";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +16,26 @@ function textoSeguro(value: unknown) {
   if (typeof value === "string" && value.length <= 80) return value;
   if (typeof value === "number" && Number.isFinite(value)) return String(value);
   return null;
+}
+
+function normalizarReferencia(value: unknown) {
+  return typeof value === "string" || typeof value === "number"
+    ? String(value).trim().toLowerCase()
+    : "";
+}
+
+/** Procura apenas identificadores operacionais de mesa/comanda, não cliente. */
+function correspondeReferencia(venda: VendaSaipos, referencia: string) {
+  const raw = venda as ObjetoSaipos;
+  const tableOrder = asObject(raw.table_order);
+  if (!tableOrder) return false;
+
+  return [
+    tableOrder.id_store_table,
+    tableOrder.id_store_order_card,
+    tableOrder.table_number,
+    tableOrder.order_card_number,
+  ].some((candidate) => normalizarReferencia(candidate) === referencia);
 }
 
 /** Resume uma venda sem retornar nome, telefone, CPF ou payload bruto. */
@@ -52,19 +72,33 @@ export async function GET(request: NextRequest) {
   if (actor instanceof NextResponse) return actor;
 
   const requestedDay = new URL(request.url).searchParams.get("dia");
+  const referenceParam = new URL(request.url).searchParams.get("referencia")?.trim() || "";
+  if (referenceParam.length > 80) {
+    return NextResponse.json({ error: "Mesa ou comanda inválida." }, { status: 400 });
+  }
   const dia = requestedDay || new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
   }).format(new Date());
 
   try {
     const { inicio, fim } = periodoDiaSaoPaulo(dia);
-    const vendas = await buscarVendasSaipos({ inicio, fim, limit: 50 });
+    // Sem referência, uma amostra limitada basta para validar token e schema.
+    // Com mesa/comanda, percorremos no máximo 1.000 vendas do dia, em memória e
+    // sem persistência, para retornar somente a venda operacional procurada.
+    const vendasConsultadas = referenceParam
+      ? await buscarTodasVendasSaipos({ inicio, fim, pageSize: 200, maxPages: 5 })
+      : await buscarVendasSaipos({ inicio, fim, limit: 50 });
+    const vendas = referenceParam
+      ? vendasConsultadas.filter((sale) => correspondeReferencia(sale, normalizarReferencia(referenceParam)))
+      : vendasConsultadas;
 
     return NextResponse.json({
       ok: true,
       modo: "somente_leitura",
       dia,
       periodo: { inicio, fim },
+      referencia_consultada: referenceParam || null,
+      vendas_consultadas: vendasConsultadas.length,
       vendas_encontradas: vendas.length,
       amostras: vendas.slice(0, 10).map(resumirVenda),
       observacao: "Nenhum cliente, ponto, QR, cupom ou registro de venda foi criado ou alterado por esta consulta.",

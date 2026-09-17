@@ -80,10 +80,11 @@ restam políticas públicas em `garcons`, `premios_roleta` ou `resgates`; o buck
    com valor aleatório independente. Ele não reutiliza a
    `SUPABASE_SERVICE_ROLE_KEY`. Se forem criados deploys Preview, cadastrar um
    segredo diferente antes de usar rotas de sessão nesses ambientes.
-4. A variável `SAIPOS_TOKEN` está marcada pela Vercel como possível segredo. Sem
-   expor o valor atual, convertê-la para **Secret** se a interface preservar o
-   valor; se não preservar, gerar/obter token novo na Saipos, gravá-lo como Secret
-   e testar o webhook antes de revogar o antigo.
+4. A antiga variável `SAIPOS_TOKEN` foi identificada como Config por legado e
+   não deve mais ser usada. A API de Dados usa somente
+   `SAIPOS_DATA_API_TOKEN`, Secret exclusivo de Production. Após o teste com a
+   nova variável, excluir a Config antiga sem revelar seu valor. Um futuro
+   webhook oficial deverá usar `SAIPOS_WEBHOOK_SECRET` independente.
 5. O próximo passo é enviar o commit e confirmar o deploy como `Ready`.
 
 ## Testes de regressão deste hardening

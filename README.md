@@ -95,7 +95,7 @@ Documentação histórica (somente referência; não usar como instrução de op
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `SAIPOS_TOKEN`
+- `SAIPOS_DATA_API_TOKEN` (Secret exclusivo da API de Consulta de Dados)
 - `SAIPOS_ID`
 - `CUSTOMER_SESSION_SECRET` (obrigatório e independente da chave de serviço)
 - `ADMIN_TEST_EMAIL` e `ADMIN_TEST_PASSWORD` (opcional, recomendado para testes)
@@ -107,5 +107,6 @@ Documentação histórica (somente referência; não usar como instrução de op
 - Não use allowlist de e-mail nem token administrativo compartilhado; cadastre, suspenda e audite a equipe em `/admin/operadores`
 - Para a suite local, prefira `ADMIN_TEST_EMAIL` e `ADMIN_TEST_PASSWORD` de um usuário de teste com papel operacional válido
 - Cron API usa `Authorization: Bearer <CRON_SECRET>`
-- Webhook SAIPOS usa `x-auth-token: <SAIPOS_TOKEN>`
+- O webhook Saipos permanece pausado até o fornecedor documentar assinatura e
+  evento de venda paga; quando existir, usará `SAIPOS_WEBHOOK_SECRET` separado.
 - Nunca commitar `.env.local`

@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const secret = process.env.SAIPOS_TOKEN;
+  const secret = process.env.SAIPOS_WEBHOOK_SECRET;
   const provided = request.headers.get('x-auth-token');
 
   if (!secret) {

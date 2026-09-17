@@ -79,8 +79,10 @@ Quando a mesa ou comanda for conhecida, ela pode ser informada no teste para
 retornar somente a referência operacional correspondente. A busca percorre no
 máximo 1.000 vendas do dia apenas em memória, sem gravar os dados recebidos.
 
-Antes do teste, a Vercel deve ter `SAIPOS_TOKEN` como Secret e `SAIPOS_ID` com
-o identificador correto da loja. O sistema não usa mais um ID de loja padrão.
+Antes do teste, a Vercel deve ter `SAIPOS_DATA_API_TOKEN` como Secret em
+Production e `SAIPOS_ID` com o identificador correto da loja. O sistema não
+usa mais um ID de loja padrão, nem reutiliza o token da API de Dados para
+webhook.
 
 ### Resultado registrado — 17/09/2026, Mesa 99 antes do pagamento
 
@@ -88,7 +90,8 @@ o identificador correto da loja. O sistema não usa mais um ID de loja padrão.
 - O Clube conseguiu chamar a API de Dados, mas a Saipos devolveu **HTTP 401**.
 - Nenhum dado de venda foi retornado; nenhum cliente, ponto, QR, cupom ou
   registro foi criado/alterado no Clube.
-- Hipótese a confirmar com a Saipos: o valor salvo como `SAIPOS_TOKEN` é de
+- Hipótese a confirmar com a Saipos: o valor salvo anteriormente como
+  `SAIPOS_TOKEN` é de
   outro produto/integração, está expirado, ou o token específico da API de
   Consulta de Dados ainda não foi emitido/liberado. Não enviar o token pelo
   atendimento; pedir que validem a emissão e o método de autenticação.

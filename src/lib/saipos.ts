@@ -90,13 +90,13 @@ export async function buscarVendasSaipos({
   fim,
   limit = 200,
   offset = 0,
-  token = process.env.SAIPOS_TOKEN,
+  token = process.env.SAIPOS_DATA_API_TOKEN,
   storeId = process.env.SAIPOS_ID,
   fetchImpl = fetch,
   sleep = esperar,
   timeoutMs = 10_000,
 }: BuscarVendasOptions): Promise<VendaSaipos[]> {
-  if (!token) throw new Error('Token Saipos não configurado.');
+  if (!token) throw new Error('Token da API de Dados Saipos não configurado.');
   if (!storeId) throw new Error('Identificador da loja Saipos não configurado.');
 
   const params = new URLSearchParams({

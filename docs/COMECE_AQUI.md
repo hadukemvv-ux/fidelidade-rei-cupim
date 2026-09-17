@@ -7,7 +7,8 @@ ou de pessoa responsável pelo projeto.
 ## Estado confirmado
 
 - Repositório: `hadukemvv-ux/fidelidade-rei-cupim`, branch `main`.
-- Último checkpoint publicado: `57f9ef9` — deploy Production **Ready** na Vercel.
+- Último checkpoint funcional publicado: `41a3b97` — separa o segredo da API
+  de Dados Saipos e exige `SAIPOS_DATA_API_TOKEN` em Production.
 - Produção: `clubecupim.com.br` / projeto Vercel `fidelidade-rei-cupim`.
 - Banco correto: Supabase `asjoubgoccbvftyggunz`. Não usar o projeto Energia.
 - A Roleta V2 continua fechada (`v2_publicada=false`, modo de teste). Não há

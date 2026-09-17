@@ -7,7 +7,7 @@ ou de pessoa responsável pelo projeto.
 ## Estado confirmado
 
 - Repositório: `hadukemvv-ux/fidelidade-rei-cupim`, branch `main`.
-- Último checkpoint publicado: `65a24cb` — deploy Production **Ready** na Vercel.
+- Último checkpoint publicado: `57f9ef9` — deploy Production **Ready** na Vercel.
 - Produção: `clubecupim.com.br` / projeto Vercel `fidelidade-rei-cupim`.
 - Banco correto: Supabase `asjoubgoccbvftyggunz`. Não usar o projeto Energia.
 - A Roleta V2 continua fechada (`v2_publicada=false`, modo de teste). Não há

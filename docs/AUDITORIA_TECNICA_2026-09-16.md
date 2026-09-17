@@ -105,22 +105,27 @@ O roteiro detalhado e espaço para evidências estão em
 
 ## Pendências não resolvidas por código
 
-1. **Saipos:** falta contrato técnico para identificar venda paga, cancelada e
+1. **Regras de nível:** há duas escalas intencionais, mas com nomes próximos: a
+   fidelidade tem quatro níveis por gasto em 90 dias; a Roleta V2 fechada tem
+   cinco faixas por valor da compra. A documentação foi esclarecida, mas antes do
+   piloto deve-se decidir se os nomes serão diferenciados na experiência do
+   cliente para evitar interpretação de que uma faixa altera o saldo.
+2. **Saipos:** falta contrato técnico para identificar venda paga, cancelada e
    estornada em tempo confiável. Foto de comanda não pode liberar QR automático.
-2. **Roleta V2:** continua fechada até piloto ponta a ponta, custo/prêmios e
+3. **Roleta V2:** continua fechada até piloto ponta a ponta, custo/prêmios e
    revisão jurídica da mecânica aleatória.
-3. **LGPD:** aviso e contenção existem, mas o controlador, canal de direitos,
+4. **LGPD:** aviso e contenção existem, mas o controlador, canal de direitos,
    retenção, contratos de operadores e revisão jurídica devem ser concluídos
    antes da coleta pública. Em incidente com risco ou dano relevante, a LGPD/ANPD
    exigem análise e comunicação nos termos aplicáveis; o plano interno contém os
    modelos e o registro de incidente.
-4. **Autenticação Supabase:** habilitar manualmente a proteção contra senhas
+5. **Autenticação Supabase:** habilitar manualmente a proteção contra senhas
    vazadas e revisar URLs de redirecionamento, SMTP e MFA. Esta auditoria não
    mudou configurações de conta por interface.
-5. **Dependências:** `npm audit --omit=dev` apontou vulnerabilidades altas em
+6. **Dependências:** `npm audit --omit=dev` apontou vulnerabilidades altas em
    `xlsx` e em `ws` indireto do Supabase. A atualização deve ocorrer numa entrega
    isolada, com testes de importação e sincronização.
-6. **Legado:** tabelas e rotas antigas foram isoladas, não apagadas. A exclusão
+7. **Legado:** tabelas e rotas antigas foram isoladas, não apagadas. A exclusão
    ou anonimização depende de mapa de retenção, backup/restauração testado e
    confirmação de ausência de referência, conforme `docs/LIMPEZA_DO_LEGADO.md`.
 

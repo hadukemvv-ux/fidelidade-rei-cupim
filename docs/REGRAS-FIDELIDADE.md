@@ -1,19 +1,24 @@
 # Regras atuais do programa de fidelidade
 
-Atualizado em 03/09/2026.
+Atualizado em 16/09/2026. Este é um registro interno de regras em pré-lançamento;
+não substitui os termos públicos nem autoriza a abertura do programa.
 
 ## Níveis e benefícios
 
 O benefício aplicado à compra é o do nível que o cliente possuía antes dessa compra.
 
-| Nível | Gasto elegível | Pontos por R$ 1 | Cashback | Tickets por R$ 100 |
-| --- | ---: | ---: | ---: | ---: |
-| Brasa (Bronze) | R$ 0 a R$ 99,99 | 1 | 0% | 1 |
-| Chama (Prata) | R$ 100 a R$ 249,99 | 2 | 0,5% | 2 |
-| Nobre (Ouro) | R$ 250 a R$ 499,99 | 4 | 1% | 5 |
-| Majestade (Rei) | A partir de R$ 500 | 7 | 3% | 10 |
+| Nível de fidelidade | Gasto elegível em 90 dias | Pontos por R$ 1 | Cashback |
+| --- | ---: | ---: | ---: |
+| Brasa (Bronze) | R$ 0 a R$ 99,99 | 1 | 0% |
+| Chama (Prata) | R$ 100 a R$ 249,99 | 2 | 0,5% |
+| Nobre (Ouro) | R$ 250 a R$ 499,99 | 4 | 1% |
+| Majestade (Rei) | A partir de R$ 500 | 7 | 3% |
 
-Frações de ticket são transportadas para a compra seguinte. Portanto, uma compra pequena não perde a parte fracionária já acumulada.
+Tickets e sorteios estão congelados: não são acumulados, não geram entrada e não podem ser divulgados como benefício futuro até decisão jurídica/comercial nova.
+
+## Faixas da Roleta V2 (separadas do nível de fidelidade)
+
+A Roleta V2 fechada usa cinco **faixas da compra que gerou o QR**, somente para ponderar o prêmio daquele giro: Brasa (até R$ 99,99), Chama (R$ 100–249,99), Nobre (R$ 250–399,99), Rei (R$ 400–499,99) e Lenda (R$ 500+). Essas faixas não alteram pontos, cashback ou o nível de fidelidade de 90 dias. A V2 continua em modo de teste e não deve ser anunciada ao público.
 
 ## Cadastro e acesso
 
@@ -27,7 +32,7 @@ Frações de ticket são transportadas para a compra seguinte. Portanto, uma com
 - A autorização gerada pelo OTP dura dez minutos, fica em cookie HttpOnly, serve apenas para o telefone/finalidade confirmados e só pode ser usada uma vez.
 - PINs novos usam derivação forte com salt; hashes antigos são migrados automaticamente após um login válido.
 - Dez tentativas incorretas bloqueiam temporariamente novas tentativas da conta por 15 minutos.
-- A integração Twilio Verify está implementada, mas permanece desativada até configurar o remetente e revisar as credenciais/custos.
+- A integração WhatsApp OTP está implementada, mas permanece desativada até configurar um provedor oficial, remetente, templates e custos. Logo, o cadastro público não está pronto para abertura; não anunciar o programa como disponível enquanto esse requisito não estiver resolvido e testado.
 
 ## Resgates
 
@@ -43,7 +48,7 @@ Frações de ticket são transportadas para a compra seguinte. Portanto, uma com
 - A venda elegível usa o valor total recebido da Saipos.
 - Cada `id_sale` pode ser creditado apenas uma vez.
 - Venda cancelada, sem valor ou sem identificação do cliente não gera benefício.
-- Pontos, cashback, tickets, nível e histórico são gravados atomicamente.
+- Pontos, cashback, nível e histórico são gravados atomicamente. Tickets permanecem congelados e com valor zero.
 - A importação manual de vendas está temporariamente desativada porque o formato antigo não fornecia idempotência confiável.
 - A importação manual de clientes permanece disponível e não altera saldos existentes.
 

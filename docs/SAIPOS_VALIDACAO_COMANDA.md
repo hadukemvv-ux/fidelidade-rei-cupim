@@ -44,3 +44,38 @@ Se a Saipos só fornecer exportação ou busca em lote noturna, isso serve para 
 ## Decisão de implementação
 
 Somente após receber e validar essas informações vamos escolher o conector da Saipos. A foto de comanda pode permanecer como anexo privado de apoio operacional, mas nunca será a única prova para emissão automática de QR ou prêmio.
+
+## Atualização de suporte — 17/09/2026
+
+A Saipos confirmou que a API de Consulta de Dados é **pull**: o Clube deve
+consultar a API por período. Não há webhook ou evento em tempo real indicado.
+Isso torna possível uma consulta sob demanda depois do fechamento da mesa, mas
+ainda exige prova prática de latência e dos campos que caracterizam uma venda
+efetivamente paga, cancelada ou estornada.
+
+Uma imagem da comanda pode ser recebida como evidência de apoio, ligada ao
+garçom, data/hora e referência da mesa. Ela **não** libera QR, pontos, cupom ou
+prêmio por si só: foto pode ser editada, reutilizada ou estar associada a uma
+venda ainda aberta. O desenho seguro é:
+
+1. Garçom registra mesa/comanda, horário e, se necessário, foto privada.
+2. Sistema consulta a Saipos em uma janela curta por `updated_at` ou outro
+   campo confirmado e tenta localizar a venda correspondente.
+3. Enquanto não houver confirmação, o QR fica `pendente` e não permite giro.
+4. Após confirmação, uma sessão QR única é emitida; se não confirmar, expira.
+5. Reconciliações posteriores só geram alerta e bloqueio preventivo do acesso
+   operacional. Um gestor analisa a evidência antes de atribuir fraude ou
+   aplicar qualquer consequência ao garçom.
+
+## Prova de conceito segura — token da API de Dados
+
+Durante a prova de conceito, o cron diário, webhook e importações legadas foram
+pausados para impedir que uma consulta à API crie clientes, pontos ou benefícios
+reais. Com um token já contratado, um `superadmin` deve abrir `/admin/saipos` e
+consultar o dia de uma venda própria de teste. A tela não grava no Supabase e
+não mostra nome, telefone, CPF, endereço ou payload completo.
+
+Conferir: a venda pelo número/valor, os campos técnicos recebidos (incluindo
+`id_sale`, `canceled`, `updated_at`, `table_order` e `payments`) e o tempo até
+ela aparecer após o pagamento. Repetir depois com uma venda cancelada/estornada
+quando houver um caso de teste apropriado. Só então definiremos a regra V2.

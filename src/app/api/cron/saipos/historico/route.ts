@@ -8,6 +8,10 @@ export const dynamic = 'force-dynamic';
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
+function processamentoLegadoEstaHabilitado() {
+  return false;
+}
+
 // Função auxiliar de logs
 async function registrarLog(
   tipo: string,
@@ -22,6 +26,13 @@ async function registrarLog(
 }
 
 export async function GET(request: NextRequest) {
+  if (!processamentoLegadoEstaHabilitado()) {
+    return NextResponse.json(
+      { error: 'Importação histórica Saipos pausada até a validação técnica.', code: 'saipos_processing_paused' },
+      { status: 410 }
+    );
+  }
+
   try {
     if (!CRON_SECRET) {
       return NextResponse.json(

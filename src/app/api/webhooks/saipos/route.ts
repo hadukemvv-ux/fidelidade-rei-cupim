@@ -2,7 +2,18 @@ import { NextResponse } from 'next/server';
 import { processarVenda } from '@/app/api/cron/saipos/processarVenda';
 import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 
+function webhookLegadoEstaHabilitado() {
+  return false;
+}
+
 export async function POST(request: Request) {
+  if (!webhookLegadoEstaHabilitado()) {
+    return NextResponse.json(
+      { error: 'Webhook Saipos pausado até a validação técnica.', code: 'saipos_webhook_paused' },
+      { status: 410 }
+    );
+  }
+
   const secret = process.env.SAIPOS_TOKEN;
   const provided = request.headers.get('x-auth-token');
 

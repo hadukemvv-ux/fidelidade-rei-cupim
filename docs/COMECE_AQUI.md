@@ -7,7 +7,7 @@ ou de pessoa responsável pelo projeto.
 ## Estado confirmado
 
 - Repositório: `hadukemvv-ux/fidelidade-rei-cupim`, branch `main`.
-- Último checkpoint publicado: `dc3bda6` — deploy Production **Ready** na Vercel.
+- Último checkpoint publicado: `65a24cb` — deploy Production **Ready** na Vercel.
 - Produção: `clubecupim.com.br` / projeto Vercel `fidelidade-rei-cupim`.
 - Banco correto: Supabase `asjoubgoccbvftyggunz`. Não usar o projeto Energia.
 - A Roleta V2 continua fechada (`v2_publicada=false`, modo de teste). Não há
@@ -27,13 +27,14 @@ ou de pessoa responsável pelo projeto.
 | Privacidade, contenção e resposta a incidente | `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md` |
 | Checklist de testes antes de cliente real | `docs/TESTES_PENDENTES_PRE_LANCAMENTO.md` |
 | Regras de pontos, cashback e Roleta V2 | `docs/REGRAS-FIDELIDADE.md` |
-| Pergunta/contrato pendente com a Saipos | `docs/SAIPOS_VALIDACAO_COMANDA.md` |
+| Saipos: contrato pendente e prova de conceito segura do token | `docs/SAIPOS_VALIDACAO_COMANDA.md` |
 | Estratégia para retirar legado | `docs/LIMPEZA_DO_LEGADO.md` |
 
 ## Próxima sequência segura
 
-1. Obter a resposta técnica da Saipos sobre venda paga, cancelamento, estorno e
-   consulta/webhook confiável. Foto de comanda não libera QR automaticamente.
+1. Executar a prova de conceito de leitura em `/admin/saipos`; confirmar o
+   comportamento de venda paga, cancelada e estornada. A Saipos confirmou API
+   por consulta (pull), sem webhook indicado. Foto não libera QR automaticamente.
 2. Definir provedor oficial de WhatsApp, remetente, templates, custos e opt-out;
    então configurar OTP e executar o teste controlado. Não automatizar WhatsApp
    pessoal.

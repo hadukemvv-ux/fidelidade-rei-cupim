@@ -11,7 +11,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 | Frente | Estado | Próximo marco |
 | --- | --- | --- |
 | Recuperação, GitHub e Vercel | Concluído | Manter rotina de commits, deploy e confirmação Ready. |
-| Base de fidelidade/Saipos | Parcial | Confirmar contrato de venda paga, cancelamento e consulta imediata com a Saipos. |
+| Base de fidelidade/Saipos | Prova de conceito | API é por consulta (pull), sem webhook indicado; validar na prática campos e latência antes de conceder benefícios. |
 | Operadores e auditoria | Em endurecimento | Papéis operacionais substituem token/allowlist legado; aplicar e verificar a migração crítica. |
 | Cupons da operação | Parcial | Retirar gradualmente o validador legado e testar o fluxo novo com a caixa. |
 | Roleta V2 | Pronta para piloto fechado | Validar uma venda paga por fonte confiável e testar ponta a ponta. |

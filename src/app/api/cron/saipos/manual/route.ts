@@ -12,7 +12,18 @@ export const dynamic = 'force-dynamic';
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
+function processamentoLegadoEstaHabilitado() {
+  return false;
+}
+
 export async function GET(req: NextRequest) {
+  if (!processamentoLegadoEstaHabilitado()) {
+    return NextResponse.json(
+      { error: 'Processamento manual Saipos pausado até a validação técnica.', code: 'saipos_processing_paused' },
+      { status: 410 }
+    );
+  }
+
   try {
     if (!CRON_SECRET) {
       return NextResponse.json(

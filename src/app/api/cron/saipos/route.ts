@@ -12,6 +12,10 @@ export const dynamic = 'force-dynamic';
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
+function processamentoLegadoEstaHabilitado() {
+  return false;
+}
+
 // Função de log (continua aqui porque pertence AO CRON)
 async function registrarLog(
   tipo: string,
@@ -26,6 +30,13 @@ async function registrarLog(
 }
 
 export async function GET(request: NextRequest) {
+  if (!processamentoLegadoEstaHabilitado()) {
+    return NextResponse.json(
+      { error: 'Processamento automático Saipos pausado até a validação técnica.', code: 'saipos_processing_paused' },
+      { status: 410 }
+    );
+  }
+
   try {
     // ✅ Validar token de cron
     if (!CRON_SECRET) {

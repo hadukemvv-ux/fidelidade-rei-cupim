@@ -156,3 +156,18 @@ quando a venda apareceu. O próximo teste deve registrar a hora exata do
 fechamento e consultar imediatamente o ID impresso, repetindo em intervalos
 curtos até encontrá-lo. Nenhum QR, ponto, cupom ou prêmio foi criado neste
 diagnóstico.
+
+### Medição de disponibilidade — Mesa 199
+
+Em 17/09/2026, uma mesa de teste foi aberta às 19:56, fechada e paga por volta
+das 20:00. A comanda fechada confirmou o total de R$ 138,60 e forneceu o ID
+impresso do pedido. A consulta protegida retornou zero vendas antes do
+pagamento, imediatamente após o pagamento por mesa/valor e novamente por ID
+impresso usando o filtro `updated_at`.
+
+Este resultado é uma medição inicial de indisponibilidade imediata, não uma
+falha nem uma conclusão sobre o prazo máximo da Saipos. Não houve criação de
+cliente, ponto, QR, cupom ou registro de venda no Clube. O próximo passo é
+repetir a mesma consulta pelo ID em intervalos documentados, até a venda
+aparecer, e então comparar `id_sale`, total, cancelamento, pagamento e horário
+de atualização.

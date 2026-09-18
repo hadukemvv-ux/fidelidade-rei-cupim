@@ -11,7 +11,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 | Frente | Estado | Próximo marco |
 | --- | --- | --- |
 | Recuperação, GitHub e Vercel | Concluído | Manter rotina de commits, deploy e confirmação Ready. |
-| Base de fidelidade/Saipos | Prova de conceito | API é por consulta (pull), sem webhook indicado; validar na prática campos e latência antes de conceder benefícios. |
+| Base de fidelidade/Saipos | Prova de conceito validada parcialmente | Consulta posterior pelo ID impresso funciona; falta medir latência e a representação de cancelamento antes de conceder benefícios. |
 | Operadores e auditoria | Em endurecimento | Papéis operacionais substituem token/allowlist legado; aplicar e verificar a migração crítica. |
 | Cupons da operação | Parcial | Retirar gradualmente o validador legado e testar o fluxo novo com a caixa. |
 | Roleta V2 | Piloto operacional estruturado, ainda fechado | Registrar uma comanda de teste, emitir QR de teste e medir a reconciliação Saipos. |
@@ -50,13 +50,13 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 Fluxo-alvo:
 
 ```text
-Venda paga na Saipos -> confirmação automática no sistema -> nível da compra
--> QR de uso único -> telefone + aviso/consentimento opcional de marketing
--> giro único no servidor -> cupom com prazo/regras -> validação pela caixa -> auditoria
+Pagamento -> duas fotos privadas da comanda -> conferência dos campos pelo operador
+-> QR de teste de uso único -> telefone + aviso/consentimento opcional de marketing
+-> giro único no servidor -> cupom de teste -> reconciliação posterior Saipos -> auditoria
 ```
 
 - [x] Fundação de sessão e QR seguro.
-- [ ] Fonte automática e confiável da venda paga. **Bloqueada pela resposta da Saipos.**
+- [ ] Fonte imediata e confiável da venda paga. A Saipos é por consulta; o fluxo de foto é apenas evidência operacional e a reconciliação posterior ainda precisa dos testes de latência/cancelamento.
 - [x] Piloto de comanda estruturado no Supabase em 17/09/2026: duas evidências privadas; OCR somente no navegador; campos confirmados pelo operador; ID do pedido impresso único; QR único de teste e trilha de auditoria. A Saipos entra depois na reconciliação, sem consequência automática.
 - [x] Cron isolado de reconciliação preparado para implantação na Vercel: consulta apenas comandas de QR pendentes dos últimos três dias por `id_sale`, compara ID/total/pagamento/cancelamento e grava `compatível`, `divergente` ou pendente. Ele não cria clientes, pontos, cupons, prêmios ou sanções. Agenda: `0 10 * * *` (janela de 07:00–07:59 BRT no Hobby). O primeiro resultado útil depende de uma comanda registrada pelo novo fluxo.
 - [x] Página pública `/roleta/v2` que lê uma sessão sem expor dados sensíveis.
@@ -70,6 +70,13 @@ Venda paga na Saipos -> confirmação automática no sistema -> nível da compra
 ### Saipos — reconciliação em validação
 
 Não publicar o fluxo comercial baseado apenas em foto de comanda. Foto pode ser alterada ou reutilizada; no piloto fechado, ela é evidência privada acompanhada de confirmação do operador e QR sem valor comercial. A pergunta completa e os dados técnicos que precisamos estão em `docs/SAIPOS_VALIDACAO_COMANDA.md`.
+
+Em 18/09, o pedido impresso `872482756` conciliou posteriormente com venda não
+cancelada e pagamento retornado. Já pedidos de mesas encerradas sem itens e
+buscas pelo número físico da mesa não retornaram resultado. O **ID do Pedido
+impresso** passa a ser obrigatório na evidência; o teste pendente deve provar
+como a API representa cancelamentos e em quanto tempo cada tipo de venda fica
+disponível.
 
 Decisão após a resposta:
 

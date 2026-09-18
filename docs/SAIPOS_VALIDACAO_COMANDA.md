@@ -184,3 +184,23 @@ O resultado confirma a compatibilidade do identificador impresso com a venda
 posteriormente disponibilizada pela Saipos. Ele não altera a conclusão sobre
 latência imediata: a consulta só foi feita na manhã seguinte. Nenhum cliente,
 ponto, QR, cupom ou prêmio foi criado ou alterado nesta conferência.
+
+### Teste de mesas encerradas e canceladas — 18/09/2026
+
+Foram feitas consultas de leitura pelo filtro `updated_at` para dois pedidos de
+teste da Mesa 199, fechados depois de remover os itens, e buscas pelos números
+físicos de mesa 50 e 200, que estavam marcadas como canceladas no sistema
+operacional. Nenhuma das quatro buscas retornou venda.
+
+O resultado **não permite** chamar as mesas 199 de canceladas e tampouco
+conclui que 50/200 não estejam canceladas: o número impresso da mesa não se
+mostrou uma chave confiável na resposta da API. A conclusão prática é que cada
+teste precisa preservar o **ID do Pedido impresso**. Só com o ID da comanda que
+foi efetivamente cancelada será possível observar se a Saipos devolve uma venda
+com `canceled` marcado, remove a venda da consulta ou usa outra representação.
+
+O próximo experimento foi agendado para 15:00 BRT: uma venda concluída, uma
+cancelada e uma mesa fechada sem venda. Para cada uma, registrar ID, valor,
+horário aproximado de fechamento e resultados das consultas imediata, em
+intervalos curtos e na manhã seguinte. Nenhum benefício será emitido durante o
+experimento.

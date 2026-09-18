@@ -7,8 +7,9 @@ ou de pessoa responsável pelo projeto.
 ## Estado confirmado
 
 - Repositório: `hadukemvv-ux/fidelidade-rei-cupim`, branch `main`.
-- Último checkpoint funcional publicado: `41a3b97` — separa o segredo da API
-  de Dados Saipos e exige `SAIPOS_DATA_API_TOKEN` em Production.
+- Último checkpoint publicado: `05b52af` — documenta a primeira conciliação
+  posterior bem-sucedida da Saipos. O cron de reconciliação foi publicado em
+  `44e513f`; o fluxo de consulta usa `SAIPOS_DATA_API_TOKEN` em Production.
 - Produção: `clubecupim.com.br` / projeto Vercel `fidelidade-rei-cupim`.
 - Banco correto: Supabase `asjoubgoccbvftyggunz`. Não usar o projeto Energia.
 - A Roleta V2 continua fechada (`v2_publicada=false`, modo de teste). Não há
@@ -33,9 +34,11 @@ ou de pessoa responsável pelo projeto.
 
 ## Próxima sequência segura
 
-1. Executar a prova de conceito de leitura em `/admin/saipos`; confirmar o
-   comportamento de venda paga, cancelada e estornada. A Saipos confirmou API
-   por consulta (pull), sem webhook indicado. Foto não libera QR automaticamente.
+1. Executar o teste controlado em `/admin/saipos`: uma venda concluída, uma
+   cancelada e uma mesa fechada sem venda. Guardar o **ID do Pedido impresso**,
+   valor e horário aproximado; consultar por `updated_at` até a manhã seguinte.
+   A Saipos é por consulta (pull), sem webhook indicado. Foto não libera QR
+   comercial automaticamente.
 2. Definir provedor oficial de WhatsApp, remetente, templates, custos e opt-out;
    então configurar OTP e executar o teste controlado. Não automatizar WhatsApp
    pessoal.

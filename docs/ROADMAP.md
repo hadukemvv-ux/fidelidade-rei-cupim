@@ -1,6 +1,6 @@
 # Roadmap do Projeto Fidelidade
 
-Atualizado em 17/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
+Atualizado em 18/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
 
 ## Objetivo
 
@@ -14,7 +14,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 | Base de fidelidade/Saipos | Prova de conceito validada parcialmente | Consulta posterior pelo ID impresso funciona; falta medir latência e a representação de cancelamento antes de conceder benefícios. |
 | Operadores e auditoria | Em endurecimento | Papéis operacionais substituem token/allowlist legado; aplicar e verificar a migração crítica. |
 | Cupons da operação | Parcial | Retirar gradualmente o validador legado e testar o fluxo novo com a caixa. |
-| Roleta V2 | Piloto operacional estruturado, ainda fechado | Registrar uma comanda de teste, emitir QR de teste e medir a reconciliação Saipos. |
+| Roleta V2 | Piloto técnico não comercial ativo | Registrar uma comanda de teste, emitir QR de teste e medir a reconciliação Saipos. |
 | WhatsApp OTP | Preparado, desligado | Escolher provedor oficial após adquirir o número comercial. |
 | LGPD e operação pública | Em andamento | Contenção inicial, inventário, preferências, retenção, backup e revisão jurídica. |
 
@@ -26,12 +26,12 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 - [x] Papéis `superadmin`, `gestor` e `caixa`, com tela de operadores, convite/suspensão e exclusão segura de usuário de teste.
 - [x] Gestão de acessos é exclusiva de `superadmin`; catálogo de prêmios pode ser consultado por gestor, mas só superadmin o altera, com evento de auditoria.
 - [x] Uso de cupom novo atômico e auditado para a operação de caixa.
-- [x] Roleta V1 desligada na página pública e na API; prêmios V2 e publicação permanecem desativados.
+- [x] Roleta V1 desligada na página pública e na API; prêmios V2 comerciais permanecem desativados.
 - [x] Sessões QR V2 privadas: token aleatório armazenado somente como hash, expiração curta, nível/valor no servidor e trilha de operador.
-- [x] Página cliente V2 e giro atômico no Supabase: telefone, consentimento opcional, prêmio por nível, cupom seguro e uso único do QR. V2 fechada e em modo de teste.
-- [x] Tela `/caixa/roleta` para gerar QR temporário, ainda bloqueada enquanto a V2 não for publicada.
+- [x] Página cliente V2 e giro atômico no Supabase: telefone, consentimento opcional, prêmio por nível, cupom seguro e uso único do QR. V2 aberta somente no modo de teste não comercial.
+- [x] Piloto técnico ativado no Supabase: QR de 10 minutos, somente o prêmio interno `piloto_interno_sem_valor_v2` (custo R$ 0,00) e baixa de cupom bloqueada pelo banco enquanto `v2_modo_teste=true`.
 - [x] Execução do giro concedida somente ao `service_role` no Supabase; navegador e usuários comuns seguem sem acesso à função.
-- [x] No piloto manual, somente gestor/superadmin pode gerar QR; o sistema calcula a faixa pelo valor (Brasa: até R$ 99,99; Chama: R$ 100–249,99; Nobre: R$ 250–399,99; Rei: R$ 400–499,99; Lenda: R$ 500+).
+- [x] No piloto por comanda, garçom, gestor ou superadmin podem gerar QR após as duas fotos, OCR completo e dupla conferência do total; caixa não pode fazê-lo. O sistema calcula a faixa pelo valor (Brasa: até R$ 99,99; Chama: R$ 100–249,99; Nobre: R$ 250–399,99; Rei: R$ 400–499,99; Lenda: R$ 500+).
 - [x] Next.js atualizado para `16.3.4`; última checagem de tipos aprovada e `32/32` testes unitários aprovados.
 - [x] Sorteio legado integralmente pausado: cron, telas e rotas públicas/administrativas respondem sem expor histórico ou dados pessoais; novos tickets estão congelados no banco.
 - [x] Central de incidente para superadmin, modo de contenção auditado e bloqueio das rotas públicas críticas implementados e aplicados no Supabase.

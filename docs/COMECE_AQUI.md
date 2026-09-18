@@ -1,19 +1,21 @@
 # Comece aqui — ponto único de retomada
 
-Atualizado em 17/09/2026. Leia este arquivo antes de alterar, testar ou publicar
+Atualizado em 18/09/2026. Leia este arquivo antes de alterar, testar ou publicar
 qualquer parte do Clube. Ele é o índice vigente quando houver troca de computador
 ou de pessoa responsável pelo projeto.
 
 ## Estado confirmado
 
 - Repositório: `hadukemvv-ux/fidelidade-rei-cupim`, branch `main`.
-- Último checkpoint publicado: `05b52af` — documenta a primeira conciliação
-  posterior bem-sucedida da Saipos. O cron de reconciliação foi publicado em
+- Último checkpoint publicado: `2338ca6` — corrige o convite de operador para
+  abrir a definição de senha. O cron de reconciliação foi publicado em
   `44e513f`; o fluxo de consulta usa `SAIPOS_DATA_API_TOKEN` em Production.
 - Produção: `clubecupim.com.br` / projeto Vercel `fidelidade-rei-cupim`.
 - Banco correto: Supabase `asjoubgoccbvftyggunz`. Não usar o projeto Energia.
-- A Roleta V2 continua fechada (`v2_publicada=false`, modo de teste). Não há
-  prêmio, QR ou campanha real liberados por este estado.
+- A Roleta V2 está aberta exclusivamente para o piloto técnico
+  (`v2_publicada=true`, `v2_modo_teste=true`): QR dura 10 minutos e só há um
+  prêmio interno de custo R$ 0,00. Não há campanha, benefício ou cupom
+  comercial liberado; a baixa do cupom de teste é recusada pelo banco.
 - A migração de hardening `202609160001_hardening_critico_legado.sql` já foi
   aplicada e verificada no Supabase. O bucket `sorteios` está privado e as RPCs
   sensíveis são exclusivas do servidor.
@@ -45,16 +47,16 @@ ou de pessoa responsável pelo projeto.
    `https://www.clubecupim.com.br/acesso/definir-senha`. O convite abre essa
    página para criar a senha; o superadmin pode reenviar um acesso pelo painel
    sem conhecer a senha da pessoa.
-2. Definir provedor oficial de WhatsApp, remetente, templates, custos e opt-out;
+3. Definir provedor oficial de WhatsApp, remetente, templates, custos e opt-out;
    então configurar OTP e executar o teste controlado. Não automatizar WhatsApp
    pessoal.
-3. Definir a apresentação comercial: fidelidade possui quatro níveis por gasto
+4. Definir a apresentação comercial: fidelidade possui quatro níveis por gasto
    em 90 dias; a Roleta V2 usa cinco faixas da compra somente para chances do
    giro. A interface já esclarece a diferença, mas ela deve ser aprovada antes
    do piloto.
-4. Executar os testes do roteiro mestre, com conta/telefone de teste e sem
+5. Executar os testes do roteiro mestre, com conta/telefone de teste e sem
    benefício comercial real.
-5. Só após Saipos, segurança, jurídico, prêmios/custos, equipe e piloto estarem
+6. Só após Saipos, segurança, jurídico, prêmios/custos, equipe e piloto estarem
    aprovados, considerar publicar a V2.
 
 ## Limites importantes

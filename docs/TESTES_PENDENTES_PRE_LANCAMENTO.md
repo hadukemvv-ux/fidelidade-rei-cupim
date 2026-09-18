@@ -1,8 +1,8 @@
 # Roteiro mestre de testes pendentes — pré-lançamento
 
-Atualizado em 17/09/2026. Este é o caderno único para executar testes aos poucos, sem depender da memória e sem usar clientes reais. Ele complementa os guias específicos; quando um teste for concluído, registre data, executor, ambiente, resultado e evidência na seção final.
+Atualizado em 18/09/2026. Este é o caderno único para executar testes aos poucos, sem depender da memória e sem usar clientes reais. Ele complementa os guias específicos; quando um teste for concluído, registre data, executor, ambiente, resultado e evidência na seção final.
 
-> Regra: enquanto a Roleta V2 estiver fechada, nenhum teste deve liberar benefício comercial ou usar dados de clientes reais. Use uma conta e um telefone de teste, e nunca compartilhe PIN, token, QR ou segredo em conversa, planilha ou captura de tela.
+> Regra: o piloto técnico da Roleta V2 jamais libera benefício comercial nem permite baixa de cupom. Use uma conta e um telefone de teste, e nunca compartilhe PIN, token, QR ou segredo em conversa, planilha ou captura de tela.
 
 ## Estado antes dos testes
 
@@ -11,7 +11,7 @@ Atualizado em 17/09/2026. Este é o caderno único para executar testes aos pouc
 | Acessos operacionais | Contas, papéis e auditoria existem | Sim, com e-mails de teste/reais autorizados |
 | Privacidade e contenção | Implementadas, aguardam teste controlado | Sim, em horário sem uso |
 | Fluxo antigo de garçons | Pausado e sem dados na tela | Sim, teste de bloqueio |
-| Roleta V2 | Código pronto, publicação desligada | Só teste controlado após confirmar o modo permitido |
+| Roleta V2 | Piloto técnico ativo, prêmio interno sem valor | Sim, apenas com QR de 10 minutos e sem baixa comercial |
 | Venda paga Saipos | Aguardando resposta técnica | Não para operação real |
 | Cupom V2/caixa | Implementado, precisa piloto controlado | Apenas com cupom de teste |
 | WhatsApp OTP | Desligado, sem número/plataforma oficial | Não |
@@ -53,11 +53,11 @@ com consultas seguras está em `docs/AUDITORIA_TECNICA_2026-09-16.md`.
 
 Objetivo: confirmar que cada pessoa opera com uma conta individual e somente dentro do seu papel.
 
-- [ ] Com um `superadmin`, convidar uma conta de teste em `/admin/operadores` e confirmar que o e-mail chega com link para `https://clubecupim.com.br`, nunca para `localhost`.
+- [ ] Com um `superadmin`, convidar uma conta de teste em `/admin/operadores` e confirmar que o e-mail chega com link para `/acesso/definir-senha`, nunca para `localhost` ou apenas para a raiz.
 - [ ] Aceitar o convite, definir senha e confirmar que o acesso ao painel usa a conta recém-criada.
 - [ ] Criar um operador `caixa`: ele deve conseguir usar o fluxo autorizado de caixa, mas não gerir operadores, prêmios, importação ou segurança.
 - [ ] Criar um operador `gestor`: confirmar acesso somente ao que foi previsto para gestão, sem conceder administração total.
-- [ ] Criar um operador `garcom`: confirmar que ele acessa `/garcom/comanda` e só consegue enviar JPEG/PNG/WebP de até 5 MB com mesa informada; ele não pode consultar a fila, abrir fotos privadas, revisar comandas, emitir QR ou validar cupom.
+- [ ] Criar um operador `garcom`: confirmar que ele acessa `/garcom/comanda`, envia JPEG/PNG/WebP de até 5 MB e emite QR somente após duas fotos legíveis e dupla conferência do total; ele não pode consultar a fila, abrir fotos privadas, revisar comandas ou validar cupom.
 - [ ] Suspender uma conta de teste e confirmar que ela perde acesso imediatamente; reativar somente se o teste exigir.
 - [ ] Tentar excluir a própria conta superadmin e confirmar que o sistema recusa.
 - [ ] Conferir em `/admin/auditoria` quem convidou, alterou papel, suspendeu, reativou ou excluiu a conta de teste.
@@ -109,9 +109,9 @@ venda paga confirmada -> sessão QR curta -> telefone + aviso/consentimento
 -> giro único no servidor -> cupom -> caixa -> auditoria
 ```
 
-Quando o piloto estiver formalmente autorizado:
+No piloto técnico já autorizado:
 
-- [ ] Criar uma sessão QR de teste como `gestor` ou `superadmin`; caixa não deve conseguir emitir prêmio se essa regra continuar vigente.
+- [ ] Criar uma sessão QR de teste como `garcom`, `gestor` ou `superadmin` pelo fluxo de comanda; caixa não deve conseguir emitir QR.
 - [ ] Confirmar que QR contém token opaco, expira e não expõe valor, nível, telefone ou dados da venda.
 - [ ] Abrir o QR com o telefone de teste, conferir aviso de privacidade e deixar marketing desmarcado.
 - [ ] Girar uma única vez; recarregar/tentar repetir e confirmar que não há segundo prêmio ou segundo cupom.
@@ -154,7 +154,7 @@ pedido impresso `872482756`, mesa `99`, valor esperado R$ 274,45. Ela é somente
 uma âncora para consulta técnica; não substitui uma comanda emitida pelo novo
 fluxo e, portanto, não cria QR, prêmio, cupom ou benefício.
 
-- [ ] Como `garcom`, abrir `/garcom/comanda`, informar mesa/comanda e selecionar **duas** fotos permitidas: cabeçalho (mesa, abertura e ID) e total (valor e pagamento). Confirmar que o sistema recusa uma única foto.
+- [ ] Como `garcom`, abrir `/garcom/comanda` e selecionar **duas** fotos permitidas: cabeçalho (mesa, abertura e ID) e total (valor e pagamento). Confirmar que o sistema recusa uma única foto e que não pede mesa/ID manualmente.
 - [ ] Acionar “Ler comanda”. Confirmar que mesa, data, hora de abertura, ID do pedido e total são lidos; se algum faltar, a tela deve exigir novas fotos, sem abrir campos manuais para esses dados.
 - [ ] Digitar somente o valor total como dupla conferência. Confirmar que valor diferente do OCR bloqueia o QR e que valor igual permite seguir.
 - [ ] Confirmar que o texto integral extraído pelo OCR não é enviado para o banco nem aparece na auditoria; somente as duas imagens privadas e os campos necessários para a reconciliação entram no fluxo.
@@ -212,3 +212,5 @@ Use uma linha por sessão de teste; não inclua PIN, telefone inteiro, token ou 
 | --- | --- | --- | --- | --- | --- |
 | 18/09/2026 08:50 BRT | 7.1 / conferência Saipos posterior | Superadmin | Compatível, somente leitura | Pedido 872482756; valor R$ 274,45; pagamento retornado; não cancelada | Não mede latência imediata; o cron diário só reconcilia comandas que passarem pelo novo fluxo QR. |
 | 18/09/2026 manhã BRT | 7.1 / mesas encerradas e canceladas | Superadmin | Inconclusivo, somente leitura | Dois pedidos da Mesa 199 encerrados sem itens e buscas pelos números físicos 50/200 retornaram zero venda | Capturar o ID impresso de uma comanda realmente cancelada. Número físico da mesa não é chave suficiente. Repetir experimento de três mesas às 15:00 BRT. |
+| 18/09/2026 manhã BRT | 6 e 7.1 / preparação do piloto | Superadmin | Ativo somente para teste | V2 publicada em modo de teste; QR de 10 min; prêmio interno R$ 0,00; sem baixa comercial | Executar o primeiro giro pelo fluxo de comanda e conferir a reconciliação do dia seguinte. |
+| 18/09/2026 manhã BRT | 2 e 7.2 / acesso por convite | Superadmin | Correção aplicada | Redirect URL `https://www.clubecupim.com.br/acesso/definir-senha` incluída no Supabase; deploy `2338ca6` Ready | Usar **Reenviar acesso** e validar o novo link; o e-mail antigo não é evidência válida. |

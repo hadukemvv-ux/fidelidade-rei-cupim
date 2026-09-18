@@ -9,10 +9,10 @@ Sistema de fidelidade para restaurante com:
 ## Estado atual (18/09/2026)
 
 - Código recuperado e versionado no GitHub; cada push em `main` dispara deploy automático na Vercel.
-- Última base publicada no Git: Roleta V2 com giro atômico e permissão explícita somente para o servidor. A V2 continua **desativada** até o fluxo completo passar por testes e aprovação comercial.
+- Última base publicada no Git: Roleta V2 com giro atômico, convite que direciona para criação de senha e permissão explícita somente para o servidor. A produção está no commit `2338ca6`, confirmado como `Ready` na Vercel em 18/09/2026.
 - TypeScript e testes unitários: `40/40` aprovados na última verificação. O lint global ainda possui pendências no legado pausado; não é critério de abertura enquanto não for corrigido e reexecutado.
 - Endurecimento crítico em 16/09: a migração `202609160001_hardening_critico_legado.sql` foi aplicada e verificada no Supabase; ela bloqueia RPC/tabelas/bucket legados ao navegador e transforma a baixa de cupom antigo em operação atômica auditável.
-- Roleta: a V1 foi bloqueada. A V2 já possui sessão QR segura, tela pública por QR, giro único atômico no banco, prêmio ponderado por nível, cupom e consentimento opcional. Ela continua fechada e em modo de teste até a validação da venda pela Saipos e o piloto operacional.
+- Roleta: a V1 foi bloqueada. A V2 já possui sessão QR segura, tela pública por QR, giro único atômico no banco, prêmio ponderado por nível, cupom e consentimento opcional. A partir de 18/09 ela está **aberta somente para o piloto técnico**: `v2_publicada=true`, `v2_modo_teste=true`, QR de 10 minutos e apenas o prêmio interno de custo R$ 0,00. Nenhum prêmio comercial está ativo e nenhum cupom de teste pode ser baixado na caixa.
 - Saipos: a API de Consulta foi conectada somente para leitura. O ID do Pedido impresso da Mesa 99 conciliou corretamente no dia seguinte; a disponibilidade imediata ainda não foi comprovada. O piloto segue: duas fotos privadas da comanda após o pagamento -> campos conferidos pelo operador -> QR de teste -> reconciliação posterior diária. Veja `docs/SAIPOS_VALIDACAO_COMANDA.md` antes de ativar qualquer benefício comercial.
 - O cron de reconciliação está configurado para a janela de 07:00–07:59 BRT (10:00–10:59 UTC) e apenas atualiza a auditoria de comandas já registradas no fluxo novo; ele não concede ponto, cupom, prêmio ou sanção.
 - Sorteios legados estão pausados: não há cron de sorteio e tickets não representam entrada ou promessa futura. O plano de privacidade, contenção e resposta a incidentes está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`; o aviso público está em `/privacidade`.
@@ -28,6 +28,7 @@ Sistema de fidelidade para restaurante com:
 - Fluxo operacional do piloto: garçom ativo fotografa cabeçalho e total; o Clube exige leitura de mesa, abertura, ID e valor; o único campo digitado é o valor para dupla conferência. Depois disso, o próprio garçom emite o QR de teste. Caixa não pode enviar comandas; gestor e superadmin podem fazê-lo apenas como contingência.
 - O painel `/admin/operacao-roleta` consolida QR emitido, conciliações, divergências, níveis e um sinal de atenção por operador. É suporte à gestão, sem punição ou bloqueio automáticos.
 - Convites da equipe levam a `/acesso/definir-senha`, onde cada pessoa cria sua senha. No Supabase, a URL precisa constar em **Authentication → URL Configuration → Redirect URLs**: `https://www.clubecupim.com.br/acesso/definir-senha`.
+- A URL de redirecionamento já foi incluída e verificada no Supabase em 18/09. Convites antigos podem ter apontado à raiz; para testar, usar **Reenviar acesso** em `/admin/operadores` e abrir apenas o e-mail novo.
 
 ## Inicio rapido
 

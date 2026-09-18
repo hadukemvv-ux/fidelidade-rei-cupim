@@ -23,6 +23,12 @@ const DeleteSchema = z.object({
   confirmar: z.literal(true),
 });
 
+const ResendSchema = z.object({ user_id: z.string().uuid() });
+
+function urlDefinirSenha(request: Request) {
+  return new URL('/acesso/definir-senha', request.url).toString();
+}
+
 export async function GET(request: Request) {
   const actor = await requireOperationalActor(request, "superadmin");
   if (actor instanceof Response) return actor;
@@ -78,7 +84,7 @@ export async function POST(request: Request) {
   const email = parsed.data.email.toLowerCase();
 
   const { data: invite, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-    data: { nome }, redirectTo: new URL("/login", request.url).toString(),
+    data: { nome }, redirectTo: urlDefinirSenha(request),
   });
   if (inviteError || !invite.user) {
     return NextResponse.json({ error: inviteError?.message || "Não foi possível enviar o convite." }, { status: 400 });
@@ -95,6 +101,24 @@ export async function POST(request: Request) {
     detalhes: { nome, email, papel },
   });
   return NextResponse.json({ ok: true, message: `Convite enviado para ${email}.` }, { status: 201 });
+}
+
+/** Reenvia um acesso sem revelar senha e preserva a auditoria da equipe. */
+export async function PATCH(request: Request) {
+  const actor = await requireOperationalActor(request, 'superadmin');
+  if (actor instanceof Response) return actor;
+  const parsed = ResendSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: 'Conta inválida.' }, { status: 400 });
+  const { data: profile, error: profileError } = await supabaseAdmin.from('perfis_operacionais')
+    .select('user_id, nome, email, papel').eq('user_id', parsed.data.user_id).maybeSingle();
+  if (profileError || !profile) return NextResponse.json({ error: 'A conta operacional não foi encontrada.' }, { status: 404 });
+  const { error } = await supabaseAdmin.auth.resetPasswordForEmail(profile.email, { redirectTo: urlDefinirSenha(request) });
+  if (error) return NextResponse.json({ error: 'Não foi possível reenviar o acesso.' }, { status: 400 });
+  await supabaseAdmin.from('administracao_eventos').insert({
+    entidade: 'operador', entidade_id: profile.user_id, acao: 'acesso_reenviado', actor_user_id: actor.userId, actor_email: actor.email,
+    detalhes: { nome: profile.nome, email: profile.email, papel: profile.papel },
+  });
+  return NextResponse.json({ ok: true, message: `Novo link de acesso enviado para ${profile.email}.` });
 }
 
 /** Exclui somente acessos operacionais de teste; a auditoria permanece preservada. */

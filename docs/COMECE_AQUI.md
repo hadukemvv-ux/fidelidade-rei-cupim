@@ -41,6 +41,10 @@ ou de pessoa responsável pelo projeto.
    consultar `/admin/saipos` por `updated_at` até a manhã seguinte e acompanhar
    `/admin/operacao-roleta`. A Saipos é por consulta (pull), sem webhook
    indicado. Foto nunca libera benefício comercial automaticamente.
+2. Antes de convidar equipe, conferir no Supabase a Redirect URL
+   `https://www.clubecupim.com.br/acesso/definir-senha`. O convite abre essa
+   página para criar a senha; o superadmin pode reenviar um acesso pelo painel
+   sem conhecer a senha da pessoa.
 2. Definir provedor oficial de WhatsApp, remetente, templates, custos e opt-out;
    então configurar OTP e executar o teste controlado. Não automatizar WhatsApp
    pessoal.

@@ -27,6 +27,7 @@ Sistema de fidelidade para restaurante com:
 - Próximo teste controlado: uma mesa concluída, uma cancelada e uma fechada sem venda; registrar ID, valor e horário aproximado, consultar imediatamente e repetir em intervalos até a manhã seguinte. Não conceder benefício nesse teste.
 - Fluxo operacional do piloto: garçom ativo fotografa cabeçalho e total; o Clube exige leitura de mesa, abertura, ID e valor; o único campo digitado é o valor para dupla conferência. Depois disso, o próprio garçom emite o QR de teste. Caixa não pode enviar comandas; gestor e superadmin podem fazê-lo apenas como contingência.
 - O painel `/admin/operacao-roleta` consolida QR emitido, conciliações, divergências, níveis e um sinal de atenção por operador. É suporte à gestão, sem punição ou bloqueio automáticos.
+- Convites da equipe levam a `/acesso/definir-senha`, onde cada pessoa cria sua senha. No Supabase, a URL precisa constar em **Authentication → URL Configuration → Redirect URLs**: `https://www.clubecupim.com.br/acesso/definir-senha`.
 
 ## Inicio rapido
 

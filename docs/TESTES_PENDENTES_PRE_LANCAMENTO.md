@@ -135,6 +135,13 @@ Depois da resposta:
 - [ ] Testar falha temporária do fornecedor: registrar erro, não liberar QR automaticamente e não criar duplicidade ao reprocessar.
 - [ ] Confirmar que uma foto de comanda nunca é prova suficiente para liberação automática.
 
+## 7.2 Acesso da equipe
+
+- [ ] No Supabase, incluir `https://www.clubecupim.com.br/acesso/definir-senha` em **Authentication → URL Configuration → Redirect URLs** e confirmar que a Site URL é `https://www.clubecupim.com.br`.
+- [ ] Criar convite de teste em `/admin/operadores`; abrir o e-mail e confirmar que a pessoa chega a `/acesso/definir-senha`, cria senha e entra em `/login`.
+- [ ] Reenviar o acesso pelo painel e confirmar que gera nova auditoria, sem expor ou alterar a senha anterior.
+- [ ] Confirmar que perfil `caixa` recebe recusa ao tentar enviar ou liberar comanda; garçom, gestor e superadmin devem conseguir operar o piloto.
+
 ## 7.1 Piloto: duas fotos, leitura local e QR de teste
 
 As migrações `202609170001_fluxo_comandas_operacional.sql` e `202609170002` a

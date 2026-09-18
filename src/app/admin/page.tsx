@@ -16,7 +16,9 @@ const sections = [
   { href: '/admin/cardapio', icon: '★', title: 'Alterar recompensas', description: 'Cadastre produtos, ajuste o custo em pontos e escolha os destaques.', action: 'Gerenciar recompensas' },
   { href: '/admin/analytics', icon: '▥', title: 'Acompanhar resultados', description: 'Veja cadastros, pontos, resgates e roleta nos últimos 7, 30 ou 90 dias.', action: 'Ver relatórios' },
   { href: '/admin/operadores', icon: '♙', title: 'Gerenciar equipe', description: 'Cadastre contas individuais e controle as permissões de cada pessoa.', action: 'Abrir acessos' },
-  { href: '/admin/operadores', icon: '♙', title: 'Controlar acessos', description: 'Libere, altere ou suspenda as permissões de caixa, gestão e administração.', action: 'Abrir acessos' },
+  { href: '/garcom/comanda', icon: '▣', title: 'Testar comanda e QR', description: 'Piloto: duas fotos, leitura do pedido, confirmação do valor e QR de teste.', action: 'Abrir piloto' },
+  { href: '/admin/comandas', icon: '◷', title: 'Conferir comandas', description: 'Veja fotos privadas e o resultado da reconciliação da Saipos.', action: 'Abrir conferência' },
+  { href: '/admin/operacao-roleta', icon: '◷', title: 'Ver operação da roleta', description: 'Acompanhe QR, conciliações e sinais de atenção por garçom.', action: 'Abrir relatório' },
 ];
 
 export default function AdminHome() {

@@ -10,7 +10,7 @@ Sistema de fidelidade para restaurante com:
 
 - Código recuperado e versionado no GitHub; cada push em `main` dispara deploy automático na Vercel.
 - Última base publicada no Git: Roleta V2 com giro atômico e permissão explícita somente para o servidor. A V2 continua **desativada** até o fluxo completo passar por testes e aprovação comercial.
-- TypeScript e testes unitários: `39/39` aprovados na última verificação. O lint global ainda possui pendências no legado pausado; não é critério de abertura enquanto não for corrigido e reexecutado.
+- TypeScript e testes unitários: `40/40` aprovados na última verificação. O lint global ainda possui pendências no legado pausado; não é critério de abertura enquanto não for corrigido e reexecutado.
 - Endurecimento crítico em 16/09: a migração `202609160001_hardening_critico_legado.sql` foi aplicada e verificada no Supabase; ela bloqueia RPC/tabelas/bucket legados ao navegador e transforma a baixa de cupom antigo em operação atômica auditável.
 - Roleta: a V1 foi bloqueada. A V2 já possui sessão QR segura, tela pública por QR, giro único atômico no banco, prêmio ponderado por nível, cupom e consentimento opcional. Ela continua fechada e em modo de teste até a validação da venda pela Saipos e o piloto operacional.
 - Saipos: a API de Consulta foi conectada somente para leitura. O ID do Pedido impresso da Mesa 99 conciliou corretamente no dia seguinte; a disponibilidade imediata ainda não foi comprovada. O piloto segue: duas fotos privadas da comanda após o pagamento -> campos conferidos pelo operador -> QR de teste -> reconciliação posterior diária. Veja `docs/SAIPOS_VALIDACAO_COMANDA.md` antes de ativar qualquer benefício comercial.
@@ -25,6 +25,8 @@ Sistema de fidelidade para restaurante com:
 - Duas mesas 199 fechadas após remover os itens não retornaram venda pela busca dos respectivos IDs na manhã seguinte. Isso não é uma confirmação de cancelamento: indica que fechar uma mesa sem venda pode não gerar registro consultável.
 - A busca somente pelo número físico da mesa não é confiável: as mesas 50 e 200 não retornaram resultado. Para concluir como a API representa um cancelamento, é obrigatório guardar o **ID do Pedido impresso** de uma comanda realmente cancelada.
 - Próximo teste controlado: uma mesa concluída, uma cancelada e uma fechada sem venda; registrar ID, valor e horário aproximado, consultar imediatamente e repetir em intervalos até a manhã seguinte. Não conceder benefício nesse teste.
+- Fluxo operacional do piloto: garçom ativo fotografa cabeçalho e total; o Clube exige leitura de mesa, abertura, ID e valor; o único campo digitado é o valor para dupla conferência. Depois disso, o próprio garçom emite o QR de teste. Caixa não pode enviar comandas; gestor e superadmin podem fazê-lo apenas como contingência.
+- O painel `/admin/operacao-roleta` consolida QR emitido, conciliações, divergências, níveis e um sinal de atenção por operador. É suporte à gestão, sem punição ou bloqueio automáticos.
 
 ## Inicio rapido
 

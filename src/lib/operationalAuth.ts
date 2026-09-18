@@ -20,6 +20,7 @@ const roleRank: Record<OperationalRole, number> = {
 export async function requireOperationalActor(
   request: Request,
   minimumRole: OperationalRole = "caixa",
+  allowedRoles?: readonly OperationalRole[],
 ): Promise<OperationalActor | NextResponse> {
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
   if (!token) {
@@ -43,6 +44,9 @@ export async function requireOperationalActor(
 
   const papel = profile.papel as OperationalRole;
   if (roleRank[papel] < roleRank[minimumRole]) {
+    return NextResponse.json({ error: "Seu perfil não tem permissão para esta operação." }, { status: 403 });
+  }
+  if (allowedRoles && !allowedRoles.includes(papel)) {
     return NextResponse.json({ error: "Seu perfil não tem permissão para esta operação." }, { status: 403 });
   }
 

@@ -57,8 +57,9 @@ Pagamento -> duas fotos privadas da comanda -> conferência dos campos pelo oper
 
 - [x] Fundação de sessão e QR seguro.
 - [ ] Fonte imediata e confiável da venda paga. A Saipos é por consulta; o fluxo de foto é apenas evidência operacional e a reconciliação posterior ainda precisa dos testes de latência/cancelamento.
-- [x] Piloto de comanda estruturado no Supabase em 17/09/2026: duas evidências privadas; OCR somente no navegador; campos confirmados pelo operador; ID do pedido impresso único; QR único de teste e trilha de auditoria. A Saipos entra depois na reconciliação, sem consequência automática.
+- [x] Piloto de comanda estruturado no Supabase: duas evidências privadas; OCR somente no navegador; mesa, abertura, ID e valor precisam ser lidos antes de seguir; o garçom digita somente o valor para dupla conferência; QR único de teste e trilha de auditoria. A Saipos entra depois na reconciliação, sem consequência automática.
 - [x] Cron isolado de reconciliação preparado para implantação na Vercel: consulta apenas comandas de QR pendentes dos últimos três dias por `id_sale`, compara ID/total/pagamento/cancelamento e grava `compatível`, `divergente` ou pendente. Ele não cria clientes, pontos, cupons, prêmios ou sanções. Agenda: `0 10 * * *` (janela de 07:00–07:59 BRT no Hobby). O primeiro resultado útil depende de uma comanda registrada pelo novo fluxo.
+- [x] Relatório operacional diário em `/admin/operacao-roleta`: mostra comandas, QR emitidos, compatibilidade, pendências, faixa e sinal de atenção por operador. O sinal não é penalidade nem bloqueio automático; serve para a gestão revisar evidências e treinamento.
 - [x] Página pública `/roleta/v2` que lê uma sessão sem expor dados sensíveis.
 - [x] Registro de telefone, consentimento opcional e giro único atômico.
 - [x] Seleção de prêmio no servidor, ponderada pelos cinco níveis e custo estimado.
@@ -76,7 +77,8 @@ cancelada e pagamento retornado. Já pedidos de mesas encerradas sem itens e
 buscas pelo número físico da mesa não retornaram resultado. O **ID do Pedido
 impresso** passa a ser obrigatório na evidência; o teste pendente deve provar
 como a API representa cancelamentos e em quanto tempo cada tipo de venda fica
-disponível.
+disponível. A reconciliação também compara a faixa registrada para o QR com a
+faixa que o total da Saipos deveria gerar.
 
 Decisão após a resposta:
 

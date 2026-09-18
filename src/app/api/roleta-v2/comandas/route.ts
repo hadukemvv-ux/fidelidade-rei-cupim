@@ -50,7 +50,9 @@ async function guardarImagem(image: File, tipo: "cabecalho" | "total") {
 
 /** Recebe duas fotos complementares. Elas ficam privadas e não geram QR automaticamente. */
 export async function POST(request: Request) {
-  const actor = await requireOperationalActor(request, "garcom");
+  // Caixa valida cupom; somente garçom, gestão e superadmin podem enviar a
+  // evidência de uma comanda e abrir um QR de piloto.
+  const actor = await requireOperationalActor(request, "garcom", ["garcom", "gestor", "superadmin"]);
   if (actor instanceof NextResponse) return actor;
 
   const form = await request.formData().catch(() => null);

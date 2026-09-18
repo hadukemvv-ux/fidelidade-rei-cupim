@@ -148,8 +148,9 @@ uma âncora para consulta técnica; não substitui uma comanda emitida pelo novo
 fluxo e, portanto, não cria QR, prêmio, cupom ou benefício.
 
 - [ ] Como `garcom`, abrir `/garcom/comanda`, informar mesa/comanda e selecionar **duas** fotos permitidas: cabeçalho (mesa, abertura e ID) e total (valor e pagamento). Confirmar que o sistema recusa uma única foto.
-- [ ] Acionar “Ler dados das fotos”. Conferir que mesa, data, hora de abertura, ID do pedido e total aparecem apenas como sugestões e corrigir manualmente ao menos um campo no teste.
-- [ ] Confirmar que o texto integral extraído pelo OCR não é enviado para o banco nem aparece na auditoria; somente as duas imagens privadas e os campos confirmados pelo operador entram no fluxo.
+- [ ] Acionar “Ler comanda”. Confirmar que mesa, data, hora de abertura, ID do pedido e total são lidos; se algum faltar, a tela deve exigir novas fotos, sem abrir campos manuais para esses dados.
+- [ ] Digitar somente o valor total como dupla conferência. Confirmar que valor diferente do OCR bloqueia o QR e que valor igual permite seguir.
+- [ ] Confirmar que o texto integral extraído pelo OCR não é enviado para o banco nem aparece na auditoria; somente as duas imagens privadas e os campos necessários para a reconciliação entram no fluxo.
 - [ ] Confirmar que o mesmo ID do pedido não pode emitir dois QR, mesmo com duas fotos novas ou outro operador.
 - [ ] Como `gestor` ou `superadmin`, abrir `/admin/comandas`, ver as duas fotos privadas e a trilha de envio/confirmação. Registrar “Em análise” e conferir data, responsável e motivo na auditoria.
 - [ ] Como `caixa`, tentar abrir a fila, a foto e a rota de revisão; todas devem recusar o acesso.
@@ -159,6 +160,7 @@ fluxo e, portanto, não cria QR, prêmio, cupom ou benefício.
 - [ ] Com a V2 explicitamente em modo de teste, emitir um QR; conferir expiração, giro único e cupom marcado como teste. Não usar esse cupom em venda real.
 - [ ] No turno seguinte, consultar a Saipos por `id_sale` usando o ID impresso, comparar valor, origem e pagamento; registrar a divergência/sucesso apenas como reconciliação, sem punição ou ajuste automático.
 - [ ] Depois de aplicar as migrações, chamar manualmente o cron protegido de reconciliação com uma comanda de teste; confirmar que ele só atualiza o estado de reconciliação e cria auditoria, sem criar cliente, ponto, cupom, prêmio ou sanção.
+- [ ] Em `/admin/operacao-roleta`, conferir o relatório da data: QR, compatíveis, divergentes, pendentes, nível e responsável. O sinal de atenção deve orientar revisão, nunca aplicar punição automática.
 - [x] Agendamento diário `0 10 * * *` incluído na configuração de implantação em 17/09/2026. Em plano Hobby, considere a janela de 10:00–10:59 UTC, não um minuto exato. Confirmar o primeiro disparo somente depois que o deploy estiver `Ready`.
 - [ ] Registrar o prazo operacional de 30 dias e implementar/testar a remoção segura das imagens expiradas antes de abrir ao público.
 

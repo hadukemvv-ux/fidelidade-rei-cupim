@@ -7,6 +7,11 @@ export type LeituraComanda = {
   texto_detectado: boolean;
 };
 
+export type ValidacaoLeituraComanda = {
+  pronta: boolean;
+  camposAusentes: string[];
+};
+
 const MESES: Record<string, string> = { jan: '01', fev: '02', mar: '03', abr: '04', mai: '05', jun: '06', jul: '07', ago: '08', set: '09', out: '10', nov: '11', dez: '12' };
 const valorLinha = (line: string) => line.match(/\d{1,3}(?:[.]\d{3})*[,\.]\d{2}/)?.[0] || '';
 
@@ -31,6 +36,22 @@ export function extrairDadosDaComanda(texto: string, anoAtual = new Date().getFu
     valor_confirmado: valor.replace('.', ',') || undefined,
     texto_detectado: normalizado.replace(/\s/g, '').length > 10,
   };
+}
+
+/**
+ * No piloto não pedimos que o garçom redigite mesa, data, horário ou pedido.
+ * Se algum deles não vier da comanda, a evidência deve ser refeita para que o
+ * QR não seja emitido com uma referência fraca.
+ */
+export function validarLeituraParaPiloto(leitura: LeituraComanda): ValidacaoLeituraComanda {
+  const camposAusentes = [
+    !leitura.mesa && 'mesa',
+    !leitura.data_operacional && 'data de abertura',
+    !leitura.horario_abertura && 'horário de abertura',
+    !leitura.id_pedido_impresso && 'ID do pedido',
+    !leitura.valor_confirmado && 'valor total',
+  ].filter((campo): campo is string => Boolean(campo));
+  return { pronta: camposAusentes.length === 0, camposAusentes };
 }
 
 /** OCR local no navegador. A imagem não é enviada para o servidor nesta etapa. */

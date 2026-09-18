@@ -34,11 +34,13 @@ ou de pessoa responsável pelo projeto.
 
 ## Próxima sequência segura
 
-1. Executar o teste controlado em `/admin/saipos`: uma venda concluída, uma
-   cancelada e uma mesa fechada sem venda. Guardar o **ID do Pedido impresso**,
-   valor e horário aproximado; consultar por `updated_at` até a manhã seguinte.
-   A Saipos é por consulta (pull), sem webhook indicado. Foto não libera QR
-   comercial automaticamente.
+1. Executar o teste controlado no fluxo real: entrar como garçom em
+   `/garcom/comanda`, enviar duas fotos, confirmar somente o valor e gerar QR
+   de teste. Repetir para uma venda concluída, uma cancelada e uma mesa fechada
+   sem venda. Guardar o **ID do Pedido impresso**, valor e horário aproximado;
+   consultar `/admin/saipos` por `updated_at` até a manhã seguinte e acompanhar
+   `/admin/operacao-roleta`. A Saipos é por consulta (pull), sem webhook
+   indicado. Foto nunca libera benefício comercial automaticamente.
 2. Definir provedor oficial de WhatsApp, remetente, templates, custos e opt-out;
    então configurar OTP e executar o teste controlado. Não automatizar WhatsApp
    pessoal.

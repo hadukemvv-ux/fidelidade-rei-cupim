@@ -1,4 +1,5 @@
 import type { VendaSaipos } from '@/lib/saipos';
+import { getFaixaRoletaV2 } from './roleta-v2-rules.ts';
 
 type Objeto = Record<string, unknown>;
 
@@ -12,6 +13,8 @@ export type ResultadoReconciliacao = {
     pagamento_total: number | null;
     tipos_pagamento: string[];
     atualizada_em: string | null;
+    nivel_roleta_registrado: number | null;
+    nivel_roleta_saipos: number | null;
   };
 };
 
@@ -40,6 +43,7 @@ export function compararComandaComVenda(
   idPedido: string,
   valorConfirmado: number,
   venda: VendaSaipos | undefined,
+  nivelRoletaRegistrado?: number | null,
 ): ResultadoReconciliacao | null {
   if (!venda || texto(venda.id_sale) !== idPedido) return null;
 
@@ -49,11 +53,14 @@ export function compararComandaComVenda(
   const pagamentoTotal = valoresPagamento.length ? Math.round(valoresPagamento.reduce((soma, valor) => soma + valor, 0) * 100) / 100 : null;
   const totalSaipos = numero(venda.total_amount);
   const cancelada = vendaEstaCancelada(venda.canceled);
+  const nivelSaipos = totalSaipos === null ? null : getFaixaRoletaV2(totalSaipos).nivel;
+  const nivelRegistrado = Number.isInteger(nivelRoletaRegistrado) ? Number(nivelRoletaRegistrado) : null;
   const motivos: string[] = [];
 
   if (cancelada) motivos.push('A venda aparece cancelada na Saipos.');
   if (totalSaipos === null || Math.abs(totalSaipos - valorConfirmado) > 0.01) motivos.push('O total da Saipos não confere com o valor confirmado na comanda.');
   if (pagamentoTotal === null || Math.abs(pagamentoTotal - valorConfirmado) > 0.01) motivos.push('A soma das formas de pagamento não confirma o total da comanda.');
+  if (nivelRegistrado !== null && nivelSaipos !== null && nivelRegistrado !== nivelSaipos) motivos.push('A faixa da roleta registrada não confere com o total retornado pela Saipos.');
 
   return {
     compativel: motivos.length === 0,
@@ -65,6 +72,8 @@ export function compararComandaComVenda(
       pagamento_total: pagamentoTotal,
       tipos_pagamento: pagamentos.map((pagamento) => texto(pagamento.desc_store_payment_type)).filter(Boolean).slice(0, 5),
       atualizada_em: texto(raw.updated_at) || null,
+      nivel_roleta_registrado: nivelRegistrado,
+      nivel_roleta_saipos: nivelSaipos,
     },
   };
 }

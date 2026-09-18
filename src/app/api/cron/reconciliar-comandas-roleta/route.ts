@@ -11,6 +11,7 @@ type ComandaPendente = {
   id: string;
   id_pedido_impresso: string;
   valor_confirmado: number;
+  nivel_roleta: number | null;
   criado_em: string;
 };
 
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
 
   const { data: comandas, error: comandasError } = await supabaseAdmin
     .from('comandas_roleta')
-    .select('id, id_pedido_impresso, valor_confirmado, criado_em')
+    .select('id, id_pedido_impresso, valor_confirmado, nivel_roleta, criado_em')
     .eq('status', 'qr_emitido')
     .eq('reconciliacao_status', 'pendente')
     .not('id_pedido_impresso', 'is', null)
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
     let pendentes = 0;
 
     for (const comanda of comandas as ComandaPendente[]) {
-      const resultado = compararComandaComVenda(comanda.id_pedido_impresso, Number(comanda.valor_confirmado), porId.get(comanda.id_pedido_impresso));
+      const resultado = compararComandaComVenda(comanda.id_pedido_impresso, Number(comanda.valor_confirmado), porId.get(comanda.id_pedido_impresso), comanda.nivel_roleta);
       if (!resultado) {
         pendentes += 1;
         continue;
@@ -87,6 +88,12 @@ export async function GET(request: NextRequest) {
         detalhes: { id_pedido_impresso: comanda.id_pedido_impresso, ...resultado.detalhes, motivo: resultado.motivo },
       });
     }
+
+    await supabaseAdmin.from('administracao_eventos').insert({
+      entidade: 'comanda', entidade_id: `rotina-${new Date().toISOString().slice(0, 10)}`,
+      acao: 'reconciliacao_saipos_rotina_diaria',
+      detalhes: { processadas: comandas.length, compativeis, divergentes, pendentes, origem: 'cron_diario' },
+    });
 
     return NextResponse.json({ ok: true, processadas: comandas.length, compativeis, divergentes, pendentes });
   } catch (error) {

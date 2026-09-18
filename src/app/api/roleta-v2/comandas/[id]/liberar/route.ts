@@ -19,7 +19,7 @@ const hash = (token: string) => crypto.createHash("sha256").update(token).digest
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const blocked = await bloquearSeContencaoAtiva();
   if (blocked) return blocked;
-  const actor = await requireOperationalActor(request, "garcom");
+  const actor = await requireOperationalActor(request, "garcom", ["garcom", "gestor", "superadmin"]);
   if (actor instanceof NextResponse) return actor;
   const body = Body.safeParse(await request.json().catch(() => null));
   const { id } = await params;

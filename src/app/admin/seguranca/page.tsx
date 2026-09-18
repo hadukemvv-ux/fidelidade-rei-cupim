@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { fetchAdmin } from '@/lib/adminFetch';
+import { useAdminCanChange } from '../adminAccessContext';
 
 type Incident = {
   id: string;
@@ -20,6 +21,7 @@ type SecurityData = {
 };
 
 export default function SegurancaPage() {
+  const canChange = useAdminCanChange();
   const [data, setData] = useState<SecurityData | null>(null);
   const [descricao, setDescricao] = useState('');
   const [escopo, setEscopo] = useState('');
@@ -83,7 +85,7 @@ export default function SegurancaPage() {
 
       {notice && <div className="admin-notice" role="status"><span>{notice}</span></div>}
 
-      <section className="admin-operator-invite">
+      {canChange ? <section className="admin-operator-invite">
         <div className="admin-section-title"><div><span>Resposta rápida</span><h2>{active ? 'Reabrir após verificação' : 'Ativar modo de contenção'}</h2></div></div>
         <form onSubmit={active ? reopen : activate}>
           {!active && <label><span>Severidade</span><select value={severidade} onChange={(event) => setSeveridade(event.target.value)}><option value="suspeita">Suspeita</option><option value="baixo">Baixo</option><option value="moderado">Moderado</option><option value="alto">Alto</option><option value="critico">Crítico</option></select></label>}
@@ -92,7 +94,7 @@ export default function SegurancaPage() {
           <label><span>Digite {active ? 'REABRIR' : 'CONTER'} para confirmar</span><input value={confirmacao} onChange={(event) => setConfirmacao(event.target.value.toUpperCase())} autoComplete="off" required /></label>
           <button className={active ? '' : 'admin-danger-button'} disabled={saving}>{saving ? 'Registrando…' : active ? 'Reabrir o Clube após verificação' : 'Ativar contenção agora'}</button>
         </form>
-      </section>
+      </section> : <section className="admin-operator-invite"><strong>Somente consulta</strong><p>Gestão acompanha o estado e o histórico. Ativar ou reabrir a contenção é exclusivo do superadmin.</p></section>}
 
       <section>
         <div className="admin-section-title"><div><span>Histórico</span><h2>Últimos incidentes</h2></div></div>

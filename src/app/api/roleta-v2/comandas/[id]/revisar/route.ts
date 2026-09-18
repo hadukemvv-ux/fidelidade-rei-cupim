@@ -8,9 +8,9 @@ const Body = z.object({
   motivo: z.string().trim().min(3).max(500),
 });
 
-/** A gestão pode registrar análise ou rejeição; esta etapa nunca cria QR ou prêmio. */
+/** Só superadmin altera a trilha da comanda; gestão apenas consulta evidências. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const actor = await requireOperationalActor(request, "gestor");
+  const actor = await requireOperationalActor(request, "superadmin");
   if (actor instanceof NextResponse) return actor;
   const body = Body.safeParse(await request.json().catch(() => null)); const { id } = await params;
   if (!body.success || !z.string().uuid().safeParse(id).success) return NextResponse.json({ error: "Dados da revisão inválidos." }, { status: 400 });

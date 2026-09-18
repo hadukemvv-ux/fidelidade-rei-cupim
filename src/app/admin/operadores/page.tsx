@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { fetchAdmin } from '@/lib/adminFetch';
+import { useAdminCanChange } from '../adminAccessContext';
 
 type Operator = { user_id: string; nome: string; email: string; papel: 'superadmin' | 'gestor' | 'caixa' | 'garcom'; ativo: boolean; atualizado_em: string };
 type Account = { user_id: string; email: string; conta_criada_em: string };
@@ -9,6 +10,7 @@ type Account = { user_id: string; email: string; conta_criada_em: string };
 const roleLabel = { superadmin: 'Administração total', gestor: 'Gestão — confere comandas e libera QR', caixa: 'Caixa — valida cupons', garcom: 'Garçom — envia comandas' };
 
 export default function OperadoresPage() {
+  const canChange = useAdminCanChange();
   const [operators, setOperators] = useState<Operator[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [notice, setNotice] = useState('');
@@ -69,6 +71,8 @@ export default function OperadoresPage() {
     } catch (error) { setNotice(error instanceof Error ? error.message : 'Não foi possível enviar o convite.'); }
     finally { setInviting(false); }
   }
+
+  if (!canChange) return <div className="admin-operators"><section className="admin-notice"><strong>Equipe — somente consulta</strong><span>Gestão pode visualizar funções e status. Convites, mudanças, suspensões, reenvios e exclusões são exclusivos do superadmin.</span></section>{notice && <div className="admin-notice error" role="status"><span>{notice}</span></div>}<section><div className="admin-section-title"><div><span>Permissões</span><h2>Equipe de operação</h2></div></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pessoa</th><th>Permissão</th><th>Status</th></tr></thead><tbody>{operators.map((operator) => <tr key={operator.user_id}><td><strong>{operator.nome}</strong><small>{operator.email}</small></td><td>{roleLabel[operator.papel]}</td><td>{operator.ativo ? 'Ativo' : 'Suspenso'}</td></tr>)}{!operators.length && <tr><td colSpan={3}>Ainda não há permissões definidas.</td></tr>}</tbody></table></div></section></div>;
 
   return <div className="admin-operators">
     <section className="admin-notice"><strong>Você controla os acessos.</strong><span>Cadastre um funcionário aqui: ele recebe um convite e escolhe a própria senha. Para o piloto da roleta, use no garçom o mesmo nome que aparece na Saipos; depois você pode mudar sua função, suspender ou reativar sem apagar o histórico.</span></section>

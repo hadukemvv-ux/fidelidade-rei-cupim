@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchAdmin } from '@/lib/adminFetch';
 import { CUSTO_ENTREGA_GRATIS_PONTOS, INTERVALO_ENTREGA_GRATIS_DIAS } from '@/lib/fidelidade-rules';
+import { useAdminCanChange } from '../adminAccessContext';
 
 type Produto = { id?: number; nome: string; descricao: string; imagem_url: string; custo_em_pontos: number; categoria: string; destaque: boolean; ativo: boolean };
 type StatusFilter = 'todos' | 'ativos' | 'pausados' | 'ofertas';
@@ -12,6 +13,7 @@ const emptyProduct: Produto = { nome: '', descricao: '', imagem_url: '', custo_e
 const categoryLabels: Record<string, string> = { prato: 'Prato', bebida: 'Bebida', sobremesa: 'Sobremesa', acompanhamento: 'Acompanhamento', beneficio: 'Benefício', geral: 'Geral' };
 
 export default function AdminCardapio() {
+  const canChange = useAdminCanChange();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -121,7 +123,7 @@ export default function AdminCardapio() {
     <section className="admin-reward-controls" aria-label="Pesquisa e filtros">
       <label><span>Buscar recompensa</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome, descrição ou categoria" /></label>
       <label><span>Mostrar</span><select value={filter} onChange={(event) => setFilter(event.target.value as StatusFilter)}><option value="todos">Todo o catálogo</option><option value="ativos">Somente publicadas</option><option value="pausados">Somente pausadas</option><option value="ofertas">Ofertas de 50%</option></select></label>
-      <button type="button" onClick={() => { setProdutoEditando({ ...emptyProduct }); setModalOpen(true); }}>+ Nova recompensa</button>
+      {canChange && <button type="button" onClick={() => { setProdutoEditando({ ...emptyProduct }); setModalOpen(true); }}>+ Nova recompensa</button>}
     </section>
 
     <div className="admin-client-result-bar"><span><strong>{filteredProducts.length}</strong> {filteredProducts.length === 1 ? 'recompensa encontrada' : 'recompensas encontradas'}</span><span>Novas recompensas começam pausadas</span></div>
@@ -135,7 +137,7 @@ export default function AdminCardapio() {
           <div className="admin-reward-image">{product.imagem_url ? <img src={product.imagem_url} alt="" /* Admin preview may use user-configured external URLs. */ /> : <span aria-hidden="true">★</span>}</div>
           <div className="admin-reward-copy"><div className="admin-reward-tags"><span>{categoryLabels[product.categoria] || product.categoria || 'Geral'}</span><span className={product.ativo ? 'published' : 'paused'}>{product.ativo ? 'Publicada' : 'Pausada'}</span>{product.destaque && <span className="offer">Oferta 50%</span>}</div><h2>{product.nome || 'Sem nome'}</h2><p>{product.descricao || 'Sem descrição.'}</p></div>
           <dl className="admin-reward-cost"><div><dt>Preço normal</dt><dd>{points(normalCost)}</dd></div><div className={product.destaque ? 'offer' : ''}><dt>Cliente paga</dt><dd>{points(customerCost)}</dd></div></dl>
-          <div className="admin-reward-actions"><button type="button" className="secondary" onClick={() => { setProdutoEditando({ ...product }); setModalOpen(true); }} disabled={busy}>Editar</button><button type="button" className={product.destaque ? 'secondary' : ''} onClick={() => toggleOffer(product)} disabled={busy}>{busy ? 'Salvando…' : product.destaque ? 'Encerrar 50%' : 'Ativar 50%'}</button><button type="button" className={product.ativo ? 'pause' : 'publish'} onClick={() => toggleActive(product)} disabled={busy}>{busy ? 'Salvando…' : product.ativo ? 'Pausar' : 'Publicar'}</button></div>
+          {canChange && <div className="admin-reward-actions"><button type="button" className="secondary" onClick={() => { setProdutoEditando({ ...product }); setModalOpen(true); }} disabled={busy}>Editar</button><button type="button" className={product.destaque ? 'secondary' : ''} onClick={() => toggleOffer(product)} disabled={busy}>{busy ? 'Salvando…' : product.destaque ? 'Encerrar 50%' : 'Ativar 50%'}</button><button type="button" className={product.ativo ? 'pause' : 'publish'} onClick={() => toggleActive(product)} disabled={busy}>{busy ? 'Salvando…' : product.ativo ? 'Pausar' : 'Publicar'}</button></div>}
         </article>;
       })}
     </section>}

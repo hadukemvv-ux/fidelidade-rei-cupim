@@ -6,6 +6,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { useEffect, useMemo, useState } from 'react';
 import { fetchAdmin } from '@/lib/adminFetch';
+import { destinoInicialOperacional, podeAbrirAdmin } from '@/lib/operationalAccess';
+import { AdminAccessContext } from './adminAccessContext';
+import type { OperationalRole } from '@/lib/operationalAuth';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -71,6 +74,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname() || '/admin';
   const router = useRouter();
   const [access, setAccess] = useState<'checking' | 'allowed' | 'denied'>('checking');
+  const [papel, setPapel] = useState<OperationalRole | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -82,10 +86,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return;
       }
 
-      const response = await fetchAdmin('/api/admin/dashboard', { cache: 'no-store' }).catch(() => null);
+      const response = await fetchAdmin('/api/operacional/perfil', { cache: 'no-store' }).catch(() => null);
+      const payload = await response?.json().catch(() => null);
       if (!active) return;
-      if (response?.status === 401 || response?.status === 403) setAccess('denied');
-      else setAccess('allowed');
+      const papel = payload?.perfil?.papel;
+      if (papel && !podeAbrirAdmin(papel)) {
+        router.replace(destinoInicialOperacional(papel));
+        return;
+      }
+      if (response?.status === 401 || response?.status === 403 || !papel) setAccess('denied');
+      else { setPapel(papel); setAccess('allowed'); }
     }
     checkAccess();
     return () => { active = false; };
@@ -112,7 +122,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="admin-shell">
+    <AdminAccessContext.Provider value={papel || 'superadmin'}><div className="admin-shell">
       <header className="admin-mobile-bar">
         <Link href="/admin" className="admin-mobile-brand"><Image src="/logo.png" width={36} height={36} alt="" /><span>Painel do Rei</span></Link>
         <button type="button" onClick={() => setMenuOpen((value) => !value)} aria-expanded={menuOpen} aria-controls="admin-navigation">{menuOpen ? 'Fechar' : 'Menu'}</button>
@@ -137,9 +147,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {menuOpen && <button className="admin-menu-backdrop" onClick={() => setMenuOpen(false)} aria-label="Fechar menu" />}
 
       <main className="admin-main">
-        <header className="admin-page-header"><div><span>Administração</span><h1>{currentPage.title}</h1><p>{currentPage.description}</p></div><Link href="/" target="_blank">Ver site ↗</Link></header>
+        <header className="admin-page-header"><div><span>{papel === 'gestor' ? 'Gestão · somente consulta' : 'Administração'}</span><h1>{currentPage.title}</h1><p>{papel === 'gestor' ? 'Você pode consultar os dados. Alterações são exclusivas do superadmin.' : currentPage.description}</p></div><Link href="/" target="_blank">Ver site ↗</Link></header>
         <div className="admin-content">{children}</div>
       </main>
-    </div>
+    </div></AdminAccessContext.Provider>
   );
 }

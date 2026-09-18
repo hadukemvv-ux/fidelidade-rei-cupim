@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { fetchAdmin } from '@/lib/adminFetch';
+import { useAdminCanChange } from '../adminAccessContext';
 
 type Filter = 'todos' | 'cadastro_seguro' | 'com_compras' | 'aniversario' | 'piloto' | 'teste';
 type Cliente = {
@@ -28,6 +29,7 @@ type Payload = { pagina: number; porPagina: number; total: number; totalPaginas:
 const emptyPayload: Payload = { pagina: 1, porPagina: 20, total: 0, totalPaginas: 0, clientes: [], resumo: { total: 0, cadastrosSeguros: 0, comCompras: 0, aniversario: 0, registrosTeste: 0, piloto: 0 } };
 
 export default function ClientesPage() {
+  const canChange = useAdminCanChange();
   const [data, setData] = useState<Payload>(emptyPayload);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -153,7 +155,7 @@ export default function ClientesPage() {
                 <span><b>Aniversário</b>{customer.aceita_whatsapp_aniversario ? 'WhatsApp autorizado' : 'Sem autorização'}{customer.data_nascimento ? ` · ${birthday(customer.data_nascimento)}` : ''}</span>
               </div>
 
-              <button
+              {canChange && <button
                 type="button"
                 className={customer.no_piloto ? 'remove' : ''}
                 disabled={updatingId === customer.id || (!customer.no_piloto && data.resumo.piloto >= 10) || customer.registro_teste}
@@ -161,7 +163,7 @@ export default function ClientesPage() {
                 title={customer.registro_teste ? 'Registros fictícios não podem participar do piloto.' : undefined}
               >
                 {updatingId === customer.id ? 'Atualizando…' : customer.no_piloto ? 'Remover do piloto' : 'Adicionar ao piloto'}
-              </button>
+              </button>}
             </article>
           ))}
         </section>

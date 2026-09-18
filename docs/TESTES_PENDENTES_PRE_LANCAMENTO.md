@@ -55,9 +55,9 @@ Objetivo: confirmar que cada pessoa opera com uma conta individual e somente den
 
 - [ ] Com um `superadmin`, convidar uma conta de teste em `/admin/operadores` e confirmar que o e-mail chega com link para `/acesso/definir-senha`, nunca para `localhost` ou apenas para a raiz.
 - [ ] Aceitar o convite, definir senha e confirmar que o acesso ao painel usa a conta recém-criada.
-- [ ] Criar um operador `caixa`: ele deve conseguir usar o fluxo autorizado de caixa, mas não gerir operadores, prêmios, importação ou segurança.
-- [ ] Criar um operador `gestor`: confirmar acesso somente ao que foi previsto para gestão, sem conceder administração total.
-- [ ] Criar um operador `garcom`: confirmar que ele acessa `/garcom/comanda`, envia JPEG/PNG/WebP de até 5 MB e emite QR somente após duas fotos legíveis e dupla conferência do total; ele não pode consultar a fila, abrir fotos privadas, revisar comandas ou validar cupom.
+- [ ] Criar um operador `caixa`: após login, deve cair em `/caixa`; pode consultar/validar cupom, mas não gerir operadores, prêmios, importação, segurança ou comanda.
+- [ ] Criar um operador `gestor`: após login, deve cair em `/admin` identificado como somente consulta; pode ver dados e fotos privadas, mas não pode criar QR, revisar comanda, validar cupom, editar prêmio, equipe ou contenção.
+- [ ] Criar um operador `garcom`: após login, deve cair em `/garcom/comanda`, enviar JPEG/PNG/WebP de até 5 MB e emitir QR somente após duas fotos legíveis e dupla conferência do total; ele não pode abrir `/admin`, consultar a fila, abrir fotos privadas, revisar comandas ou validar cupom.
 - [ ] Suspender uma conta de teste e confirmar que ela perde acesso imediatamente; reativar somente se o teste exigir.
 - [ ] Tentar excluir a própria conta superadmin e confirmar que o sistema recusa.
 - [ ] Conferir em `/admin/auditoria` quem convidou, alterou papel, suspendeu, reativou ou excluiu a conta de teste.
@@ -111,7 +111,7 @@ venda paga confirmada -> sessão QR curta -> telefone + aviso/consentimento
 
 No piloto técnico já autorizado:
 
-- [ ] Criar uma sessão QR de teste como `garcom`, `gestor` ou `superadmin` pelo fluxo de comanda; caixa não deve conseguir emitir QR.
+- [ ] Criar uma sessão QR de teste como `garcom` (ou `superadmin` em contingência) pelo fluxo de comanda; caixa e gestor não devem conseguir emitir QR.
 - [ ] Confirmar que QR contém token opaco, expira e não expõe valor, nível, telefone ou dados da venda.
 - [ ] Abrir o QR com o telefone de teste, conferir aviso de privacidade e deixar marketing desmarcado.
 - [ ] Girar uma única vez; recarregar/tentar repetir e confirmar que não há segundo prêmio ou segundo cupom.
@@ -140,7 +140,7 @@ Depois da resposta:
 - [ ] No Supabase, incluir `https://www.clubecupim.com.br/acesso/definir-senha` em **Authentication → URL Configuration → Redirect URLs** e confirmar que a Site URL é `https://www.clubecupim.com.br`.
 - [ ] Criar convite de teste em `/admin/operadores`; abrir o e-mail e confirmar que a pessoa chega a `/acesso/definir-senha`, cria senha e entra em `/login`.
 - [ ] Reenviar o acesso pelo painel e confirmar que gera nova auditoria, sem expor ou alterar a senha anterior.
-- [ ] Confirmar que perfil `caixa` recebe recusa ao tentar enviar ou liberar comanda; garçom, gestor e superadmin devem conseguir operar o piloto.
+- [ ] Confirmar que perfil `caixa` e `gestor` recebem recusa ao tentar enviar ou liberar comanda; apenas garçom e superadmin devem conseguir operar o piloto.
 
 ## 7.1 Piloto: duas fotos, leitura local e QR de teste
 
@@ -159,7 +159,7 @@ fluxo e, portanto, não cria QR, prêmio, cupom ou benefício.
 - [ ] Digitar somente o valor total como dupla conferência. Confirmar que valor diferente do OCR bloqueia o QR e que valor igual permite seguir.
 - [ ] Confirmar que o texto integral extraído pelo OCR não é enviado para o banco nem aparece na auditoria; somente as duas imagens privadas e os campos necessários para a reconciliação entram no fluxo.
 - [ ] Confirmar que o mesmo ID do pedido não pode emitir dois QR, mesmo com duas fotos novas ou outro operador.
-- [ ] Como `gestor` ou `superadmin`, abrir `/admin/comandas`, ver as duas fotos privadas e a trilha de envio/confirmação. Registrar “Em análise” e conferir data, responsável e motivo na auditoria.
+- [ ] Como `gestor`, abrir `/admin/comandas`, ver as duas fotos privadas e a trilha de envio/confirmação, sem botões de alteração. Como `superadmin`, registrar “Em análise” e conferir data, responsável e motivo na auditoria.
 - [ ] Como `caixa`, tentar abrir a fila, a foto e a rota de revisão; todas devem recusar o acesso.
 - [ ] Como `garcom`, tentar acessar a fila e a URL de imagem; ambas devem recusar o acesso.
 - [ ] Tentar upload acima de 5 MB, de arquivo não-imagem e de conteúdo incompatível com a extensão/tipo; todos devem ser recusados.

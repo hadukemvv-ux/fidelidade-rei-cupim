@@ -19,10 +19,9 @@ const hashToken = (token: string) => crypto.createHash("sha256").update(token).d
 export async function POST(request: Request) {
   const blocked = await bloquearSeContencaoAtiva();
   if (blocked) return blocked;
-  // Enquanto não existe confirmação automática da Saipos, gerar QR manual é
-  // uma exceção de piloto aprovada por gestor. Caixa continua somente validando
-  // cupons; isso reduz o risco de premiação por valor ou nível inventados.
-  const actor = await requireOperationalActor(request, "gestor");
+  // QR manual legado é exceção exclusiva do superadmin. O fluxo normal usa
+  // comanda fotografada pelo garçom e a gestão fica somente em consulta.
+  const actor = await requireOperationalActor(request, "superadmin");
   if (actor instanceof NextResponse) return actor;
 
   const parsed = RequestSchema.safeParse(await request.json().catch(() => null));

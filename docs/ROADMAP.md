@@ -31,7 +31,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 - [x] Página cliente V2 e giro atômico no Supabase: telefone, consentimento opcional, prêmio por nível, cupom seguro e uso único do QR. V2 aberta somente no modo de teste não comercial.
 - [x] Piloto técnico ativado no Supabase: QR de 10 minutos, somente o prêmio interno `piloto_interno_sem_valor_v2` (custo R$ 0,00) e baixa de cupom bloqueada pelo banco enquanto `v2_modo_teste=true`.
 - [x] Execução do giro concedida somente ao `service_role` no Supabase; navegador e usuários comuns seguem sem acesso à função.
-- [x] No piloto por comanda, garçom, gestor ou superadmin podem gerar QR após as duas fotos, OCR completo e dupla conferência do total; caixa não pode fazê-lo. O sistema calcula a faixa pelo valor (Brasa: até R$ 99,99; Chama: R$ 100–249,99; Nobre: R$ 250–399,99; Rei: R$ 400–499,99; Lenda: R$ 500+).
+- [x] Matriz de permissões aplicada em 18/09: garçom emite QR pelo fluxo de duas fotos; caixa só valida cupom; gestor visualiza o painel sem alterar; superadmin é o único papel administrativo com escrita. O sistema calcula a faixa pelo valor (Brasa: até R$ 99,99; Chama: R$ 100–249,99; Nobre: R$ 250–399,99; Rei: R$ 400–499,99; Lenda: R$ 500+). Ver `docs/PERMISSOES_OPERACIONAIS.md`.
 - [x] Next.js atualizado para `16.3.4`; última checagem de tipos aprovada e `32/32` testes unitários aprovados.
 - [x] Sorteio legado integralmente pausado: cron, telas e rotas públicas/administrativas respondem sem expor histórico ou dados pessoais; novos tickets estão congelados no banco.
 - [x] Central de incidente para superadmin, modo de contenção auditado e bloqueio das rotas públicas críticas implementados e aplicados no Supabase.
@@ -89,7 +89,7 @@ Decisão após a resposta:
 ## Próximas prioridades independentes da Saipos
 
 1. [x] Restringir importação de planilha a superadmin, com limite de 2 MB e 2.000 linhas por envio. Planejar a substituição de `xlsx` (alertas altos conhecidos) continua pendente.
-2. [Em andamento] Completar a matriz única de permissões: endpoints que antes aceitavam token/allowlist agora exigem papel operacional; falta validar os papéis em produção e cobrir auditoria obrigatória para todos os escritores administrativos.
+2. [Em andamento] Validar em produção a matriz única de permissões aplicada em 18/09 e cobrir auditoria obrigatória para todos os escritores administrativos.
 3. Consolidar cupom novo e remover o caminho legado quando o teste de caixa for concluído.
 4. [Em andamento] Preferência de marketing/opt-out do cliente implementada: o portal permite revogar WhatsApp promocional ou aniversário, com evidência e auditoria. Falta testar ponta a ponta, definir canal formal de direitos e fechar o plano de retenção. O aviso público, a central de incidente, o modo de contenção e o bloqueio de rotas críticas já foram preparados; o checkpoint está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`.
 5. [Em andamento] Criar backup/restauração testável do Supabase e alertas de cron.

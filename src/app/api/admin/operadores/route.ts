@@ -30,7 +30,7 @@ function urlDefinirSenha(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const actor = await requireOperationalActor(request, "superadmin");
+  const actor = await requireOperationalActor(request, "gestor");
   if (actor instanceof Response) return actor;
 
   const [{ data: profiles, error: profileError }, { data: authData, error: authError }] = await Promise.all([
@@ -45,7 +45,9 @@ export async function GET(request: Request) {
     .filter(([id]) => !(profiles || []).some((profile) => profile.user_id === id))
     .map(([user_id, user]) => ({ user_id, email: user.email, conta_criada_em: user.criado_em }));
 
-  return NextResponse.json({ operadores, semPerfil });
+  // Gestão pode consultar a equipe, mas não deve enumerar contas do Auth que
+  // ainda não tenham função. Essa parte é exclusiva do superadmin.
+  return NextResponse.json({ operadores, semPerfil: actor.papel === 'superadmin' ? semPerfil : [] });
 }
 
 export async function PUT(request: Request) {

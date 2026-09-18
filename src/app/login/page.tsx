@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { destinoInicialOperacional } from '@/lib/operationalAccess';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
@@ -19,13 +20,21 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     setError('');
-    const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (authError) {
       setError('E-mail ou senha incorretos. Confira os dados e tente novamente.');
       setLoading(false);
       return;
     }
-    router.push('/admin');
+    const response = await fetch('/api/operacional/perfil', { headers: { Authorization: `Bearer ${authData.session?.access_token || ''}` } });
+    const profile = await response.json().catch(() => null);
+    if (!response.ok || !profile?.perfil?.papel) {
+      await supabase.auth.signOut();
+      setError(profile?.error || 'Sua conta foi criada, mas ainda não recebeu uma função operacional. Peça ao superadmin para liberá-la.');
+      setLoading(false);
+      return;
+    }
+    router.push(destinoInicialOperacional(profile.perfil.papel));
     router.refresh();
   }
 

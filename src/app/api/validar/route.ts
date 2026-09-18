@@ -15,7 +15,7 @@ type LegacyRedeemResult = {
 export async function POST(request: NextRequest) {
   const requestId = getRequestId(request);
 
-  const actor = await requireOperationalActor(request, 'caixa');
+  const actor = await requireOperationalActor(request, 'caixa', ['caixa', 'superadmin']);
   if (actor instanceof Response) return actor;
 
   try {

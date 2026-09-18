@@ -22,7 +22,7 @@ const ActionSchema = z.discriminatedUnion("acao", [
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const actor = await requireOperationalActor(request, "superadmin");
+  const actor = await requireOperationalActor(request, "gestor");
   if (actor instanceof Response) return actor;
 
   const [{ data: configuracao, error: configError }, { data: incidentes, error: incidentError }] = await Promise.all([

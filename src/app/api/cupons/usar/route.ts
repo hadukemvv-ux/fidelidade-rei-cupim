@@ -14,7 +14,7 @@ const getIpHash = (request: Request) => crypto.createHash("sha256")
 export async function POST(request: Request) {
   const blocked = await bloquearSeContencaoAtiva();
   if (blocked) return blocked;
-  const actor = await requireOperationalActor(request, "caixa");
+  const actor = await requireOperationalActor(request, "caixa", ["caixa", "superadmin"]);
   if (actor instanceof NextResponse) return actor;
 
   const { codigo } = await request.json().catch(() => ({}));

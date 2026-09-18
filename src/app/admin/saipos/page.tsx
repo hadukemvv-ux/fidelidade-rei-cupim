@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchAdmin } from '@/lib/adminFetch';
 
 type Diagnostic = {
@@ -25,6 +25,15 @@ type Diagnostic = {
   status_fornecedor?: number;
 };
 
+type SavedReference = {
+  id_pedido_impresso: string | null;
+  mesa_referencia: string | null;
+  data_operacional: string | null;
+  valor_esperado: number | null;
+  situacao: string | null;
+  registrada_em: string;
+};
+
 function todaySaoPaulo() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 }
@@ -36,6 +45,14 @@ export default function SaiposPage() {
   const [dateField, setDateField] = useState<'shift_date' | 'created_at' | 'updated_at'>('shift_date');
   const [data, setData] = useState<Diagnostic | null>(null);
   const [loading, setLoading] = useState(false);
+  const [savedReference, setSavedReference] = useState<SavedReference | null>(null);
+
+  useEffect(() => {
+    fetchAdmin('/api/admin/saipos/referencia-teste', { cache: 'no-store' })
+      .then((response) => response.ok ? response.json() : null)
+      .then((payload) => setSavedReference(payload?.referencia || null))
+      .catch(() => setSavedReference(null));
+  }, []);
 
   async function diagnose() {
     setLoading(true); setData(null);
@@ -53,6 +70,7 @@ export default function SaiposPage() {
 
   return <div className="space-y-8">
     <section className="admin-notice"><strong>Teste seguro da conexão Saipos</strong><span>Esta tela apenas consulta vendas do dia escolhido. Ela nunca cria cliente, distribui pontos, gera QR Code ou muda qualquer dado do Clube.</span></section>
+    {savedReference && <section className="admin-notice"><strong>Referência guardada para a conferência</strong><span>Pedido {savedReference.id_pedido_impresso || '—'} · mesa {savedReference.mesa_referencia || '—'} · {savedReference.data_operacional || '—'} · {savedReference.valor_esperado === null ? 'valor não informado' : savedReference.valor_esperado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}. Situação: aguardando consulta técnica. Esta referência não contém foto ou dados de cliente.</span></section>}
     <section className="admin-operator-invite">
       <div className="admin-section-title"><div><span>Prova de conceito</span><h2>Consultar um dia</h2></div></div>
       <label><span>Data da venda de teste</span><input type="date" value={day} onChange={(event) => setDay(event.target.value)} /></label>

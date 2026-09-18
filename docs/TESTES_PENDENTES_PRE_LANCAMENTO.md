@@ -142,6 +142,11 @@ As migrações `202609170001_fluxo_comandas_operacional.sql` e `202609170002` a
 somente em modo de teste e com fotos sem documento, cartão, CPF ou dados de
 cliente além do estritamente necessário na comanda.
 
+Referência registrada em 17/09/2026 no painel **Saipos — teste de conexão**:
+pedido impresso `872482756`, mesa `99`, valor esperado R$ 274,45. Ela é somente
+uma âncora para consulta técnica; não substitui uma comanda emitida pelo novo
+fluxo e, portanto, não cria QR, prêmio, cupom ou benefício.
+
 - [ ] Como `garcom`, abrir `/garcom/comanda`, informar mesa/comanda e selecionar **duas** fotos permitidas: cabeçalho (mesa, abertura e ID) e total (valor e pagamento). Confirmar que o sistema recusa uma única foto.
 - [ ] Acionar “Ler dados das fotos”. Conferir que mesa, data, hora de abertura, ID do pedido e total aparecem apenas como sugestões e corrigir manualmente ao menos um campo no teste.
 - [ ] Confirmar que o texto integral extraído pelo OCR não é enviado para o banco nem aparece na auditoria; somente as duas imagens privadas e os campos confirmados pelo operador entram no fluxo.

@@ -201,4 +201,4 @@ Use uma linha por sessão de teste; não inclua PIN, telefone inteiro, token ou 
 
 | Data/hora | Teste/seção | Executor | Resultado | Evidência/ID | Pendência ou correção |
 | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |
+| 18/09/2026 08:50 BRT | 7.1 / conferência Saipos posterior | Superadmin | Compatível, somente leitura | Pedido 872482756; valor R$ 274,45; pagamento retornado; não cancelada | Não mede latência imediata; o cron diário só reconcilia comandas que passarem pelo novo fluxo QR. |

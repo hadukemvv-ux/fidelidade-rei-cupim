@@ -171,3 +171,16 @@ cliente, ponto, QR, cupom ou registro de venda no Clube. O próximo passo é
 repetir a mesma consulta pelo ID em intervalos documentados, até a venda
 aparecer, e então comparar `id_sale`, total, cancelamento, pagamento e horário
 de atualização.
+
+### Conferência posterior bem-sucedida — Mesa 99, 18/09/2026
+
+Às 08:50 BRT, a referência preservada do pedido de teste foi consultada de modo
+somente-leitura pelo filtro `updated_at`. A Saipos retornou exatamente uma venda
+com o mesmo `id_sale`, valor total de R$ 274,45, pagamento “Pagamento não
+cadastrado” no mesmo total e indicador de cancelamento negativo. A atualização
+retornada foi às 16:45 do dia anterior.
+
+O resultado confirma a compatibilidade do identificador impresso com a venda
+posteriormente disponibilizada pela Saipos. Ele não altera a conclusão sobre
+latência imediata: a consulta só foi feita na manhã seguinte. Nenhum cliente,
+ponto, QR, cupom ou prêmio foi criado ou alterado nesta conferência.

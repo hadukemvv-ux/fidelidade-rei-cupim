@@ -1,6 +1,6 @@
 # Permissões operacionais
 
-Atualizado em 18/09/2026. Esta matriz define as permissões vigentes do Clube.
+Atualizado em 21/09/2026. Esta matriz define as permissões vigentes do Clube.
 O servidor confere o papel ativo em cada rota sensível; botões ocultos são apenas
 uma ajuda visual, nunca a proteção principal.
 
@@ -20,6 +20,10 @@ uma ajuda visual, nunca a proteção principal.
 Se uma conta estiver ativa, mas sem perfil operacional, o login é encerrado e a
 tela informa que o superadmin precisa atribuir uma função. Isso evita uma conta
 autenticada sem permissões claras.
+
+O encaminhamento acima é aplicado pelo servidor e pelo login desde o checkpoint
+`f436a6d`, publicado e confirmado como `Ready`. Em um novo computador, testar
+primeiro o login de uma conta por papel antes de iniciar qualquer piloto.
 
 ## Regras para o piloto da roleta
 

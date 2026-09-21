@@ -6,10 +6,10 @@ Sistema de fidelidade para restaurante com:
 - Area admin protegida por sessao
 - Crons de sincronizacao e expiracao
 
-## Estado atual (18/09/2026)
+## Estado atual (21/09/2026)
 
 - Código recuperado e versionado no GitHub; cada push em `main` dispara deploy automático na Vercel.
-- Última base publicada no Git: Roleta V2 com giro atômico, convite que direciona para criação de senha e permissão explícita somente para o servidor. A produção está no commit `2338ca6`, confirmado como `Ready` na Vercel em 18/09/2026.
+- Última base funcional publicada: `f436a6d` — corrige o encaminhamento após login conforme o papel operacional. Garçom entra em `/garcom/comanda`, caixa em `/caixa`, gestor em `/admin` somente leitura e superadmin em `/admin` com escrita. A produção foi confirmada como `Ready` na Vercel em 18/09/2026.
 - TypeScript e testes unitários: `40/40` aprovados na última verificação. O lint global ainda possui pendências no legado pausado; não é critério de abertura enquanto não for corrigido e reexecutado.
 - Endurecimento crítico em 16/09: a migração `202609160001_hardening_critico_legado.sql` foi aplicada e verificada no Supabase; ela bloqueia RPC/tabelas/bucket legados ao navegador e transforma a baixa de cupom antigo em operação atômica auditável.
 - Roleta: a V1 foi bloqueada. A V2 já possui sessão QR segura, tela pública por QR, giro único atômico no banco, prêmio ponderado por nível, cupom e consentimento opcional. A partir de 18/09 ela está **aberta somente para o piloto técnico**: `v2_publicada=true`, `v2_modo_teste=true`, QR de 10 minutos e apenas o prêmio interno de custo R$ 0,00. Nenhum prêmio comercial está ativo e nenhum cupom de teste pode ser baixado na caixa.
@@ -19,7 +19,7 @@ Sistema de fidelidade para restaurante com:
 - O controle antigo de garçons e alertas foi pausado: não existem mais senhas previsíveis, ranking operacional ou telas de rotina expondo telefone/IP. A equipe é administrada em `/admin/operadores`; o fluxo futuro usa QR V2 e auditoria.
 - O deploy da alteração funcional `f59fd85` foi confirmado como `Ready` na Vercel em 16/09/2026; ele pausou o fluxo legado de garçons e publicou o roteiro mestre de testes. O commit `fd476c1` contém o modo de contenção e a pausa segura do sorteio.
 
-### Checkpoint operacional — 18/09/2026
+### Checkpoint operacional — 21/09/2026
 
 - Pedido de referência confirmado posteriormente: `872482756` (Mesa 99), R$ 274,45, não cancelado e pagamento retornado pela Saipos. Isso valida o **ID do Pedido impresso** como a chave de conferência posterior.
 - Duas mesas 199 fechadas após remover os itens não retornaram venda pela busca dos respectivos IDs na manhã seguinte. Isso não é uma confirmação de cancelamento: indica que fechar uma mesa sem venda pode não gerar registro consultável.
@@ -29,6 +29,8 @@ Sistema de fidelidade para restaurante com:
 - O painel `/admin/operacao-roleta` consolida QR emitido, conciliações, divergências, níveis e um sinal de atenção por operador. É suporte à gestão, sem punição ou bloqueio automáticos.
 - Convites da equipe levam a `/acesso/definir-senha`, onde cada pessoa cria sua senha. No Supabase, a URL precisa constar em **Authentication → URL Configuration → Redirect URLs**: `https://www.clubecupim.com.br/acesso/definir-senha`.
 - A URL de redirecionamento já foi incluída e verificada no Supabase em 18/09. Convites antigos podem ter apontado à raiz; para testar, usar **Reenviar acesso** em `/admin/operadores` e abrir apenas o e-mail novo.
+- O lembrete do piloto foi cancelado a pedido do responsável. Nenhum novo giro, ponto, cupom comercial ou teste de equipe foi executado após o checkpoint de 18/09; o próximo piloto permanece pendente e deve seguir o caderno de testes.
+- O arquivo local `supabase/migrations/202609120001_comandas_roleta_v2.sql` é um rascunho não versionado e não faz parte da base publicada. Ele foi preservado e não deve ser aplicado, apagado ou incluído em commit sem revisão exclusiva.
 
 ## Inicio rapido
 
@@ -48,15 +50,18 @@ npm run dev:clean
 ## Validacao tecnica
 
 ```bash
-npm run build
 npx tsc --noEmit
-node tests/saipos-integration.js
+npm run test:unit
 ```
+
+O build local exige as variáveis de ambiente configuradas. O lint global ainda tem
+pendências no legado pausado e não substitui os testes acima.
 
 ## Comece por aqui
 
 Antes de retomar o projeto em outro computador ou iniciar uma nova frente, leia:
 - `docs/COMECE_AQUI.md`
+- `docs/RETOMADA_EM_NOVO_COMPUTADOR.md`
 
 ## Documentacao oficial do projeto
 
@@ -87,6 +92,9 @@ Roadmap vivo, com estado de cada frente:
 Pergunta pronta e contrato técnico necessário com a Saipos:
 - `docs/SAIPOS_VALIDACAO_COMANDA.md`
 
+Controle de acesso operacional:
+- `docs/PERMISSOES_OPERACIONAIS.md`
+
 Plano para substituir e remover as partes antigas, sem compatibilidade desnecessária:
 - `docs/LIMPEZA_DO_LEGADO.md`
 
@@ -114,7 +122,7 @@ Documentação histórica (somente referência; não usar como instrução de op
 
 ## Seguranca basica
 
-- Admin API usa `Authorization: Bearer <JWT da sessao Supabase>` e confere o papel ativo em `perfis_operacionais` (`caixa`, `gestor` ou `superadmin`)
+- Admin API usa `Authorization: Bearer <JWT da sessao Supabase>` e confere o papel ativo em `perfis_operacionais` (`garcom`, `caixa`, `gestor` ou `superadmin`)
 - Não use allowlist de e-mail nem token administrativo compartilhado; cadastre, suspenda e audite a equipe em `/admin/operadores`
 - Para a suite local, prefira `ADMIN_TEST_EMAIL` e `ADMIN_TEST_PASSWORD` de um usuário de teste com papel operacional válido
 - Cron API usa `Authorization: Bearer <CRON_SECRET>`

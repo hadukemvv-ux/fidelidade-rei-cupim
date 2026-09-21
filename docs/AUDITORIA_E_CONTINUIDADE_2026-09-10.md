@@ -1,6 +1,9 @@
 # Auditoria e continuidade — Clube Cupim
 
-Atualizado em 16/09/2026. Este é o ponto de retomada oficial do projeto.
+Atualizado em 16/09/2026. **Documento histórico:** retrata o checkpoint de
+16/09 e não é mais o ponto de retomada oficial. Para o estado vigente, usar
+`docs/COMECE_AQUI.md`, `docs/ROADMAP.md` e
+`docs/RETOMADA_EM_NOVO_COMPUTADOR.md`.
 
 ## Checkpoint de continuidade — 16/09/2026
 

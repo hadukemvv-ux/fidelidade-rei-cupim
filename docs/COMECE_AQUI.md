@@ -1,15 +1,17 @@
 # Comece aqui — ponto único de retomada
 
-Atualizado em 18/09/2026. Leia este arquivo antes de alterar, testar ou publicar
+Atualizado em 21/09/2026. Leia este arquivo antes de alterar, testar ou publicar
 qualquer parte do Clube. Ele é o índice vigente quando houver troca de computador
 ou de pessoa responsável pelo projeto.
 
 ## Estado confirmado
 
 - Repositório: `hadukemvv-ux/fidelidade-rei-cupim`, branch `main`.
-- Último checkpoint publicado: `2338ca6` — corrige o convite de operador para
-  abrir a definição de senha. O cron de reconciliação foi publicado em
-  `44e513f`; o fluxo de consulta usa `SAIPOS_DATA_API_TOKEN` em Production.
+- Último checkpoint funcional publicado: `f436a6d` — encaminha cada pessoa após
+  o login para a operação correta: garçom `/garcom/comanda`, caixa `/caixa` e
+  gestor/superadmin `/admin`. O deploy foi confirmado como `Ready` na Vercel.
+  O cron de reconciliação foi publicado em `44e513f`; o fluxo de consulta usa
+  `SAIPOS_DATA_API_TOKEN` em Production.
 - Produção: `clubecupim.com.br` / projeto Vercel `fidelidade-rei-cupim`.
 - Banco correto: Supabase `asjoubgoccbvftyggunz`. Não usar o projeto Energia.
 - A Roleta V2 está aberta exclusivamente para o piloto técnico
@@ -33,10 +35,12 @@ ou de pessoa responsável pelo projeto.
 | Regras de pontos, cashback e Roleta V2 | `docs/REGRAS-FIDELIDADE.md` |
 | Saipos: contrato pendente e prova de conceito segura do token | `docs/SAIPOS_VALIDACAO_COMANDA.md` |
 | Estratégia para retirar legado | `docs/LIMPEZA_DO_LEGADO.md` |
+| Retomada em computador novo | `docs/RETOMADA_EM_NOVO_COMPUTADOR.md` |
+| Matriz de papéis e rotas | `docs/PERMISSOES_OPERACIONAIS.md` |
 
 ## Próxima sequência segura
 
-1. Executar o teste controlado no fluxo real: entrar como garçom em
+1. Quando o responsável autorizar, executar o teste controlado no fluxo real: entrar como garçom em
    `/garcom/comanda`, enviar duas fotos, confirmar somente o valor e gerar QR
    de teste. Repetir para uma venda concluída, uma cancelada e uma mesa fechada
    sem venda. Guardar o **ID do Pedido impresso**, valor e horário aproximado;
@@ -67,10 +71,11 @@ ou de pessoa responsável pelo projeto.
   limpeza.
 - Não versionar `.env.local`, token da Saipos, senha, PIN, QR, telefone ou dados
   de clientes.
-- Há rascunhos locais não versionados em `src/app/api/roleta-v2/comandas/` e
-  `supabase/migrations/202609120001_comandas_roleta_v2.sql`. Eles não foram
-  revisados, aplicados ou publicados; manter fora de commits até uma tarefa
-  dedicada de Saipos/comanda.
+- Há um rascunho local não versionado em
+  `supabase/migrations/202609120001_comandas_roleta_v2.sql`. Ele não foi
+  revisado, aplicado ou publicado; manter fora de commits até uma tarefa
+  dedicada de Saipos/comanda. Em um clone novo ele não existirá, pois não foi
+  enviado ao GitHub.
 
 ## Documentos históricos
 

@@ -1,6 +1,6 @@
 # Roteiro mestre de testes pendentes — pré-lançamento
 
-Atualizado em 18/09/2026. Este é o caderno único para executar testes aos poucos, sem depender da memória e sem usar clientes reais. Ele complementa os guias específicos; quando um teste for concluído, registre data, executor, ambiente, resultado e evidência na seção final.
+Atualizado em 21/09/2026. Este é o caderno único para executar testes aos poucos, sem depender da memória e sem usar clientes reais. Ele complementa os guias específicos; quando um teste for concluído, registre data, executor, ambiente, resultado e evidência na seção final.
 
 > Regra: o piloto técnico da Roleta V2 jamais libera benefício comercial nem permite baixa de cupom. Use uma conta e um telefone de teste, e nunca compartilhe PIN, token, QR ou segredo em conversa, planilha ou captura de tela.
 
@@ -214,3 +214,4 @@ Use uma linha por sessão de teste; não inclua PIN, telefone inteiro, token ou 
 | 18/09/2026 manhã BRT | 7.1 / mesas encerradas e canceladas | Superadmin | Inconclusivo, somente leitura | Dois pedidos da Mesa 199 encerrados sem itens e buscas pelos números físicos 50/200 retornaram zero venda | Capturar o ID impresso de uma comanda realmente cancelada. Número físico da mesa não é chave suficiente. Repetir experimento de três mesas às 15:00 BRT. |
 | 18/09/2026 manhã BRT | 6 e 7.1 / preparação do piloto | Superadmin | Ativo somente para teste | V2 publicada em modo de teste; QR de 10 min; prêmio interno R$ 0,00; sem baixa comercial | Executar o primeiro giro pelo fluxo de comanda e conferir a reconciliação do dia seguinte. |
 | 18/09/2026 manhã BRT | 2 e 7.2 / acesso por convite | Superadmin | Correção aplicada | Redirect URL `https://www.clubecupim.com.br/acesso/definir-senha` incluída no Supabase; deploy `2338ca6` Ready | Usar **Reenviar acesso** e validar o novo link; o e-mail antigo não é evidência válida. |
+| 21/09/2026 | organização do piloto | Superadmin | Pausado por decisão do responsável | Lembrete de teste cancelado; nenhum teste novo foi executado | Retomar apenas com autorização, começando pelo login de cada papel e depois pelo piloto de três cenários. |

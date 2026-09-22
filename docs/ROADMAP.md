@@ -1,6 +1,6 @@
 # Roadmap do Projeto Fidelidade
 
-Atualizado em 21/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
+Atualizado em 22/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
 
 ## Objetivo
 
@@ -88,11 +88,11 @@ Decisão após a resposta:
 
 ## Próximas prioridades independentes da Saipos
 
-1. [x] Restringir importação de planilha a superadmin, com limite de 2 MB e 2.000 linhas por envio. Planejar a substituição de `xlsx` (alertas altos conhecidos) continua pendente.
+1. [x] Restringir importação de planilha a superadmin, com limite de 2 MB e 2.000 linhas por envio. Em 22/09, `xlsx` foi atualizado para 0.20.3 pelo canal oficial do SheetJS; `npm audit` passou sem vulnerabilidades.
 2. [Em andamento] Validar em produção a matriz única de permissões e o encaminhamento pós-login com uma conta de cada papel; cobrir auditoria obrigatória para todos os escritores administrativos.
 3. Consolidar cupom novo e remover o caminho legado quando o teste de caixa for concluído.
 4. [Em andamento] Preferência de marketing/opt-out do cliente implementada: o portal permite revogar WhatsApp promocional ou aniversário, com evidência e auditoria. Falta testar ponta a ponta, definir canal formal de direitos e fechar o plano de retenção. O aviso público, a central de incidente, o modo de contenção e o bloqueio de rotas críticas já foram preparados; o checkpoint está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`.
-5. [Em andamento] Criar backup/restauração testável do Supabase e alertas de cron.
+5. [Em andamento] Criar backup/restauração testável do Supabase e alertas de cron. O projeto está no plano Free, que não oferece backups agendados; definir armazenamento protegido e testar a restauração isolada antes da abertura.
 6. Escolher WhatsApp Business Platform/Cloud API ou BSP oficial; não automatizar WhatsApp pessoal.
 7. Depois do piloto V2, remover telas, rotas e tabelas legadas que não forem mais referenciadas. O plano está em `docs/LIMPEZA_DO_LEGADO.md`.
 8. Executar o roteiro mestre de testes gradualmente, sem usar clientes reais: `docs/TESTES_PENDENTES_PRE_LANCAMENTO.md`.

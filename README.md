@@ -19,6 +19,12 @@ Sistema de fidelidade para restaurante com:
 - O controle antigo de garçons e alertas foi pausado: não existem mais senhas previsíveis, ranking operacional ou telas de rotina expondo telefone/IP. A equipe é administrada em `/admin/operadores`; o fluxo futuro usa QR V2 e auditoria.
 - O deploy da alteração funcional `f59fd85` foi confirmado como `Ready` na Vercel em 16/09/2026; ele pausou o fluxo legado de garçons e publicou o roteiro mestre de testes. O commit `fd476c1` contém o modo de contenção e a pausa segura do sorteio.
 
+### Atualização técnica — 22/09/2026
+
+- A dependência `xlsx` foi atualizada para a versão 0.20.3 distribuída pelo canal oficial do SheetJS. `npm audit` passou sem vulnerabilidades; a importação continua limitada a `superadmin`, 2 MB e 2.000 linhas.
+- Auditoria somente leitura no Supabase confirmou que `usar_cupom_promocional` e `usar_resgate_legado` só concedem `EXECUTE` a `service_role` e `postgres`, e que o bucket legado `sorteios` permanece privado.
+- O painel do Supabase não possui histórico de migrations pelo CLI e o plano Free não inclui backups agendados. Antes de abrir ao público, registrar a linha de base das migrations e validar uma estratégia de backup e restauração isolada.
+
 ### Checkpoint operacional — 21/09/2026
 
 - Pedido de referência confirmado posteriormente: `872482756` (Mesa 99), R$ 274,45, não cancelado e pagamento retornado pela Saipos. Isso valida o **ID do Pedido impresso** como a chave de conferência posterior.

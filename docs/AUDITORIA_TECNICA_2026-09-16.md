@@ -123,9 +123,10 @@ O roteiro detalhado e espaço para evidências estão em
 5. **Autenticação Supabase:** habilitar manualmente a proteção contra senhas
    vazadas e revisar URLs de redirecionamento, SMTP e MFA. Esta auditoria não
    mudou configurações de conta por interface.
-6. **Dependências:** `npm audit --omit=dev` apontou vulnerabilidades altas em
-   `xlsx` e em `ws` indireto do Supabase. A atualização deve ocorrer numa entrega
-   isolada, com testes de importação e sincronização.
+6. **Dependências:** atualizado em 22/09: `xlsx` passou para 0.20.3 pelo canal
+   oficial do SheetJS e as dependências transitivas seguras foram atualizadas.
+   `npm audit` passou sem vulnerabilidades. A importação continua limitada a
+   `superadmin`, 2 MB e 2.000 linhas.
 7. **Legado:** tabelas e rotas antigas foram isoladas, não apagadas. A exclusão
    ou anonimização depende de mapa de retenção, backup/restauração testado e
    confirmação de ausência de referência, conforme `docs/LIMPEZA_DO_LEGADO.md`.

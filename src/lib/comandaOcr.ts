@@ -14,6 +14,7 @@ export type ValidacaoLeituraComanda = {
 
 const MESES: Record<string, string> = { jan: '01', fev: '02', mar: '03', abr: '04', mai: '05', jun: '06', jul: '07', ago: '08', set: '09', out: '10', nov: '11', dez: '12' };
 const valorLinha = (line: string) => line.match(/\d{1,3}(?:[.]\d{3})*[,\.]\d{2}/)?.[0] || '';
+const linhaDoTotalFinal = (line: string) => /^total(?!\s+(?:de\s+)?itens?\b)\s*\(\s*=?\s*\)/i.test(line.trim());
 
 /** Extrai sugestões do texto OCR; nunca trata a leitura como confirmação. */
 export function extrairDadosDaComanda(texto: string, anoAtual = new Date().getFullYear()): LeituraComanda {
@@ -22,7 +23,10 @@ export function extrairDadosDaComanda(texto: string, anoAtual = new Date().getFu
   const id = normalizado.match(/id\s*(?:do)?\s*pedido\s*[:.]?\s*(\d{4,30})/i)?.[1];
   const carimbo = normalizado.match(/(\d{1,2})\s*\/\s*(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\s*[-–]\s*(\d{1,2}:\d{2})/i);
   const linhas = normalizado.split('\n').map((line) => line.trim()).filter(Boolean);
-  const indiceTotal = linhas.findIndex((line) => /total\s*\(?\s*=?\s*\)?/i.test(line));
+  // A comanda Saipos tem o subtotal "Total itens (=)" e, depois de taxas e
+  // descontos, o valor efetivamente cobrado em "TOTAL (=)". Só este último
+  // pode definir a faixa do QR.
+  const indiceTotal = linhas.findIndex(linhaDoTotalFinal);
   let valor = indiceTotal >= 0 ? valorLinha(linhas[indiceTotal]) : '';
   if (!valor && indiceTotal >= 0) {
     for (const line of linhas.slice(indiceTotal + 1, indiceTotal + 4)) { valor = valorLinha(line); if (valor) break; }

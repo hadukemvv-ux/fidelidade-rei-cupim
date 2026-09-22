@@ -7,11 +7,11 @@ ou de pessoa responsável pelo projeto.
 ## Estado confirmado
 
 - Repositório: `hadukemvv-ux/fidelidade-rei-cupim`, branch `main`.
-- Último checkpoint funcional publicado: `f436a6d` — encaminha cada pessoa após
-  o login para a operação correta: garçom `/garcom/comanda`, caixa `/caixa` e
-  gestor/superadmin `/admin`. O deploy foi confirmado como `Ready` na Vercel.
-  O cron de reconciliação foi publicado em `44e513f`; o fluxo de consulta usa
-  `SAIPOS_DATA_API_TOKEN` em Production.
+- Último checkpoint funcional publicado: `be86bde` — nova interface da roleta
+  V2 e da gestão de prêmios, com prêmio visual alinhado ao resultado do banco.
+  O deploy foi confirmado como `Ready` na Vercel. As rotas pós-login seguem
+  separadas: garçom `/garcom/comanda`, caixa `/caixa` e gestor `/admin`.
+  A reconciliação consulta a Saipos com `SAIPOS_DATA_API_TOKEN` em Production.
 - Produção: `clubecupim.com.br` / projeto Vercel `fidelidade-rei-cupim`.
 - Banco correto: Supabase `asjoubgoccbvftyggunz`. Não usar o projeto Energia.
 - A Roleta V2 está aberta exclusivamente para o piloto técnico

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buscarTodasVendasSaipos, periodoUltimosDiasSaoPaulo, SaiposApiError, type VendaSaipos } from '@/lib/saipos';
 import { compararComandaComVenda } from '@/lib/reconciliacaoComanda';
+import { diasDeConsultaParaPendencias } from '@/lib/reconciliacaoJanela';
 import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
@@ -47,9 +48,10 @@ export async function GET(request: NextRequest) {
   if (!comandas?.length) return NextResponse.json({ ok: true, processadas: 0, compativeis: 0, divergentes: 0, pendentes: 0 });
 
   try {
-    // Três dias cobrem uma publicação tardia na Saipos sem transformar o cron
-    // em importador de clientes ou de histórico inteiro.
-    const { inicio, fim } = periodoUltimosDiasSaoPaulo(3);
+    // A janela cresce até a pendência mais antiga (teto de 90 dias). Assim,
+    // ficar uma semana sem abrir o painel não faz a venda sair da conferência.
+    const diasDeConsulta = diasDeConsultaParaPendencias((comandas as ComandaPendente[]).map((comanda) => comanda.criado_em));
+    const { inicio, fim } = periodoUltimosDiasSaoPaulo(diasDeConsulta);
     const vendas = await buscarTodasVendasSaipos({
       inicio, fim, dateColumnFilter: 'updated_at', pageSize: 200, maxPages: 5,
     });
@@ -92,10 +94,10 @@ export async function GET(request: NextRequest) {
     await supabaseAdmin.from('administracao_eventos').insert({
       entidade: 'comanda', entidade_id: `rotina-${new Date().toISOString().slice(0, 10)}`,
       acao: 'reconciliacao_saipos_rotina_diaria',
-      detalhes: { processadas: comandas.length, compativeis, divergentes, pendentes, origem: 'cron_diario' },
+      detalhes: { processadas: comandas.length, compativeis, divergentes, pendentes, dias_consulta_saipos: diasDeConsulta, origem: 'cron_diario' },
     });
 
-    return NextResponse.json({ ok: true, processadas: comandas.length, compativeis, divergentes, pendentes });
+    return NextResponse.json({ ok: true, processadas: comandas.length, compativeis, divergentes, pendentes, dias_consulta_saipos: diasDeConsulta });
   } catch (error) {
     const mensagem = error instanceof Error ? error.message : 'Erro inesperado.';
     return NextResponse.json({ error: 'A reconciliação não foi concluída.', detalhe: mensagem }, {

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
-import { lerFotosDaComanda, type LeituraComanda, validarLeituraParaPiloto } from '@/lib/comandaOcr';
+import { lerFotosDaComanda, prepararFotoParaEnvio, type LeituraComanda, validarLeituraParaPiloto } from '@/lib/comandaOcr';
 import { OperationalLogout } from '@/components/OperationalLogout';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -43,7 +43,6 @@ export default function EnviarComandaPage() {
   async function lerFotos(event: React.FormEvent) {
     event.preventDefault();
     if (!fotoCabecalho || !fotoTotal) { setNotice('Escolha as duas fotos antes de continuar.'); return; }
-    if (fotoCabecalho.size > 5 * 1024 * 1024 || fotoTotal.size > 5 * 1024 * 1024) { setNotice('Cada foto deve ter no máximo 5 MB.'); return; }
     setReading(true); setNotice('Lendo a comanda…');
     try {
       const resultado = await lerFotosDaComanda(fotoCabecalho, fotoTotal, setNotice);
@@ -95,19 +94,22 @@ export default function EnviarComandaPage() {
       let comanda = enviada;
       if (!comanda) {
         const { data } = await supabase.auth.getSession();
+        setNotice('Preparando cópias privadas das fotos para envio…');
+        const [cabecalhoParaEnvio, totalParaEnvio] = await Promise.all([prepararFotoParaEnvio(fotoCabecalho), prepararFotoParaEnvio(fotoTotal)]);
         const body = new FormData();
         body.set('mesa_referencia', leitura.mesa || '');
-        body.set('foto_cabecalho', fotoCabecalho); body.set('foto_total', fotoTotal);
+        body.set('foto_cabecalho', cabecalhoParaEnvio); body.set('foto_total', totalParaEnvio);
         const response = await fetch('/api/roleta-v2/comandas', { method: 'POST', headers: { Authorization: `Bearer ${data.session?.access_token || ''}` }, body });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Não foi possível guardar as fotos.');
+        const result = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(response.status === 413 ? 'As fotos ficaram grandes demais para envio. Tire fotos mais próximas do cupom e tente novamente.' : result?.error || 'Não foi possível guardar as fotos.');
         comanda = { id: result.comanda.id, mesa_referencia: result.comanda.mesa_referencia };
         setEnviada(comanda);
       }
       await liberarQr(comanda);
       setNotice('QR de teste liberado e auditado. Mostre-o ao cliente; ele expira após um giro ou no horário indicado.');
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : 'Não foi possível liberar o QR.');
+      const message = error instanceof Error ? error.message : '';
+      setNotice(/expected pattern/i.test(message) ? 'Não foi possível preparar as fotos neste aparelho. Tire novas fotos bem iluminadas e tente novamente.' : message || 'Não foi possível liberar o QR.');
     } finally { setSending(false); }
   }
 

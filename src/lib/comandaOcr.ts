@@ -15,6 +15,100 @@ export type ValidacaoLeituraComanda = {
 const MESES: Record<string, string> = { jan: '01', fev: '02', mar: '03', abr: '04', mai: '05', jun: '06', jul: '07', ago: '08', set: '09', out: '10', nov: '11', dez: '12' };
 const valorLinha = (line: string) => line.match(/\d{1,3}(?:[.]\d{3})*[,\.]\d{2}/)?.[0] || '';
 const linhaDoTotalFinal = (line: string) => /^total(?!\s+(?:de\s+)?itens?\b)\s*\(\s*=?\s*\)/i.test(line.trim());
+const MAXIMO_BYTES_POR_FOTO = 1_400_000;
+
+type FonteImagem = {
+  source: CanvasImageSource;
+  width: number;
+  height: number;
+  dispose: () => void;
+};
+
+async function criarBitmap(file: File): Promise<FonteImagem> {
+  if (typeof createImageBitmap === 'function') {
+    const bitmap = await createImageBitmap(file);
+    return { source: bitmap, width: bitmap.width, height: bitmap.height, dispose: () => bitmap.close() };
+  }
+  const url = URL.createObjectURL(file);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const elemento = new Image();
+      elemento.onload = () => resolve(elemento);
+      elemento.onerror = () => reject(new Error('Não foi possível abrir a foto.'));
+      elemento.src = url;
+    });
+    return { source: image, width: image.naturalWidth, height: image.naturalHeight, dispose: () => URL.revokeObjectURL(url) };
+  } catch (error) {
+    URL.revokeObjectURL(url);
+    throw error;
+  }
+}
+
+function criarCanvas(width: number, height: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  return canvas;
+}
+
+function dimensoesLimitadas(width: number, height: number, maximoLado: number) {
+  const escala = Math.min(1, maximoLado / Math.max(width, height));
+  return { width: Math.max(1, Math.round(width * escala)), height: Math.max(1, Math.round(height * escala)) };
+}
+
+async function blobDoCanvas(canvas: HTMLCanvasElement, quality: number) {
+  return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+}
+
+/**
+ * Cria uma cópia temporária com contraste reforçado para o OCR local. Ela não
+ * é enviada ao servidor: a evidência salva continua sendo uma cópia privada
+ * da fotografia em cor.
+ */
+async function prepararImagemParaOcr(file: File): Promise<Blob | File> {
+  try {
+    const bitmap = await criarBitmap(file);
+    const dimensoes = dimensoesLimitadas(bitmap.width, bitmap.height, 2200);
+    const canvas = criarCanvas(dimensoes.width, dimensoes.height);
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) { bitmap.dispose(); return file; }
+    context.drawImage(bitmap.source, 0, 0, dimensoes.width, dimensoes.height);
+    bitmap.dispose();
+    const imagem = context.getImageData(0, 0, dimensoes.width, dimensoes.height);
+    for (let index = 0; index < imagem.data.length; index += 4) {
+      const luminosidade = imagem.data[index] * 0.299 + imagem.data[index + 1] * 0.587 + imagem.data[index + 2] * 0.114;
+      const ajustada = Math.max(0, Math.min(255, (luminosidade - 128) * 1.7 + 128));
+      imagem.data[index] = ajustada;
+      imagem.data[index + 1] = ajustada;
+      imagem.data[index + 2] = ajustada;
+    }
+    context.putImageData(imagem, 0, 0);
+    return await blobDoCanvas(canvas, 0.92) || file;
+  } catch {
+    return file;
+  }
+}
+
+/** Mantém cada cópia privada enviada abaixo do limite operacional da Vercel. */
+export async function prepararFotoParaEnvio(file: File): Promise<File> {
+  const bitmap = await criarBitmap(file);
+  try {
+    for (const [maximoLado, quality] of [[2048, 0.82], [1600, 0.72], [1280, 0.64]] as const) {
+      const dimensoes = dimensoesLimitadas(bitmap.width, bitmap.height, maximoLado);
+      const canvas = criarCanvas(dimensoes.width, dimensoes.height);
+      const context = canvas.getContext('2d');
+      if (!context) break;
+      context.drawImage(bitmap.source, 0, 0, dimensoes.width, dimensoes.height);
+      const blob = await blobDoCanvas(canvas, quality);
+      if (blob && blob.size <= MAXIMO_BYTES_POR_FOTO) {
+        return new File([blob], `${file.name.replace(/\.[^.]+$/, '') || 'comanda'}.jpg`, { type: 'image/jpeg' });
+      }
+    }
+  } finally {
+    bitmap.dispose();
+  }
+  throw new Error('Não foi possível reduzir a foto para envio. Tire uma foto mais próxima do cupom e tente novamente.');
+}
 
 /** Extrai sugestões do texto OCR; nunca trata a leitura como confirmação. */
 export function extrairDadosDaComanda(texto: string, anoAtual = new Date().getFullYear()): LeituraComanda {
@@ -65,8 +159,9 @@ export async function lerFotosDaComanda(cabecalho: File, total: File, onProgress
     if (message.status === 'recognizing text') onProgress(`Lendo texto das fotos… ${Math.round(message.progress * 100)}%`);
   } });
   try {
-    const primeiro = await worker.recognize(cabecalho);
-    const segundo = await worker.recognize(total);
+    const [cabecalhoOcr, totalOcr] = await Promise.all([prepararImagemParaOcr(cabecalho), prepararImagemParaOcr(total)]);
+    const primeiro = await worker.recognize(cabecalhoOcr);
+    const segundo = await worker.recognize(totalOcr);
     return extrairDadosDaComanda(`${primeiro.data.text}\n${segundo.data.text}`);
   } finally {
     await worker.terminate();

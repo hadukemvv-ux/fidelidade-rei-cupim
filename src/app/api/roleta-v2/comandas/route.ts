@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 export const dynamic = "force-dynamic";
 
 const allowed = new Set(["image/jpeg", "image/png", "image/webp"]);
+const maxBytesPerImage = 1_400_000;
 
 function imagemCorrespondeAoTipo(bytes: Buffer, type: string) {
   if (type === "image/jpeg") return bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
 }
 
 function arquivoValido(file: FormDataEntryValue | null): file is File {
-  return file instanceof File && allowed.has(file.type) && file.size > 0 && file.size <= 5 * 1024 * 1024;
+  return file instanceof File && allowed.has(file.type) && file.size > 0 && file.size <= maxBytesPerImage;
 }
 
 async function guardarImagem(image: File, tipo: "cabecalho" | "total") {
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
   const cabecalho = form?.get("foto_cabecalho") || null; const total = form?.get("foto_total") || null;
   const mesa = String(form?.get("mesa_referencia") || "").trim();
   if (!arquivoValido(cabecalho) || !arquivoValido(total)) {
-    return NextResponse.json({ error: "Envie as duas fotos em JPEG, PNG ou WebP, com até 5 MB cada." }, { status: 400 });
+    return NextResponse.json({ error: "Envie as duas fotos em JPEG, PNG ou WebP, com até 1,4 MB cada." }, { status: 400 });
   }
   if (!referenciaValida(mesa)) return NextResponse.json({ error: "Informe uma mesa ou referência válida." }, { status: 400 });
 

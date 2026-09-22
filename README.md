@@ -24,6 +24,7 @@ Sistema de fidelidade para restaurante com:
 - A dependência `xlsx` foi atualizada para a versão 0.20.3 distribuída pelo canal oficial do SheetJS. `npm audit` passou sem vulnerabilidades; a importação continua limitada a `superadmin`, 2 MB e 2.000 linhas.
 - Auditoria somente leitura no Supabase confirmou que `usar_cupom_promocional` e `usar_resgate_legado` só concedem `EXECUTE` a `service_role` e `postgres`, e que o bucket legado `sorteios` permanece privado.
 - O painel do Supabase não possui histórico de migrations pelo CLI e o plano Free não inclui backups agendados. Antes de abrir ao público, registrar a linha de base das migrations e validar uma estratégia de backup e restauração isolada.
+- Fotos do piloto são enviadas como cópias JPEG otimizadas de no máximo 1,4 MB por imagem. A evidência expira em 36 horas e o cron autenticado remove os arquivos privados do Storage diariamente; pela janela de execução do plano Hobby, a remoção física pode ocorrer em até cerca de 49 horas.
 
 ### Checkpoint operacional — 21/09/2026
 

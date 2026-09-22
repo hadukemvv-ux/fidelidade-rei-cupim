@@ -169,7 +169,7 @@ fluxo e, portanto, não cria QR, prêmio, cupom ou benefício.
 - [ ] Depois de aplicar as migrações, chamar manualmente o cron protegido de reconciliação com uma comanda de teste; confirmar que ele só atualiza o estado de reconciliação e cria auditoria, sem criar cliente, ponto, cupom, prêmio ou sanção.
 - [ ] Em `/admin/operacao-roleta`, conferir o relatório da data: QR, compatíveis, divergentes, pendentes, nível e responsável. O sinal de atenção deve orientar revisão, nunca aplicar punição automática.
 - [x] Agendamento diário `0 10 * * *` incluído na configuração de implantação em 17/09/2026. Em plano Hobby, considere a janela de 10:00–10:59 UTC, não um minuto exato. Confirmar o primeiro disparo somente depois que o deploy estiver `Ready`.
-- [ ] Registrar o prazo operacional de 30 dias e implementar/testar a remoção segura das imagens expiradas antes de abrir ao público.
+- [ ] Aplicar a migração `202609220001_retencao_curta_comandas.sql` e chamar o cron protegido de limpeza com uma comanda de teste expirada; confirmar que os dois objetos privados somem do Storage, `apagada_em` é preenchido e a auditoria registra a remoção. A retenção é de 36 horas; no plano Hobby, a execução diária pode levar a remoção física para até cerca de 49 horas.
 
 ## 8. WhatsApp e OTP
 

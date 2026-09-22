@@ -245,14 +245,6 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 .operations-page [class*="text-[#c5a059]"] { color: var(--gold) !important; }
 .operations-page [class*="bg-[#c5a059]"] { background: var(--gold) !important; }
 .operations-page [class*="bg-[#e31e24]"] { background: var(--ember) !important; }
-.roleta-visual { position: relative; display: grid; place-items: center; width: min(100%, 18rem); aspect-ratio: 1; margin: 0 auto 1.25rem; padding: .8rem; }
-.roleta-ponteiro { position: absolute; z-index: 3; top: -.1rem; left: 50%; width: 0; height: 0; border-right: .9rem solid transparent; border-left: .9rem solid transparent; border-top: 1.8rem solid #f6d483; filter: drop-shadow(0 3px 2px rgba(0,0,0,.55)); transform: translateX(-50%); }
-.roleta-disco { position: relative; display: grid; place-items: center; width: 100%; height: 100%; overflow: hidden; border: .55rem solid #f6d483; border-radius: 50%; background: conic-gradient(#d92c30 0deg 60deg, #4a1917 60deg 120deg, #d58a1d 120deg 180deg, #7c2420 180deg 240deg, #e4b34c 240deg 300deg, #581d1a 300deg 360deg); box-shadow: 0 0 0 .2rem #421411, 0 16px 34px rgba(0,0,0,.44), inset 0 0 0 .15rem rgba(255,255,255,.45); transition: transform 3.2s cubic-bezier(.12,.76,.1,1); will-change: transform; }
-.roleta-disco::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(from 0deg, transparent 0deg 59deg, rgba(255,249,222,.5) 59deg 60deg); }
-.roleta-disco.girando { filter: saturate(1.2) brightness(1.08); }
-.roleta-fatia { position: absolute; z-index: 1; color: #fff7e3; font-size: .66rem; font-weight: 950; letter-spacing: .08em; text-shadow: 0 2px 2px rgba(0,0,0,.5); }
-.roleta-miolo { position: relative; z-index: 2; display: grid; place-items: center; width: 4.4rem; height: 4.4rem; border: .3rem solid #7d231d; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff4c8, #d89b2e 52%, #8e4218); box-shadow: 0 3px 8px rgba(0,0,0,.45); color: #511614; font-size: 2.1rem; }
-@media (prefers-reduced-motion: reduce) { .roleta-disco { transition-duration: 0s; } }
 
 /* Administração: ferramenta de trabalho clara e previsível */
 .admin-shell { min-height: 100svh; background: #f3f1ee; color: #241b18; }

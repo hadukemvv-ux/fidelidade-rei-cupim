@@ -1,6 +1,6 @@
 # Comece aqui — ponto único de retomada
 
-Atualizado em 21/09/2026. Leia este arquivo antes de alterar, testar ou publicar
+Atualizado em 22/09/2026. Leia este arquivo antes de alterar, testar ou publicar
 qualquer parte do Clube. Ele é o índice vigente quando houver troca de computador
 ou de pessoa responsável pelo projeto.
 
@@ -18,6 +18,12 @@ ou de pessoa responsável pelo projeto.
   (`v2_publicada=true`, `v2_modo_teste=true`): QR dura 10 minutos e só há um
   prêmio interno de custo R$ 0,00. Não há campanha, benefício ou cupom
   comercial liberado; a baixa do cupom de teste é recusada pelo banco.
+- A nova interface da roleta usa apenas os prêmios elegíveis para a faixa e
+  revela o resultado sorteado pelo servidor. Em `/admin/roleta`, o prêmio
+  interno aparece separado do catálogo comercial, que permanece em rascunho.
+  A referência visual é o Instagram público `@oreidocupim_` (preto, vermelho,
+  dourado e linguagem de churrasco). A aprovação final da arte e dos prêmios
+  comerciais ainda depende do responsável.
 - A migração de hardening `202609160001_hardening_critico_legado.sql` já foi
   aplicada e verificada no Supabase. O bucket `sorteios` está privado e as RPCs
   sensíveis são exclusivas do servidor.

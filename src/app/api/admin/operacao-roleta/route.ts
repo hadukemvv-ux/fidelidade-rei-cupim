@@ -34,7 +34,7 @@ export async function GET(request: Request) {
 
   const { data: rows, error } = await supabaseAdmin.from('comandas_roleta')
     .select('criado_por, criado_por_nome, status, reconciliacao_status, valor_confirmado, nivel_roleta')
-    .eq('data_operacional', data).is('apagada_em', null).limit(500);
+    .eq('data_operacional', data).limit(500);
   if (error) return NextResponse.json({ error: 'Não foi possível montar o relatório operacional.' }, { status: 500 });
 
   const comandas = (rows || []) as Comanda[];
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
   const divergentes = comandas.filter((item) => item.reconciliacao_status === 'divergente').length;
   const pendentes = comandas.filter((item) => item.reconciliacao_status === 'pendente' || item.reconciliacao_status === 'nao_localizada').length;
   const qrsEmitidos = comandas.filter((item) => ['qr_emitido', 'reconciliada', 'divergente'].includes(item.status)).length;
-  const porNivel = [1, 2, 3, 4, 5].map((nivel) => ({ nivel, quantidade: comandas.filter((item) => item.nivel_roleta === nivel).length }));
+  const porNivel = [1, 2, 3, 4, 5, 6].map((nivel) => ({ nivel, quantidade: comandas.filter((item) => item.nivel_roleta === nivel).length }));
   const agrupado = new Map<string, { nome: string; total: number; qrs_emitidos: number; compativeis: number; divergentes: number; pendentes: number }>();
   for (const item of comandas) {
     const chave = item.criado_por || item.criado_por_nome || 'sem-responsável';

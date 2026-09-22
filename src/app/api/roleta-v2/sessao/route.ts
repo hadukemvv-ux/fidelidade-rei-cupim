@@ -46,5 +46,21 @@ export async function GET(request: NextRequest) {
       .eq("status", "criada");
   }
 
-  return NextResponse.json({ nivel: sessao.nivel, expira_em: sessao.expira_em });
+  const { data: premios, error: premiosError } = await supabaseAdmin
+    .from("premios_roleta")
+    .select("nome, emoji, pesos_nivel")
+    .eq("versao", 2)
+    .eq("ativo", true)
+    .eq("participa_roleta", true);
+  if (premiosError) return NextResponse.json({ error: "Não foi possível preparar os prêmios." }, { status: 500 });
+
+  const indiceNivel = Number(sessao.nivel) - 1;
+  const elegiveis = (premios || []).filter((premio) => Number(premio.pesos_nivel?.[indiceNivel] || 0) > 0);
+  if (!elegiveis.length) return NextResponse.json({ error: "Não há prêmio disponível para esta faixa. Peça ajuda à equipe." }, { status: 409 });
+
+  return NextResponse.json({
+    nivel: sessao.nivel,
+    expira_em: sessao.expira_em,
+    premios: elegiveis.map(({ nome, emoji }) => ({ nome, emoji })),
+  });
 }

@@ -62,7 +62,9 @@ Pagamento -> duas fotos privadas da comanda -> conferência dos campos pelo oper
 - [x] Relatório operacional diário em `/admin/operacao-roleta`: mostra comandas, QR emitidos, compatibilidade, pendências, faixa e sinal de atenção por operador. O sinal não é penalidade nem bloqueio automático; serve para a gestão revisar evidências e treinamento.
 - [x] Página pública `/roleta/v2` que lê uma sessão sem expor dados sensíveis.
 - [x] Registro de telefone, consentimento opcional e giro único atômico.
-- [x] Seleção de prêmio no servidor, ponderada pelos cinco níveis e custo estimado.
+- [x] Seleção de prêmio no servidor, ponderada pelas seis faixas da conta. A roda visual termina no prêmio retornado pelo banco.
+- [x] Nova interface da roleta e do catálogo inspirada na identidade pública do Rei do Cupim (preto, vermelho e dourado). O prêmio de teste fica separado dos rascunhos comerciais; durante o piloto, a API impede ativação de prêmio comercial pela gestão.
+- [x] Limpeza das fotos após 36 horas não remove as comandas do relatório e da lista operacional; os metadados continuam disponíveis para conferência posterior.
 - [x] Emissão de cupom V2 com dias úteis, feriados, canal e expiração.
 - [x] Tela/rota de caixa para consulta, confirmação e auditoria do cupom V2; a recusa ainda será desenhada com motivo obrigatório.
 - [x] Geração manual do QR protegida para piloto: sem escolha manual de nível e sem permissão para perfil `caixa` emitir prêmio.

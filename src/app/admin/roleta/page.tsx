@@ -1,21 +1,85 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { fetchAdmin } from '@/lib/adminFetch';
-import { useAdminCanChange } from '../adminAccessContext';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { fetchAdmin } from "@/lib/adminFetch";
+import { useAdminCanChange } from "../adminAccessContext";
+import styles from "./roleta-admin.module.css";
 
-type Prize = { id: number; nome: string; emoji: string; descricao_vitoria?: string | null; descricao_operacional?: string | null; ativo: boolean; canal_uso: 'presencial' | 'delivery' | 'ambos'; custo_estimado: number; expira_em_dias: number; pesos_nivel: number[] };
-const levels = ['Até R$ 100', 'R$ 100,01–200', 'R$ 200,01–300', 'R$ 300,01–400', 'R$ 400,01–500', 'Acima de R$ 500'];
+type Prize = {
+  id: number; codigo: string; nome: string; emoji: string; descricao_vitoria: string | null;
+  descricao_operacional: string | null; ativo: boolean; participa_roleta: boolean;
+  canal_uso: "presencial" | "delivery" | "ambos";
+  custo_estimado: number; expira_em_dias: number; pesos_nivel: number[];
+};
+type RawPrize = Partial<Prize> & { id: number; versao: number };
+type Config = { v2_publicada: boolean; v2_modo_teste: boolean } | null;
+const levels = ["Até R$ 100", "R$ 100–200", "R$ 200–300", "R$ 300–400", "R$ 400–500", "Acima de R$ 500"];
+
+function normalize(raw: RawPrize): Prize {
+  return {
+    id: Number(raw.id), codigo: raw.codigo || "", nome: raw.nome || "Prêmio", emoji: raw.emoji || "🎁",
+    descricao_vitoria: raw.descricao_vitoria || null, descricao_operacional: raw.descricao_operacional || null,
+    ativo: Boolean(raw.ativo), participa_roleta: Boolean(raw.participa_roleta), canal_uso: raw.canal_uso || "ambos",
+    custo_estimado: Number(raw.custo_estimado || 0), expira_em_dias: Number(raw.expira_em_dias || 14),
+    pesos_nivel: Array.from({ length: 6 }, (_, index) => Number(raw.pesos_nivel?.[index] || 0)),
+  };
+}
 
 export default function AdminRoletaV2() {
   const canChange = useAdminCanChange();
-  const [prizes, setPrizes] = useState<Prize[]>([]); const [notice, setNotice] = useState(''); const [saving, setSaving] = useState<number | null>(null);
-  async function load() { const response = await fetchAdmin('/api/admin/premios', { cache: 'no-store' }); const json = await response.json(); if (!response.ok || !json.ok) throw new Error(json.error || 'Não foi possível carregar a configuração.'); setPrizes((json.data?.premios || []).filter((item: any) => Number(item.versao) === 2).map(normalize)); }
-  useEffect(() => { load().catch((error) => setNotice(error.message)); }, []);
-  const activeCost = useMemo(() => prizes.filter((prize) => prize.ativo).reduce((sum, prize) => sum + Number(prize.custo_estimado || 0), 0), [prizes]);
-  function update(id: number, change: Partial<Prize>) { setPrizes((items) => items.map((item) => item.id === id ? { ...item, ...change } : item)); }
-  async function save(prize: Prize) { setSaving(prize.id); setNotice(''); try { const response = await fetchAdmin('/api/admin/premios', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: prize.id, ativo: prize.ativo, canal_uso: prize.canal_uso, custo_estimado: Number(prize.custo_estimado), expira_em_dias: Number(prize.expira_em_dias), pesos_nivel: prize.pesos_nivel, descricao_operacional: prize.descricao_operacional || null }) }); const json = await response.json(); if (!response.ok || !json.ok) throw new Error(json.error || 'Não foi possível salvar.'); setNotice(`“${prize.nome}” foi salvo.`); await load(); } catch (error) { setNotice(error instanceof Error ? error.message : 'Não foi possível salvar.'); } finally { setSaving(null); } }
-  return <div className="admin-wheel"><section className="admin-notice"><strong>Roleta V2 · preparação segura</strong><span>QR temporário do garçom → telefone do cliente → consentimento opcional → giro → cupom com validade e auditoria. A roleta antiga não é alterada por esta tela.</span></section>{!canChange && <section className="admin-notice"><span>Gestão consulta o catálogo e custos; somente o superadmin pode editar prêmio, chance, validade ou ativação.</span></section>}<section className="admin-client-summary"><Summary label="Prêmios V2" value={prizes.length} note="Catálogo definido" /><Summary label="Preparados" value={prizes.filter((item) => item.ativo).length} note="Ainda não publica a V2" accent /><Summary label="Custo estimado" value={`R$ ${activeCost.toFixed(2)}`} note="Por giro, não custo mensal" warning /></section>{notice && <div className="admin-notice success"><span>{notice}</span></div>}<section className="admin-wheel-help"><strong>Regras-padrão V2.</strong><span>14 dias de validade; dias úteis; sem feriados; sem acúmulo; validação no caixa ou delivery. O consentimento de marketing não interfere no prêmio.</span></section><section className="admin-wheel-list">{prizes.map((prize) => <article key={prize.id}><div className="admin-wheel-identity"><div className="text-4xl">{prize.emoji}</div><div><div className="admin-reward-tags"><span className={prize.ativo ? 'published' : 'paused'}>{prize.ativo ? 'Preparado' : 'Rascunho'}</span><span>{prize.canal_uso}</span></div><h2>{prize.nome}</h2><p>{prize.descricao_vitoria}</p></div></div><label className="admin-wheel-message"><span>Instrução para operação</span><input disabled={!canChange} value={prize.descricao_operacional || ''} onChange={(event) => update(prize.id, { descricao_operacional: event.target.value })} /></label><div className="admin-wheel-settings"><label><span>Canal</span><select disabled={!canChange} value={prize.canal_uso} onChange={(event) => update(prize.id, { canal_uso: event.target.value as Prize['canal_uso'] })}><option value="ambos">Salão e delivery</option><option value="presencial">Somente salão</option><option value="delivery">Somente delivery</option></select></label><label><span>Custo estimado (R$)</span><input disabled={!canChange} type="number" min="0" step="0.01" value={prize.custo_estimado} onChange={(event) => update(prize.id, { custo_estimado: Number(event.target.value) })} /></label><label><span>Validade (dias)</span><input disabled={!canChange} type="number" min="1" max="90" value={prize.expira_em_dias} onChange={(event) => update(prize.id, { expira_em_dias: Number(event.target.value) })} /></label><label className="check"><input disabled={!canChange} type="checkbox" checked={prize.ativo} onChange={(event) => update(prize.id, { ativo: event.target.checked })} /><span>Preparar este prêmio</span></label></div><div className="admin-wheel-settings"><span className="text-xs font-bold">Peso por nível</span>{levels.map((level, index) => <label key={level}><span>{level}</span><input disabled={!canChange} type="number" min="0" value={prize.pesos_nivel[index] || 0} onChange={(event) => { const weights = [...prize.pesos_nivel]; weights[index] = Number(event.target.value); update(prize.id, { pesos_nivel: weights }); }} /></label>)}</div>{canChange && <footer><span>Uso individual, não cumulativo e auditável.</span><button onClick={() => save(prize)} disabled={saving === prize.id}>{saving === prize.id ? 'Salvando…' : 'Salvar prêmio'}</button></footer>}</article>)}</section><div className="admin-notice"><strong>Antes da publicação real.</strong><span>Precisamos fechar teto/desconto mínimo, custo máximo de frete, calendário de feriados e o enquadramento da distribuição aleatória de prêmios. Até lá, os itens ficam como rascunho/teste.</span></div></div>;
+  const [prizes, setPrizes] = useState<Prize[]>([]);
+  const [config, setConfig] = useState<Config>(null);
+  const [notice, setNotice] = useState("");
+  const [saving, setSaving] = useState<number | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState(0);
+  const [view, setView] = useState<"pilot" | "drafts">("pilot");
+
+  const load = useCallback(async () => {
+    const response = await fetchAdmin("/api/admin/premios", { cache: "no-store" });
+    const json = await response.json();
+    if (!response.ok || !json.ok) throw new Error(json.error || "Não foi possível carregar os prêmios.");
+    setPrizes(((json.data?.premios || []) as RawPrize[]).filter((item) => Number(item.versao) === 2).map(normalize));
+    setConfig(json.data?.configuracao || null);
+  }, []);
+  useEffect(() => { load().catch((error) => setNotice(error instanceof Error ? error.message : "Falha ao carregar.")); }, [load]);
+
+  const pilot = prizes.filter((prize) => prize.codigo === "piloto_interno_sem_valor_v2");
+  const drafts = prizes.filter((prize) => prize.codigo !== "piloto_interno_sem_valor_v2");
+  const shown = view === "pilot" ? pilot : drafts;
+  const odds = useMemo(() => {
+    const eligible = prizes.filter((prize) => prize.ativo && prize.participa_roleta);
+    const total = eligible.reduce((sum, prize) => sum + prize.pesos_nivel[selectedLevel], 0);
+    return new Map(eligible.map((prize) => [prize.id, total ? Math.round(prize.pesos_nivel[selectedLevel] / total * 100) : 0]));
+  }, [prizes, selectedLevel]);
+
+  function update(id: number, patch: Partial<Prize>) { setPrizes((items) => items.map((item) => item.id === id ? { ...item, ...patch } : item)); }
+  async function save(prize: Prize) {
+    setSaving(prize.id); setNotice("");
+    try {
+      const response = await fetchAdmin("/api/admin/premios", {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: prize.id, canal_uso: prize.canal_uso, custo_estimado: Number(prize.custo_estimado), expira_em_dias: Number(prize.expira_em_dias), pesos_nivel: prize.pesos_nivel, descricao_operacional: prize.descricao_operacional || null }),
+      });
+      const json = await response.json();
+      if (!response.ok || !json.ok) throw new Error(json.error || "Não foi possível salvar.");
+      await load(); setNotice(`“${prize.nome}” foi salvo.`);
+    } catch (error) { setNotice(error instanceof Error ? error.message : "Não foi possível salvar."); }
+    finally { setSaving(null); }
+  }
+
+  return <main className={styles.page}>
+    <div className={styles.top}><span className={styles.kicker}>CLUBE CUPIM / CONFIGURAÇÃO</span><h1>A Roleta do Rei</h1><p>Prêmios, custos e chances em um só lugar. O sorteio sempre usa a configuração salva no servidor.</p></div>
+    <section className={styles.status}><span className={styles.statusDot} /><div><strong>{config?.v2_modo_teste ? "PILOTO EM MODO DE TESTE" : config?.v2_publicada ? "ROLETA PUBLICADA" : "ROLETA NÃO PUBLICADA"}</strong><p>{config?.v2_modo_teste ? "Somente o prêmio interno, sem valor comercial, pode entrar nos giros. Os demais continuam como rascunho." : "Confira cuidadosamente os prêmios ativos e suas chances antes de operar."}</p></div></section>
+    {notice && <p className={styles.notice} role="status">{notice}</p>}
+    <div className={styles.metrics}><article><span>PRÊMIO DE TESTE</span><strong>{pilot.filter((item) => item.ativo).length}</strong><small>ativo no piloto</small></article><article><span>CATÁLOGO COMERCIAL</span><strong>{drafts.length}</strong><small>rascunhos para revisar</small></article><article><span>FAIXAS DA CONTA</span><strong>06</strong><small>pesos independentes</small></article></div>
+    <div className={styles.toolbar}><div className={styles.tabs}><button type="button" className={view === "pilot" ? styles.activeTab : ""} onClick={() => setView("pilot")}>Em teste <span>{pilot.length}</span></button><button type="button" className={view === "drafts" ? styles.activeTab : ""} onClick={() => setView("drafts")}>Rascunhos <span>{drafts.length}</span></button></div><label>Simular chances na faixa <select value={selectedLevel} onChange={(event) => setSelectedLevel(Number(event.target.value))}>{levels.map((level, index) => <option key={level} value={index}>{level}</option>)}</select></label></div>
+    {view === "drafts" && <p className={styles.guidance}>Estes são os tipos de prêmio antigos preservados para revisão. Alterar custo, validade ou pesos não os ativa. A publicação comercial dependerá de sua aprovação e de regras finais para descontos, frete e resgate.</p>}
+    <section className={styles.cards}>{shown.map((prize) => <article className={styles.card} key={prize.id}>
+      <div className={styles.cardTop}><span className={styles.emoji}>{prize.emoji}</span><div><span className={prize.ativo ? styles.activeBadge : styles.draftBadge}>{prize.ativo ? "ATIVO NO PILOTO" : "RASCUNHO"}</span><h2>{prize.nome}</h2><p>{prize.descricao_vitoria}</p></div><strong className={styles.chance}>{odds.has(prize.id) ? `${odds.get(prize.id)}%` : "—"}<small>CHANCE ATUAL</small></strong></div>
+      <div className={styles.fields}><label>Uso no atendimento<input disabled={!canChange} maxLength={1000} value={prize.descricao_operacional || ""} onChange={(event) => update(prize.id, { descricao_operacional: event.target.value })} /></label><label>Canal<select disabled={!canChange} value={prize.canal_uso} onChange={(event) => update(prize.id, { canal_uso: event.target.value as Prize["canal_uso"] })}><option value="ambos">Salão e delivery</option><option value="presencial">Somente salão</option><option value="delivery">Somente delivery</option></select></label><label>Custo estimado (R$)<input disabled={!canChange} type="number" min="0" step="0.01" value={prize.custo_estimado} onChange={(event) => update(prize.id, { custo_estimado: Number(event.target.value) })} /></label><label>Validade (dias)<input disabled={!canChange} type="number" min="1" max="90" value={prize.expira_em_dias} onChange={(event) => update(prize.id, { expira_em_dias: Number(event.target.value) })} /></label></div>
+      <details className={styles.weights}><summary>Pesos por faixa da conta <span>▾</span></summary><div>{levels.map((level, index) => <label key={level}>{level}<input disabled={!canChange} type="number" min="0" max="100000" value={prize.pesos_nivel[index]} onChange={(event) => { const next = [...prize.pesos_nivel]; next[index] = Number(event.target.value); update(prize.id, { pesos_nivel: next }); }} /></label>)}</div><p>Peso não é porcentagem: a chance depende da soma dos pesos de todos os prêmios ativos na faixa.</p></details>
+      <div className={styles.cardFoot}><span>{prize.ativo ? "Aparece na roleta enquanto elegível" : "Não aparece na roleta"}</span>{canChange && <button type="button" disabled={saving !== null} onClick={() => save(prize)}>{saving === prize.id ? "Salvando…" : "Salvar alterações"}</button>}</div>
+    </article>)}</section>
+    {!canChange && <p className={styles.guidance}>Seu acesso é somente de consulta. A edição é restrita ao superadministrador.</p>}
+  </main>;
 }
-function normalize(item: any): Prize { return { id: Number(item.id), nome: item.nome || 'Prêmio', emoji: item.emoji || '🎁', descricao_vitoria: item.descricao_vitoria, descricao_operacional: item.descricao_operacional, ativo: Boolean(item.ativo), canal_uso: item.canal_uso || 'ambos', custo_estimado: Number(item.custo_estimado || 0), expira_em_dias: Number(item.expira_em_dias || 14), pesos_nivel: Array.isArray(item.pesos_nivel) ? item.pesos_nivel.map(Number) : [1, 1, 1, 1, 1, 1] }; }
-function Summary({ label, value, note, accent, warning }: { label: string; value: string | number; note: string; accent?: boolean; warning?: boolean }) { return <article className={accent ? 'accent' : warning ? 'warning' : ''}><span>{label}</span><strong>{value}</strong><small>{note}</small></article>; }

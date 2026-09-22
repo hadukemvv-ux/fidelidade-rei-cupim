@@ -2,32 +2,29 @@
 
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import styles from "./roleta.module.css";
+import { rotationForSector } from "@/lib/wheelLanding";
 
-type Session = { nivel: number; expira_em: string };
-type Result = {
-  premio: { nome: string; descricao_vitoria: string; emoji: string; canal_uso: string };
-  cupom: string;
-  expira_em: string;
-  modo_teste: boolean;
-};
+type Prize = { nome: string; emoji: string };
+type Session = { nivel: number; expira_em: string; premios: Prize[] };
+type Result = { premio: Prize & { descricao_vitoria: string }; cupom: string; expira_em: string; modo_teste: boolean };
+const levels = ["", "Até R$ 100", "R$ 100 a R$ 200", "R$ 200 a R$ 300", "R$ 300 a R$ 400", "R$ 400 a R$ 500", "Acima de R$ 500"];
 
-const levelNames = ["", "Conta até R$ 100", "Conta entre R$ 100 e R$ 200", "Conta entre R$ 200 e R$ 300", "Conta entre R$ 300 e R$ 400", "Conta entre R$ 400 e R$ 500", "Conta acima de R$ 500"];
-const wheelLabels = ["SORTE", "CUPIM", "GIRO", "BÔNUS", "REI", "CLUBE"];
-
-function RoletaVisual({ rotation, spinning }: { rotation: number; spinning: boolean }) {
-  return <div className="roleta-visual" aria-label={spinning ? "A roleta está girando" : "Roleta pronta para girar"}>
-    <span className="roleta-ponteiro" aria-hidden />
-    <div className={`roleta-disco${spinning ? " girando" : ""}`} style={{ transform: `rotate(${rotation}deg)` }}>
-      {wheelLabels.map((label, index) => {
+function Wheel({ prizes, rotation, spinning }: { prizes: Prize[]; rotation: number; spinning: boolean }) {
+  const sectors = Array.from({ length: 6 }, (_, index) => prizes[index % prizes.length]);
+  return <div className={styles.wheelStage} role="img" aria-label={spinning ? "Roleta girando" : "Roleta de prêmios do Clube Cupim"}>
+    <span className={styles.pointer} aria-hidden="true" />
+    <div className={styles.wheel} style={{ transform: `rotate(${rotation}deg)` }}>
+      {sectors.map((prize, index) => {
         const angle = index * 60 + 30;
-        return <span key={label} className="roleta-fatia" style={{ transform: `rotate(${angle}deg) translateY(-108px) rotate(${-angle}deg)` }}>{label}</span>;
+        return <span className={styles.sectorLabel} key={index} style={{ transform: `rotate(${angle}deg) translateY(calc(var(--wheel-size) * -0.34)) rotate(${-angle}deg)` }}><span>{prize.emoji}</span><small>{prize.nome}</small></span>;
       })}
-      <span className="roleta-miolo" aria-hidden>♛</span>
+      <span className={styles.hub} aria-hidden="true">O REI<br />DO CUPIM</span>
     </div>
   </div>;
 }
 
-function RoletaV2Content() {
+function RoletaContent() {
   const params = useSearchParams();
   const token = params?.get("token") || "";
   const [session, setSession] = useState<Session | null>(null);
@@ -37,79 +34,51 @@ function RoletaV2Content() {
   const [notice, setNotice] = useState("Preparando sua chance...");
   const [loading, setLoading] = useState(true);
   const [spinning, setSpinning] = useState(false);
-  const [wheelRotation, setWheelRotation] = useState(0);
+  const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
-    if (!token) {
-      setNotice("Este QR é inválido. Peça ajuda à equipe.");
-      setLoading(false);
-      return;
-    }
+    if (!token) { setNotice("Este QR é inválido. Peça ajuda à equipe."); setLoading(false); return; }
     fetch(`/api/roleta-v2/sessao?token=${encodeURIComponent(token)}`, { cache: "no-store" })
-      .then(async (response) => {
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Não foi possível abrir a roleta.");
-        setSession(data);
-        setNotice("");
-      })
+      .then(async (response) => { const data = await response.json(); if (!response.ok) throw new Error(data.error || "Não foi possível abrir a roleta."); setSession(data as Session); setNotice(""); })
       .catch((error) => setNotice(error instanceof Error ? error.message : "Não foi possível abrir a roleta."))
       .finally(() => setLoading(false));
   }, [token]);
 
   async function spin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!session || loading || spinning) return;
-    setSpinning(true);
-    setNotice("");
+    if (!session || spinning) return;
+    setSpinning(true); setNotice("");
     try {
-      setWheelRotation((current) => current + 1_800 + Math.floor(Math.random() * 720));
-      const request = fetch("/api/roleta-v2/girar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, telefone: phone, receber_marketing: marketing, consentimento_versao: "marketing-roleta-v1" }),
-      }).then(async (response) => {
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Não foi possível concluir o giro.");
-        return data as Result;
-      });
-      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const waitForAnimation = new Promise((resolve) => window.setTimeout(resolve, reducedMotion ? 0 : 3_200));
-      const [data] = await Promise.all([request, waitForAnimation]);
-      setResult(data);
-    } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Não foi possível concluir o giro.");
-    } finally {
-      setSpinning(false);
-    }
+      const response = await fetch("/api/roleta-v2/girar", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, telefone: phone, receber_marketing: marketing, consentimento_versao: "marketing-roleta-v1" }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Não foi possível concluir o giro.");
+      const winning = data as Result;
+      const sectors = Array.from({ length: 6 }, (_, index) => session.premios[index % session.premios.length]);
+      const landingIndex = sectors.findIndex((prize) => prize.nome === winning.premio.nome);
+      if (landingIndex >= 0 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setRotation((current) => rotationForSector(current, landingIndex));
+        await new Promise((resolve) => window.setTimeout(resolve, 3800));
+      }
+      setResult(winning);
+    } catch (error) { setNotice(error instanceof Error ? error.message : "Não foi possível concluir o giro."); }
+    finally { setSpinning(false); }
   }
 
-  return (
-    <main className="operations-page min-h-screen bg-[#280404] px-5 py-10 text-white">
-      <section className="mx-auto max-w-xl rounded-3xl border border-[#c5a059]/50 bg-[#1a0a0a] p-7 text-center shadow-2xl sm:p-10">
-        <p className="text-sm font-bold uppercase tracking-[0.25em] text-[#c5a059]">Clube Cupim</p>
-        <h1 className="mt-3 text-3xl font-black">A Roleta do Rei</h1>
-        {loading && !result && <p className="mt-8 text-zinc-300">{notice || "Carregando..."}</p>}
-        {!loading && notice && <p className="mt-8 rounded-xl border border-red-500/50 bg-red-950/40 p-4 font-semibold text-red-100">{notice}</p>}
-        {!loading && session && !result && !notice && (
-          <form className="mt-8 space-y-5 text-left" onSubmit={spin}>
-            <RoletaVisual rotation={wheelRotation} spinning={spinning} />
-            <div className="rounded-2xl bg-[#311414] p-4 text-center"><span className="text-sm text-zinc-300">Faixa da sua compra</span><strong className="mt-1 block text-2xl text-[#eabf67]">{levelNames[session.nivel] || "Clube"}</strong><small className="mt-2 block text-xs text-zinc-400">Esta faixa define apenas as chances deste giro.</small></div>
-            <label className="block"><span className="mb-2 block text-sm font-bold">Seu WhatsApp</span><input required disabled={spinning} inputMode="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="(85) 99999-9999" className="w-full rounded-xl border border-zinc-600 bg-zinc-950 px-4 py-3 text-lg outline-none focus:border-[#c5a059]" /></label>
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-white/5 p-4 text-sm text-zinc-200"><input disabled={spinning} className="mt-1 size-4" type="checkbox" checked={marketing} onChange={(event) => setMarketing(event.target.checked)} /><span>Quero receber promoções e cupons pelo WhatsApp. É opcional e posso cancelar quando quiser.</span></label>
-            <p className="text-xs leading-relaxed text-zinc-400">Seu telefone é usado para registrar o prêmio e evitar mais de um giro por QR. O giro é único. <a className="font-bold text-[#f4ce83] underline underline-offset-2" href="/privacidade">Como tratamos seus dados</a>.</p>
-            <button className="w-full rounded-xl bg-[#e31e24] py-4 text-lg font-black transition hover:bg-[#c1191f] disabled:opacity-60" type="submit" disabled={spinning}>{spinning ? "Girando…" : "Girar a roleta"}</button>
-          </form>
-        )}
-        {result && <section className="mt-8"><span className="text-6xl" aria-hidden>{result.premio.emoji}</span><p className="mt-4 text-sm font-bold uppercase tracking-[0.18em] text-[#c5a059]">Você ganhou</p><h2 className="mt-2 text-3xl font-black">{result.premio.nome}</h2><p className="mt-3 text-zinc-300">{result.premio.descricao_vitoria}</p><div className="mt-6 rounded-2xl border border-[#c5a059]/40 bg-[#311414] p-5"><span className="text-xs font-bold uppercase tracking-widest text-zinc-400">Código do benefício</span><strong className="mt-2 block break-all text-2xl tracking-wider text-[#f4ce83]">{result.cupom}</strong><p className="mt-3 text-sm text-zinc-300">Apresente este código no caixa ou no atendimento até {new Date(result.expira_em).toLocaleDateString("pt-BR")}.</p>{result.modo_teste && <p className="mt-3 rounded-lg bg-amber-950/60 p-3 text-sm text-amber-100">Modo de teste: este benefício não pode ser usado na operação real.</p>}</div></section>}
-      </section>
-    </main>
-  );
+  return <main className={styles.page}><div className={styles.shell}>
+    <header className={styles.header}><span className={styles.brandMark}>♛</span><span>O REI DO CUPIM <small>CLUBE CUPIM</small></span><span className={styles.headerBadge}>A ROLETA DO REI</span></header>
+    <section className={styles.hero}><p className={styles.eyebrow}>SUA CONTA VIROU UMA CHANCE</p><h1>Hoje a sorte <em>é sua.</em></h1><p>Um giro, um resultado. Descubra o que o Rei reservou para você.</p>{session && <div className={styles.band}><span>FAIXA DA CONTA</span><strong>{levels[session.nivel] || "Clube Cupim"}</strong></div>}</section>
+    {loading && <p className={styles.message}>{notice}</p>}
+    {!loading && notice && <p className={styles.error} role="alert">{notice}</p>}
+    {!loading && session && !result && <div className={styles.game}><Wheel prizes={session.premios} rotation={rotation} spinning={spinning} /><form className={styles.form} onSubmit={spin}>
+      <span className={styles.step}>01 / PARTICIPE</span><h2>Pronto para girar?</h2><p>Informe seu WhatsApp para vincular o resultado ao seu QR. Cada QR permite apenas um giro.</p>
+      <label className={styles.phoneLabel}>Seu WhatsApp<input required disabled={spinning} inputMode="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="(85) 99999-9999" /></label>
+      <label className={styles.optIn}><input disabled={spinning} type="checkbox" checked={marketing} onChange={(event) => setMarketing(event.target.checked)} /><span>Quero receber novidades e ofertas pelo WhatsApp. Opcional, com cancelamento a qualquer momento.</span></label>
+      <button className={styles.spinButton} disabled={spinning} type="submit">{spinning ? "PREPARANDO RESULTADO…" : "GIRAR A ROLETA"}<span aria-hidden="true">↗</span></button>
+      <small className={styles.privacy}>Seu telefone ajuda a proteger o giro único. <a href="/privacidade">Veja nossa política de privacidade</a>.</small>
+    </form></div>}
+    {result && <section className={styles.result} aria-live="polite"><span className={styles.resultEmoji} aria-hidden="true">{result.premio.emoji}</span><p className={styles.eyebrow}>RESULTADO CONFIRMADO</p><h2>{result.premio.nome}</h2><p>{result.premio.descricao_vitoria}</p><div className={styles.coupon}><span>CÓDIGO DO BENEFÍCIO</span><strong>{result.cupom}</strong><small>Apresente no atendimento até {new Date(result.expira_em).toLocaleDateString("pt-BR")}.</small></div>{result.modo_teste && <p className={styles.testWarning}>Este é um teste sem valor comercial. O benefício não pode ser utilizado em compras.</p>}</section>}
+    <footer className={styles.footer}>CHURRASCO • EXPERIÊNCIA • SORTE <span>FORTALEZA, CE</span></footer>
+  </div></main>;
 }
 
-export default function RoletaV2Page() {
-  return (
-    <Suspense fallback={<main className="operations-page min-h-screen bg-[#280404] p-10 text-center text-white">Preparando a roleta...</main>}>
-      <RoletaV2Content />
-    </Suspense>
-  );
-}
+export default function RoletaV2Page() { return <Suspense fallback={<main className={styles.page}>Preparando a roleta...</main>}><RoletaContent /></Suspense>; }

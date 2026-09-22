@@ -52,7 +52,14 @@ export async function GET(request: NextRequest) {
       return handleApiError(error, '/api/admin/premios', requestId);
     }
 
-    return successResponse({ premios: data || [] });
+    const { data: configuracao, error: configError } = await supabaseAdmin
+      .from('roleta_configuracoes')
+      .select('v2_publicada, v2_modo_teste')
+      .eq('id', 1)
+      .maybeSingle();
+    if (configError) return handleApiError(configError, '/api/admin/premios', requestId);
+
+    return successResponse({ premios: data || [], configuracao });
   } catch (error) {
     logError('/api/admin/premios', error instanceof Error ? error : new Error(String(error)), {
       requestId,
@@ -83,11 +90,21 @@ export async function PUT(request: NextRequest) {
 
     const { data: atual, error: atualError } = await supabaseAdmin
       .from('premios_roleta')
-      .select('nome, ativo, canal_uso, custo_estimado, expira_em_dias, pesos_nivel, descricao_operacional')
+      .select('codigo, versao, nome, ativo, canal_uso, custo_estimado, expira_em_dias, pesos_nivel, descricao_operacional')
       .eq('id', id)
       .maybeSingle();
     if (atualError) return handleApiError(atualError, '/api/admin/premios', requestId);
     if (!atual) return errorResponse('Prêmio não encontrado', 'not_found', 404, requestId);
+
+    if (Number(atual.versao) === 2 && atual.codigo !== 'piloto_interno_sem_valor_v2' && updateData.ativo === true) {
+      const { data: config, error: configError } = await supabaseAdmin
+        .from('roleta_configuracoes')
+        .select('v2_modo_teste')
+        .eq('id', 1)
+        .maybeSingle();
+      if (configError || !config) return errorResponse('Não foi possível verificar o modo da roleta.', 'server_error', 500, requestId);
+      if (config.v2_modo_teste) return errorResponse('Prêmios comerciais devem permanecer em rascunho durante o piloto.', 'validation_error', 409, requestId);
+    }
 
     // A sátira do PlayStation é sempre visual e nunca entra no sorteio real.
     if (/playstation/i.test(atual.nome || '') || /playstation/i.test(updateData.nome || '')) {

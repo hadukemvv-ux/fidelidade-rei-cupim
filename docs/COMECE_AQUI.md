@@ -55,7 +55,7 @@ ou de pessoa responsável pelo projeto.
    então configurar OTP e executar o teste controlado. Não automatizar WhatsApp
    pessoal.
 4. Definir a apresentação comercial: fidelidade possui quatro níveis por gasto
-   em 90 dias; a Roleta V2 usa cinco faixas da compra somente para chances do
+   em 90 dias; a Roleta V2 usa seis faixas da compra somente para chances do
    giro. A interface já esclarece a diferença, mas ela deve ser aprovada antes
    do piloto.
 5. Executar os testes do roteiro mestre, com conta/telefone de teste e sem

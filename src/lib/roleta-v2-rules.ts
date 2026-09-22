@@ -4,7 +4,7 @@
  * cliente em 90 dias. Aqui a regra é sempre o valor da compra que originou
  * o QR, para que a equipe não escolha manualmente uma chance maior.
  */
-export type NivelRoletaV2 = 1 | 2 | 3 | 4 | 5;
+export type NivelRoletaV2 = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type FaixaRoletaV2 = {
   nivel: NivelRoletaV2;
@@ -14,11 +14,12 @@ export type FaixaRoletaV2 = {
 };
 
 const FAIXAS: readonly FaixaRoletaV2[] = [
-  { nivel: 1, nome: "Brasa", minimo: 0, maximo: 99.99 },
-  { nivel: 2, nome: "Chama", minimo: 100, maximo: 249.99 },
-  { nivel: 3, nome: "Nobre", minimo: 250, maximo: 399.99 },
-  { nivel: 4, nome: "Rei", minimo: 400, maximo: 499.99 },
-  { nivel: 5, nome: "Lenda", minimo: 500, maximo: null },
+  { nivel: 1, nome: "Conta até R$ 100", minimo: 0, maximo: 100 },
+  { nivel: 2, nome: "Conta entre R$ 100 e R$ 200", minimo: 100.01, maximo: 200 },
+  { nivel: 3, nome: "Conta entre R$ 200 e R$ 300", minimo: 200.01, maximo: 300 },
+  { nivel: 4, nome: "Conta entre R$ 300 e R$ 400", minimo: 300.01, maximo: 400 },
+  { nivel: 5, nome: "Conta entre R$ 400 e R$ 500", minimo: 400.01, maximo: 500 },
+  { nivel: 6, nome: "Conta acima de R$ 500", minimo: 500.01, maximo: null },
 ];
 
 export function getFaixaRoletaV2(valorComanda: number): FaixaRoletaV2 {

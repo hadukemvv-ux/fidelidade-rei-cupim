@@ -18,7 +18,7 @@ Tickets e sorteios estão congelados: não são acumulados, não geram entrada e
 
 ## Faixas da Roleta V2 (separadas do nível de fidelidade)
 
-A Roleta V2 fechada usa cinco **faixas da compra que gerou o QR**, somente para ponderar o prêmio daquele giro: Brasa (até R$ 99,99), Chama (R$ 100–249,99), Nobre (R$ 250–399,99), Rei (R$ 400–499,99) e Lenda (R$ 500+). Essas faixas não alteram pontos, cashback ou o nível de fidelidade de 90 dias. A V2 continua em modo de teste e não deve ser anunciada ao público.
+A Roleta V2 fechada usa seis **faixas da compra que gerou o QR**, somente para ponderar o prêmio daquele giro: até R$ 100; R$ 100,01–200; R$ 200,01–300; R$ 300,01–400; R$ 400,01–500; e acima de R$ 500. Essas faixas não alteram pontos, cashback ou o nível de fidelidade de 90 dias. A V2 continua em modo de teste e não deve ser anunciada ao público.
 
 ## Cadastro e acesso
 

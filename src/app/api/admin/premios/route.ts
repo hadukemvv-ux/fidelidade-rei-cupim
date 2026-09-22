@@ -27,7 +27,7 @@ const PremioUpdateSchema = z.object({
   canal_uso: z.enum(['presencial', 'delivery', 'ambos']).optional(),
   custo_estimado: z.coerce.number().min(0).optional(),
   expira_em_dias: z.coerce.number().int().min(1).max(90).optional(),
-  pesos_nivel: z.array(z.coerce.number().int().min(0).max(100000)).length(5).optional(),
+  pesos_nivel: z.array(z.coerce.number().int().min(0).max(100000)).length(6).optional(),
   descricao_operacional: z.string().max(1000).optional().nullable(),
 });
 

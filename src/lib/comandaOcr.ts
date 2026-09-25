@@ -65,7 +65,7 @@ async function blobDoCanvas(canvas: HTMLCanvasElement, quality: number) {
  * é enviada ao servidor: a evidência salva continua sendo uma cópia privada
  * da fotografia em cor.
  */
-async function prepararImagemParaOcr(file: File): Promise<Blob | File> {
+async function prepararImagemParaOcr(file: File, modo: 'contraste' | 'sombra' = 'contraste'): Promise<Blob | File> {
   try {
     const bitmap = await criarBitmap(file);
     const dimensoes = dimensoesLimitadas(bitmap.width, bitmap.height, 2200);
@@ -75,12 +75,43 @@ async function prepararImagemParaOcr(file: File): Promise<Blob | File> {
     context.drawImage(bitmap.source, 0, 0, dimensoes.width, dimensoes.height);
     bitmap.dispose();
     const imagem = context.getImageData(0, 0, dimensoes.width, dimensoes.height);
-    for (let index = 0; index < imagem.data.length; index += 4) {
-      const luminosidade = imagem.data[index] * 0.299 + imagem.data[index + 1] * 0.587 + imagem.data[index + 2] * 0.114;
-      const ajustada = Math.max(0, Math.min(255, (luminosidade - 128) * 1.7 + 128));
-      imagem.data[index] = ajustada;
-      imagem.data[index + 1] = ajustada;
-      imagem.data[index + 2] = ajustada;
+    const { width, height, data } = imagem;
+    if (modo === 'contraste') {
+      for (let index = 0; index < data.length; index += 4) {
+        const luminosidade = data[index] * 0.299 + data[index + 1] * 0.587 + data[index + 2] * 0.114;
+        const ajustada = Math.max(0, Math.min(255, (luminosidade - 128) * 1.7 + 128));
+        data[index] = ajustada;
+        data[index + 1] = ajustada;
+        data[index + 2] = ajustada;
+      }
+    } else {
+      const luminosidades = new Uint8Array(width * height);
+      const tamanhoBloco = 64;
+      const colunas = Math.ceil(width / tamanhoBloco);
+      const somas = new Float64Array(colunas * Math.ceil(height / tamanhoBloco));
+      const contagens = new Uint32Array(somas.length);
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const pixel = y * width + x;
+          const index = pixel * 4;
+          const luminosidade = Math.round(data[index] * 0.299 + data[index + 1] * 0.587 + data[index + 2] * 0.114);
+          luminosidades[pixel] = luminosidade;
+          const bloco = Math.floor(y / tamanhoBloco) * colunas + Math.floor(x / tamanhoBloco);
+          somas[bloco] += luminosidade;
+          contagens[bloco]++;
+        }
+      }
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const pixel = y * width + x;
+          const index = pixel * 4;
+          const bloco = Math.floor(y / tamanhoBloco) * colunas + Math.floor(x / tamanhoBloco);
+          const ajustada = luminosidades[pixel] < somas[bloco] / contagens[bloco] - 25 ? 0 : 255;
+          data[index] = ajustada;
+          data[index + 1] = ajustada;
+          data[index + 2] = ajustada;
+        }
+      }
     }
     context.putImageData(imagem, 0, 0);
     return await blobDoCanvas(canvas, 0.92) || file;
@@ -154,7 +185,7 @@ export function validarLeituraParaPiloto(leitura: LeituraComanda): ValidacaoLeit
 
 /** OCR local no navegador. A imagem não é enviada para o servidor nesta etapa. */
 export async function lerFotosDaComanda(cabecalho: File, total: File, onProgress: (texto: string) => void): Promise<LeituraComanda> {
-  const { createWorker } = await import('tesseract.js');
+  const { createWorker, PSM } = await import('tesseract.js');
   const worker = await createWorker('por', 1, { logger: (message: { status: string; progress: number }) => {
     if (message.status === 'recognizing text') onProgress(`Lendo texto das fotos… ${Math.round(message.progress * 100)}%`);
   } });
@@ -162,7 +193,27 @@ export async function lerFotosDaComanda(cabecalho: File, total: File, onProgress
     const [cabecalhoOcr, totalOcr] = await Promise.all([prepararImagemParaOcr(cabecalho), prepararImagemParaOcr(total)]);
     const primeiro = await worker.recognize(cabecalhoOcr);
     const segundo = await worker.recognize(totalOcr);
-    return extrairDadosDaComanda(`${primeiro.data.text}\n${segundo.data.text}`);
+    const leituraInicial = extrairDadosDaComanda(`${primeiro.data.text}\n${segundo.data.text}`);
+    if (validarLeituraParaPiloto(leituraInicial).pronta) return leituraInicial;
+
+    // A sombra pode tornar ilegível apenas uma região. Reprocessamos somente
+    // a foto com campos ausentes, sem enviar texto ou imagem extra ao servidor.
+    onProgress('Ajustando áreas com sombra para uma segunda leitura…');
+    await worker.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK });
+    const precisaCabecalho = !leituraInicial.mesa || !leituraInicial.data_operacional || !leituraInicial.horario_abertura || !leituraInicial.id_pedido_impresso;
+    const precisaTotal = !leituraInicial.valor_confirmado;
+    const novoCabecalho = precisaCabecalho ? await worker.recognize(await prepararImagemParaOcr(cabecalho, 'sombra')) : primeiro;
+    const novoTotal = precisaTotal ? await worker.recognize(await prepararImagemParaOcr(total, 'sombra')) : segundo;
+    const leituraAlternativa = extrairDadosDaComanda(`${novoCabecalho.data.text}\n${novoTotal.data.text}`);
+    if (validarLeituraParaPiloto(leituraAlternativa).pronta) return leituraAlternativa;
+    return {
+      mesa: leituraInicial.mesa || leituraAlternativa.mesa,
+      data_operacional: leituraInicial.data_operacional || leituraAlternativa.data_operacional,
+      horario_abertura: leituraInicial.horario_abertura || leituraAlternativa.horario_abertura,
+      id_pedido_impresso: leituraInicial.id_pedido_impresso || leituraAlternativa.id_pedido_impresso,
+      valor_confirmado: leituraInicial.valor_confirmado || leituraAlternativa.valor_confirmado,
+      texto_detectado: leituraInicial.texto_detectado || leituraAlternativa.texto_detectado,
+    };
   } finally {
     await worker.terminate();
   }

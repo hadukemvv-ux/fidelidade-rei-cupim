@@ -29,6 +29,24 @@ Pagamento nao cadastrado`, 2026);
   assert.deepEqual(validarLeituraParaPiloto(leitura), { pronta: true, camposAusentes: [] });
 });
 
+test('interpreta a leitura da foto real com sombra após correção local', () => {
+  const leitura = extrairDadosDaComanda(`RAS: 22/set - 13:39
+Mesa: 200 - Garcom: Teste
+Tempo: Ohom
+ID do Pedido:878519537
+Total] itens(=) 200,00
+Taxa de servico(+) 20,00
+Acrescimo(+) 0,00
+Desconto(-) 0,00
+TOTAL(=) 220,00`, 2026);
+  assert.equal(leitura.mesa, '200');
+  assert.equal(leitura.data_operacional, '2026-09-22');
+  assert.equal(leitura.horario_abertura, '13:39');
+  assert.equal(leitura.id_pedido_impresso, '878519537');
+  assert.equal(leitura.valor_confirmado, '220,00');
+  assert.deepEqual(validarLeituraParaPiloto(leitura), { pronta: true, camposAusentes: [] });
+});
+
 test('permite revisão humana quando o OCR não encontra os campos', () => {
   const leitura = extrairDadosDaComanda('foto desfocada', 2026);
   assert.equal(leitura.mesa, undefined);

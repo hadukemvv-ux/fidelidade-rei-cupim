@@ -1,6 +1,6 @@
 # Roadmap do Projeto Fidelidade
 
-Atualizado em 22/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
+Atualizado em 25/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
 
 ## Objetivo
 
@@ -46,6 +46,14 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 ## Em andamento
 
 ### Roleta V2 — desenho aprovado
+
+#### Decisão comercial em rascunho — 25/09/2026
+
+- Manter somente os dois descontos de 10% já previstos no catálogo: um para a próxima compra no salão e outro para o próximo pedido delivery, ambos com teto de R$ 100. Não criar prêmio de 20%.
+- O teto só limita o desconto a partir de uma compra futura de R$ 1.000; validar custo, prazo de validade, acumulação e pesos/chances antes de ativar qualquer prêmio comercial.
+- O prêmio futuro deve ficar associado à conta do cliente após verificação do telefone. Um QR de apresentação poderá ser recuperado nessa conta para a caixa/atendimento consultar e dar baixa uma única vez; o QR não substitui a prova de acesso ao telefone.
+- A verificação por WhatsApp depende de número comercial e provedor oficial ainda não contratados. Esta frente fica em espera; os prêmios seguem em rascunho e o piloto permanece sem valor comercial. Marketing continua opcional e separado de códigos de autenticação.
+- Antes da abertura, revisar juridicamente o enquadramento da roleta aleatória. Os detalhes operacionais de resgate e o prazo dos descontos ainda não foram aprovados.
 
 Fluxo-alvo:
 

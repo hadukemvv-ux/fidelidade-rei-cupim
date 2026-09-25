@@ -1,6 +1,6 @@
 # Roteiro mestre de testes pendentes — pré-lançamento
 
-Atualizado em 21/09/2026. Este é o caderno único para executar testes aos poucos, sem depender da memória e sem usar clientes reais. Ele complementa os guias específicos; quando um teste for concluído, registre data, executor, ambiente, resultado e evidência na seção final.
+Atualizado em 25/09/2026. Este é o caderno único para executar testes aos poucos, sem depender da memória e sem usar clientes reais. Ele complementa os guias específicos; quando um teste for concluído, registre data, executor, ambiente, resultado e evidência na seção final.
 
 > Regra: o piloto técnico da Roleta V2 jamais libera benefício comercial nem permite baixa de cupom. Use uma conta e um telefone de teste, e nunca compartilhe PIN, token, QR ou segredo em conversa, planilha ou captura de tela.
 
@@ -156,6 +156,7 @@ fluxo e, portanto, não cria QR, prêmio, cupom ou benefício.
 
 - [ ] Como `garcom`, abrir `/garcom/comanda` e selecionar **duas** fotos permitidas: cabeçalho (mesa, abertura e ID) e total (valor e pagamento). Confirmar que o sistema recusa uma única foto e que não pede mesa/ID manualmente.
 - [ ] Acionar “Ler comanda”. Confirmar que mesa, data, hora de abertura, ID do pedido e total são lidos; se algum faltar, a tela deve exigir novas fotos, sem abrir campos manuais para esses dados.
+- [ ] Repetir com sombra leve sobre parte da comanda: se a primeira leitura falhar, conferir a segunda leitura com correção local de iluminação. Verificar visualmente mesa, data/hora, ID e a última linha `TOTAL (=)`, sem aceitar `Total itens (=)` como total pago. Confirmar o resultado no próprio celular usado pela equipe.
 - [ ] Digitar somente o valor total como dupla conferência. Confirmar que valor diferente do OCR bloqueia o QR e que valor igual permite seguir.
 - [ ] Confirmar que o texto integral extraído pelo OCR não é enviado para o banco nem aparece na auditoria; somente as duas imagens privadas e os campos necessários para a reconciliação entram no fluxo.
 - [ ] Confirmar que o mesmo ID do pedido não pode emitir dois QR, mesmo com duas fotos novas ou outro operador.
@@ -215,3 +216,4 @@ Use uma linha por sessão de teste; não inclua PIN, telefone inteiro, token ou 
 | 18/09/2026 manhã BRT | 6 e 7.1 / preparação do piloto | Superadmin | Ativo somente para teste | V2 publicada em modo de teste; QR de 10 min; prêmio interno R$ 0,00; sem baixa comercial | Executar o primeiro giro pelo fluxo de comanda e conferir a reconciliação do dia seguinte. |
 | 18/09/2026 manhã BRT | 2 e 7.2 / acesso por convite | Superadmin | Correção aplicada | Redirect URL `https://www.clubecupim.com.br/acesso/definir-senha` incluída no Supabase; deploy `2338ca6` Ready | Usar **Reenviar acesso** e validar o novo link; o e-mail antigo não é evidência válida. |
 | 21/09/2026 | organização do piloto | Superadmin | Pausado por decisão do responsável | Lembrete de teste cancelado; nenhum teste novo foi executado | Retomar apenas com autorização, começando pelo login de cada papel e depois pelo piloto de três cenários. |
+| 22/09/2026 | 6 e 7.1 / primeiro giro pelo QR | Responsável | QR lido e giro de teste registrado com sucesso; prêmio interno sem valor exibido | Comanda da Mesa 200, ID impresso preservado pelo responsável; captura do resultado enviada na conversa | Este teste não valida a nova interface publicada depois, o uso na caixa, a reconciliação Saipos nem os três cenários planejados. |

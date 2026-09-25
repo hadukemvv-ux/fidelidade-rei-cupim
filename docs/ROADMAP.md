@@ -90,6 +90,13 @@ como a API representa cancelamentos e em quanto tempo cada tipo de venda fica
 disponível. A reconciliação também compara a faixa registrada para o QR com a
 faixa que o total da Saipos deveria gerar.
 
+Em 25/09, o primeiro QR da Mesa 200 (R$ 220,00) foi confirmado na Saipos:
+ID, total, pagamento e não cancelamento bateram. O alerta de faixa era falso
+positivo porque a emissão usou a regra anterior de cinco faixas; agora a
+versão da regra fica registrada por comanda e a retificação foi auditada.
+O relatório do dia mostra uma comanda compatível. Isso ainda não prova
+disponibilidade imediata da venda nem o comportamento de cancelamentos.
+
 Decisão após a resposta:
 
 1. **Webhook de venda paga:** usar como fonte principal, com assinatura e idempotência.

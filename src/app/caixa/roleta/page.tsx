@@ -3,14 +3,37 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { OperationalLogout } from '@/components/OperationalLogout';
+import { destinoInicialOperacional } from '@/lib/operationalAccess';
+import { isOperationalRole } from '@/lib/operationalRoles';
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 export default function CaixaRoletaPage() {
+  const router = useRouter();
+  const [access, setAccess] = useState<'checking' | 'allowed' | 'denied'>('checking');
   const [valor, setValor] = useState(''); const [mesa, setMesa] = useState('');
   const [url, setUrl] = useState(''); const [expires, setExpires] = useState(''); const [feedback, setFeedback] = useState(''); const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    async function checkAccess() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!active) return;
+      if (!session) { router.replace('/login'); return; }
+      const response = await fetch('/api/operacional/perfil', { headers: { Authorization: `Bearer ${session.access_token}` }, cache: 'no-store' }).catch(() => null);
+      const payload = await response?.json().catch(() => null);
+      if (!active) return;
+      const papel = payload?.perfil?.papel;
+      if (response?.ok && papel === 'superadmin') { setAccess('allowed'); return; }
+      if (response?.ok && isOperationalRole(papel)) { router.replace(destinoInicialOperacional(papel)); return; }
+      setAccess('denied');
+    }
+    checkAccess();
+    return () => { active = false; };
+  }, [router]);
 
   async function criarQr() {
     setLoading(true); setFeedback(''); setUrl('');
@@ -24,8 +47,11 @@ export default function CaixaRoletaPage() {
     finally { setLoading(false); }
   }
 
-  return <main className="min-h-screen bg-stone-950 px-4 py-8 text-white"><section className="mx-auto grid max-w-xl gap-5 rounded-2xl border border-amber-500/40 bg-stone-900 p-6 shadow-2xl"><header><div className="flex items-start justify-between gap-4"><div><Link href="/caixa" className="text-sm font-bold text-amber-400 underline">← Validador de cupom</Link><p className="mt-5 text-xs font-bold uppercase tracking-[.2em] text-amber-400">Piloto controlado · Roleta V2</p><h1 className="mt-2 text-3xl font-black">Gerar QR da mesa</h1></div><OperationalLogout className="rounded-lg border border-stone-600 px-3 py-2 text-sm font-bold text-stone-200 disabled:opacity-50" /></div><p className="mt-2 text-sm text-stone-300">O QR expira e só pode gerar um giro. A faixa da roleta é calculada pelo sistema a partir do valor informado.</p></header>
-    <div className="rounded-lg border border-amber-500/40 bg-amber-950/30 p-3 text-sm text-amber-100">Use apenas após conferir a venda paga. Enquanto a Saipos não confirmar a venda automaticamente, esta tela é exclusiva de gestor no piloto.</div><div className="grid gap-3"><label className="grid gap-1 text-sm font-bold">Valor da comanda<input inputMode="decimal" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="Ex.: 250,00" className="rounded-lg border border-stone-600 bg-stone-950 px-3 py-3" /></label><label className="grid gap-1 text-sm font-bold">Mesa ou referência<input value={mesa} onChange={(e) => setMesa(e.target.value)} placeholder="Ex.: Mesa 12" className="rounded-lg border border-stone-600 bg-stone-950 px-3 py-3" /></label></div>
+  if (access === 'checking') return <main className="min-h-screen bg-stone-950 p-8 text-white" role="status">Verificando acesso…</main>;
+  if (access === 'denied') return <main className="min-h-screen bg-stone-950 p-8 text-white"><p>Esta conta não tem acesso ao QR manual.</p><Link href="/login" className="text-amber-400 underline">Trocar de conta</Link></main>;
+
+  return <main className="min-h-screen bg-stone-950 px-4 py-8 text-white"><section className="mx-auto grid max-w-xl gap-5 rounded-2xl border border-amber-500/40 bg-stone-900 p-6 shadow-2xl"><header><div className="flex items-start justify-between gap-4"><div><Link href="/admin" className="text-sm font-bold text-amber-400 underline">← Administração</Link><p className="mt-5 text-xs font-bold uppercase tracking-[.2em] text-amber-400">Contingência do superadmin · Roleta V2</p><h1 className="mt-2 text-3xl font-black">Gerar QR manual de teste</h1></div><OperationalLogout className="rounded-lg border border-stone-600 px-3 py-2 text-sm font-bold text-stone-200 disabled:opacity-50" /></div><p className="mt-2 text-sm text-stone-300">O QR expira e só pode gerar um giro. A faixa da roleta é calculada pelo sistema a partir do valor informado.</p></header>
+    <div className="rounded-lg border border-amber-500/40 bg-amber-950/30 p-3 text-sm text-amber-100">Use somente em contingência autorizada. O fluxo normal exige duas fotos da comanda pelo garçom. Este QR continua sem benefício comercial no piloto.</div><div className="grid gap-3"><label className="grid gap-1 text-sm font-bold">Valor da comanda<input inputMode="decimal" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="Ex.: 250,00" className="rounded-lg border border-stone-600 bg-stone-950 px-3 py-3" /></label><label className="grid gap-1 text-sm font-bold">Mesa ou referência<input value={mesa} onChange={(e) => setMesa(e.target.value)} placeholder="Ex.: Mesa 12" className="rounded-lg border border-stone-600 bg-stone-950 px-3 py-3" /></label></div>
     <button onClick={criarQr} disabled={loading || !valor || !mesa} className="rounded-xl bg-amber-500 py-4 font-black text-stone-950 disabled:opacity-50">{loading ? 'Gerando…' : 'Gerar QR temporário'}</button>{feedback && <p className="rounded-lg border border-red-500 bg-red-950/40 p-3 text-sm text-red-100">{feedback}</p>}
     {url && <section className="grid justify-items-center gap-4 rounded-xl border border-emerald-500 bg-emerald-950/30 p-5 text-center"><QRCodeSVG value={url} size={220} includeMargin /><strong>QR pronto para o cliente</strong><p className="text-sm text-stone-300">Expira às {new Date(expires).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. Depois de girar, este QR não poderá ser reutilizado.</p></section>}
   </section></main>;

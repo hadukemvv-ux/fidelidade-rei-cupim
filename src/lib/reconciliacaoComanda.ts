@@ -15,6 +15,7 @@ export type ResultadoReconciliacao = {
     atualizada_em: string | null;
     nivel_roleta_registrado: number | null;
     nivel_roleta_saipos: number | null;
+    regra_faixa_versao: string;
   };
 };
 
@@ -35,6 +36,14 @@ function vendaEstaCancelada(value: unknown) {
   return ['s', 'sim', 'true', '1', 'cancelada', 'cancelado'].includes(texto(value).toLowerCase());
 }
 
+function faixaHistoricaCincoNiveis(valor: number) {
+  if (valor < 100) return 1;
+  if (valor < 250) return 2;
+  if (valor < 400) return 3;
+  if (valor < 500) return 4;
+  return 5;
+}
+
 /**
  * Compara somente campos operacionais da venda. Não traz cliente, telefone,
  * CPF, endereço nem o payload original da Saipos para o banco do Clube.
@@ -44,6 +53,7 @@ export function compararComandaComVenda(
   valorConfirmado: number,
   venda: VendaSaipos | undefined,
   nivelRoletaRegistrado?: number | null,
+  regraFaixaVersao = 'v2_seis_faixas',
 ): ResultadoReconciliacao | null {
   if (!venda || texto(venda.id_sale) !== idPedido) return null;
 
@@ -53,13 +63,19 @@ export function compararComandaComVenda(
   const pagamentoTotal = valoresPagamento.length ? Math.round(valoresPagamento.reduce((soma, valor) => soma + valor, 0) * 100) / 100 : null;
   const totalSaipos = numero(venda.total_amount);
   const cancelada = vendaEstaCancelada(venda.canceled);
-  const nivelSaipos = totalSaipos === null ? null : getFaixaRoletaV2(totalSaipos).nivel;
+  const versaoConhecida = regraFaixaVersao === 'v1_cinco_faixas' || regraFaixaVersao === 'v2_seis_faixas';
+  const nivelSaipos = totalSaipos === null || totalSaipos < 0 || !versaoConhecida
+    ? null
+    : regraFaixaVersao === 'v1_cinco_faixas'
+      ? faixaHistoricaCincoNiveis(totalSaipos)
+      : getFaixaRoletaV2(totalSaipos).nivel;
   const nivelRegistrado = Number.isInteger(nivelRoletaRegistrado) ? Number(nivelRoletaRegistrado) : null;
   const motivos: string[] = [];
 
   if (cancelada) motivos.push('A venda aparece cancelada na Saipos.');
   if (totalSaipos === null || Math.abs(totalSaipos - valorConfirmado) > 0.01) motivos.push('O total da Saipos não confere com o valor confirmado na comanda.');
   if (pagamentoTotal === null || Math.abs(pagamentoTotal - valorConfirmado) > 0.01) motivos.push('A soma das formas de pagamento não confirma o total da comanda.');
+  if (!versaoConhecida) motivos.push('A versão da faixa da roleta não é reconhecida.');
   if (nivelRegistrado !== null && nivelSaipos !== null && nivelRegistrado !== nivelSaipos) motivos.push('A faixa da roleta registrada não confere com o total retornado pela Saipos.');
 
   return {
@@ -74,6 +90,7 @@ export function compararComandaComVenda(
       atualizada_em: texto(raw.updated_at) || null,
       nivel_roleta_registrado: nivelRegistrado,
       nivel_roleta_saipos: nivelSaipos,
+      regra_faixa_versao: regraFaixaVersao,
     },
   };
 }

@@ -32,3 +32,25 @@ test('marca divergência quando a faixa da roleta não corresponde ao valor conf
   assert.match(resultado?.motivo || '', /faixa da roleta/i);
   assert.equal(resultado?.detalhes.nivel_roleta_saipos, 3);
 });
+
+test('usa a regra vigente na emissão histórica do QR, sem reclassificar a venda', () => {
+  const venda = {
+    id_sale: 878519537, total_amount: 220, canceled: 'N',
+    payments: [{ payment_amount: 220 }],
+  } as never;
+  const legado = compararComandaComVenda('878519537', 220, venda, 2, 'v1_cinco_faixas');
+  assert.equal(legado?.compativel, true);
+  assert.equal(legado?.detalhes.nivel_roleta_saipos, 2);
+  assert.equal(legado?.detalhes.regra_faixa_versao, 'v1_cinco_faixas');
+  const atual = compararComandaComVenda('878519537', 220, venda, 2, 'v2_seis_faixas');
+  assert.equal(atual?.compativel, false);
+  assert.equal(atual?.detalhes.nivel_roleta_saipos, 3);
+});
+
+test('não aceita uma versão desconhecida da regra da roleta', () => {
+  const resultado = compararComandaComVenda('1', 220, {
+    id_sale: 1, total_amount: 220, canceled: 'N', payments: [{ payment_amount: 220 }],
+  } as never, 2, 'desconhecida');
+  assert.equal(resultado?.compativel, false);
+  assert.match(resultado?.motivo || '', /versão da faixa/i);
+});

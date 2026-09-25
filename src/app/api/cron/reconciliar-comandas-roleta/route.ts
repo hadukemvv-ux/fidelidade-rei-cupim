@@ -13,6 +13,7 @@ type ComandaPendente = {
   id_pedido_impresso: string;
   valor_confirmado: number;
   nivel_roleta: number | null;
+  regra_faixa_versao: string;
   criado_em: string;
 };
 
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
 
   const { data: comandas, error: comandasError } = await supabaseAdmin
     .from('comandas_roleta')
-    .select('id, id_pedido_impresso, valor_confirmado, nivel_roleta, criado_em')
+    .select('id, id_pedido_impresso, valor_confirmado, nivel_roleta, regra_faixa_versao, criado_em')
     .eq('status', 'qr_emitido')
     .eq('reconciliacao_status', 'pendente')
     .not('id_pedido_impresso', 'is', null)
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
     let pendentes = 0;
 
     for (const comanda of comandas as ComandaPendente[]) {
-      const resultado = compararComandaComVenda(comanda.id_pedido_impresso, Number(comanda.valor_confirmado), porId.get(comanda.id_pedido_impresso), comanda.nivel_roleta);
+      const resultado = compararComandaComVenda(comanda.id_pedido_impresso, Number(comanda.valor_confirmado), porId.get(comanda.id_pedido_impresso), comanda.nivel_roleta, comanda.regra_faixa_versao);
       if (!resultado) {
         pendentes += 1;
         continue;

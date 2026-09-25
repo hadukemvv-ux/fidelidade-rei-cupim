@@ -47,7 +47,7 @@ export default function AdminHome() {
         <div className="admin-section-title"><div><span>Resumo</span><h2 id="admin-summary-title">Situação do clube</h2></div><small>Dados atualizados ao abrir a página</small></div>
         <div className="admin-kpi-grid">
           <article><span>Clientes na base</span><strong>{stats ? stats.totalClientes.toLocaleString('pt-BR') : '—'}</strong><small>Cadastros importados e digitais</small></article>
-          <article><span>Pontos em circulação</span><strong>{stats ? stats.saldoPontosAtivos.toLocaleString('pt-BR') : '—'}</strong><small>Estimativa: distribuídos menos resgatados</small></article>
+          <article><span>Saldo de pontos dos clientes</span><strong>{stats ? stats.saldoPontosAtivos.toLocaleString('pt-BR') : '—'}</strong><small>Soma dos saldos disponíveis nas contas</small></article>
           <article><span>Resgates registrados</span><strong>{stats ? stats.totalResgates.toLocaleString('pt-BR') : '—'}</strong><small>Produtos, cashback e entregas</small></article>
           <article className="accent"><span>Autorizaram aniversário</span><strong>{stats ? stats.clientesAniversario.toLocaleString('pt-BR') : '—'}</strong><small>Campanha ainda não envia mensagens</small></article>
         </div>

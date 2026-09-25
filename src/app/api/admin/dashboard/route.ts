@@ -27,26 +27,13 @@ export async function GET(request: NextRequest) {
       return handleApiError(clientError, '/api/admin/dashboard', requestId);
     }
 
-    // 2. Pontos Distribuídos
-    const { data: entradas, error: entradasError } = await supabaseAdmin
-      .from('extrato_pontos')
-      .select('valor')
-      .eq('tipo', 'entrada');
+    // 2. Somar os saldos operacionais, incluindo pontos de abertura importados.
+    const { data: saldoPontosAtivos, error: saldoError } = await supabaseAdmin
+      .rpc('saldo_pontos_cadastrados');
 
-    if (entradasError) {
-      logError('/api/admin/dashboard', entradasError as Error, {
-        requestId,
-      });
-      return handleApiError(entradasError, '/api/admin/dashboard', requestId);
-    }
-
-    const { data: creditosAtomicos, error: creditosError } = await supabaseAdmin
-      .from('fidelidade_transacoes')
-      .select('pontos_gerados');
-
-    if (creditosError) {
-      logError('/api/admin/dashboard', creditosError as Error, { requestId });
-      return handleApiError(creditosError, '/api/admin/dashboard', requestId);
+    if (saldoError) {
+      logError('/api/admin/dashboard', saldoError as Error, { requestId });
+      return handleApiError(saldoError, '/api/admin/dashboard', requestId);
     }
 
     const { count: clientesAniversario, error: birthdayError } = await supabaseAdmin
@@ -59,29 +46,7 @@ export async function GET(request: NextRequest) {
       return handleApiError(birthdayError, '/api/admin/dashboard', requestId);
     }
 
-    const pontosDistribuidosLegado = entradas?.reduce((s, e) => s + Number(e.valor || 0), 0) || 0;
-    const pontosDistribuidosAtomicos = creditosAtomicos?.reduce(
-      (s, e) => s + Number(e.pontos_gerados || 0),
-      0
-    ) || 0;
-    const pontosDistribuidos = pontosDistribuidosLegado + pontosDistribuidosAtomicos;
-
-    // 3. Pontos Resgatados
-    const { data: saidas, error: saidasError } = await supabaseAdmin
-      .from('resgates')
-      .select('valor')
-      .in('tipo', ['frete', 'pontos', 'produto']);
-
-    if (saidasError) {
-      logError('/api/admin/dashboard', saidasError as Error, {
-        requestId,
-      });
-      return handleApiError(saidasError, '/api/admin/dashboard', requestId);
-    }
-
-    const pontosResgatados = saidas?.reduce((s, e) => s + Number(e.valor || 0), 0) || 0;
-
-    // 4. Total de Resgates
+    // 3. Total de Resgates
     const { count: totalResgates, error: resgateCountError } = await supabaseAdmin
       .from('resgates')
       .select('*', { count: 'exact', head: true });
@@ -93,28 +58,10 @@ export async function GET(request: NextRequest) {
       return handleApiError(resgateCountError, '/api/admin/dashboard', requestId);
     }
 
-    // 5. Cashback Distribuído
-    const { data: cashbackData, error: cashbackError } = await supabaseAdmin
-      .from('resgates')
-      .select('valor')
-      .eq('tipo', 'cashback');
-
-    if (cashbackError) {
-      logError('/api/admin/dashboard', cashbackError as Error, {
-        requestId,
-      });
-      return handleApiError(cashbackError, '/api/admin/dashboard', requestId);
-    }
-
-    const cashbackDistribuido = cashbackData?.reduce((s, e) => s + (e.valor || 0), 0) || 0;
-
     const dashboardData = {
       totalClientes: totalClientes || 0,
-      pontosDistribuidos,
-      pontosResgatados,
-      saldoPontosAtivos: pontosDistribuidos - pontosResgatados,
+      saldoPontosAtivos: Number(saldoPontosAtivos),
       totalResgates: totalResgates || 0,
-      cashbackDistribuido,
       clientesAniversario: clientesAniversario || 0,
       timestamp: new Date().toISOString(),
     };

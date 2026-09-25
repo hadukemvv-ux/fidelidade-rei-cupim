@@ -1,20 +1,14 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { canAccessOperationalRoute, type OperationalRole } from "@/lib/operationalRoles";
 
-export type OperationalRole = "superadmin" | "gestor" | "caixa" | "garcom";
+export type { OperationalRole } from "@/lib/operationalRoles";
 
 export type OperationalActor = {
   userId: string;
   nome: string;
   email: string;
   papel: OperationalRole;
-};
-
-const roleRank: Record<OperationalRole, number> = {
-  garcom: 0,
-  caixa: 1,
-  gestor: 2,
-  superadmin: 3,
 };
 
 export async function requireOperationalActor(
@@ -42,11 +36,8 @@ export async function requireOperationalActor(
     return NextResponse.json({ error: "Seu acesso operacional ainda não foi liberado." }, { status: 403 });
   }
 
-  const papel = profile.papel as OperationalRole;
-  if (roleRank[papel] < roleRank[minimumRole]) {
-    return NextResponse.json({ error: "Seu perfil não tem permissão para esta operação." }, { status: 403 });
-  }
-  if (allowedRoles && !allowedRoles.includes(papel)) {
+  const papel = profile.papel;
+  if (!canAccessOperationalRoute(papel, minimumRole, allowedRoles)) {
     return NextResponse.json({ error: "Seu perfil não tem permissão para esta operação." }, { status: 403 });
   }
 

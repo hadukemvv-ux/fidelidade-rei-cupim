@@ -100,6 +100,7 @@ Decisão após a resposta:
 
 1. [x] Restringir importação de planilha a superadmin, com limite de 2 MB e 2.000 linhas por envio. Em 22/09, `xlsx` foi atualizado para 0.20.3 pelo canal oficial do SheetJS; `npm audit` passou sem vulnerabilidades.
 2. [Em andamento] Validar em produção a matriz única de permissões e o encaminhamento pós-login com uma conta de cada papel; cobrir auditoria obrigatória para todos os escritores administrativos.
+   - Em 25/09, a checagem estática das rotas sensíveis não encontrou liberação indevida evidente. O guard de papéis passou a negar valores desconhecidos explicitamente e ganhou testes unitários da matriz. Ainda falta o teste real em produção com as quatro contas e a verificação da trilha de cada escrita.
 3. Consolidar cupom novo e remover o caminho legado quando o teste de caixa for concluído.
 4. [Em andamento] Preferência de marketing/opt-out do cliente implementada: o portal permite revogar WhatsApp promocional ou aniversário, com evidência e auditoria. Falta testar ponta a ponta, definir canal formal de direitos e fechar o plano de retenção. O aviso público, a central de incidente, o modo de contenção e o bloqueio de rotas críticas já foram preparados; o checkpoint está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`.
 5. [Em andamento] Criar backup/restauração testável do Supabase e alertas de cron. O projeto está no plano Free, que não oferece backups agendados; definir armazenamento protegido e testar a restauração isolada antes da abertura.

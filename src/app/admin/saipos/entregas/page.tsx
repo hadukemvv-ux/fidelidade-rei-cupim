@@ -15,6 +15,7 @@ type Delivery = {
   delivery_by: string | null;
   history_available: boolean;
   statuses: Status[];
+  latest_status: string | null;
 };
 type Result = {
   ok?: boolean;
@@ -81,16 +82,17 @@ export default function SaiposDeliveriesPage() {
       <section className="admin-notice"><strong>O que o teste pode provar</strong><span>{data.history_available ? 'A consulta de histórico respondeu.' : `O histórico de status não respondeu${data.history_error_status ? ` (código ${data.history_error_status})` : ''}${data.history_error_kind === 'tempo_esgotado' ? ': tempo esgotado' : data.history_error_kind === 'falha_de_conexao' ? ': falha de conexão' : ''}; horários de entrega não foram confirmados.`} {data.history_available && !data.history_complete ? 'O histórico ultrapassou o limite da consulta; resultados podem estar incompletos.' : ''} O tempo estimado retornado pela venda ainda precisa ser comparado ao prazo mostrado ao cliente. Nenhum pedido desta tela é declarado atrasado.</span></section>
       <section>
         <div className="admin-section-title"><div><span>Pedidos de entrega</span><h2>Monitoramento técnico</h2></div><small>Mostrando até 150 pedidos recentes de {data.delivery_count ?? 0}</small></div>
-        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Origem</th><th>Criado</th><th>Tempo estimado</th><th>Situação</th><th>Etapas</th></tr></thead><tbody>
+        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Origem</th><th>Criado</th><th>Tempo estimado</th><th>Situação</th><th>Etapa atual</th><th>Histórico</th></tr></thead><tbody>
           {(data.rows || []).map((row, index) => <tr key={`${row.id_sale}-${index}`}>
             <td><strong>{row.sale_number || row.id_sale || '—'}</strong><small>ID {row.id_sale || 'não informado'}</small></td>
             <td>{channelLabel(row)}</td>
             <td>{row.created_at || '—'}</td>
             <td>{row.delivery_time === null ? 'Não informado' : `${row.delivery_time} (unidade a confirmar)`}</td>
             <td>{row.canceled === 'Y' ? 'Cancelado' : row.canceled === 'N' ? 'Não cancelado' : 'Não informado'}</td>
+            <td>{row.latest_status || 'Não informado'}</td>
             <td>{row.history_available ? <details><summary>{row.statuses.length} etapa(s)</summary><ol>{row.statuses.map((status, step) => <li key={step}>{status.status || 'Status sem nome'} · {status.at || 'sem horário'}</li>)}</ol></details> : 'Sem histórico'}</td>
           </tr>)}
-          {!data.rows?.length && <tr><td colSpan={6}>Nenhuma entrega retornada para a data.</td></tr>}
+          {!data.rows?.length && <tr><td colSpan={7}>Nenhuma entrega retornada para a data.</td></tr>}
         </tbody></table></div>
       </section>
     </>}

@@ -18,7 +18,16 @@ test('resumo de entrega não transmite dados pessoais nem inventa prazo', () => 
   }, { histories: [{ desc_store_sale_status: 'Entregue', created_at: '2026-09-26T13:00:00Z', user: { email: 'privado@example.com' } }] });
   assert.equal(result.delivery_time, null);
   assert.equal(result.statuses[0].status, 'Entregue');
+  assert.equal(result.latest_status, 'Entregue');
   assert.equal(JSON.stringify(result).includes('privado'), false);
+});
+
+test('etapa atual usa o horário mais recente, mesmo quando o histórico vem fora de ordem', () => {
+  const result = summarizeDelivery({ id_sale: 123 }, { histories: [
+    { desc_store_sale_status: 'Entregue', created_at: '2026-09-26T13:00:00Z' },
+    { desc_store_sale_status: 'Em preparo', created_at: '2026-09-26T12:00:00Z' },
+  ] });
+  assert.equal(result.latest_status, 'Entregue');
 });
 
 test('histórico Saipos usa filtros documentados e não expõe token na URL', async () => {

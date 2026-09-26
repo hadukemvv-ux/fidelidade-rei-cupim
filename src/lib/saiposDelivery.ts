@@ -32,6 +32,15 @@ export function summarizeDelivery(sale: Row, history?: Row) {
   const delivery = object(sale.delivery);
   const partner = object(sale.partner_sale);
   const events = Array.isArray(history?.histories) ? history.histories : [];
+  const statuses = events.slice(0, 30).map((event) => {
+    const row = object(event);
+    return {
+      status: safeText(row?.desc_store_sale_status),
+      at: safeDate(row?.created_at),
+      duration_seconds: safeNumber(row?.duration_time_seconds),
+    };
+  });
+  const latest = statuses.filter((status) => status.at).sort((a, b) => (b.at || '').localeCompare(a.at || ''))[0];
 
   return {
     id_sale: safeText(sale.id_sale, 30),
@@ -45,14 +54,8 @@ export function summarizeDelivery(sale: Row, history?: Row) {
     delivery_time: safeNumber(delivery?.delivery_time) && Number(delivery?.delivery_time) > 0
       ? Number(delivery?.delivery_time) : null,
     delivery_by: safeText(delivery?.delivery_by, 20),
-    statuses: events.slice(0, 30).map((event) => {
-      const row = object(event);
-      return {
-        status: safeText(row?.desc_store_sale_status),
-        at: safeDate(row?.created_at),
-        duration_seconds: safeNumber(row?.duration_time_seconds),
-      };
-    }),
+    statuses,
+    latest_status: latest?.status || null,
     history_available: Boolean(history),
   };
 }

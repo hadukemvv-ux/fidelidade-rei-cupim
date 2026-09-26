@@ -261,6 +261,19 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 .admin-brand small { color: rgba(255,255,255,.48); font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .admin-nav { display: grid; gap: 1.15rem; flex: 1; padding: 1.15rem 0; }
 .admin-nav section { display: grid; gap: .28rem; }
+.admin-nav-group-items { display: grid; gap: .28rem; }
+.admin-nav-group-button { display: flex; align-items: center; justify-content: space-between; width: 100%; margin: 0 0 .1rem; padding: .35rem .65rem; border: 0; background: transparent; color: rgba(255,255,255,.52); cursor: pointer; font-size: .68rem; font-weight: 900; letter-spacing: .12em; text-align: left; text-transform: uppercase; }
+.admin-nav-group-button:hover, .admin-nav-group-button:focus-visible { color: white; }
+.admin-nav-group-button[aria-expanded="true"] > span, .admin-nav-folder-button[aria-expanded="true"] > b { transform: rotate(180deg); }
+.admin-nav-folder { display: grid; gap: .28rem; }
+.admin-nav-folder-button { display: grid; grid-template-columns: 2.15rem 1fr auto; align-items: center; gap: .65rem; min-height: 3.15rem; padding: .45rem .55rem; border: 0; border-radius: .45rem; background: transparent; color: rgba(255,255,255,.7); cursor: pointer; text-align: left; }
+.admin-nav-folder-button:hover, .admin-nav-folder-button.active { background: rgba(255,255,255,.06); color: white; }
+.admin-nav-folder-button i { display: grid; place-items: center; width: 2.15rem; height: 2.15rem; border: 1px solid rgba(255,255,255,.12); border-radius: .42rem; font-size: .78rem; font-style: normal; font-weight: 900; }
+.admin-nav-folder-button span { display: grid; gap: .08rem; }
+.admin-nav-folder-button strong { font-size: .84rem; }
+.admin-nav-folder-button small { color: inherit; font-size: .68rem; opacity: .58; }
+.admin-nav-folder-button b { font-size: .8rem; }
+.admin-nav-folder-items { display: grid; gap: .28rem; padding-left: 1.1rem; border-left: 1px solid rgba(255,255,255,.12); }
 .admin-nav section > p { margin: 0 .65rem .3rem; color: rgba(255,255,255,.38); font-size: .68rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
 .admin-nav a { display: grid; grid-template-columns: 2.15rem 1fr; align-items: center; gap: .65rem; min-height: 3.15rem; padding: .45rem .55rem; border-radius: .45rem; color: rgba(255,255,255,.7); transition: background .18s ease, color .18s ease; }
 .admin-nav a:hover { background: rgba(255,255,255,.06); color: white; }

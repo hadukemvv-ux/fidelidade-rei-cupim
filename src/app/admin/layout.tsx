@@ -16,8 +16,10 @@ const supabase = createClient(
 );
 
 type NavItem = { href: string; icon: string; label: string; hint: string };
+type NavFolder = { label: string; icon: string; hint: string; items: NavItem[] };
+type NavGroup = { label: string; items: NavItem[]; folders?: NavFolder[] };
 
-const navigation: Array<{ label: string; items: NavItem[] }> = [
+const navigation: NavGroup[] = [
   { label: 'Visão geral', items: [
     { href: '/admin', icon: '⌂', label: 'Início', hint: 'Resumo e atalhos' },
     { href: '/admin/analytics', icon: '▥', label: 'Relatórios', hint: 'Resultados por período' },
@@ -36,10 +38,12 @@ const navigation: Array<{ label: string; items: NavItem[] }> = [
     { href: '/admin/comandas', icon: '▣', label: 'Comandas', hint: 'Fotos pendentes de conferência' },
     { href: '/admin/operacao-roleta', icon: '◷', label: 'Operação da roleta', hint: 'Resultado diário e sinais' },
     { href: '/admin/auditoria', icon: '◷', label: 'Auditoria', hint: 'Quem fez cada ação' },
-    { href: '/admin/saipos', icon: '↔', label: 'Saipos', hint: 'Teste seguro da conexão' },
     { href: '/admin/seguranca', icon: '⛨', label: 'Privacidade', hint: 'Incidentes e contenção' },
+  ], folders: [{ label: 'Saipos', icon: '↔', hint: 'Integração e entregas', items: [
+    { href: '/admin/saipos', icon: '◇', label: 'Diagnóstico', hint: 'Teste da conexão' },
+    { href: '/admin/saipos/entregas', icon: '▣', label: 'Entregas', hint: 'Prazos e etapas' },
     { href: '/admin/importar', icon: '⇧', label: 'Importação', hint: 'Clientes da Saipos' },
-  ] },
+  ] }] },
 ];
 
 const pageInfo: Record<string, { title: string; description: string }> = {
@@ -59,6 +63,7 @@ const pageInfo: Record<string, { title: string; description: string }> = {
   '/admin/operacao-roleta': { title: 'Operação da roleta', description: 'Acompanhe conciliações, divergências e qualidade operacional por dia.' },
   '/admin/auditoria': { title: 'Auditoria', description: 'Acompanhe liberações, validações e ações administrativas.' },
   '/admin/saipos': { title: 'Saipos — teste de conexão', description: 'Confirme a API sem criar clientes, pontos ou benefícios.' },
+  '/admin/saipos/entregas': { title: 'Saipos — entregas', description: 'Examine canal, prazo estimado e etapas de pedidos sem alterar dados.' },
   '/admin/garcons/alertas': { title: 'Alertas antigos pausados', description: 'A segurança operacional agora usa auditoria e contenção de incidentes.' },
   '/admin/seguranca': { title: 'Privacidade e incidentes', description: 'Contenha riscos, preserve evidências e acompanhe a investigação.' },
   '/admin/importar': { title: 'Importação', description: 'Atualize a base de clientes com uma planilha da Saipos.' },
@@ -76,6 +81,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [access, setAccess] = useState<'checking' | 'allowed' | 'denied'>('checking');
   const [papel, setPapel] = useState<OperationalRole | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     let active = true;
@@ -133,11 +140,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <nav className="admin-nav" aria-label="Navegação administrativa">
           {navigation.map((group) => (
             <section key={group.label}>
-              <p>{group.label}</p>
-              {group.items.map((item) => {
+              <button type="button" className="admin-nav-group-button" aria-expanded={expandedGroups[group.label] ?? Boolean(group.items.some((item) => isActive(pathname, item.href)) || group.folders?.some((folder) => folder.items.some((item) => isActive(pathname, item.href))))} onClick={() => setExpandedGroups((current) => ({ ...current, [group.label]: !(current[group.label] ?? Boolean(group.items.some((item) => isActive(pathname, item.href)) || group.folders?.some((folder) => folder.items.some((item) => isActive(pathname, item.href))))) }))}>{group.label}<span aria-hidden="true">⌄</span></button>
+              {(expandedGroups[group.label] ?? Boolean(group.items.some((item) => isActive(pathname, item.href)) || group.folders?.some((folder) => folder.items.some((item) => isActive(pathname, item.href))))) && <div className="admin-nav-group-items">{group.items.map((item) => {
                 const active = isActive(pathname, item.href);
                 return <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className={active ? 'active' : ''} aria-current={active ? 'page' : undefined}><i aria-hidden="true">{item.icon}</i><span><strong>{item.label}</strong><small>{item.hint}</small></span></Link>;
-              })}
+              })}{group.folders?.map((folder) => {
+                const active = folder.items.some((item) => isActive(pathname, item.href));
+                const open = expandedFolders[folder.label] ?? active;
+                return <div className="admin-nav-folder" key={folder.label}>
+                  <button type="button" className={`admin-nav-folder-button ${active ? 'active' : ''}`} aria-expanded={open} onClick={() => setExpandedFolders((current) => ({ ...current, [folder.label]: !open }))}><i aria-hidden="true">{folder.icon}</i><span><strong>{folder.label}</strong><small>{folder.hint}</small></span><b aria-hidden="true">⌄</b></button>
+                  {open && <div className="admin-nav-folder-items">{folder.items.map((item) => <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className={isActive(pathname, item.href) ? 'active' : ''} aria-current={isActive(pathname, item.href) ? 'page' : undefined}><i aria-hidden="true">{item.icon}</i><span><strong>{item.label}</strong><small>{item.hint}</small></span></Link>)}</div>}
+                </div>;
+              })}</div>}
             </section>
           ))}
         </nav>

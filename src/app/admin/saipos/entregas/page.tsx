@@ -66,7 +66,7 @@ export default function SaiposDeliveriesPage() {
   }
 
   return <div className="admin-report">
-    <section className="admin-notice"><strong>Diagnóstico de entregas — somente leitura</strong><span>Esta página consulta a Saipos sob demanda. Não cria cupons, altera pedidos ou determina automaticamente que uma entrega atrasou. A API ainda não permitiu distinguir com segurança canal próprio de marketplace.</span></section>
+    <section className="admin-notice"><strong>Diagnóstico de entregas — somente leitura</strong><span>Esta página consulta a Saipos sob demanda. Não cria cupons, altera pedidos ou determina automaticamente que uma entrega atrasou. A compensação por atraso está em standby: a API disponível não identifica com segurança canal próprio versus marketplace.</span></section>
     <section className="admin-toolbar">
       <label><span>Data de criação dos pedidos</span><input type="date" value={day} onChange={(event) => setDay(event.target.value)} /></label>
       <button type="button" onClick={consult} disabled={loading}>{loading ? 'Consultando…' : 'Consultar entregas'}</button>

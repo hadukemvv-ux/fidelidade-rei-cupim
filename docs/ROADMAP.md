@@ -146,6 +146,7 @@ Vendas Saipos do período -> verificar origem elegível, pagamento e cancelament
 -> recalcular nível pela janela móvel de 90 dias -> relatório e alerta de falha
 ```
 
+- [x] Primeira base isolada em código e testes: a identificação recusa CPF/nome, telefone sem DDD, conta não verificada e duplicidade; o cálculo de referência soma somente compras dentro dos últimos 90 dias. **Ainda não está ligado ao processador nem altera saldos reais.**
 - [ ] Aprovar a elegibilidade: somente cliente com telefone comprovado e conta concluída recebe pontos/cashback; não criar perfis, saldos ou logs individuais para todos os compradores da Saipos. Não usar CPF isoladamente para atribuir a compra a uma conta.
 - [ ] Decidir a primeira compra: proposta de reconhecer compra anterior ao cadastro por até **7 dias**, somente após verificação do mesmo telefone; prazo e marco inicial dependem de aprovação do responsável. Sem guardar venda de não participante no Clube apenas para essa possibilidade.
 - [ ] Confirmar em exemplos reais que a API retorna telefone com DDD 85 para balcão, salão e delivery; número curto de mesa/balcão não substitui `id_sale`. Testar ausência, duplicidade, troca de telefone e mais de uma conta candidata sem crédito ambíguo.

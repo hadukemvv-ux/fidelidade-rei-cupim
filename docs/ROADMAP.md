@@ -78,6 +78,7 @@ Pagamento -> duas fotos privadas da comanda -> conferência dos campos pelo oper
 - [x] Tela/rota de caixa para consulta, confirmação e auditoria do cupom V2; a recusa ainda será desenhada com motivo obrigatório.
 - [x] Geração manual do QR protegida para piloto: sem escolha manual de nível e sem permissão para perfil `caixa` emitir prêmio.
 - [ ] Piloto fechado com compras reais antes de publicar a V2.
+- [ ] Corrigir a identidade dos ícones do site antes do lançamento. Em 26/09, a produção ainda servia `src/app/favicon.ico` com o triângulo padrão da Vercel e também `src/app/icon.png` com a chama genérica; o Next.js publica ambos como `rel="icon"`. Falta receber a arte oficial aprovada do Rei do Cupim, gerar ícones coerentes para navegador e tela inicial do celular, substituir os arquivos e conferir o resultado em produção (inclusive cache do navegador).
 
 ### Saipos — reconciliação em validação
 
@@ -101,6 +102,16 @@ positivo porque a emissão usou a regra anterior de cinco faixas; agora a
 versão da regra fica registrada por comanda e a retificação foi auditada.
 O relatório do dia mostra uma comanda compatível. Isso ainda não prova
 disponibilidade imediata da venda nem o comportamento de cancelamentos.
+
+Em 26/09, novo teste controlado: a Mesa 200, ID Saipos `882731373`, R$ 259,16,
+consta não cancelada e com pagamento de R$ 259,16. O Clube registrou duas fotos,
+emitiu um QR de teste às 14:42 e auditou um giro/cupom de teste às 14:44.
+A reconciliação ainda estava pendente no painel antes da janela automática do
+dia seguinte. A retirada/balcão, ID Saipos `882731058`, R$ 22,00, também consta
+não cancelada, mas não é comanda da roleta e não aparece no painel de comandas.
+Os números curtos mesa 200 e balcão 140 não são localizáveis na API de Dados;
+usar o ID completo da venda. O método da retirada veio descrito como `Vale` e
+o da mesa como `Pagamento não cadastrado`; ambos retornaram o valor integral.
 
 Decisão após a resposta:
 

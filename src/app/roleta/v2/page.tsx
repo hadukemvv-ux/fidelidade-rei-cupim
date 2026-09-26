@@ -1,25 +1,25 @@
 "use client";
 
-import { FormEvent, Suspense, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 import styles from "./roleta.module.css";
 import { rotationForSector } from "@/lib/wheelLanding";
 
 type Prize = { nome: string; emoji: string };
 type Session = { nivel: number; expira_em: string; premios: Prize[] };
 type Result = { premio: Prize & { descricao_vitoria: string }; cupom: string; expira_em: string; modo_teste: boolean };
-const levels = ["", "Até R$ 100", "R$ 100 a R$ 200", "R$ 200 a R$ 300", "R$ 300 a R$ 400", "R$ 400 a R$ 500", "Acima de R$ 500"];
-
 function Wheel({ prizes, rotation, spinning }: { prizes: Prize[]; rotation: number; spinning: boolean }) {
   const sectors = Array.from({ length: 6 }, (_, index) => prizes[index % prizes.length]);
+  const repeatedPrize = new Set(sectors.map((prize) => prize.nome)).size === 1;
   return <div className={styles.wheelStage} role="img" aria-label={spinning ? "Roleta girando" : "Roleta de prêmios do Clube Cupim"}>
     <span className={styles.pointer} aria-hidden="true" />
     <div className={styles.wheel} style={{ transform: `rotate(${rotation}deg)` }}>
       {sectors.map((prize, index) => {
         const angle = index * 60 + 30;
-        return <span className={styles.sectorLabel} key={index} style={{ transform: `rotate(${angle}deg) translateY(calc(var(--wheel-size) * -0.34)) rotate(${-angle}deg)` }}><span>{prize.emoji}</span><small>{prize.nome}</small></span>;
+        return <span className={styles.sectorLabel} key={index} style={{ transform: `rotate(${angle}deg) translateY(calc(var(--wheel-size) * -0.34)) rotate(${-angle}deg)` }}>{repeatedPrize ? <Image src="/logo.png" alt="" width={32} height={32} /> : <><span>{prize.emoji}</span><small>{prize.nome}</small></>}</span>;
       })}
-      <span className={styles.hub} aria-hidden="true">O REI<br />DO CUPIM</span>
+      <span className={styles.hub} aria-hidden="true"><Image src="/logo.png" alt="" width={64} height={64} /></span>
     </div>
   </div>;
 }
@@ -30,11 +30,20 @@ function RoletaContent() {
   const [session, setSession] = useState<Session | null>(null);
   const [phone, setPhone] = useState("");
   const [marketing, setMarketing] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const privacyDialog = useRef<HTMLDialogElement>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [notice, setNotice] = useState("Preparando sua chance...");
   const [loading, setLoading] = useState(true);
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
+
+  useEffect(() => {
+    const dialog = privacyDialog.current;
+    if (!dialog) return;
+    if (privacyOpen && !dialog.open) dialog.showModal();
+    if (!privacyOpen && dialog.open) dialog.close();
+  }, [privacyOpen]);
 
   useEffect(() => {
     if (!token) { setNotice("Este QR é inválido. Peça ajuda à equipe."); setLoading(false); return; }
@@ -65,19 +74,19 @@ function RoletaContent() {
   }
 
   return <main className={styles.page}><div className={styles.shell}>
-    <header className={styles.header}><span className={styles.brandMark}>♛</span><span>O REI DO CUPIM <small>CLUBE CUPIM</small></span><span className={styles.headerBadge}>A ROLETA DO REI</span></header>
-    <section className={styles.hero}><p className={styles.eyebrow}>SUA CONTA VIROU UMA CHANCE</p><h1>Hoje a sorte <em>é sua.</em></h1><p>Um giro, um resultado. Descubra o que o Rei reservou para você.</p>{session && <div className={styles.band}><span>FAIXA DA CONTA</span><strong>{levels[session.nivel] || "Clube Cupim"}</strong></div>}</section>
+    <header className={styles.header}><Image src="/logo.png" alt="" width={42} height={42} /><span>O REI DO CUPIM <small>CLUBE CUPIM</small></span></header>
+    <section className={styles.hero}><p className={styles.eyebrow}>A ROLETA DO REI</p><h1>{result ? <>Giro <em>concluído.</em></> : <>É sua vez <em>de girar.</em></>}</h1></section>
     {loading && <p className={styles.message}>{notice}</p>}
     {!loading && notice && <p className={styles.error} role="alert">{notice}</p>}
     {!loading && session && !result && <div className={styles.game}><Wheel prizes={session.premios} rotation={rotation} spinning={spinning} /><form className={styles.form} onSubmit={spin}>
-      <span className={styles.step}>01 / PARTICIPE</span><h2>Pronto para girar?</h2><p>Informe seu WhatsApp para vincular o resultado ao seu QR. Cada QR permite apenas um giro.</p>
+      <h2>Vamos lá?</h2>
       <label className={styles.phoneLabel}>Seu WhatsApp<input required disabled={spinning} inputMode="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="(85) 99999-9999" /></label>
-      <label className={styles.optIn}><input disabled={spinning} type="checkbox" checked={marketing} onChange={(event) => setMarketing(event.target.checked)} /><span>Quero receber novidades e ofertas pelo WhatsApp. Opcional, com cancelamento a qualquer momento.</span></label>
-      <button className={styles.spinButton} disabled={spinning} type="submit">{spinning ? "PREPARANDO RESULTADO…" : "GIRAR A ROLETA"}<span aria-hidden="true">↗</span></button>
-      <small className={styles.privacy}>Seu telefone ajuda a proteger o giro único. <a href="/privacidade">Veja nossa política de privacidade</a>.</small>
+      <div className={styles.consentRow}><label className={styles.optIn}><input disabled={spinning} type="checkbox" checked={marketing} onChange={(event) => setMarketing(event.target.checked)} /><span>Receber ofertas no WhatsApp</span></label><button type="button" className={styles.learnMore} onClick={() => setPrivacyOpen(true)}>Saiba mais</button></div>
+      <button className={styles.spinButton} disabled={spinning} type="submit">{spinning ? "GIRANDO…" : "GIRAR AGORA"}<span aria-hidden="true">↗</span></button>
+      <small className={styles.privacy}>Um giro por QR. Ofertas são opcionais.</small>
     </form></div>}
-    {result && <section className={styles.result} aria-live="polite"><span className={styles.resultEmoji} aria-hidden="true">{result.premio.emoji}</span><p className={styles.eyebrow}>RESULTADO CONFIRMADO</p><h2>{result.premio.nome}</h2><p>{result.premio.descricao_vitoria}</p><div className={styles.coupon}><span>CÓDIGO DO BENEFÍCIO</span><strong>{result.cupom}</strong><small>Apresente no atendimento até {new Date(result.expira_em).toLocaleDateString("pt-BR")}.</small></div>{result.modo_teste && <p className={styles.testWarning}>Este é um teste sem valor comercial. O benefício não pode ser utilizado em compras.</p>}</section>}
-    <footer className={styles.footer}>CHURRASCO • EXPERIÊNCIA • SORTE <span>FORTALEZA, CE</span></footer>
+    {result && <section className={styles.result} aria-live="polite">{result.modo_teste ? <Image className={styles.resultLogo} src="/logo.png" alt="" width={76} height={76} /> : <span className={styles.resultEmoji} aria-hidden="true">{result.premio.emoji}</span>}<p className={styles.eyebrow}>{result.modo_teste ? "SIMULAÇÃO CONCLUÍDA" : "VOCÊ GANHOU"}</p><h2>{result.premio.nome}</h2>{result.modo_teste ? <p className={styles.testWarning}>Teste do Clube — sem benefício para resgatar.</p> : <><p>{result.premio.descricao_vitoria}</p><div className={styles.coupon}><span>SEU CÓDIGO</span><strong>{result.cupom}</strong><small>Válido até {new Date(result.expira_em).toLocaleDateString("pt-BR")}.</small></div></>}</section>}
+    <dialog ref={privacyDialog} className={styles.privacyDialog} aria-labelledby="privacy-title" onClose={() => setPrivacyOpen(false)}><div className={styles.dialogInner}><button type="button" className={styles.closeDialog} aria-label="Fechar" onClick={() => setPrivacyOpen(false)}>×</button><p className={styles.eyebrow}>JOGUE COM TRANQUILIDADE</p><h2 id="privacy-title">Seu giro, suas escolhas</h2><p>Seu WhatsApp vincula o resultado a este QR. Cada QR dá direito a um giro.</p><p>Receber ofertas é opcional: só enviaremos promoções se você marcar a opção. Você poderá cancelar quando quiser.</p><a href="/privacidade" target="_blank" rel="noopener noreferrer">Ler o aviso de privacidade completo ↗</a><button type="button" className={styles.dialogButton} onClick={() => setPrivacyOpen(false)}>Entendi</button></div></dialog>
   </div></main>;
 }
 

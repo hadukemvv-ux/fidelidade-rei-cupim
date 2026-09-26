@@ -10,12 +10,14 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 
 | Frente | Estado | Próximo marco |
 | --- | --- | --- |
-| Recuperação, GitHub e Vercel | Concluído | Manter rotina de commits, deploy e confirmação Ready. |
-| Base de fidelidade/Saipos | Prova de conceito validada parcialmente | Consulta posterior pelo ID impresso funciona; falta medir latência e a representação de cancelamento antes de conceder benefícios. |
+| Recuperação, GitHub e deploy Vercel | Deploy funcional; plano comercial pendente | Confirmar Ready em cada mudança e resolver hospedagem permitida para uso comercial antes da abertura. |
+| Pontuação diária Saipos | **Pausada; não agenda nem credita pontos** | Reconstruir para contas verificadas, testar pagamentos/cancelamentos, ordenar vendas e agendar com observabilidade. |
+| Níveis de 90 dias | Cálculo atual não é janela móvel real | Recalcular o gasto elegível por data para permitir subida e descida sem apagar pontos. |
+| Saipos e QR da roleta | Prova de conceito validada parcialmente | Consulta posterior pelo ID impresso funciona; medir latência/cancelamento e concluir piloto antes de conceder prêmio comercial. |
 | Entregas Saipos | Diagnóstico somente-leitura publicado; compensação por atraso em standby | Retomar apenas se a Saipos disponibilizar origem confiável por pedido via API ou outro mecanismo autorizado e verificável. |
 | Operadores e auditoria | Base operacional concluída; validação pendente | Papéis e rotas pós-login estão separados; validar no próximo piloto com contas reais de teste. |
 | Cupons da operação | Parcial | Retirar gradualmente o validador legado e testar o fluxo novo com a caixa. |
-| Roleta V2 | Piloto técnico não comercial ativo | Registrar uma comanda de teste, emitir QR de teste e medir a reconciliação Saipos. |
+| Roleta V2 | Piloto técnico não comercial ativo | Mesa 200 emitiu QR e girou em 26/09; conferir reconciliação automática posterior e completar cenários negativos. |
 | WhatsApp OTP | Preparado, desligado | Escolher provedor oficial após adquirir o número comercial. |
 | LGPD e operação pública | Em andamento | Contenção inicial, inventário, preferências, retenção, backup e revisão jurídica. |
 
@@ -33,7 +35,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 - [x] Piloto técnico ativado no Supabase: QR de 10 minutos, somente o prêmio interno `piloto_interno_sem_valor_v2` (custo R$ 0,00) e baixa de cupom bloqueada pelo banco enquanto `v2_modo_teste=true`.
 - [x] Execução do giro concedida somente ao `service_role` no Supabase; navegador e usuários comuns seguem sem acesso à função.
 - [x] Matriz de permissões aplicada em 18/09 e encaminhamento de login corrigido em `f436a6d`: garçom emite QR pelo fluxo de duas fotos; caixa só valida cupom; gestor visualiza o painel sem alterar; superadmin é o único papel administrativo com escrita. O sistema calcula a faixa pelo valor: até R$ 100; R$ 100,01–200; R$ 200,01–300; R$ 300,01–400; R$ 400,01–500; e acima de R$ 500. Ver `docs/PERMISSOES_OPERACIONAIS.md`.
-- [x] Next.js atualizado para `16.3.4`; última checagem de tipos aprovada e `40/40` testes unitários aprovados.
+- [x] Next.js atualizado para `16.3.4`; build de produção e `60/60` testes unitários aprovados em 26/09/2026.
 - [x] Sorteio legado integralmente pausado: cron, telas e rotas públicas/administrativas respondem sem expor histórico ou dados pessoais; novos tickets estão congelados no banco.
 - [x] Central de incidente para superadmin, modo de contenção auditado e bloqueio das rotas públicas críticas implementados e aplicados no Supabase.
 - [x] Aviso de privacidade público disponível em `/privacidade`, vinculado ao site e ao cadastro; ainda requer revisão jurídica e tabela final de retenção antes do lançamento.
@@ -73,6 +75,10 @@ Pagamento -> duas fotos privadas da comanda -> conferência dos campos pelo oper
 - [x] Registro de telefone, consentimento opcional e giro único atômico.
 - [x] Seleção de prêmio no servidor, ponderada pelas seis faixas da conta. A roda visual termina no prêmio retornado pelo banco.
 - [x] Nova interface da roleta e do catálogo inspirada na identidade pública do Rei do Cupim (preto, vermelho e dourado). O prêmio de teste fica separado dos rascunhos comerciais; durante o piloto, a API impede ativação de prêmio comercial pela gestão.
+- [ ] Revisar a experiência real da roleta no celular: a versão técnica existe, mas o teste de 26/09 mostrou excesso de texto, roda pouco imersiva e resultado de teste visualmente fraco. Fazer protótipo com a referência que o responsável enviará e validar legibilidade/interação em aparelhos reais antes de marcar a frente visual como pronta para lançamento.
+- [ ] Trocar a coroa genérica pela logomarca oficial aprovada, inclusive no centro da roleta e nas telas do cliente; não tratar a paleta de cores atual como identidade final.
+- [ ] Simplificar entrada, participação e resultado aos dados indispensáveis; usar produtos/fotos reais aprovados nos prêmios comerciais, sem exibir código técnico como elemento principal ao cliente. Manter aviso de teste claro enquanto o piloto não tiver valor comercial.
+- [ ] Revisar o formulário de telefone, os termos do programa e o aviso de privacidade em uma interface curta e acessível. O consentimento para promoções no WhatsApp deve permanecer separado, opcional e sem marcação prévia até revisão jurídica; testar também o cancelamento das mensagens.
 - [x] Limpeza das fotos após 36 horas não remove as comandas do relatório e da lista operacional; os metadados continuam disponíveis para conferência posterior.
 - [x] Emissão de cupom V2 com dias úteis, feriados, canal e expiração.
 - [x] Tela/rota de caixa para consulta, confirmação e auditoria do cupom V2; a recusa ainda será desenhada com motivo obrigatório.
@@ -119,6 +125,54 @@ Decisão após a resposta:
 2. **Consulta individual confiável por pedido/nota:** usar como alternativa imediata sob demanda.
 3. **Somente consulta em lote/noturna:** operar apenas o piloto de QR de teste, fazer reconciliação posterior e não aplicar punição, pontos ou benefício comercial até a regra ser formalmente aprovada.
 
+### Pontuação diária, identidade e níveis — revisão de 26/09/2026
+
+**Não confundir os dois trabalhos das 07h:** o único cron Saipos agendado em
+`vercel.json` é `/api/cron/reconciliar-comandas-roleta`, que confere comandas
+com QR já emitido e **não concede pontos**. O processador antigo de vendas
+(`/api/cron/saipos`, manual, histórico e webhook) responde como pausado e não
+deve ser religado apenas trocando uma flag: ele tentaria criar cadastro para
+todo comprador identificado por telefone/CPF, contrariando o objetivo de
+pontuar somente participantes do Clube. Nenhum pedido precisa ser digitado
+manualmente para pontuar no desenho futuro: a API fornecerá `id_sale` para
+deduplicação e o telefone com DDD para localizar uma conta verificada.
+
+Fluxo-alvo proposto (ainda **não implementado nem aprovado para produção**):
+
+```text
+Vendas Saipos do período -> verificar origem elegível, pagamento e cancelamento
+-> normalizar telefone com DDD -> localizar conta já cadastrada/verificada
+-> ordenar compras pela data da venda -> creditar uma vez por id_sale
+-> recalcular nível pela janela móvel de 90 dias -> relatório e alerta de falha
+```
+
+- [ ] Aprovar a elegibilidade: somente cliente com telefone comprovado e conta concluída recebe pontos/cashback; não criar perfis, saldos ou logs individuais para todos os compradores da Saipos. Não usar CPF isoladamente para atribuir a compra a uma conta.
+- [ ] Decidir a primeira compra: proposta de reconhecer compra anterior ao cadastro por até **7 dias**, somente após verificação do mesmo telefone; prazo e marco inicial dependem de aprovação do responsável. Sem guardar venda de não participante no Clube apenas para essa possibilidade.
+- [ ] Confirmar em exemplos reais que a API retorna telefone com DDD 85 para balcão, salão e delivery; número curto de mesa/balcão não substitui `id_sale`. Testar ausência, duplicidade, troca de telefone e mais de uma conta candidata sem crédito ambíguo.
+- [ ] Comprovar um campo confiável de origem/canal para excluir iFood, 99Food e outros marketplaces. `partner_sale`/nome da loja não servem. Até lá, **não automatizar pontos de delivery**; validar separadamente a classificação de salão e balcão para um piloto restrito.
+- [ ] Definir e testar venda efetivamente paga, cancelada, estornada, pagamento parcial e falha/atraso da API. O total e a soma de pagamentos devem conferir; uma venda não localizada permanece pendente, sem crédito presumido.
+- [ ] Substituir o processador legado por uma rotina que consulta em lotes/dias com paginação e retentativa limitadas, aplica o filtro antes de escrever no banco, ordena pela hora real da compra e mantém `id_sale` idempotente. Evitar um log de duplicidade para cada venda reconsultada diariamente.
+- [ ] Implementar **janela móvel real de 90 dias** usando o histórico de compras elegíveis, inclusive queda de nível quando compras antigas saem da janela. O benefício de cada compra usa o nível imediatamente anterior a ela; reprocessamentos tardios não podem mudar pontos de modo arbitrário.
+- [ ] Separar claramente saldo de pontos/cashback do nível: resgate desconta só o custo do benefício (saldo zera apenas se for todo gasto), nunca o gasto dos 90 dias. Testar resgate simultâneo, saldo insuficiente e baixa do cupom no caixa.
+- [ ] Criar relatório diário por venda/conta com estados `creditada`, `já creditada`, `não elegível`, `pendente` e `erro`, sem expor telefones completos; registrar início/fim, quantidade e falhas do cron e alertar a gestão se não executar. Não depender de acesso manual ao painel para processar o dia.
+- [ ] Agendar a rotina de pontos de forma compatível com o plano de hospedagem aprovado. A janela desejada é 07:00 de Fortaleza (10:00 UTC), mas no Hobby a Vercel não garante o minuto exato dentro da hora; prever retomada após indisponibilidade sem dupla contagem.
+- [ ] Pilotar com os IDs Saipos `882731373` (mesa 200) e `882731058` (retirada), sem crédito retroativo real antes de revisar elegibilidade e telefone; depois testar compras consecutivas no mesmo dia, compra sem cadastro, cancelamento/estorno e uma semana sem abrir o painel.
+- [ ] Revisar o cron da roleta separadamente: hoje limita a consulta a 5 páginas de 200 vendas e até 100 comandas por execução. Uma pendência antiga pode alargar a busca a 90 dias e ultrapassar o teto; dividir por dia ou usar consulta oficial por ID antes de confiar nesse caminho em volume.
+
+### Custos, hospedagem e continuidade — revisão de 26/09/2026
+
+Medição dos painéis em 26/09, **não uma projeção do lançamento**: a organização
+Supabase mostrava 33/500 MB de banco, armazenamento de arquivos arredondado
+para 0,00/1 GB e 2/50.000 usuários ativos; a equipe Vercel mostrava, nos
+últimos 30 dias, 715/1.000.000 invocações de funções e 210,74 MB/100 GB de
+transferência rápida. Esses totais incluem outros projetos das mesmas contas.
+O consumo atual é baixo, mas não valida o custo com clientes reais.
+
+- [ ] Resolver **antes do uso comercial**: o projeto está na Vercel Hobby, cujo [uso é restrito a projetos pessoais não comerciais](https://vercel.com/docs/limits/fair-use-guidelines). Escolher Pro (preço-base anunciado de US$ 20/mês, sujeito a impostos/excedentes) ou hospedagem alternativa que permita operação comercial. Não mudar plano ou contratar sem autorização do responsável.
+- [ ] Definir backup/restauração para o Supabase antes de confiar saldos reais ao banco. O [Free não inclui backup automático](https://supabase.com/pricing); avaliar procedimento externo testado ou Pro (preço-base anunciado de US$ 25/mês). Não confundir espaço disponível com proteção contra perda de dados.
+- [ ] Medir banco, arquivos privados, egress e erros semanalmente no piloto; verificar a limpeza das fotos de comanda após 36 horas (remoção física pode passar disso pela agenda diária) e estabelecer alertas antes dos limites do plano.
+- [ ] Manter GitHub Free enquanto o uso de repositório/Actions estiver dentro das [cotas oficiais](https://github.com/pricing); revisar também custo do domínio e do futuro provedor WhatsApp, que não estão incluídos nos números acima.
+
 ## Próximas prioridades independentes da Saipos
 
 1. [x] Restringir importação de planilha a superadmin, com limite de 2 MB e 2.000 linhas por envio. Em 22/09, `xlsx` foi atualizado para 0.20.3 pelo canal oficial do SheetJS; `npm audit` passou sem vulnerabilidades.
@@ -137,11 +191,14 @@ Decisão após a resposta:
 Nada de roleta ou campanha real antes de todos os itens abaixo:
 
 - [ ] Validação da venda paga contra Saipos ou alternativa formalmente aprovada.
+- [ ] Pontuação diária restrita a contas verificadas, com origem elegível, idempotência, relatório de exceções e testes de cancelamento/estorno; não reativar o processador legado.
+- [ ] Janela móvel de 90 dias correta, inclusive descida de nível; pontos/cashback e resgates conferidos em testes de ponta a ponta.
 - [ ] QR -> telefone -> giro -> cupom -> caixa -> auditoria testado de ponta a ponta.
 - [ ] Prêmios, validade, dias bloqueados e custo aprovados pelo negócio.
 - [ ] Política de privacidade e consentimento de marketing publicados; opt-out testado.
 - [ ] Revisão jurídica da ação promocional baseada em prêmios aleatórios.
 - [ ] Backup e restauração do Supabase validados.
+- [ ] Hospedagem autorizada para uso comercial e orçamento de Vercel/Supabase/WhatsApp aprovados, com alertas de consumo.
 - [ ] Dois acessos reais de caixa e um de gestor, todos individuais, configurados.
 - [ ] Botão de contenção e procedimento de incidente testados em ambiente controlado.
 

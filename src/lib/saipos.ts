@@ -54,6 +54,14 @@ export function telefoneDaVendaSaipos(venda: VendaSaipos) {
   return digitos.length >= 10 ? digitos : null;
 }
 
+/** Uma venda pode atualizar identificadores, mas nunca o nome escolhido no Clube. */
+export function atualizacaoClienteDaVendaSaipos(telefone: string | null, cpf: string | null, atualizadoEm: string) {
+  const dados: Record<string, string> = { atualizado_em: atualizadoEm };
+  if (telefone) dados.telefone = telefone;
+  if (cpf) dados.cpf = cpf;
+  return dados;
+}
+
 export class SaiposApiError extends Error {
   readonly status: number;
   readonly detalhes: string;

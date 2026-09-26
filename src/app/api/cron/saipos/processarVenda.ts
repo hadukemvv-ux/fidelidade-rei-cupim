@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { telefoneDaVendaSaipos, type VendaSaipos } from "@/lib/saipos";
+import { atualizacaoClienteDaVendaSaipos, telefoneDaVendaSaipos, type VendaSaipos } from "@/lib/saipos";
 
 export type ProcessarVendaResult =
   | { status: "processada"; idSale: number; credito: Record<string, unknown> }
@@ -172,11 +172,7 @@ export async function processarVenda(venda: VendaSaipos): Promise<ProcessarVenda
     return { status: "duplicada", idSale } satisfies ProcessarVendaResult;
   }
 
-  const dadosCliente: Record<string, string> = {
-    atualizado_em: new Date().toISOString(),
-  };
-  if (telefone) dadosCliente.telefone = telefone;
-  if (cpf) dadosCliente.cpf = cpf;
+  const dadosCliente = atualizacaoClienteDaVendaSaipos(telefone, cpf, new Date().toISOString());
 
   const { error: dadosError } = await supabaseAdmin
     .from("base_clientes_saipos")

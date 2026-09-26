@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  atualizacaoClienteDaVendaSaipos,
   buscarTodasVendasSaipos,
   buscarVendasSaipos,
   periodoDiaSaoPaulo,
@@ -128,4 +129,12 @@ test('normaliza o telefone presente em formatos diferentes da Saipos', () => {
   assert.equal(telefoneDaVendaSaipos({ customer: { phone: '+55 (85) 98888-7777' } }), '85988887777');
   assert.equal(telefoneDaVendaSaipos({ customer_phone: '85 98888-7777' }), '85988887777');
   assert.equal(telefoneDaVendaSaipos({ telefone: 'sem telefone' }), null);
+  assert.equal(telefoneDaVendaSaipos({ customer: { phone: '98888-7777' } }), null);
+});
+
+test('uma venda Saipos não sobrescreve o nome já cadastrado no Clube', () => {
+  assert.deepEqual(
+    atualizacaoClienteDaVendaSaipos('85988887777', null, '2026-09-26T12:00:00.000Z'),
+    { atualizado_em: '2026-09-26T12:00:00.000Z', telefone: '85988887777' },
+  );
 });

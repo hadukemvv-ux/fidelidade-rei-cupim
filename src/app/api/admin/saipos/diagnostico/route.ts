@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireOperationalActor } from "@/lib/operationalAuth";
-import { buscarTodasVendasSaipos, buscarVendasSaipos, periodoDiaSaoPaulo, SaiposApiError, type ColunaDataSaipos, type VendaSaipos } from "@/lib/saipos";
+import { buscarTodasVendasSaipos, buscarVendasSaipos, periodoDiaSaoPaulo, SaiposApiError, telefoneDaVendaSaipos, type ColunaDataSaipos, type VendaSaipos } from "@/lib/saipos";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +54,7 @@ function resumirVenda(venda: VendaSaipos) {
     id_sale: Number.isSafeInteger(Number(venda.id_sale)) ? Number(venda.id_sale) : null,
     total_amount: Number.isFinite(Number(venda.total_amount)) ? Number(venda.total_amount) : null,
     canceled: textoSeguro(venda.canceled),
+    telefone_com_ddd: Boolean(telefoneDaVendaSaipos(venda)),
     created_at: textoSeguro(venda.created_at),
     updated_at: textoSeguro(raw.updated_at),
     sale_type: textoSeguro(raw.id_sale_type),

@@ -42,6 +42,7 @@ const navigation: NavGroup[] = [
   ], folders: [{ label: 'Saipos', icon: '↔', hint: 'Integração e entregas', items: [
     { href: '/admin/saipos', icon: '◇', label: 'Diagnóstico', hint: 'Teste da conexão' },
     { href: '/admin/saipos/entregas', icon: '▣', label: 'Entregas', hint: 'Prazos e etapas' },
+    { href: '/admin/saipos/telefones', icon: '☎', label: 'Telefones', hint: 'Teste agregado de origem' },
     { href: '/admin/importar', icon: '⇧', label: 'Importação', hint: 'Clientes da Saipos' },
   ] }] },
 ];
@@ -64,6 +65,7 @@ const pageInfo: Record<string, { title: string; description: string }> = {
   '/admin/auditoria': { title: 'Auditoria', description: 'Acompanhe liberações, validações e ações administrativas.' },
   '/admin/saipos': { title: 'Saipos — teste de conexão', description: 'Confirme a API sem criar clientes, pontos ou benefícios.' },
   '/admin/saipos/entregas': { title: 'Saipos — entregas', description: 'Examine canal, prazo estimado e etapas de pedidos sem alterar dados.' },
+  '/admin/saipos/telefones': { title: 'Saipos — telefones', description: 'Teste a presença e repetição de telefones sem expor dados pessoais.' },
   '/admin/garcons/alertas': { title: 'Alertas antigos pausados', description: 'A segurança operacional agora usa auditoria e contenção de incidentes.' },
   '/admin/seguranca': { title: 'Privacidade e incidentes', description: 'Contenha riscos, preserve evidências e acompanhe a investigação.' },
   '/admin/importar': { title: 'Importação', description: 'Atualize a base de clientes com uma planilha da Saipos.' },

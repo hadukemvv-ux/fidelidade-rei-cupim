@@ -173,7 +173,6 @@ export async function processarVenda(venda: VendaSaipos): Promise<ProcessarVenda
   }
 
   const dadosCliente: Record<string, string> = {
-    nome,
     atualizado_em: new Date().toISOString(),
   };
   if (telefone) dadosCliente.telefone = telefone;

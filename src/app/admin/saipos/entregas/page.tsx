@@ -26,6 +26,7 @@ type Result = {
   by_channel?: Record<string, number>;
   history_available?: boolean;
   history_error_status?: number | null;
+  history_error_kind?: string | null;
   history_complete?: boolean;
   shown_count?: number;
   rows?: Delivery[];
@@ -77,7 +78,7 @@ export default function SaiposDeliveriesPage() {
         <article><span>Com parceiro informado</span><strong>{data.by_channel?.parceiro_informado_canal_desconhecido ?? 0}</strong><small>Nome da loja no parceiro não revela a origem</small></article>
         <article><span>Sem parceiro informado</span><strong>{data.by_channel?.sem_parceiro_informado ?? 0}</strong><small>Também não comprova canal próprio</small></article>
       </section>
-      <section className="admin-notice"><strong>O que o teste pode provar</strong><span>{data.history_available ? 'A consulta de histórico respondeu.' : `O histórico de status não respondeu${data.history_error_status ? ` (código ${data.history_error_status})` : ''}; horários de entrega não foram confirmados.`} {data.history_available && !data.history_complete ? 'O histórico ultrapassou o limite da consulta; resultados podem estar incompletos.' : ''} O tempo estimado retornado pela venda ainda precisa ser comparado ao prazo mostrado ao cliente. Nenhum pedido desta tela é declarado atrasado.</span></section>
+      <section className="admin-notice"><strong>O que o teste pode provar</strong><span>{data.history_available ? 'A consulta de histórico respondeu.' : `O histórico de status não respondeu${data.history_error_status ? ` (código ${data.history_error_status})` : ''}${data.history_error_kind === 'tempo_esgotado' ? ': tempo esgotado' : data.history_error_kind === 'falha_de_conexao' ? ': falha de conexão' : ''}; horários de entrega não foram confirmados.`} {data.history_available && !data.history_complete ? 'O histórico ultrapassou o limite da consulta; resultados podem estar incompletos.' : ''} O tempo estimado retornado pela venda ainda precisa ser comparado ao prazo mostrado ao cliente. Nenhum pedido desta tela é declarado atrasado.</span></section>
       <section>
         <div className="admin-section-title"><div><span>Pedidos de entrega</span><h2>Monitoramento técnico</h2></div><small>Mostrando até 150 pedidos recentes de {data.delivery_count ?? 0}</small></div>
         <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Origem</th><th>Criado</th><th>Tempo estimado</th><th>Situação</th><th>Etapas</th></tr></thead><tbody>

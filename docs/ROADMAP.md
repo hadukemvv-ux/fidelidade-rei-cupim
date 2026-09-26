@@ -1,6 +1,6 @@
 # Roadmap do Projeto Fidelidade
 
-Atualizado em 25/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
+Atualizado em 26/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
 
 ## Objetivo
 
@@ -12,6 +12,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 | --- | --- | --- |
 | Recuperação, GitHub e Vercel | Concluído | Manter rotina de commits, deploy e confirmação Ready. |
 | Base de fidelidade/Saipos | Prova de conceito validada parcialmente | Consulta posterior pelo ID impresso funciona; falta medir latência e a representação de cancelamento antes de conceder benefícios. |
+| Entregas Saipos | Diagnóstico somente-leitura publicado | Confirmar canal próprio versus marketplace, histórico de status e significado do prazo antes de medir atrasos. |
 | Operadores e auditoria | Base operacional concluída; validação pendente | Papéis e rotas pós-login estão separados; validar no próximo piloto com contas reais de teste. |
 | Cupons da operação | Parcial | Retirar gradualmente o validador legado e testar o fluxo novo com a caixa. |
 | Roleta V2 | Piloto técnico não comercial ativo | Registrar uma comanda de teste, emitir QR de teste e medir a reconciliação Saipos. |
@@ -79,6 +80,8 @@ Pagamento -> duas fotos privadas da comanda -> conferência dos campos pelo oper
 - [ ] Piloto fechado com compras reais antes de publicar a V2.
 
 ### Saipos — reconciliação em validação
+
+Em 26/09, a página `/admin/saipos/entregas` e o menu administrativo agrupado foram publicados. Uma consulta de produção, sem criar cupons nem alterar pedidos, retornou 100 vendas e 49 entregas naquele momento. Em 43 entregas havia o nome da **loja no parceiro**; em seis, não. Esse campo não identifica a plataforma nem comprova canal próprio. O histórico de status não respondeu na primeira consulta (falha genérica 503); o diagnóstico agora distingue timeout, falha de conexão e resposta do fornecedor para o próximo teste. Nenhuma entrega foi classificada como atrasada. Não ativar compensação até validar origem, prazo prometido e horário efetivo de entrega em pedidos conhecidos.
 
 Não publicar o fluxo comercial baseado apenas em foto de comanda. Foto pode ser alterada ou reutilizada; no piloto fechado, ela é evidência privada acompanhada de confirmação do operador e QR sem valor comercial. A pergunta completa e os dados técnicos que precisamos estão em `docs/SAIPOS_VALIDACAO_COMANDA.md`.
 

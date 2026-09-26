@@ -20,8 +20,12 @@ export async function GET(request: NextRequest) {
     const [sales, historyCheck] = await Promise.all([
       buscarTodasVendasSaipos({ inicio, fim, dateColumnFilter: 'created_at', pageSize: 500, maxPages: 4 }),
       buscarHistoricosStatusSaipos({ inicio, fim, maxPages: 4 })
-        .then((result) => ({ result, errorStatus: null as number | null }))
-        .catch((error: unknown) => ({ result: null, errorStatus: error instanceof SaiposApiError ? error.status : 503 })),
+        .then((result) => ({ result, errorStatus: null as number | null, errorKind: null as string | null }))
+        .catch((error: unknown) => ({
+          result: null,
+          errorStatus: error instanceof SaiposApiError ? error.status : error instanceof Error && error.name === 'AbortError' ? 504 : 503,
+          errorKind: error instanceof SaiposApiError ? 'resposta_fornecedor' : error instanceof Error && error.name === 'AbortError' ? 'tempo_esgotado' : 'falha_de_conexao',
+        })),
     ]);
 
     const historyResult = historyCheck.result;
@@ -45,6 +49,7 @@ export async function GET(request: NextRequest) {
       by_channel: byChannel,
       history_available: historyResult !== null,
       history_error_status: historyCheck.errorStatus,
+      history_error_kind: historyCheck.errorKind,
       history_complete: historyResult?.complete || false,
       shown_count: recentRows.length,
       rows: recentRows,

@@ -23,10 +23,9 @@ function safeNumber(value: unknown): number | null {
 
 export function classifyDeliveryChannel(sale: Row) {
   const partner = object(sale.partner_sale);
-  const name = safeText(partner?.desc_store_partner)?.toLowerCase() || '';
-  if (/ifood|99\s*food|rappi|aiqfome|keeta/.test(name)) return 'marketplace';
-  if (/site\s*delivery|saipos/.test(name)) return 'proprio_identificado';
-  return partner ? 'parceiro_a_verificar' : 'sem_parceiro_informado';
+  // desc_store_partner é o nome da loja dentro do parceiro, não o canal.
+  // Sem um identificador mapeado, a origem nunca deve ser inferida daqui.
+  return partner ? 'parceiro_informado_canal_desconhecido' : 'sem_parceiro_informado';
 }
 
 export function summarizeDelivery(sale: Row, history?: Row) {
@@ -43,7 +42,8 @@ export function summarizeDelivery(sale: Row, history?: Row) {
     total_amount: safeNumber(sale.total_amount),
     channel_class: classifyDeliveryChannel(sale),
     partner_name: safeText(partner?.desc_store_partner),
-    delivery_time: safeNumber(delivery?.delivery_time),
+    delivery_time: safeNumber(delivery?.delivery_time) && Number(delivery?.delivery_time) > 0
+      ? Number(delivery?.delivery_time) : null,
     delivery_by: safeText(delivery?.delivery_by, 20),
     statuses: events.slice(0, 30).map((event) => {
       const row = object(event);

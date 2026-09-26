@@ -17,11 +17,14 @@ export async function GET(request: NextRequest) {
 
   try {
     const { inicio, fim } = periodoDiaSaoPaulo(day);
-    const [sales, historyResult] = await Promise.all([
+    const [sales, historyCheck] = await Promise.all([
       buscarTodasVendasSaipos({ inicio, fim, dateColumnFilter: 'created_at', pageSize: 500, maxPages: 4 }),
-      buscarHistoricosStatusSaipos({ inicio, fim, maxPages: 4 }).catch(() => null),
+      buscarHistoricosStatusSaipos({ inicio, fim, maxPages: 4 })
+        .then((result) => ({ result, errorStatus: null as number | null }))
+        .catch((error: unknown) => ({ result: null, errorStatus: error instanceof SaiposApiError ? error.status : 503 })),
     ]);
 
+    const historyResult = historyCheck.result;
     const histories = new Map((historyResult?.rows || []).map((row) => [String(row.id_sale), row]));
     const deliverySales = sales.filter((sale) => Number((sale as Record<string, unknown>).id_sale_type) === 1);
     const rows = deliverySales.map((sale) => summarizeDelivery(
@@ -41,6 +44,7 @@ export async function GET(request: NextRequest) {
       delivery_count: rows.length,
       by_channel: byChannel,
       history_available: historyResult !== null,
+      history_error_status: historyCheck.errorStatus,
       history_complete: historyResult?.complete || false,
       shown_count: recentRows.length,
       rows: recentRows,

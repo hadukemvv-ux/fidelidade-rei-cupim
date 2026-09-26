@@ -3,12 +3,10 @@ import test from 'node:test';
 import { classifyDeliveryChannel, summarizeDelivery } from '../src/lib/saiposDelivery.ts';
 import { buscarHistoricosStatusSaipos } from '../src/lib/saiposStatusHistory.ts';
 
-test('separa marketplace, canal próprio identificado e origem incerta', () => {
-  assert.equal(classifyDeliveryChannel({ partner_sale: { desc_store_partner: 'iFood' } }), 'marketplace');
-  assert.equal(classifyDeliveryChannel({ partner_sale: { desc_store_partner: '99Food' } }), 'marketplace');
-  assert.equal(classifyDeliveryChannel({ partner_sale: { desc_store_partner: 'Site Delivery Saipos' } }), 'proprio_identificado');
+test('não infere o canal a partir do nome da loja no parceiro', () => {
+  assert.equal(classifyDeliveryChannel({ partner_sale: { desc_store_partner: 'O Rei do Cupim' } }), 'parceiro_informado_canal_desconhecido');
+  assert.equal(classifyDeliveryChannel({ partner_sale: { desc_store_partner: 'iFood' } }), 'parceiro_informado_canal_desconhecido');
   assert.equal(classifyDeliveryChannel({ partner_sale: null }), 'sem_parceiro_informado');
-  assert.equal(classifyDeliveryChannel({ partner_sale: { desc_store_partner: 'Outro parceiro' } }), 'parceiro_a_verificar');
 });
 
 test('resumo de entrega não transmite dados pessoais nem inventa prazo', () => {

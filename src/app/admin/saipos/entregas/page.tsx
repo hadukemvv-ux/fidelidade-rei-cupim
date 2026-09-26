@@ -25,6 +25,7 @@ type Result = {
   delivery_count?: number;
   by_channel?: Record<string, number>;
   history_available?: boolean;
+  history_error_status?: number | null;
   history_complete?: boolean;
   shown_count?: number;
   rows?: Delivery[];
@@ -38,10 +39,8 @@ function today() {
 
 function channelLabel(row: Delivery) {
   switch (row.channel_class) {
-    case 'marketplace': return `Marketplace — ${row.partner_name || 'identificado'}`;
-    case 'proprio_identificado': return `Canal próprio provável — ${row.partner_name || 'Saipos'}`;
-    case 'parceiro_a_verificar': return `Parceiro a verificar — ${row.partner_name || 'não informado'}`;
-    default: return 'Sem parceiro informado — confirmar origem';
+    case 'parceiro_informado_canal_desconhecido': return `Loja no parceiro: ${row.partner_name || 'não informada'} — canal desconhecido`;
+    default: return 'Sem parceiro informado — canal desconhecido';
   }
 }
 
@@ -65,7 +64,7 @@ export default function SaiposDeliveriesPage() {
   }
 
   return <div className="admin-report">
-    <section className="admin-notice"><strong>Diagnóstico de entregas — somente leitura</strong><span>Esta página consulta a Saipos sob demanda. Não cria cupons, altera pedidos ou determina automaticamente que uma entrega atrasou. Pedidos de marketplace identificados ficam separados dos canais próprios.</span></section>
+    <section className="admin-notice"><strong>Diagnóstico de entregas — somente leitura</strong><span>Esta página consulta a Saipos sob demanda. Não cria cupons, altera pedidos ou determina automaticamente que uma entrega atrasou. A API ainda não permitiu distinguir com segurança canal próprio de marketplace.</span></section>
     <section className="admin-toolbar">
       <label><span>Data de criação dos pedidos</span><input type="date" value={day} onChange={(event) => setDay(event.target.value)} /></label>
       <button type="button" onClick={consult} disabled={loading}>{loading ? 'Consultando…' : 'Consultar entregas'}</button>
@@ -75,10 +74,10 @@ export default function SaiposDeliveriesPage() {
       <section className="admin-kpi-grid" aria-label="Resumo de entregas">
         <article><span>Vendas consultadas</span><strong>{data.sales_scanned ?? 0}</strong><small>Todos os tipos retornados na data</small></article>
         <article><span>Entregas</span><strong>{data.delivery_count ?? 0}</strong><small>Tipo de venda 1 na Saipos</small></article>
-        <article><span>Canal próprio provável</span><strong>{data.by_channel?.proprio_identificado ?? 0}</strong><small>Parceiro identificado como Saipos/Site Delivery</small></article>
-        <article><span>Origem a confirmar</span><strong>{(data.by_channel?.sem_parceiro_informado ?? 0) + (data.by_channel?.parceiro_a_verificar ?? 0)}</strong><small>Não presumir elegibilidade para cupom</small></article>
+        <article><span>Com parceiro informado</span><strong>{data.by_channel?.parceiro_informado_canal_desconhecido ?? 0}</strong><small>Nome da loja no parceiro não revela a origem</small></article>
+        <article><span>Sem parceiro informado</span><strong>{data.by_channel?.sem_parceiro_informado ?? 0}</strong><small>Também não comprova canal próprio</small></article>
       </section>
-      <section className="admin-notice"><strong>O que o teste pode provar</strong><span>{data.history_available ? 'A consulta de histórico respondeu.' : 'O histórico de status não respondeu; horários de entrega não foram confirmados.'} {data.history_available && !data.history_complete ? 'O histórico ultrapassou o limite da consulta; resultados podem estar incompletos.' : ''} O tempo estimado retornado pela venda ainda precisa ser comparado ao prazo mostrado ao cliente. Nenhum pedido desta tela é declarado atrasado.</span></section>
+      <section className="admin-notice"><strong>O que o teste pode provar</strong><span>{data.history_available ? 'A consulta de histórico respondeu.' : `O histórico de status não respondeu${data.history_error_status ? ` (código ${data.history_error_status})` : ''}; horários de entrega não foram confirmados.`} {data.history_available && !data.history_complete ? 'O histórico ultrapassou o limite da consulta; resultados podem estar incompletos.' : ''} O tempo estimado retornado pela venda ainda precisa ser comparado ao prazo mostrado ao cliente. Nenhum pedido desta tela é declarado atrasado.</span></section>
       <section>
         <div className="admin-section-title"><div><span>Pedidos de entrega</span><h2>Monitoramento técnico</h2></div><small>Mostrando até 150 pedidos recentes de {data.delivery_count ?? 0}</small></div>
         <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Pedido</th><th>Origem</th><th>Criado</th><th>Tempo estimado</th><th>Situação</th><th>Etapas</th></tr></thead><tbody>

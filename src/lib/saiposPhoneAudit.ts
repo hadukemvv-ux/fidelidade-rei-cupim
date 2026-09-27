@@ -12,6 +12,30 @@ export type ResumoTelefonesSaipos = {
   maior_repeticao: number;
 };
 
+/** Expõe só a estrutura dos campos, nunca o conteúdo de contato. */
+export function diagnosticarFormatoTelefoneSaipos(venda: VendaComTipo) {
+  const raw = venda as Record<string, unknown>;
+  const customer = venda.customer && typeof venda.customer === 'object' && !Array.isArray(venda.customer)
+    ? venda.customer as Record<string, unknown> : null;
+  const candidatos = [
+    ['customer.phone', customer?.phone],
+    ['customer_phone', venda.customer_phone],
+    ['telefone', venda.telefone],
+  ] as const;
+  return {
+    campos_cliente: customer ? Object.keys(customer).sort() : [],
+    campos_raiz_com_telefone: Object.keys(raw).filter((campo) => /phone|tel/i.test(campo)).sort(),
+    campos_esperados: candidatos.map(([campo, valor]) => {
+      const texto = Array.isArray(valor) ? valor[0] : valor;
+      return {
+        campo,
+        presente: texto !== null && texto !== undefined && String(texto).trim().length > 0,
+        quantidade_digitos: typeof texto === 'string' ? texto.replace(/\D/g, '').length : null,
+      };
+    }),
+  };
+}
+
 function resumir(vendas: VendaComTipo[]): ResumoTelefonesSaipos {
   const frequencias = new Map<string, number>();
   let semTelefone = 0;

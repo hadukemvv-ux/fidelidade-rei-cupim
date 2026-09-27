@@ -13,9 +13,15 @@ type Diagnostic = {
   vendas_encontradas?: number;
   amostras?: Array<{
     id_sale: number | null;
+    sale_type: string | null;
     total_amount: number | null;
     canceled: string | null;
     telefone_com_ddd: boolean;
+    estrutura_telefone: {
+      campos_cliente: string[];
+      campos_raiz_com_telefone: string[];
+      campos_esperados: Array<{ campo: string; presente: boolean; quantidade_digitos: number | null }>;
+    };
     created_at: string | null;
     updated_at: string | null;
     table_order: { id_store_table: string | null; id_store_order_card: string | null; status: string | null } | null;
@@ -85,7 +91,7 @@ export default function SaiposPage() {
       <section className="admin-notice"><strong>Conexão confirmada</strong><span>{data.vendas_encontradas} venda(s) encontrada(s) para {data.referencia_consultada ? `mesa/comanda ${data.referencia_consultada}` : data.valor_aproximado_consultado !== null && data.valor_aproximado_consultado !== undefined ? `valor próximo de R$ ${data.valor_aproximado_consultado.toFixed(2)}` : data.dia}, usando {data.campo_data_consultado === 'updated_at' ? 'a última atualização' : data.campo_data_consultado === 'created_at' ? 'a criação' : 'a data do turno'}. {data.observacao}</span></section>
       <section>
         <div className="admin-section-title"><div><span>Amostra técnica sem dados pessoais</span><h2>Campos retornados pela Saipos</h2></div></div>
-        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Venda</th><th>Valor</th><th>Cancelada</th><th>Telefone com DDD</th><th>Mesa/comanda</th><th>Atualizada</th><th>Pagamento</th></tr></thead><tbody>{(data.amostras || []).map((sale, index) => <tr key={`${sale.id_sale}-${index}`}><td>{sale.id_sale ?? '—'}</td><td>{sale.total_amount === null ? '—' : sale.total_amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td><td>{sale.canceled ?? 'não informado'}</td><td>{sale.telefone_com_ddd ? 'Sim' : 'Não'}</td><td>{sale.table_order ? `${sale.table_order.id_store_table || '—'} / ${sale.table_order.id_store_order_card || '—'} (${sale.table_order.status || 'sem status'})` : 'não informado'}</td><td>{sale.updated_at ? new Date(sale.updated_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'}</td><td>{sale.payments.length ? sale.payments.map((payment) => [payment.desc_store_payment_type || 'forma não informada', payment.payment_amount === null ? null : payment.payment_amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })].filter(Boolean).join(' · ')).join(' / ') : 'não informado'}</td></tr>)}{!data.amostras?.length && <tr><td colSpan={7}>Nenhuma venda retornada para esta data.</td></tr>}</tbody></table></div>
+        <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Venda</th><th>Valor</th><th>Cancelada</th><th>Telefone com DDD</th><th>Formato do telefone</th><th>Mesa/comanda</th><th>Atualizada</th><th>Pagamento</th></tr></thead><tbody>{(data.amostras || []).map((sale, index) => <tr key={`${sale.id_sale}-${index}`}><td>{sale.id_sale ?? '—'}<br /><small>Tipo {sale.sale_type || 'não informado'}</small></td><td>{sale.total_amount === null ? '—' : sale.total_amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td><td>{sale.canceled ?? 'não informado'}</td><td>{sale.telefone_com_ddd ? 'Sim' : 'Não'}</td><td>{sale.estrutura_telefone.campos_esperados.filter((campo) => campo.presente).map((campo) => `${campo.campo}: ${campo.quantidade_digitos ?? '?'} dígitos`).join(' · ') || 'Campos esperados vazios'}<details><summary>Campos disponíveis</summary><small>Cliente: {sale.estrutura_telefone.campos_cliente.join(', ') || 'nenhum'} · Raiz telefônica: {sale.estrutura_telefone.campos_raiz_com_telefone.join(', ') || 'nenhum'}</small></details></td><td>{sale.table_order ? `${sale.table_order.id_store_table || '—'} / ${sale.table_order.id_store_order_card || '—'} (${sale.table_order.status || 'sem status'})` : 'não informado'}</td><td>{sale.updated_at ? new Date(sale.updated_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'}</td><td>{sale.payments.length ? sale.payments.map((payment) => [payment.desc_store_payment_type || 'forma não informada', payment.payment_amount === null ? null : payment.payment_amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })].filter(Boolean).join(' · ')).join(' / ') : 'não informado'}</td></tr>)}{!data.amostras?.length && <tr><td colSpan={8}>Nenhuma venda retornada para esta data.</td></tr>}</tbody></table></div>
       </section>
       <section className="admin-operator-invite"><h2>O que conferir agora</h2><p>Localize a venda de teste pelo número e valor. Veja se há campos de pagamento e o status da mesa/comanda. Compare primeiro uma venda paga; depois, em outro momento, uma venda cancelada ou estornada. Nenhum dado pessoal de cliente é mostrado aqui.</p></section>
     </>}

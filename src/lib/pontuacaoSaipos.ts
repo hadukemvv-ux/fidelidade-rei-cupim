@@ -1,4 +1,5 @@
 import { telefoneDaVendaSaipos, type VendaSaipos } from './saipos.ts';
+import { isLegacyAutomaticPin } from './pin.ts';
 
 export type ContaCandidata = {
   id: number;
@@ -26,7 +27,7 @@ export function identificarContaParaPontuacao(
   const conta = encontradas[0];
   if (!Number.isSafeInteger(conta.id) || conta.id <= 0 ||
       !conta.telefone_verificado_em || !Number.isFinite(Date.parse(conta.telefone_verificado_em)) ||
-      !conta.pin_hash) {
+      !conta.pin_hash || isLegacyAutomaticPin(telefone, conta.pin_hash)) {
     return { status: 'nao_verificada' };
   }
 

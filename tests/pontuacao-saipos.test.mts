@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { getNivelPorGasto } from '../src/lib/fidelidade-rules.ts';
 import { calcularGastoMovel90Dias, identificarContaParaPontuacao } from '../src/lib/pontuacaoSaipos.ts';
@@ -39,6 +40,10 @@ test('não pontua pré-cadastro, telefone não comprovado ou identidade ambígua
   );
   assert.deepEqual(
     identificarContaParaPontuacao({ customer_phone: conta.telefone }, [{ ...conta, pin_hash: null }]),
+    { status: 'nao_verificada' },
+  );
+  assert.deepEqual(
+    identificarContaParaPontuacao({ customer_phone: conta.telefone }, [{ ...conta, pin_hash: createHash('sha256').update(conta.telefone.slice(0, 4)).digest('hex') }]),
     { status: 'nao_verificada' },
   );
   assert.deepEqual(

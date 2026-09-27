@@ -3,6 +3,7 @@ import { requireOperationalActor } from "@/lib/operationalAuth";
 import { diagnosticarFormatoTelefoneSaipos } from "@/lib/saiposPhoneAudit";
 import { identificarContaParaPontuacao } from "@/lib/pontuacaoSaipos";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { isLegacyAutomaticPin } from "@/lib/pin";
 import { buscarTodasVendasSaipos, buscarVendasSaipos, periodoDiaSaoPaulo, SaiposApiError, telefoneDaVendaSaipos, type ColunaDataSaipos, type VendaSaipos } from "@/lib/saipos";
 
 export const dynamic = "force-dynamic";
@@ -139,7 +140,15 @@ export async function GET(request: NextRequest) {
         .eq('telefone', telefone)
         .limit(2);
       if (candidatasError) throw candidatasError;
-      return { ...resumo, vinculo_clube: identificarContaParaPontuacao(venda, candidatas || []).status };
+      const conta = candidatas?.length === 1 ? candidatas[0] : null;
+      return {
+        ...resumo,
+        vinculo_clube: identificarContaParaPontuacao(venda, candidatas || []).status,
+        preparo_clube: conta ? {
+          telefone_comprovado: Boolean(conta.telefone_verificado_em && Number.isFinite(Date.parse(conta.telefone_verificado_em))),
+          pin_concluido: Boolean(conta.pin_hash && !isLegacyAutomaticPin(telefone, conta.pin_hash)),
+        } : null,
+      };
     }));
 
     return NextResponse.json({

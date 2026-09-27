@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireOperationalActor } from "@/lib/operationalAuth";
 import { diagnosticarFormatoTelefoneSaipos } from "@/lib/saiposPhoneAudit";
+import { identificarContaParaPontuacao } from "@/lib/pontuacaoSaipos";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { buscarTodasVendasSaipos, buscarVendasSaipos, periodoDiaSaoPaulo, SaiposApiError, telefoneDaVendaSaipos, type ColunaDataSaipos, type VendaSaipos } from "@/lib/saipos";
 
 export const dynamic = "force-dynamic";
@@ -127,6 +129,19 @@ export async function GET(request: NextRequest) {
       return referenciaCorresponde && valorCorresponde;
     });
 
+    const amostras = await Promise.all(vendas.slice(0, 10).map(async (venda) => {
+      const resumo = resumirVenda(venda);
+      const telefone = telefoneDaVendaSaipos(venda);
+      if (!telefone) return { ...resumo, vinculo_clube: 'sem_telefone' };
+      const { data: candidatas, error: candidatasError } = await supabaseAdmin
+        .from('base_clientes_saipos')
+        .select('id, telefone, telefone_verificado_em, pin_hash')
+        .eq('telefone', telefone)
+        .limit(2);
+      if (candidatasError) throw candidatasError;
+      return { ...resumo, vinculo_clube: identificarContaParaPontuacao(venda, candidatas || []).status };
+    }));
+
     return NextResponse.json({
       ok: true,
       modo: "somente_leitura",
@@ -137,7 +152,7 @@ export async function GET(request: NextRequest) {
       valor_aproximado_consultado: valorAproximado,
       vendas_consultadas: vendasConsultadas.length,
       vendas_encontradas: vendas.length,
-      amostras: vendas.slice(0, 10).map(resumirVenda),
+      amostras,
       observacao: "Nenhum cliente, ponto, QR, cupom ou registro de venda foi criado ou alterado por esta consulta.",
     });
   } catch (error) {

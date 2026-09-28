@@ -32,10 +32,45 @@ pessoa vê na tela, organização ou limpeza → Claude.**
 | **Claude — a vitrine e a casa** | Visual das telas (landing, roleta no celular, painéis), logo e ícones; documentação; limpeza do legado; lint; backup do Supabase; revisão das entregas do Codex que mexem em banco ou dinheiro |
 | **Responsável — o dono do negócio** | Decide e autoriza: jurídico, prêmios e custos, WhatsApp, planos pagos, arte oficial, pilotos no restaurante. Não mexe em GitHub |
 
-- Só trabalhe em tarefa cujo dono é você. Se precisar mexer na frente do outro,
-  **não mexa**: registre no `docs/DIARIO.md` ("precisa do Codex/Claude: ...") e avise o responsável.
-- Tarefa sem dono ou decisão de negócio: pergunte ao responsável em linguagem simples, não decida.
-- Só o responsável muda esta tabela.
+### Exemplos de pedidos e de quem é
+
+| Pedido do responsável | Dono |
+| --- | --- |
+| "Muda quantos pontos o cliente ganha" / "cria um nível novo" | Codex |
+| "Troca os prêmios da roleta" / "muda as chances" | Codex |
+| "O cliente não recebeu os pontos" / "a Saipos não bateu" | Codex |
+| "Liga o WhatsApp" / "manda mensagem pro cliente" | Codex |
+| "Registrar a saideira entregue" / "baixa do estoque" | Codex |
+| "Deu erro no painel ao salvar" (erro de dado/servidor) | Codex |
+| "A roleta tá feia no celular" / "muda a cor, a foto, o layout" | Claude |
+| "Coloca a logo nova" / "troca o ícone do site" | Claude |
+| "Muda um texto do site" (sem mudar regra ou valor) | Claude |
+| "Organiza os documentos" / "o que falta fazer?" | Claude (o Codex também pode responder lendo o ROADMAP) |
+| "Faz backup do banco" / "limpa código velho" | Claude |
+| "Confere se o que o Codex fez tá certo" | Claude |
+| "Contrata plano" / "aprova prêmio" / "fala com advogado" | Responsável (agente só explica as opções) |
+
+Pelas pastas, em caso de dúvida:
+
+- **Codex:** `supabase/`, `src/lib/` (regras, Saipos, WhatsApp, cupons, sessões),
+  `src/app/api/`, `vercel.json`, `tests/` das regras.
+- **Claude:** estilos e layout das páginas em `src/app/**/page.tsx` e `*.module.css`,
+  `src/app/globals.css`, `src/components/`, `public/`, `docs/`, `scripts/backup-*`.
+- Página que mistura as duas coisas: Claude muda o visual, Codex muda a lógica.
+
+### Se o pedido chegou para a IA errada
+
+1. **Não comece a fazer.** Diga, em linguagem simples:
+   "Isso é tarefa do **Codex/Claude** pelo nosso combinado. Cole isto lá:"
+2. Entregue o recado pronto para colar, em um bloco, com o pedido reescrito
+   de forma clara e o contexto necessário (arquivos, erro, o que já se sabe).
+3. Se o responsável insistir ("faz você mesmo"), pode fazer. Registre no
+   `docs/DIARIO.md` "feito por X no lugar de Y, a pedido do responsável" para o outro saber.
+4. Pedido misto (regra + visual): faça só a sua parte e entregue o recado da outra.
+5. Tarefa que não se encaixa na tabela ou decisão de negócio: pergunte ao
+   responsável quem deve fazer. Não decida sozinho.
+
+- Só o responsável muda esta divisão.
 
 ## 3. Git — cada agente na sua pasta e branch
 

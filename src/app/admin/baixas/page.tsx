@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { deliveryChoices, deliveryOverdue, type ImmediatePrize } from '@/lib/prizeDeliveryRules';
 import { demoProducts, demoSummary, demoTransition, type DemoDelivery } from '@/lib/prizeDeliverySimulation';
+import styles from './page.module.css';
 
 const prizeNames: Record<ImmediatePrize, string> = { saideira: 'Saideira · 1 cerveja', expulsadeira: 'Expulsadeira · 2 cervejas', sobremesa: 'Sobremesa · 1 unidade' };
 const statusNames = { pendente: 'Escolha pendente', selecionada: 'Aguardando entrega', entregue: 'Entregue', nao_entregue: 'Não entregue' };
-const buttonClass = 'rounded-lg bg-stone-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-40';
+const buttonClass = `${styles.primary} rounded-lg bg-stone-900 px-4 py-3 text-sm font-semibold disabled:opacity-40`;
 const timeLabel = (value: string) => new Date(value).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza' });
 
 export default function DemoDeliveriesPage() {

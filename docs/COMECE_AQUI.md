@@ -23,6 +23,16 @@ ou de pessoa responsável pelo projeto.
   não na Saipos. Conta legada com PIN próprio sem telefone comprovado ainda
   precisa de fluxo seguro de verificação. Critérios completos no roadmap.
 
+### Evidência posterior de publicação — 28/09
+
+`2cb51fe` enviado ao GitHub e confirmado Ready em produção na Vercel
+(`AaLbabwUMTSFsMK6rRvrdMNksJGN`). `/admin/baixas` aberta e ensaio fictício
+de expulsadeira/baixa/alerta de 73h confirmado. Foi detectado contraste ruim
+nos botões por CSS legado e preparada correção isolada em CSS Module nesta
+entrega. Testes no celular e revisão do responsável continuam pendentes.
+Este registro substitui a condição de deploy não confirmado acima; não muda
+a decisão de manter bot desligado e migração não aplicada.
+
 ## Estado confirmado anteriormente — histórico de 22/09
 
 As referências de versão abaixo são históricas, não o último código da branch.

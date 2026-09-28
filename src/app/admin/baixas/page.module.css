@@ -1,0 +1,9 @@
+/* Não usar text-white aqui: o tema legado do admin sobrescreve essa utility. */
+.primary {
+  color: #fff;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  cursor: not-allowed;
+}

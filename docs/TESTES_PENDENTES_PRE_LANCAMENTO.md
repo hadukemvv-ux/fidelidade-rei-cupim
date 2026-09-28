@@ -48,6 +48,16 @@ envio WhatsApp, catálogo real, permissões de API futura ou teste visual.
 
 ### Preparação do bot — não executar envios agora
 
+Evidência posterior — 28/09, desenvolvimento, produção `2cb51fe` Ready
+(`AaLbabwUMTSFsMK6rRvrdMNksJGN`): página abriu com sessão admin existente;
+selecionar cerveja B não somou saída, entrega de expulsadeira somou 2,
+baixa simulada passou lançadas para 2 e falta lançar para 0. Pendência de
+73h permaneceu com alerta. Inspeção visual desktop detectou contraste ruim
+nos botões pela regra global `text-white`; correção em CSS Module incluída
+nesta entrega. Cenários ainda não executados acima permanecem pendentes;
+este registro substitui apenas o estado de publicação pendente do ensaio.
+
+
 - [ ] Adquirir número separado e aprovar canal/custos; não conectar número pessoal.
 - [ ] Revisar migração inbox, RLS e grants em banco isolado antes de aplicar.
 - [ ] Implementar consumidor transacional, vínculos operador/QR e catálogo real.

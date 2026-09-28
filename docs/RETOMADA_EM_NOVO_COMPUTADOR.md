@@ -16,6 +16,12 @@ como preparação, **não aplicada**; nunca executar todas as migrations em
 produção sem conferir a linha de base e aprovação. Não conectar WhatsApp
 pessoal nem habilitar o bot: aguardar número separado e escolha do canal.
 
+Publicação posterior: `2cb51fe` confirmado Ready em produção em 28/09;
+ensaio fictício desktop de expulsadeira, fechamento e alerta de 73h validado.
+Correção de contraste de botões preparada em CSS Module após a inspeção.
+Detalhes/evidência no README e caderno de testes; conferir sempre o topo atual
+e Ready antes de retomar, pois o ajuste pode ter SHA posterior.
+
 ## Histórico — checkpoint de 21/09
 
 - Repositório oficial: `https://github.com/hadukemvv-ux/fidelidade-rei-cupim`.

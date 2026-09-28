@@ -24,6 +24,8 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 
 ## Concluído
 
+- [x] 28/09: simulador `/admin/baixas` publicado por `2cb51fe`, confirmado Ready na Vercel. Ensaio fictício de expulsadeira (2), separação escolha/entrega/baixa e alerta 73h verificados no desktop. Contraste dos botões detectado e corrigido isoladamente nesta entrega; celular e outros cenários manuais ainda pendentes. Bot desligado, inbox não aplicada e nenhuma baixa real.
+
 - [x] Repositório recuperado no GitHub e produção vinculada à Vercel em `clubecupim.com.br`.
 - [x] Projeto Supabase correto identificado: `asjoubgoccbvftyggunz`.
 - [x] Migrações de base, cupons auditáveis, perfis operacionais/auditoria e preparação da Roleta V2 aplicadas.

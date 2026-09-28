@@ -17,6 +17,13 @@ Sistema de fidelidade para restaurante com:
 - Validação local em 28/09: **84/84 testes**, TypeScript, lint dos arquivos alterados e build aprovados. Build executado com variáveis fictícias; não comprova integração com produção. Teste visual/manual do simulador e confirmação de deploy desta etapa ainda pendentes. Lint global legado não foi revalidado.
 - Este checkpoint registra o código preparado, não uma confirmação de publicação. Conferir SHA no GitHub e deploy `Ready` na Vercel antes de testar a nova página em produção.
 
+### Publicação e ensaio — 28/09/2026
+
+- Commit funcional `2cb51fe` enviado ao GitHub; deploy de produção confirmado **Ready** na Vercel (`AaLbabwUMTSFsMK6rRvrdMNksJGN`, duração 42s). `/admin/baixas` abriu no domínio oficial com acesso admin existente. Este registro substitui os avisos de publicação pendente do checkpoint acima.
+- Ensaio no site confirmou: escolha sem saída, expulsadeira com 2 garrafas, baixa simulada com falta lançar zerada e pendência de 73h mantida com alerta. Nenhum recurso real foi alterado.
+- Conferência visual desktop detectou texto escuro nos botões por override global legado de `text-white`. Correção isolada em CSS Module nesta entrega, sem mudar o tema das outras páginas. Validação no celular, demais prêmios e revisão do responsável permanecem pendentes.
+- WhatsApp/OTP continuam desligados; migração inbox não aplicada. Publicação do simulador não autoriza prêmios comerciais.
+
 Leitura de continuidade: [comece aqui](docs/COMECE_AQUI.md), [roadmap](docs/ROADMAP.md) e [caderno de testes](docs/TESTES_PENDENTES_PRE_LANCAMENTO.md).
 
 ## Histórico — estado registrado em 21/09/2026

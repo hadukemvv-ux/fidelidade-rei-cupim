@@ -131,6 +131,14 @@ Ao retomar, seguir o caderno `docs/TESTES_PENDENTES_PRE_LANCAMENTO.md`, registra
 resultado do ensaio e continuar pelos próximos passos acima. Não confundir
 commit/push de código com migração aplicada, canal ativado ou lançamento comercial.
 
+Publicação posterior em 28/09: `2cb51fe` enviado ao GitHub e Ready na Vercel
+(`AaLbabwUMTSFsMK6rRvrdMNksJGN`). Ensaio desktop em `/admin/baixas` verificou
+escolha sem saída, expulsadeira de 2, baixa sem duplicar total e alerta 73h
+mantendo pendência. Inspeção visual identificou override legado de cor dos
+botões; correção isolada em CSS Module incluída nesta entrega. Celular e
+demais cenários manuais ainda pendentes. Isso substitui o estado de publicação
+pendente acima, não a ausência de integração/migração/WhatsApp reais.
+
 Referências: [Baileys](https://github.com/WhiskeySockets/Baileys),
 [whatsapp-web.js](https://wwebjs.dev/guide/),
 [termos WhatsApp](https://www.whatsapp.com/legal/terms-of-service),

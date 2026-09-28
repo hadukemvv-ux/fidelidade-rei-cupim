@@ -24,6 +24,11 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 
 ## Concluído
 
+- [x] Evidência de publicação da revisão de comunicação: commit `66196b3`
+  no GitHub, deploy `9qQoyeSx3oDMcnMuov2yuJfP2SC8` Ready na Vercel.
+  Hero estável e Majestade (7% via pontos + 3% cashback) conferidos no domínio
+  de produção. Nenhuma ativação comercial, migration ou envio de mensagem.
+
 - [x] Revisão local da explicação pontos + cashback em 28/09: taxas preservadas; apresentação derivada da conversão de 100 pontos = R$ 1 em produtos; totais 1%, 2,5%, 5%, 10%, sem tratar tudo como cashback. Mensagem fixa e diretrizes em `docs/COMUNICACAO_PUBLICA.md`. Não reposicionar landing para “em construção”; decisão explicitamente esclarecida pelo responsável. 87/87 testes, tipos, lint e build aprovados; painel conferido em desktop e viewport móvel de 390 × 844 sem rolagem horizontal. Publicação desta revisão deve ser conferida separadamente.
 
 - [x] 28/09: simulador `/admin/baixas` publicado por `2cb51fe`, confirmado Ready na Vercel. Ensaio fictício de expulsadeira (2), separação escolha/entrega/baixa e alerta 73h verificados no desktop. Contraste dos botões detectado e corrigido isoladamente nesta entrega; celular e outros cenários manuais ainda pendentes. Bot desligado, inbox não aplicada e nenhuma baixa real.

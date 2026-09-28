@@ -267,8 +267,10 @@ Nenhum item abaixo pode ficar sem resposta formal:
   Chama mostra 200 pontos + R$ 0,50. Painel conferido em desktop e viewport
   móvel de 390 × 844; largura do documento igual à área útil (375 px), sem
   rolagem horizontal. Override do navegador restaurado após o teste.
-- [ ] Confirmar publicação desta revisão como Ready na Vercel e conferir a
-  mesma mensagem em produção. Testes locais usaram placeholders de ambiente,
+- [x] Commit `66196b3` enviado ao GitHub; deploy
+  `9qQoyeSx3oDMcnMuov2yuJfP2SC8` confirmado Ready em Production. Hero e painel
+  Majestade conferidos em `https://www.clubecupim.com.br/`, com 7% via pontos
+  + 3% cashback = 10% em benefícios. Testes locais usaram placeholders de ambiente,
   sem consulta ou alteração de dados reais, crédito, cupom ou envio de mensagem.
 
 Este ensaio valida apresentação e matemática; não valida cadastro/OTP,

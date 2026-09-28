@@ -11,7 +11,9 @@ ou de pessoa responsável pelo projeto.
   descontos com fonte única; totais de referência não são todo cashback.
   Ler `docs/COMUNICACAO_PUBLICA.md` antes de alterar redação ou taxas.
   Revisão local validada: 87/87 testes, tipos, lint, build e painel desktop/
-  móvel. Isso não resolve bloqueadores operacionais nem confirma novo deploy.
+  móvel. Publicada por `66196b3`, deploy `9qQoyeSx3oDMcnMuov2yuJfP2SC8`
+  confirmado Ready; mensagem e exemplo conferidos em produção. Isso não
+  resolve os bloqueadores operacionais.
 
 - Base anterior desta etapa: commit `524ad68` em `main`; diagnóstico funcional
   `65eb9a4` teve deploy confirmado Ready. Não presumir que commits novos já

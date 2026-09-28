@@ -38,8 +38,9 @@ Ver [contrato de comunicação](docs/COMUNICACAO_PUBLICA.md) e diretrizes em
 `AGENTS.md`. A revisão de apresentação não ativa pontuação, OTP ou campanha.
 Validação local: 87/87 testes, TypeScript, lint dos arquivos alterados e build
 aprovados. Painel conferido no desktop e em viewport móvel de 390 × 844;
-Chama mostra R$ 0,50 no exemplo, sem rolagem horizontal. Confirmar o deploy
-desta revisão separadamente; validação local não significa publicação.
+Chama mostra R$ 0,50 no exemplo, sem rolagem horizontal. Commit `66196b3`
+enviado ao GitHub; deploy `9qQoyeSx3oDMcnMuov2yuJfP2SC8` confirmado Ready,
+com hero e exemplo Majestade conferidos no domínio de produção.
 
 ## Histórico — estado registrado em 21/09/2026
 

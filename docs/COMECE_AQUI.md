@@ -1,10 +1,31 @@
 # Comece aqui — ponto único de retomada
 
-Atualizado em 22/09/2026. Leia este arquivo antes de alterar, testar ou publicar
+Atualizado em 28/09/2026. Leia este arquivo antes de alterar, testar ou publicar
 qualquer parte do Clube. Ele é o índice vigente quando houver troca de computador
 ou de pessoa responsável pelo projeto.
 
-## Estado confirmado
+## Checkpoint vigente — 28/09/2026
+
+- Base anterior desta etapa: commit `524ad68` em `main`; diagnóstico funcional
+  `65eb9a4` teve deploy confirmado Ready. Não presumir que commits novos já
+  estejam publicados: verificar GitHub e Vercel separadamente.
+- Código desta etapa: `/admin/baixas` é SOMENTE um simulador em memória com
+  dados fictícios, sem estoque, clientes, cupons ou mensagens reais. Permite
+  seleção → entrega → baixa manual simulada e fechamento diário UTC−3.
+- WhatsApp pessoal não será conectado; aguardar número separado e aprovação
+  do canal. Bot e OTP desligados. Base Cloud API é experimental, não decisão
+  de contratação. Migração `202609280001_whatsapp_bot_inbox.sql` não aplicada.
+- Ver `docs/WHATSAPP_BOT_E_BAIXAS.md` para limites, testes e próxima sequência.
+  Não aplicar migrações nem habilitar envio somente por estarem versionados.
+- 84/84 testes, tipos, lint dos arquivos alterados e build local aprovados em
+  28/09. Ensaio manual/visual do simulador e deploy desta etapa não confirmados.
+- Pontuação diária Saipos continua pausada; salão vincula telefone no Clube,
+  não na Saipos. Conta legada com PIN próprio sem telefone comprovado ainda
+  precisa de fluxo seguro de verificação. Critérios completos no roadmap.
+
+## Estado confirmado anteriormente — histórico de 22/09
+
+As referências de versão abaixo são históricas, não o último código da branch.
 
 - Repositório: `hadukemvv-ux/fidelidade-rei-cupim`, branch `main`.
 - Último checkpoint funcional publicado: `be86bde` — nova interface da roleta
@@ -43,6 +64,7 @@ ou de pessoa responsável pelo projeto.
 | Estratégia para retirar legado | `docs/LIMPEZA_DO_LEGADO.md` |
 | Retomada em computador novo | `docs/RETOMADA_EM_NOVO_COMPUTADOR.md` |
 | Matriz de papéis e rotas | `docs/PERMISSOES_OPERACIONAIS.md` |
+| Bot operacional, entrega de prêmios e simulador de baixas | `docs/WHATSAPP_BOT_E_BAIXAS.md` |
 
 ## Próxima sequência segura
 
@@ -57,9 +79,10 @@ ou de pessoa responsável pelo projeto.
    `https://www.clubecupim.com.br/acesso/definir-senha`. O convite abre essa
    página para criar a senha; o superadmin pode reenviar um acesso pelo painel
    sem conhecer a senha da pessoa.
-3. Definir provedor oficial de WhatsApp, remetente, templates, custos e opt-out;
-   então configurar OTP e executar o teste controlado. Não automatizar WhatsApp
-   pessoal.
+3. Enquanto aguardamos número separado, revisar `/admin/baixas` pelo caderno
+   de testes. Canal do bot operacional continua em aberto; OTP mantém a rota
+   oficial preparada. Aprovar canal, remetente, templates, custos e opt-out
+   antes de configurar/enviarem mensagens. Não automatizar WhatsApp pessoal.
 4. Definir a apresentação comercial: fidelidade possui quatro níveis por gasto
    em 90 dias; a Roleta V2 usa seis faixas da compra somente para chances do
    giro. A interface já esclarece a diferença, mas ela deve ser aprovada antes

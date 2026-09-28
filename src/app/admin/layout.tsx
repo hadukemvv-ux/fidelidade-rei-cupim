@@ -37,6 +37,7 @@ const navigation: NavGroup[] = [
     { href: '/admin/operadores', icon: '♙', label: 'Acessos', hint: 'Garçom, caixa, gestão e admin' },
     { href: '/admin/comandas', icon: '▣', label: 'Comandas', hint: 'Fotos pendentes de conferência' },
     { href: '/admin/operacao-roleta', icon: '◷', label: 'Operação da roleta', hint: 'Resultado diário e sinais' },
+    { href: '/admin/baixas', icon: '▤', label: 'Baixas de prêmios', hint: 'Simulador sem estoque real' },
     { href: '/admin/auditoria', icon: '◷', label: 'Auditoria', hint: 'Quem fez cada ação' },
     { href: '/admin/seguranca', icon: '⛨', label: 'Privacidade', hint: 'Incidentes e contenção' },
   ], folders: [{ label: 'Saipos', icon: '↔', hint: 'Integração e entregas', items: [
@@ -62,6 +63,7 @@ const pageInfo: Record<string, { title: string; description: string }> = {
   '/admin/operadores': { title: 'Acessos da equipe', description: 'Defina o que cada pessoa pode fazer no sistema.' },
   '/admin/comandas': { title: 'Comandas para conferência', description: 'Fotos privadas aguardando a confirmação da gestão.' },
   '/admin/operacao-roleta': { title: 'Operação da roleta', description: 'Acompanhe conciliações, divergências e qualidade operacional por dia.' },
+  '/admin/baixas': { title: 'Baixas de prêmios — simulador', description: 'Ensaie escolha, entrega e fechamento com dados fictícios, sem WhatsApp.' },
   '/admin/auditoria': { title: 'Auditoria', description: 'Acompanhe liberações, validações e ações administrativas.' },
   '/admin/saipos': { title: 'Saipos — teste de conexão', description: 'Confirme a API sem criar clientes, pontos ou benefícios.' },
   '/admin/saipos/entregas': { title: 'Saipos — entregas', description: 'Examine canal, prazo estimado e etapas de pedidos sem alterar dados.' },

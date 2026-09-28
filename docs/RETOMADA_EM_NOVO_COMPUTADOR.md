@@ -1,9 +1,22 @@
 # Retomada em novo computador
 
-Atualizado em 21/09/2026. Este guia permite recuperar o trabalho sem depender
+Atualizado em 28/09/2026. Este guia permite recuperar o trabalho sem depender
 do computador anterior, de histórico de conversa ou de memória.
 
-## Estado exato deste checkpoint
+## Checkpoint vigente
+
+Leia primeiro `docs/COMECE_AQUI.md` e o estado atual do README. A base anterior
+à etapa de bot/simulador é `524ad68`; confira `git log -1` e deploy Ready,
+sem considerar os SHAs históricos abaixo como o topo atual da branch.
+
+Em 28/09, 84/84 testes, tipos, lint dos arquivos alterados e build local foram
+aprovados. `/admin/baixas` é ensaio fictício em memória; não requer WhatsApp
+nem migração. A migração `202609280001_whatsapp_bot_inbox.sql` está versionada
+como preparação, **não aplicada**; nunca executar todas as migrations em
+produção sem conferir a linha de base e aprovação. Não conectar WhatsApp
+pessoal nem habilitar o bot: aguardar número separado e escolha do canal.
+
+## Histórico — checkpoint de 21/09
 
 - Repositório oficial: `https://github.com/hadukemvv-ux/fidelidade-rei-cupim`.
 - Branch de trabalho: `main`.
@@ -32,8 +45,8 @@ git log -1 --oneline
 git status --short
 ```
 
-O resultado esperado é `main`, um commit mais recente ou igual a `f436a6d` e
-nenhuma alteração local. Se vier de uma cópia antiga do projeto, o arquivo
+O resultado esperado é `main`, a versão mais recente conferida no GitHub e
+nenhuma alteração local em um clone novo. Se vier de uma cópia antiga do projeto, o arquivo
 `supabase/migrations/202609120001_comandas_roleta_v2.sql` pode aparecer como
 não rastreado: é um rascunho local, não foi aplicado nem enviado ao GitHub e
 não deve ser incluído em commit, executado ou apagado sem revisão dedicada.
@@ -68,7 +81,7 @@ npm run test:unit
 npm run dev
 ```
 
-Na última checagem, tipos passaram e a suíte tinha `40/40` testes aprovados.
+Na checagem de 28/09, tipos passaram e a suíte tinha `84/84` testes aprovados.
 O lint global ainda contém pendências em módulos legados pausados; registrar
 qualquer nova falha em vez de escondê-la. O build local só é útil depois que as
 variáveis de ambiente estiverem corretas.
@@ -81,11 +94,19 @@ variáveis de ambiente estiverem corretas.
 4. `docs/TESTES_PENDENTES_PRE_LANCAMENTO.md`
 5. `docs/SAIPOS_VALIDACAO_COMANDA.md`
 6. `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`
+7. `docs/WHATSAPP_BOT_E_BAIXAS.md`
 
 Documentos datados antes de 18/09/2026 explicam a história, mas não substituem
 essa sequência.
 
-## Onde o trabalho parou
+## Próxima retomada
+
+Executar o roteiro de `/admin/baixas` no caderno mestre e revisar a experiência
+com o responsável. Depois implementar persistência atômica/vínculo a operador
+e QR, catálogo físico e correções auditadas; isso NÃO existe no simulador.
+Nenhuma baixa real nem envio está autorizado por executar o ensaio.
+
+## Onde o trabalho parou em 21/09 — histórico
 
 O fluxo foi preparado, mas não está aberto ao público. O teste que falta deve
 ser feito só quando autorizado:

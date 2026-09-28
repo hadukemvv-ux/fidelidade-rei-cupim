@@ -1,6 +1,6 @@
 # Roteiro mestre de testes pendentes — pré-lançamento
 
-Atualizado em 26/09/2026. Este é o caderno único para executar testes aos poucos, sem depender da memória e sem usar clientes reais. Ele complementa os guias específicos; quando um teste for concluído, registre data, executor, ambiente, resultado e evidência na seção final.
+Atualizado em 28/09/2026. Este é o caderno único para executar testes aos poucos, sem depender da memória e sem usar clientes reais. Ele complementa os guias específicos; quando um teste for concluído, registre data, executor, ambiente, resultado e evidência na seção final.
 
 > Regra: o piloto técnico da Roleta V2 jamais libera benefício comercial nem permite baixa de cupom. Use uma conta e um telefone de teste, e nunca compartilhe PIN, token, QR ou segredo em conversa, planilha ou captura de tela.
 
@@ -18,6 +18,44 @@ Atualizado em 26/09/2026. Este é o caderno único para executar testes aos pouc
 | Backup/restauração | Sem evidência de restauração | Planejar antes de abrir |
 
 ## Preparação comum
+
+### Ensaio isolado de baixas — sem WhatsApp (28/09)
+
+Estado: código preparado, validação manual/visual **pendente**, deploy desta
+etapa **não confirmado**. Ver `docs/WHATSAPP_BOT_E_BAIXAS.md`. Use a página
+local com acesso admin autorizado ou confira Ready antes de testar no site.
+O gestor pode manipular o ensaio fictício, mas não ganha permissão de escrita
+nos recursos reais; `/admin/baixas` não chama API de alteração.
+
+- [ ] Criar saideira e escolher cerveja A: resumo ainda vazio antes de entregar.
+- [ ] Simular entrega: resumo soma exatamente 1 garrafa de 600 ml.
+- [ ] Criar expulsadeira e escolher cerveja B: entrega soma 2 garrafas, não 1.
+- [ ] Criar sobremesa e selecionar pudim: resumo usa produto/unidade exatos.
+- [ ] Confirmar que cervejas exibidas são só A/B, consumidas na conta fictícia;
+      não confundir exemplos com catálogo real da empresa.
+- [ ] Simular baixa manual: quantidade entregue não muda; falta lançar diminui.
+- [ ] Entrega/baixa encerradas não podem ser feitas novamente; conferir histórico.
+- [ ] Encerrar prêmio sem entrega: não entra no resumo de saídas.
+- [ ] Criar pendência de 73h: aparece alerta e o registro permanece resolvível.
+- [ ] Recarregar: ensaio desaparece; nenhum registro foi persistido em servidor.
+- [ ] Conferir apresentação no celular e teclado, rótulos e histórico expansível.
+
+Evidência técnica em 28/09: 84/84 testes unitários passaram; TypeScript,
+lint dos arquivos alterados e build local passaram. Incluem quantidade,
+cerveja não consumida, duplicação, separação seleção/entrega/baixa e dia UTC−3.
+Build usou valores fictícios de ambiente. Isso não comprova SQL aplicado,
+envio WhatsApp, catálogo real, permissões de API futura ou teste visual.
+
+### Preparação do bot — não executar envios agora
+
+- [ ] Adquirir número separado e aprovar canal/custos; não conectar número pessoal.
+- [ ] Revisar migração inbox, RLS e grants em banco isolado antes de aplicar.
+- [ ] Implementar consumidor transacional, vínculos operador/QR e catálogo real.
+- [ ] Validar operador suspenso, respostas repetidas/reordenadas e concorrência.
+- [ ] Aprovar retenção de evidências e correções auditadas; não auto-apagar pendências.
+- [ ] Somente depois autorizar teste de transporte com destinos consentidos.
+
+### Preparação para os testes reais
 
 1. Confirme que o último deploy da Vercel está `Ready` e anote o commit.
 2. Use o Supabase `asjoubgoccbvftyggunz`; o projeto Energia é fora de escopo.

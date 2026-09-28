@@ -1,6 +1,6 @@
 # Roadmap do Projeto Fidelidade
 
-Atualizado em 26/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
+Atualizado em 28/09/2026. Este é o roteiro operacional vigente; documentos históricos não substituem este arquivo nem a auditoria de continuidade.
 
 ## Objetivo
 
@@ -19,6 +19,7 @@ Operar um programa de fidelidade seguro, auditável e simples para clientes e eq
 | Cupons da operação | Parcial | Retirar gradualmente o validador legado e testar o fluxo novo com a caixa. |
 | Roleta V2 | Piloto técnico não comercial ativo | Mesa 200 emitiu QR e girou em 26/09; conferir reconciliação automática posterior e completar cenários negativos. |
 | WhatsApp OTP | Preparado, desligado | Escolher provedor oficial após adquirir o número comercial. |
+| Bot operacional e baixas de prêmios | Simulador fictício preparado; bot desligado, migração não aplicada | Revisar ensaio `/admin/baixas`; persistência/QR/operador reais pendentes. Aguardar número separado e aprovar canal. |
 | LGPD e operação pública | Em andamento | Contenção inicial, inventário, preferências, retenção, backup e revisão jurídica. |
 
 ## Concluído
@@ -154,10 +155,10 @@ Vendas Saipos do período -> verificar origem elegível, pagamento e cancelament
 - [x] O pedido de retirada `882731058` trouxe `customer.phone` com DDD e encontrou uma única conta do Clube pelo telefone normalizado. O diagnóstico inicial apontou `nao_verificada`; não revelar o número nem atribuir pontos por essa correspondência isolada.
 - [x] Diagnóstico em produção da retirada `882731058` em 27/09: **telefone comprovado: não; PIN concluído: sim**. O PIN automático legado agora é excluído da regra futura de pontuação. Nenhum ponto foi atribuído.
 - [ ] Resolver o fluxo de verificação de uma conta legada que já possui PIN próprio, mas ainda não tem `telefone_verificado_em`: hoje `/api/otp/solicitar` considera esse registro conta completa e recusa OTP com propósito `cadastro`; a tela de cadastro também não conclui o caso. Exigir comprovação real pelo WhatsApp, sem marcar a coluna manualmente, antes de tornar a retirada elegível. Definir como fica o bônus de cadastro preexistente para não duplicá-lo.
-- [ ] Repetir um pedido de salão identificando/vinculando **explicitamente o cliente cadastrado** na comanda Saipos e confirmar se o campo `customer.phone` passa a vir na API. A [orientação da Saipos Garçom](https://meajuda.saipos.com/hc/pt-br/articles/20211650734484-Como-lan%C3%A7ar-vendas-de-sal%C3%A3o-pelo-Saipos-Gar%C3%A7om) distingue a etapa opcional de identificar o cliente; nome/telefone escritos apenas como identificação livre não devem ser tratados como vínculo seguro. Se mesmo com vínculo o telefone não vier, definir outro fluxo verificável para salão.
+- [ ] Validar o fluxo de salão sem telefone na Saipos, conforme operação confirmada pelo responsável: vínculo ao cliente é feito no Clube pelo QR/telefone informado; conciliar a conta pelo `id_sale`, sem inventar telefone na venda. Prêmio imediato não exige cadastro completo; benefício futuro exige conta concluída e telefone comprovado.
 - [ ] Aprovar a elegibilidade: somente cliente com telefone comprovado e conta concluída recebe pontos/cashback; não criar perfis, saldos ou logs individuais para todos os compradores da Saipos. Não usar CPF isoladamente para atribuir a compra a uma conta.
 - [ ] Decidir a primeira compra: proposta de reconhecer compra anterior ao cadastro por até **7 dias**, somente após verificação do mesmo telefone; prazo e marco inicial dependem de aprovação do responsável. Sem guardar venda de não participante no Clube apenas para essa possibilidade.
-- [ ] Confirmar em exemplos reais que a API retorna telefone com DDD 85 para balcão, salão e delivery; número curto de mesa/balcão não substitui `id_sale`. Testar ausência, duplicidade, troca de telefone e mais de uma conta candidata sem crédito ambíguo.
+- [ ] Confirmar em exemplos reais telefone com DDD 85 para delivery (obrigatório na operação) e balcão identificado (opcional); salão usa vínculo no Clube, não telefone Saipos. Número curto de mesa/balcão não substitui `id_sale`. Testar ausência, duplicidade, troca de telefone e mais de uma conta candidata sem crédito ambíguo.
 - [ ] Comprovar um campo confiável de origem/canal para excluir iFood, 99Food e outros marketplaces. `partner_sale`/nome da loja não servem. Até lá, **não automatizar pontos de delivery**; validar separadamente a classificação de salão e balcão para um piloto restrito.
 - [ ] Testar a hipótese do telefone com amostras rotuladas da própria operação: pelo menos um pedido direto Saipos, um iFood e um 99Food, comparando apenas presença/formato/repetição do número, sem divulgar telefone real no relatório. A [Saipos informa que integrações como iFood podem não enviar o telefone](https://meajuda.saipos.com/hc/pt-br/articles/31349900338836-Rastreamento-e-acompanhamento-de-entregas); isso não comprova que **todos** os pedidos desses canais venham sem número ou com número padrão, especialmente pedidos lançados manualmente.
 - [ ] Definir e testar venda efetivamente paga, cancelada, estornada, pagamento parcial e falha/atraso da API. O total e a soma de pagamentos devem conferir; uma venda não localizada permanece pendente, sem crédito presumido.
@@ -192,7 +193,11 @@ O consumo atual é baixo, mas não valida o custo com clientes reais.
 3. Consolidar cupom novo e remover o caminho legado quando o teste de caixa for concluído.
 4. [Em andamento] Preferência de marketing/opt-out do cliente implementada: o portal permite revogar WhatsApp promocional ou aniversário, com evidência e auditoria. Falta testar ponta a ponta, definir canal formal de direitos e fechar o plano de retenção. O aviso público, a central de incidente, o modo de contenção e o bloqueio de rotas críticas já foram preparados; o checkpoint está em `docs/PRIVACIDADE_E_RESPOSTA_A_INCIDENTES.md`.
 5. [Em andamento] Criar backup/restauração testável do Supabase e alertas de cron. O projeto está no plano Free, que não oferece backups agendados; definir armazenamento protegido e testar a restauração isolada antes da abertura.
-6. Escolher WhatsApp Business Platform/Cloud API ou BSP oficial; não automatizar WhatsApp pessoal.
+6. [Em andamento em 28/09] Responsável decidiu aguardar número separado, sem conectar WhatsApp pessoal. Base local isolada de webhook/adapter e regras de entrega preparada, sem envio nem migração aplicada. Simulador `/admin/baixas` preparado para ensaiar escolha → entrega física → baixa manual com dados fictícios em memória e resumo diário UTC−3; nenhuma integração real de estoque/cupom. Canal do bot continua pendente de aprovação. Plano e limites em `docs/WHATSAPP_BOT_E_BAIXAS.md`.
+   - [x] Simulador isolado: saideira (1), expulsadeira (2), sobremesa (1), escolha entre cervejas consumidas, registro por item/unidade, bloqueio de duplicação e alerta de 72h sem apagar pendências.
+   - [ ] Revisar o ensaio com o responsável; persistência atômica, correções auditadas, vínculo ao operador/QR real e retenção do histórico ainda não implementados.
+   - [ ] Registrar entrega física (produto exato + unidade + quantidade + operador) e fechamento diário para baixa manual na Saipos, sem criar outro estoque. Cliente escolhe a cerveja entre as consumidas; saideira = 1 e expulsadeira = 2, sem teto de preço.
+   - [ ] Separar pendência, escolha, entrega e lançamento na Saipos; impedir baixas duplicadas, manter correções auditadas e alerta após 72h. Prazo de exclusão do histórico ainda depende de aprovação; nenhuma limpeza nova foi ligada.
 7. Depois do piloto V2, remover telas, rotas e tabelas legadas que não forem mais referenciadas. O plano está em `docs/LIMPEZA_DO_LEGADO.md`.
 8. Executar o roteiro mestre de testes gradualmente, sem usar clientes reais: `docs/TESTES_PENDENTES_PRE_LANCAMENTO.md`.
 

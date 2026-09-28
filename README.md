@@ -2,11 +2,26 @@
 
 Sistema de fidelidade para restaurante com:
 - Pontos, cashback e benefícios por compra
-- Integracao com SAIPOS (webhook + cron)
+- Consulta SAIPOS e reconciliação de comandas; pontuação diária e webhook de vendas pausados
 - Area admin protegida por sessao
 - Crons de sincronizacao e expiracao
 
-## Estado atual (21/09/2026)
+## Estado atual — checkpoint de 28/09/2026
+
+- A Roleta V2 permanece em piloto técnico, sem benefício comercial. Publicar código não significa autorizar o lançamento do programa.
+- A pontuação diária Saipos continua pausada. O cron de conferência de comandas não concede pontos; origem dos pedidos, telefone comprovado e conciliação segura ainda são bloqueadores. Ver [roadmap](docs/ROADMAP.md).
+- Salão: o telefone é informado no Clube pelo QR, não obtido da venda Saipos. Delivery exige telefone na operação; balcão pode ter identificação ou não. Não usar número de mesa/balcão como substituto de `id_sale`.
+- O responsável decidiu aguardar um número separado para o bot. WhatsApp pessoal não será conectado. Canal definitivo, provedor e custos continuam pendentes; OTP e bot permanecem desligados.
+- Preparado no código: `/admin/baixas`, simulador com mesas/produtos fictícios e dados somente em memória. Testa escolha → entrega física → baixa manual simulada, resumo diário UTC−3 e alerta após 72h. Não altera estoque Saipos, cupons ou clientes; sair/recarregar descarta o ensaio.
+- Base experimental de Cloud API/webhook disponível, mas não conectada: `WHATSAPP_BOT_MODE=disabled` por padrão. Migração `202609280001_whatsapp_bot_inbox.sql` **não aplicada**. Sem worker, consumidor de respostas, vínculo ao giro ou registro persistente de entregas. Não habilitar antes da revisão e das dependências descritas no [plano do bot e baixas](docs/WHATSAPP_BOT_E_BAIXAS.md).
+- Validação local em 28/09: **84/84 testes**, TypeScript, lint dos arquivos alterados e build aprovados. Build executado com variáveis fictícias; não comprova integração com produção. Teste visual/manual do simulador e confirmação de deploy desta etapa ainda pendentes. Lint global legado não foi revalidado.
+- Este checkpoint registra o código preparado, não uma confirmação de publicação. Conferir SHA no GitHub e deploy `Ready` na Vercel antes de testar a nova página em produção.
+
+Leitura de continuidade: [comece aqui](docs/COMECE_AQUI.md), [roadmap](docs/ROADMAP.md) e [caderno de testes](docs/TESTES_PENDENTES_PRE_LANCAMENTO.md).
+
+## Histórico — estado registrado em 21/09/2026
+
+Os checkpoints abaixo preservam evidências anteriores; não substituem o estado atual acima.
 
 - Código recuperado e versionado no GitHub; cada push em `main` dispara deploy automático na Vercel.
 - Última base funcional publicada: `f436a6d` — corrige o encaminhamento após login conforme o papel operacional. Garçom entra em `/garcom/comanda`, caixa em `/caixa`, gestor em `/admin` somente leitura e superadmin em `/admin` com escrita. A produção foi confirmada como `Ready` na Vercel em 18/09/2026.

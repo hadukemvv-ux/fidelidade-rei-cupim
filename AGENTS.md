@@ -23,27 +23,37 @@ Este arquivo vale para os dois agentes (o `CLAUDE.md` importa este arquivo).
 
 ## 2. Quem faz o quê
 
+Regra simples: **mudou regra, número, dinheiro ou dado → Codex. Mudou o que a
+pessoa vê na tela, organização ou limpeza → Claude.**
+
 | Dono | Frentes |
 | --- | --- |
-| **Codex** | Saipos (reconciliação e futura pontuação), regras e banco da Roleta V2, WhatsApp OTP/bot, baixas reais de prêmios, texto/benefícios da landing, novas migrações do Supabase |
-| **Claude** | Organização da documentação, limpeza do legado, lint, backup/restauração do Supabase, visual mobile da roleta e ícones/logo, revisão dos PRs do Codex |
-| **Responsável** | Decisões de negócio: jurídico, prêmios e custos, número/provedor de WhatsApp, planos pagos, arte oficial, execução dos pilotos, merge dos PRs |
+| **Codex — o motor** | Regras de pontos, cashback, níveis e prêmios (`src/lib/*-rules.ts`); banco de dados e migrações; Saipos; WhatsApp (OTP e bot); baixas reais de prêmios; crons |
+| **Claude — a vitrine e a casa** | Visual das telas (landing, roleta no celular, painéis), logo e ícones; documentação; limpeza do legado; lint; backup do Supabase; revisão das entregas do Codex que mexem em banco ou dinheiro |
+| **Responsável — o dono do negócio** | Decide e autoriza: jurídico, prêmios e custos, WhatsApp, planos pagos, arte oficial, pilotos no restaurante. Não mexe em GitHub |
 
 - Só trabalhe em tarefa cujo dono é você. Se precisar mexer na frente do outro,
-  **não mexa**: registre a necessidade no `docs/DIARIO.md` e avise o responsável.
-- Tarefa sem dono ou decisão de negócio: pergunte ao responsável, não decida.
+  **não mexa**: registre no `docs/DIARIO.md` ("precisa do Codex/Claude: ...") e avise o responsável.
+- Tarefa sem dono ou decisão de negócio: pergunte ao responsável em linguagem simples, não decida.
 - Só o responsável muda esta tabela.
 
 ## 3. Git — cada agente na sua pasta e branch
 
+O responsável **não usa GitHub**. Os agentes cuidam de tudo e só pedem
+"posso publicar?" em linguagem simples.
+
 - Codex: pasta `fidelidade-rei-cupim`. Claude: pasta `fidelidade-rei-cupim-claude` (git worktree).
 - Nunca commitar direto em `main`. Uma branch por tarefa: `codex/<tema>` ou `claude/<tema>`.
 - Antes de começar: `git fetch` e criar a branch a partir de `origin/main` atualizado.
-- Ao terminar: testes (`npm run test:unit`, `npx tsc --noEmit`), push da branch e
-  Pull Request para `main`. O outro agente revisa quando pedido; **o responsável faz o merge**.
-- A Vercel gera um deploy de Preview por branch. Preview não tem os segredos de
-  produção: não usar para fluxos com sessão, Saipos ou dados reais.
-- Merge em `main` publica em produção. Depois do merge, conferir deploy `Ready`.
+- Ao terminar: testes (`npm run test:unit`, `npx tsc --noEmit`) e push da branch.
+- Entrega do Codex que mexe em banco, migração, Saipos ou saldo: pedir revisão
+  do Claude antes de publicar (o responsável repassa o pedido).
+- **Publicar** = o próprio agente atualiza a branch com `origin/main`, resolve
+  conflitos, faz merge em `main` e push. Só depois do responsável dizer
+  "pode publicar". Push em `main` = deploy em produção na Vercel.
+- Depois de publicar, conferir o site em produção e contar ao responsável o que mudou, em uma frase.
+- A Vercel gera Preview por branch, mas sem os segredos de produção: não usar
+  para fluxos com sessão, Saipos ou dados reais.
 
 ## 4. Documentação — regra enxuta
 

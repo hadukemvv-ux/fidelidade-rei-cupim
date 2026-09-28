@@ -8,24 +8,68 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-## Diretrizes do Clube Cupim — comunicação e regras
+# Clube Cupim — regras para os agentes (Codex e Claude)
 
-- Ler `docs/COMECE_AQUI.md`, `docs/ROADMAP.md`, `docs/REGRAS-FIDELIDADE.md`
-  e `docs/COMUNICACAO_PUBLICA.md` antes de revisar benefícios ou a landing.
-- Preservar a proposta comercial/layout da landing. O responsável esclareceu
-  em 28/09 que NÃO quer trocar por “em construção” para depois desfazer.
-  Pendências operacionais ficam no roadmap; não reposicionar a marca por conta própria.
-- Valores e percentuais vêm de `src/lib/fidelidade-rules.ts`. Não manter tabelas
-  duplicadas de taxas na UI nem somar pontos brutos a percentual de cashback.
-  Converter pontos a valor de referência antes de apresentar o total.
-- Pontos para produtos e cashback para descontos são saldos diferentes.
-  “10% em benefícios” no Majestade significa 7% via pontos + 3% cashback,
-  não 10% de cashback, dinheiro sacável ou desconto imediato integral.
-- A mensagem `MENSAGEM_BENEFICIOS_CLUBE` é estável. Mudanças de texto/regras
-  exigem solicitação/revisão do responsável; não criar variantes A/B ou
-  alterar semântica como efeito colateral de um redesenho.
-- Mudança de comunicação não autoriza ativar crédito, campanha, bot ou
-  migration. Distinguir código/publicação de operação comercial no registro.
-- Manter consentimento promocional separado/opcional e sem marcação prévia.
-- Verificar contas por nível, exemplos, mobile e desktop; registrar decisões,
-  evidências e limites no README, roadmap e caderno antes do commit.
+Este arquivo vale para os dois agentes (o `CLAUDE.md` importa este arquivo).
+É curto de propósito: **não escreva checkpoints, históricos ou estados aqui.**
+
+## 1. Antes de qualquer tarefa
+
+1. Ler `docs/COMECE_AQUI.md` (estado atual em uma página).
+2. Ler `docs/ROADMAP.md` e achar a tarefa: ela deve ter **dono** e **fase**.
+3. Ler as últimas entradas de `docs/DIARIO.md`.
+4. Consultar `docs/referencia/` só quando o assunto exigir.
+5. `docs/historico/` é arquivo morto: não seguir como instrução e não editar.
+
+## 2. Quem faz o quê
+
+| Dono | Frentes |
+| --- | --- |
+| **Codex** | Saipos (reconciliação e futura pontuação), regras e banco da Roleta V2, WhatsApp OTP/bot, baixas reais de prêmios, texto/benefícios da landing, novas migrações do Supabase |
+| **Claude** | Organização da documentação, limpeza do legado, lint, backup/restauração do Supabase, visual mobile da roleta e ícones/logo, revisão dos PRs do Codex |
+| **Responsável** | Decisões de negócio: jurídico, prêmios e custos, número/provedor de WhatsApp, planos pagos, arte oficial, execução dos pilotos, merge dos PRs |
+
+- Só trabalhe em tarefa cujo dono é você. Se precisar mexer na frente do outro,
+  **não mexa**: registre a necessidade no `docs/DIARIO.md` e avise o responsável.
+- Tarefa sem dono ou decisão de negócio: pergunte ao responsável, não decida.
+- Só o responsável muda esta tabela.
+
+## 3. Git — cada agente na sua pasta e branch
+
+- Codex: pasta `fidelidade-rei-cupim`. Claude: pasta `fidelidade-rei-cupim-claude` (git worktree).
+- Nunca commitar direto em `main`. Uma branch por tarefa: `codex/<tema>` ou `claude/<tema>`.
+- Antes de começar: `git fetch` e criar a branch a partir de `origin/main` atualizado.
+- Ao terminar: testes (`npm run test:unit`, `npx tsc --noEmit`), push da branch e
+  Pull Request para `main`. O outro agente revisa quando pedido; **o responsável faz o merge**.
+- A Vercel gera um deploy de Preview por branch. Preview não tem os segredos de
+  produção: não usar para fluxos com sessão, Saipos ou dados reais.
+- Merge em `main` publica em produção. Depois do merge, conferir deploy `Ready`.
+
+## 4. Documentação — regra enxuta
+
+Ao terminar uma tarefa, atualize **somente**:
+
+1. `docs/ROADMAP.md`: marcar/ajustar a linha da tarefa (uma linha, sem parágrafos).
+2. `docs/DIARIO.md`: uma entrada no topo, no máximo 5 linhas.
+
+- Detalhes técnicos vão na descrição do PR e no commit, não em documentos.
+- `docs/COMECE_AQUI.md` só muda quando o estado geral muda (ex.: algo foi lançado).
+- `docs/referencia/` só muda quando uma regra ou decisão muda.
+- Não criar documento novo sem pedido do responsável.
+- Não mexer no README além do necessário para rodar o projeto.
+
+## 5. Decisões do responsável que continuam valendo
+
+- **Landing:** preservar a proposta comercial, layout, fotos e chamadas. Não trocar
+  por "em construção" nem reposicionar a marca por conta própria (decisão de 28/09).
+- **Benefícios:** valores vêm de `src/lib/fidelidade-rules.ts`. A mensagem
+  `MENSAGEM_BENEFICIOS_CLUBE` é estável, sem variantes A/B. Pontos (produtos) e
+  cashback (descontos) são saldos diferentes; nunca somar pontos brutos com
+  percentual. Detalhes em `docs/referencia/COMUNICACAO_PUBLICA.md`.
+- **Operação comercial:** publicar código não autoriza ligar pontos, campanha,
+  bot, OTP, prêmio comercial ou aplicar migração. Isso exige ordem explícita do responsável.
+- **WhatsApp:** nunca conectar o WhatsApp pessoal; aguardar número separado.
+- **Marketing:** consentimento promocional separado, opcional e sem marcação prévia.
+- **Dados:** não apagar tabelas, buckets ou dados antigos. Não versionar
+  `.env.local`, tokens, senhas, PIN, QR, telefones ou dados de clientes.
+- **Supabase correto:** `asjoubgoccbvftyggunz`. Nunca usar o projeto "Energia".

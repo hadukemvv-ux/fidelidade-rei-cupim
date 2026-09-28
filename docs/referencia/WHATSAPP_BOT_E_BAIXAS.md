@@ -127,7 +127,7 @@ garantida: devem entrar no inventário/controle de acesso e na retenção aprova
 O exemplo browser-only não possui atomicidade entre dispositivos e não pode
 ser adaptado a estoque/cupom real sem transação, autorização e auditoria no servidor.
 
-Ao retomar, seguir o caderno `docs/TESTES_PENDENTES_PRE_LANCAMENTO.md`, registrar
+Ao retomar, seguir o caderno `docs/referencia/TESTES_PENDENTES_PRE_LANCAMENTO.md`, registrar
 resultado do ensaio e continuar pelos próximos passos acima. Não confundir
 commit/push de código com migração aplicada, canal ativado ou lançamento comercial.
 

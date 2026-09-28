@@ -62,4 +62,4 @@ produto no catálogo tenha preço em reais rigorosamente proporcional aos pontos
 
 Antes de mexer em mensagem/regras, ler este contrato e o roadmap. Evitar trabalho
 temporário de “em construção” ou remover blocos inteiros sem pedido explícito.
-Validações técnicas/manuais ficam em `docs/TESTES_PENDENTES_PRE_LANCAMENTO.md`.
+Validações técnicas/manuais ficam em `docs/referencia/TESTES_PENDENTES_PRE_LANCAMENTO.md`.

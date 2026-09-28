@@ -29,7 +29,7 @@ Exemplo de R$ 100 no Majestade: 700 pontos (R$ 7 de referência em produtos)
 e R$ 3 de cashback. Usa-se o nível anterior à compra; taxas nominais não
 substituem arredondamento, elegibilidade ou custo de resgate do catálogo.
 O cálculo de apresentação vem de `getResumoBeneficiosNivel` nas regras
-centrais. Contrato completo em `docs/COMUNICACAO_PUBLICA.md`.
+centrais. Contrato completo em `docs/referencia/COMUNICACAO_PUBLICA.md`.
 
 Tickets e sorteios estão congelados: não são acumulados, não geram entrada e não podem ser divulgados como benefício futuro até decisão jurídica/comercial nova.
 

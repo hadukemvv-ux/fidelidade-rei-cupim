@@ -22,7 +22,7 @@ Atualizado em 28/09/2026. Este é o caderno único para executar testes aos pouc
 ### Ensaio isolado de baixas — sem WhatsApp (28/09)
 
 Estado: código preparado, validação manual/visual **pendente**, deploy desta
-etapa **não confirmado**. Ver `docs/WHATSAPP_BOT_E_BAIXAS.md`. Use a página
+etapa **não confirmado**. Ver `docs/referencia/WHATSAPP_BOT_E_BAIXAS.md`. Use a página
 local com acesso admin autorizado ou confira Ready antes de testar no site.
 O gestor pode manipular o ensaio fictício, mas não ganha permissão de escrita
 nos recursos reais; `/admin/baixas` não chama API de alteração.
@@ -126,7 +126,7 @@ Não apagar tabelas legadas neste teste. A remoção/anonimização depende de p
 
 ## 4. Privacidade, consentimento e direitos
 
-Siga o passo a passo detalhado de `docs/GUIA_TESTE_PRIVACIDADE_E_CONTENCAO.md` e registre também aqui a conclusão.
+Siga o passo a passo detalhado de `docs/referencia/GUIA_TESTE_PRIVACIDADE_E_CONTENCAO.md` e registre também aqui a conclusão.
 
 - [ ] No cadastro, confirmar que telefone e nome explicam sua finalidade antes do envio.
 - [ ] Confirmar que aniversário é opcional e não bloqueia pontos nem acesso.
@@ -138,7 +138,7 @@ Siga o passo a passo detalhado de `docs/GUIA_TESTE_PRIVACIDADE_E_CONTENCAO.md` e
 
 ## 5. Contenção e resposta a incidente
 
-Execute somente quando não houver pessoa usando o Clube. O roteiro completo está em `docs/GUIA_TESTE_PRIVACIDADE_E_CONTENCAO.md`.
+Execute somente quando não houver pessoa usando o Clube. O roteiro completo está em `docs/referencia/GUIA_TESTE_PRIVACIDADE_E_CONTENCAO.md`.
 
 - [ ] Com superadmin, abrir `/admin/seguranca` e registrar um incidente de teste com motivo claro.
 - [ ] Ativar a contenção usando a confirmação exigida.
@@ -172,7 +172,7 @@ No piloto técnico já autorizado:
 
 ## 7. Saipos e venda paga
 
-Permanecer em espera até a resposta técnica da Saipos. A mensagem pronta está em `docs/SAIPOS_VALIDACAO_COMANDA.md`.
+Permanecer em espera até a resposta técnica da Saipos. A mensagem pronta está em `docs/referencia/SAIPOS_VALIDACAO_COMANDA.md`.
 
 Depois da resposta:
 

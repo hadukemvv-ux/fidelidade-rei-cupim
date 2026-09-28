@@ -10,8 +10,8 @@ Legenda: `[ ]` a fazer · `[~]` em andamento · `[x]` feito · **Dono**: Codex, 
 
 | | Tarefa | Dono |
 | --- | --- | --- |
-| [~] | Reorganizar documentação e regras dos agentes | Claude |
-| [ ] | Remover legado sem uso: `/api/test-env`, `src/pages/api`, roleta V1, sorteio, garçons antigos (seguir `referencia/LIMPEZA_DO_LEGADO.md`) | Claude |
+| [x] | Reorganizar documentação e regras dos agentes | Claude |
+| [~] | Remover legado sem uso — rotas mortas e garçons antigos feitos; roleta V1, sorteio e `/validar` só após o piloto (ver `referencia/LIMPEZA_DO_LEGADO.md`) | Claude |
 | [ ] | Zerar erros do lint global | Claude |
 | [ ] | Instalar `gh` e Node no PATH nesta máquina para PRs e testes | Claude |
 

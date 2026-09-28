@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**28/09/2026 — Claude** · Limpeza do legado, parte 1: removidas rotas mortas (`/api/test-env`, `/api/debug`, `/teste`, pasta `src/pages`), o controle antigo de garçons (telas e rotas que só respondiam "desativado") e imagens sem uso. Banco não foi tocado. 87/87 testes, tipos e build OK. Pendente: roleta V1, sorteio e `/validar` após o piloto.
+
 **28/09/2026 — Claude** · Documentação reorganizada: `AGENTS.md` com divisão de trabalho
 e fluxo de branches/PR; novos `COMECE_AQUI`, `ROADMAP` por fases com dono e este diário.
 Documentos de tema movidos para `docs/referencia/`, antigos para `docs/historico/`.

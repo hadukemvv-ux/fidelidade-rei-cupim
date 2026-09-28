@@ -11,11 +11,15 @@ Uma parte antiga só permanece enquanto for necessária para:
 
 Não manteremos dois caminhos ativos para a mesma ação. A V2 será a única fonte de verdade para QR, giro, prêmio e cupom.
 
-## Já desativado
+## Já removido do código — 28/09/2026
+
+- `/api/test-env`, `/api/webhook/venda` (pasta `src/pages` inteira), `/api/debug` e `/teste`.
+- Controle antigo de garçons: `/admin/garcons/*`, `/api/admin/garcons/*`, `/api/garcons/validar` e `src/lib/legacyGarcons.ts`. As tabelas `garcons` e `garcons_logs` continuam no banco.
+- Imagens padrão não usadas em `public/`.
+
+## Já desativado, ainda no código
 
 - Roleta V1: `/roleta` informa que a V2 está em preparação e `POST /api/roleta/girar` retorna bloqueio.
-- Rota `/api/debug`: desativada; não pode expor registros de resgate.
-- Controle antigo de garçons: as rotas de senha, ranking, “alertas”, logs, reset e prêmios em `/api/admin/garcons/*` e `/api/garcons/validar` retornam `410`. As telas antigas não exibem mais senha previsível, telefone ou IP; direcionam para Acessos, Roleta V2, Auditoria e Privacidade.
 
 ## Legado ainda presente, mas não operacional
 

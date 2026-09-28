@@ -59,7 +59,6 @@ const pageInfo: Record<string, { title: string; description: string }> = {
   '/admin/sorteio/previsao': { title: 'Previsão do sorteio', description: 'Confira participantes e chances antes de sortear.' },
   '/admin/sorteio/resumo': { title: 'Resumo do sorteio', description: 'Consulte os números de um sorteio específico.' },
   '/admin/sorteio/ganhadores': { title: 'Ganhadores', description: 'Histórico dos resultados já realizados.' },
-  '/admin/garcons': { title: 'Equipe — fluxo antigo pausado', description: 'Use contas individuais, Roleta V2 e auditoria para a operação atual.' },
   '/admin/operadores': { title: 'Acessos da equipe', description: 'Defina o que cada pessoa pode fazer no sistema.' },
   '/admin/comandas': { title: 'Comandas para conferência', description: 'Fotos privadas aguardando a confirmação da gestão.' },
   '/admin/operacao-roleta': { title: 'Operação da roleta', description: 'Acompanhe conciliações, divergências e qualidade operacional por dia.' },
@@ -68,7 +67,6 @@ const pageInfo: Record<string, { title: string; description: string }> = {
   '/admin/saipos': { title: 'Saipos — teste de conexão', description: 'Confirme a API sem criar clientes, pontos ou benefícios.' },
   '/admin/saipos/entregas': { title: 'Saipos — entregas', description: 'Examine canal, prazo estimado e etapas de pedidos sem alterar dados.' },
   '/admin/saipos/telefones': { title: 'Saipos — telefones', description: 'Teste a presença e repetição de telefones sem expor dados pessoais.' },
-  '/admin/garcons/alertas': { title: 'Alertas antigos pausados', description: 'A segurança operacional agora usa auditoria e contenção de incidentes.' },
   '/admin/seguranca': { title: 'Privacidade e incidentes', description: 'Contenha riscos, preserve evidências e acompanhe a investigação.' },
   '/admin/importar': { title: 'Importação', description: 'Atualize a base de clientes com uma planilha da Saipos.' },
 };
@@ -112,12 +110,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return () => { active = false; };
   }, [router]);
 
-  const currentPage = useMemo(() => {
-    if (/^\/admin\/garcons\/\d+$/.test(pathname)) {
-      return { title: 'Perfil antigo indisponível', description: 'A gestão da equipe acontece agora por acessos individuais.' };
-    }
-    return pageInfo[pathname] || { title: 'Administração', description: 'Clube Rei do Cupim.' };
-  }, [pathname]);
+  const currentPage = useMemo(
+    () => pageInfo[pathname] || { title: 'Administração', description: 'Clube Rei do Cupim.' },
+    [pathname]
+  );
 
   async function logout() {
     await supabase.auth.signOut();

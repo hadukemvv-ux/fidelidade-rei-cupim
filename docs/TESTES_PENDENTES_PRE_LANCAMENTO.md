@@ -255,6 +255,25 @@ Nenhum item abaixo pode ficar sem resposta formal:
 
 ## Registro de execuções
 
+### Landing — pontos e cashback, 28/09/2026
+
+- [x] Preservar layout, taxas, título e chamadas comerciais; desfazer a
+  tentativa local de reposicionamento para “em construção” antes de publicar.
+- [x] Matriz derivada das regras: Brasa 1% + 0%; Chama 2% + 0,5%; Nobre
+  4% + 1%; Majestade 7% + 3%. Total é equivalência em benefícios, não cashback.
+- [x] 87/87 testes unitários, TypeScript, lint dos arquivos alterados,
+  `git diff --check` e build de produção local aprovados.
+- [x] Navegador local: Majestade mostra 700 pontos + R$ 3,00 para R$ 100;
+  Chama mostra 200 pontos + R$ 0,50. Painel conferido em desktop e viewport
+  móvel de 390 × 844; largura do documento igual à área útil (375 px), sem
+  rolagem horizontal. Override do navegador restaurado após o teste.
+- [ ] Confirmar publicação desta revisão como Ready na Vercel e conferir a
+  mesma mensagem em produção. Testes locais usaram placeholders de ambiente,
+  sem consulta ou alteração de dados reais, crédito, cupom ou envio de mensagem.
+
+Este ensaio valida apresentação e matemática; não valida cadastro/OTP,
+cron de pontuação, janela móvel de 90 dias ou lançamento comercial.
+
 Use uma linha por sessão de teste; não inclua PIN, telefone inteiro, token ou QR.
 
 | Data/hora | Teste/seção | Executor | Resultado | Evidência/ID | Pendência ou correção |

@@ -6,6 +6,13 @@ ou de pessoa responsável pelo projeto.
 
 ## Checkpoint vigente — 28/09/2026
 
+- Esclarecimento da landing: manter proposta comercial e layout, sem “em
+  construção” temporário. Explicar pontos para produtos + cashback para
+  descontos com fonte única; totais de referência não são todo cashback.
+  Ler `docs/COMUNICACAO_PUBLICA.md` antes de alterar redação ou taxas.
+  Revisão local validada: 87/87 testes, tipos, lint, build e painel desktop/
+  móvel. Isso não resolve bloqueadores operacionais nem confirma novo deploy.
+
 - Base anterior desta etapa: commit `524ad68` em `main`; diagnóstico funcional
   `65eb9a4` teve deploy confirmado Ready. Não presumir que commits novos já
   estejam publicados: verificar GitHub e Vercel separadamente.
@@ -74,6 +81,7 @@ As referências de versão abaixo são históricas, não o último código da br
 | Estratégia para retirar legado | `docs/LIMPEZA_DO_LEGADO.md` |
 | Retomada em computador novo | `docs/RETOMADA_EM_NOVO_COMPUTADOR.md` |
 | Matriz de papéis e rotas | `docs/PERMISSOES_OPERACIONAIS.md` |
+| Mensagem estável e equivalência pontos + cashback da landing | `docs/COMUNICACAO_PUBLICA.md` |
 | Bot operacional, entrega de prêmios e simulador de baixas | `docs/WHATSAPP_BOT_E_BAIXAS.md` |
 
 ## Próxima sequência segura

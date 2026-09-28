@@ -26,6 +26,21 @@ Sistema de fidelidade para restaurante com:
 
 Leitura de continuidade: [comece aqui](docs/COMECE_AQUI.md), [roadmap](docs/ROADMAP.md) e [caderno de testes](docs/TESTES_PENDENTES_PRE_LANCAMENTO.md).
 
+### Revisão de comunicação — 28/09/2026
+
+A landing preserva proposta comercial/layout: não foi reposicionada para “em
+construção”. A mensagem estável é “Acumule pontos para trocar por produtos e
+cashback para usar em descontos.” Percentuais derivam das regras centrais:
+Brasa 1%, Chama 2,5%, Nobre 5%, Majestade 10% em valor equivalente de benefícios,
+separando produtos via pontos e cashback em desconto. Exemplos usam as funções
+existentes e o nível anterior à compra; nenhuma taxa/saldo foi alterada.
+Ver [contrato de comunicação](docs/COMUNICACAO_PUBLICA.md) e diretrizes em
+`AGENTS.md`. A revisão de apresentação não ativa pontuação, OTP ou campanha.
+Validação local: 87/87 testes, TypeScript, lint dos arquivos alterados e build
+aprovados. Painel conferido no desktop e em viewport móvel de 390 × 844;
+Chama mostra R$ 0,50 no exemplo, sem rolagem horizontal. Confirmar o deploy
+desta revisão separadamente; validação local não significa publicação.
+
 ## Histórico — estado registrado em 21/09/2026
 
 Os checkpoints abaixo preservam evidências anteriores; não substituem o estado atual acima.

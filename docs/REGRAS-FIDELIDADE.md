@@ -1,6 +1,6 @@
 # Regras atuais do programa de fidelidade
 
-Atualizado em 16/09/2026. Este é um registro interno de regras em pré-lançamento;
+Atualizado em 28/09/2026. Este é um registro interno de regras em pré-lançamento;
 não substitui os termos públicos nem autoriza a abertura do programa.
 
 ## Níveis e benefícios
@@ -13,6 +13,23 @@ O benefício aplicado à compra é o do nível que o cliente possuía antes dess
 | Chama (Prata) | R$ 100 a R$ 249,99 | 2 | 0,5% |
 | Nobre (Ouro) | R$ 250 a R$ 499,99 | 4 | 1% |
 | Majestade (Rei) | A partir de R$ 500 | 7 | 3% |
+
+### Como explicar pontos + cashback
+
+Mensagem estável: **Acumule pontos para trocar por produtos e cashback para
+usar em descontos.** Preservar proposta e layout da landing; não substituir
+por “em construção”, conforme esclarecimento do responsável em 28/09.
+
+100 pontos representam R$ 1 em produtos. Assim, os totais de referência são
+Brasa 1% + 0% = 1%; Chama 2% + 0,5% = 2,5%; Nobre 4% + 1% = 5%; Majestade
+7% + 3% = 10%. Esses totais não são todo cashback, dinheiro sacável ou desconto
+imediato integral: pontos e cashback são saldos separados.
+
+Exemplo de R$ 100 no Majestade: 700 pontos (R$ 7 de referência em produtos)
+e R$ 3 de cashback. Usa-se o nível anterior à compra; taxas nominais não
+substituem arredondamento, elegibilidade ou custo de resgate do catálogo.
+O cálculo de apresentação vem de `getResumoBeneficiosNivel` nas regras
+centrais. Contrato completo em `docs/COMUNICACAO_PUBLICA.md`.
 
 Tickets e sorteios estão congelados: não são acumulados, não geram entrada e não podem ser divulgados como benefício futuro até decisão jurídica/comercial nova.
 

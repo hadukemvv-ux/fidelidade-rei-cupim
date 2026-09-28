@@ -3,6 +3,10 @@ export type NivelFidelidade = 'BRONZE' | 'PRATA' | 'OURO' | 'REI';
 
 export interface BeneficioNivel { pontos: number; cashback: number; tickets: number }
 
+/** Conversão econômica de referência; pontos não são saldo de cashback. */
+export const PONTOS_POR_REAL_EM_PRODUTOS = 100;
+export const MENSAGEM_BENEFICIOS_CLUBE = 'Acumule pontos para trocar por produtos e cashback para usar em descontos.';
+
 export const BONUS_CADASTRO_PONTOS = 200;
 export const CUSTO_ENTREGA_GRATIS_PONTOS = 200;
 /** Duas utilizações mensais no máximo, com intervalo simples e transparente de 14 dias. */
@@ -80,4 +84,23 @@ export function getAllNivelThresholds() {
     nivel, nome: NIVEIS[nivel].nome, min: NIVEIS[nivel].gastoMinimo,
     max: NIVEIS[nivel].gastoMaximo, beneficio: { ...NIVEIS[nivel].beneficio },
   }));
+}
+
+/** Apresentação derivada das regras, sem mudar crédito, nível ou custo do catálogo. */
+export function getResumoBeneficiosNivel(nivel: NivelFidelidade) {
+  const info = getNivelInfo(nivel);
+  const percentualProdutos = (info.beneficio.pontos * 100) / PONTOS_POR_REAL_EM_PRODUTOS;
+  const percentualCashback = info.beneficio.cashback * 100;
+  const valorCompra = 100;
+  // Nível já possuído: não subir de nível com a própria compra do exemplo.
+  const pontos = calcularPontosEarned(valorCompra, info.gastoMinimo);
+  const cashback = calcularCashbackValue(valorCompra, info.gastoMinimo);
+  const valorEmProdutos = pontos / PONTOS_POR_REAL_EM_PRODUTOS;
+  return {
+    percentualProdutos,
+    percentualCashback,
+    percentualTotalReferencia: percentualProdutos + percentualCashback,
+    pontosPorReal: info.beneficio.pontos,
+    exemplo: { valorCompra, pontos, valorEmProdutos, cashback, valorTotalReferencia: valorEmProdutos + cashback },
+  };
 }

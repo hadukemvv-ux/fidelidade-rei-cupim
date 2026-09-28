@@ -10,6 +10,9 @@ import {
   calcularTicketsEarned,
   getAllNivelThresholds,
   getNivelPorGasto,
+  getResumoBeneficiosNivel,
+  MENSAGEM_BENEFICIOS_CLUBE,
+  PONTOS_POR_REAL_EM_PRODUTOS,
 } from '../src/lib/fidelidade-rules.ts';
 
 test('bônus inicial libera uma entrega, com recorrência controlada a cada 14 dias', () => {
@@ -67,4 +70,33 @@ test('mantém o catálogo canônico usado pelo frontend e pelo backend', () => {
       { nivel: 'REI', nome: 'Majestade — Rei do Cupim', min: 500, max: null, pontos: 7, cashback: 0.03, tickets: 10 },
     ]
   );
+});
+
+test('converte pontos em valor de produtos antes de somar percentuais de cashback', () => {
+  assert.equal(PONTOS_POR_REAL_EM_PRODUTOS, 100);
+  assert.deepEqual(getAllNivelThresholds().map(({ nivel }) => {
+    const resumo = getResumoBeneficiosNivel(nivel);
+    return [resumo.percentualProdutos, resumo.percentualCashback, resumo.percentualTotalReferencia];
+  }), [[1, 0, 1], [2, 0.5, 2.5], [4, 1, 5], [7, 3, 10]]);
+});
+
+test('exemplos da landing usam as funções reais e não tratam total como cashback', () => {
+  for (const level of getAllNivelThresholds()) {
+    const resumo = getResumoBeneficiosNivel(level.nivel);
+    assert.equal(resumo.exemplo.pontos, calcularPontosEarned(100, level.min));
+    assert.equal(resumo.exemplo.cashback, calcularCashbackValue(100, level.min));
+    assert.equal(resumo.exemplo.valorTotalReferencia, resumo.exemplo.pontos / 100 + resumo.exemplo.cashback);
+  }
+  assert.deepEqual(getResumoBeneficiosNivel('REI').exemplo, {
+    valorCompra: 100, pontos: 700, valorEmProdutos: 7, cashback: 3, valorTotalReferencia: 10,
+  });
+  assert.deepEqual(getResumoBeneficiosNivel('PRATA').exemplo, {
+    valorCompra: 100, pontos: 200, valorEmProdutos: 2, cashback: 0.5, valorTotalReferencia: 2.5,
+  });
+});
+
+test('mensagem estável mantém proposta de produtos e descontos, sem reposicionar o clube', () => {
+  assert.equal(MENSAGEM_BENEFICIOS_CLUBE, 'Acumule pontos para trocar por produtos e cashback para usar em descontos.');
+  assert.equal(getResumoBeneficiosNivel('BRONZE').exemplo.pontos, 100);
+  assert.equal(getResumoBeneficiosNivel('BRONZE').exemplo.cashback, 0);
 });

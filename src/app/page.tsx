@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { getAllNivelThresholds, type NivelFidelidade } from '@/lib/fidelidade-rules';
+import { getAllNivelThresholds, getResumoBeneficiosNivel, MENSAGEM_BENEFICIOS_CLUBE, PONTOS_POR_REAL_EM_PRODUTOS, type NivelFidelidade } from '@/lib/fidelidade-rules';
 
 const levels = getAllNivelThresholds();
 const levelNames: Record<NivelFidelidade, string> = {
@@ -24,8 +24,8 @@ function money(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 });
 }
 
-function percent(value: number) {
-  return `${(value * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
+function cashbackMoney(value: number) {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 function benefitPercent(value: number) {
@@ -35,6 +35,7 @@ function benefitPercent(value: number) {
 export default function Home() {
   const [selectedLevel, setSelectedLevel] = useState<NivelFidelidade>('BRONZE');
   const level = levels.find((item) => item.nivel === selectedLevel) ?? levels[0];
+  const benefit = getResumoBeneficiosNivel(level.nivel);
 
   return (
     <main className="home-shell">
@@ -65,7 +66,7 @@ export default function Home() {
         <div className="hero-content">
           <p className="eyebrow"><span /> Clube de vantagens</p>
           <h1 id="hero-title">Seu sabor de sempre.<br /><em>Agora rende mais.</em></h1>
-          <p className="hero-copy">Coma bem, acumule pontos e transforme cada visita em novas recompensas.</p>
+          <p className="hero-copy">{MENSAGEM_BENEFICIOS_CLUBE}</p>
           <div className="hero-actions">
             <Link href="/cadastro" className="button button-primary">Entrar para o clube <span aria-hidden="true">→</span></Link>
             <Link href="/resgate" className="button button-ghost">Consultar meus pontos</Link>
@@ -132,20 +133,21 @@ export default function Home() {
           </div>
           <div className="level-metrics">
             <article>
-              <strong>{benefitPercent(level.beneficio.pontos)}</strong>
-              <span>em produtos</span>
-              <b>{level.beneficio.pontos} {level.beneficio.pontos === 1 ? 'ponto' : 'pontos'} por real</b>
+              <strong>{benefitPercent(benefit.percentualProdutos)}</strong>
+              <span>em produtos via pontos</span>
+              <b>{benefit.pontosPorReal} {benefit.pontosPorReal === 1 ? 'ponto' : 'pontos'} por real</b>
             </article>
             <article>
-              <strong>{percent(level.beneficio.cashback)}</strong>
+              <strong>{benefitPercent(benefit.percentualCashback)}</strong>
               <span>cashback em desconto</span>
             </article>
             <article className="total-benefit">
-              <strong>{benefitPercent(level.beneficio.pontos + level.beneficio.cashback * 100)}</strong>
-              <span>vantagem em pontos e cashback</span>
+              <strong>{benefitPercent(benefit.percentualTotalReferencia)}</strong>
+              <span>valor equivalente em benefícios</span>
             </article>
           </div>
-          <p className="points-note">100 pontos = R$ 1 em produtos. Vantagem total = pontos + cashback.</p>
+          <p className="points-note">{PONTOS_POR_REAL_EM_PRODUTOS} pontos = R$ 1 em produtos. O total soma pontos e cashback; não é todo cashback.</p>
+          <p className="points-note">Exemplo no nível {levelNames[level.nivel]}: uma compra elegível de {money(benefit.exemplo.valorCompra)} gera {benefit.exemplo.pontos} pontos + {cashbackMoney(benefit.exemplo.cashback)} de cashback. Vale o nível anterior à compra.</p>
         </div>
       </section>
 

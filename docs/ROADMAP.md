@@ -24,7 +24,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [ ] | Parecer jurídico sobre a roleta (promoção com sorte) | Você |
 | [ ] | Aprovar prêmios, custos, pesos por faixa e validade | Você |
 | [ ] | Contratar hospedagem com uso comercial (Vercel Pro ou alternativa) | Você |
-| [ ] | Backup e teste de restauração do Supabase (plano Free não tem backup) | Claude prepara, Você aprova custo |
+| [~] | Backup diário com teste de restauração pronto (`referencia/BACKUP_E_MIGRACAO.md`); falta você cadastrar 3 segredos no GitHub e rodar o 1º teste | Claude prepara, Você aprova custo |
 | [ ] | Baixas reais: gravar escolha → entrega → baixa no banco, com operador e QR reais | Codex |
 | [ ] | Visual da roleta no celular: menos texto, roda mais imersiva, resultado claro | Claude |
 | [x] | Arte oficial (logo) e ícones do site/favicon — foguinho aplicado; pedir versão vetorial (SVG/PDF) para uso grande | Você envia a arte, Claude aplica |

@@ -1,0 +1,102 @@
+# Backup diário do Supabase com teste de restauração.
+# Guia completo: docs/referencia/BACKUP_E_MIGRACAO.md
+name: Backup Supabase
+
+on:
+  schedule:
+    - cron: '0 9 * * *' # 06:00 em Fortaleza
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-supabase
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+      NEXT_PUBLIC_SUPABASE_URL: https://asjoubgoccbvftyggunz.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      RESTORE_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Conferir segredos
+        run: |
+          for name in SUPABASE_DB_URL BACKUP_PASSPHRASE SUPABASE_SERVICE_ROLE_KEY; do
+            if [ -z "${!name}" ]; then echo "::error::Segredo não configurado no GitHub: $name"; exit 1; fi
+          done
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Exportar banco (papéis, estrutura e dados)
+        run: |
+          mkdir -p out/db
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f out/db/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f out/db/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f out/db/data.sql --use-copy --data-only
+          psql "$SUPABASE_DB_URL" -tAc "show server_version_num" > out/db/server_version.txt
+          ls -la out/db
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      - name: Exportar arquivos do Storage
+        run: node scripts/backup-storage.mjs out/storage
+
+      - name: Compactar e criptografar
+        run: |
+          stamp=$(date -u +%Y-%m-%dT%H-%M)
+          echo "STAMP=$stamp" >> "$GITHUB_ENV"
+          tar -czf backup.tar.gz -C out .
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" \
+            --symmetric --cipher-algo AES256 -o "supabase-$stamp.tar.gz.gpg" backup.tar.gz
+          rm backup.tar.gz
+          ls -la supabase-*.gpg
+
+      - name: Guardar backup (30 dias)
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-${{ env.STAMP }}
+          path: supabase-*.tar.gz.gpg
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Teste de restauração em Supabase descartável
+        run: |
+          major=$(( $(tr -d '[:space:]' < out/db/server_version.txt) / 10000 ))
+          mkdir restore-test && cd restore-test
+          supabase init --force
+          sed -i "s/^major_version = .*/major_version = $major/" supabase/config.toml
+          supabase start
+          cd ..
+          psql --single-transaction --variable ON_ERROR_STOP=1 \
+            --file out/db/roles.sql \
+            --file out/db/schema.sql \
+            --command 'SET session_replication_role = replica' \
+            --file out/db/data.sql \
+            --dbname "$RESTORE_DB_URL" > /dev/null
+
+      - name: Conferir linhas restauradas
+        run: |
+          # Conta as linhas de cada tabela no arquivo exportado e compara com o banco restaurado.
+          awk '/^COPY /{table=$2; n=0; next} /^\\\.$/{print table, n; table=""; next} table!=""{n++}' out/db/data.sql > expected.txt
+          fail=0
+          while read -r table expected; do
+            actual=$(psql "$RESTORE_DB_URL" -tAc "select count(*) from $table")
+            if [ "$actual" != "$expected" ]; then echo "::error::$table: esperado $expected, restaurado $actual"; fail=1; fi
+          done < expected.txt
+          echo "Tabelas conferidas: $(wc -l < expected.txt)"
+          exit $fail

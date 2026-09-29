@@ -62,7 +62,8 @@ export default function UploadImagem({ onUpload }: { onUpload: (url: string) => 
       {/* PREVIEW */}
       <div className="w-full h-48 bg-black/30 border border-gray-700 rounded-xl flex items-center justify-center overflow-hidden">
         {preview ? (
-          <img src={preview} className="w-full h-full object-cover" />
+          // eslint-disable-next-line @next/next/no-img-element -- prévia local (blob) do arquivo escolhido
+          <img src={preview} alt="Prévia da imagem selecionada" className="w-full h-full object-cover" />
         ) : (
           <span className="text-gray-500 text-sm">Nenhuma imagem selecionada</span>
         )}

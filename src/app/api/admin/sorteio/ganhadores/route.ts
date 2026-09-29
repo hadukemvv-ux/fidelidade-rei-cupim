@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server';
 import { sorteioLegadoPausadoResponse } from '@/lib/legacySorteio';
 
 /**
@@ -8,6 +7,6 @@ import { sorteioLegadoPausadoResponse } from '@/lib/legacySorteio';
  * política de retenção necessários. A rota permanece apenas para não gerar
  * respostas ambíguas para versões antigas do painel.
  */
-export async function GET(_request: NextRequest) {
+export async function GET() {
   return sorteioLegadoPausadoResponse();
 }

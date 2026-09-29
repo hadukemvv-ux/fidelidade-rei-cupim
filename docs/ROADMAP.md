@@ -10,9 +10,9 @@ Legenda: `[ ]` a fazer · `[~]` em andamento · `[x]` feito · **Dono**: Codex, 
 
 | | Tarefa | Dono |
 | --- | --- | --- |
-| [~] | Reorganizar documentação e regras dos agentes | Claude |
-| [ ] | Remover legado sem uso: `/api/test-env`, `src/pages/api`, roleta V1, sorteio, garçons antigos (seguir `referencia/LIMPEZA_DO_LEGADO.md`) | Claude |
-| [ ] | Zerar erros do lint global | Claude |
+| [x] | Reorganizar documentação e regras dos agentes | Claude |
+| [~] | Remover legado sem uso — rotas mortas e garçons antigos feitos; roleta V1, sorteio e `/validar` só após o piloto (ver `referencia/LIMPEZA_DO_LEGADO.md`) | Claude |
+| [x] | Zerar erros do lint global | Claude |
 | [ ] | Instalar `gh` e Node no PATH nesta máquina para PRs e testes | Claude |
 
 ## Fase 1 — Clube no salão (roleta com prêmio físico na hora)
@@ -24,10 +24,11 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [ ] | Parecer jurídico sobre a roleta (promoção com sorte) | Você |
 | [ ] | Aprovar prêmios, custos, pesos por faixa e validade | Você |
 | [ ] | Contratar hospedagem com uso comercial (Vercel Pro ou alternativa) | Você |
-| [ ] | Backup e teste de restauração do Supabase (plano Free não tem backup) | Claude prepara, Você aprova custo |
+| [~] | Backup diário com teste de restauração pronto (`referencia/BACKUP_E_MIGRACAO.md`); falta você cadastrar 3 segredos no GitHub e rodar o 1º teste | Claude prepara, Você aprova custo |
 | [~] | Baixas reais: correção do re-roll e 109 testes (8 SQL isolados); faltam nova revisão Claude, concorrência real, catálogo/opções e painel; SQL não aplicado | Codex |
-| [ ] | Visual da roleta no celular: menos texto, roda mais imersiva, resultado claro | Claude |
-| [ ] | Arte oficial (logo) e ícones do site/favicon | Você envia a arte, Claude aplica |
+| [~] | Roleta interativa (arrastar com o dedo, PARAR, parada lenta, confete) pronta; ensaio em `/roleta/demo`; faltam fotos reais dos prêmios e teste em celulares reais | Claude |
+| [ ] | Enviar `imagem_url` de cada prêmio na sessão da roleta (`/api/roleta-v2/sessao`) para trocar foto sem mexer em código | Codex |
+| [x] | Arte oficial (logo) e ícones do site/favicon — foguinho aplicado; pedir versão vetorial (SVG/PDF) para uso grande | Você envia a arte, Claude aplica |
 | [ ] | Piloto Saipos de 3 cenários: venda concluída, cancelada, mesa sem venda | Você executa, Codex analisa |
 | [ ] | Testar os 4 acessos reais (garçom, caixa, gestor, superadmin) em produção | Você executa, Claude acompanha |
 | [ ] | Roteiro `referencia/TESTES_PENDENTES_PRE_LANCAMENTO.md` — itens da Fase 1 | Todos |

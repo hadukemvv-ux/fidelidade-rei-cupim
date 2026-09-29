@@ -44,6 +44,7 @@ export default function ClientesPage() {
     return () => window.clearTimeout(timer);
   }, [search]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- load lê page, filter e debouncedSearch, que já são as dependências
   useEffect(() => { load(); }, [page, filter, debouncedSearch]);
 
   async function load() {

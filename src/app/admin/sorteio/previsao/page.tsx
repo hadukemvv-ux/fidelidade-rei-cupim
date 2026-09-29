@@ -3,11 +3,15 @@
 import { fetchAdmin } from '@/lib/adminFetch';
 import { useEffect, useState } from 'react';
 
+type SorteioInfo = { titulo: string; descricao?: string; data_sorteio?: string; modo?: string };
+type Participante = { nome: string; telefone?: string; tickets: number; chance_percentual: number };
+type Previsao = { total_participantes: number; total_tickets: number; top_10: Participante[]; clientes: Participante[] };
+
 export default function SorteioPrevisaoPage() {
   const [loading, setLoading] = useState(true);
 
-  const [sorteio, setSorteio] = useState<any>(null);
-  const [previsao, setPrevisao] = useState<any>(null);
+  const [sorteio, setSorteio] = useState<SorteioInfo | null>(null);
+  const [previsao, setPrevisao] = useState<Previsao | null>(null);
 
   const [erro, setErro] = useState<string | null>(null);
 
@@ -113,7 +117,7 @@ export default function SorteioPrevisaoPage() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
 
-          {previsao.top_10.map((c: any, i: number) => (
+          {previsao.top_10.map((c, i) => (
             <div
               key={i}
               className="p-4 border border-[#c5a059]/30 rounded-lg text-center bg-black/20"
@@ -166,7 +170,7 @@ export default function SorteioPrevisaoPage() {
               </thead>
 
               <tbody>
-                {previsao.clientes.map((c: any, i: number) => (
+                {previsao.clientes.map((c, i) => (
                   <tr key={i} className="border-b border-[#c5a059]/20 text-gray-200">
                     <td className="p-3">{c.nome}</td>
                     <td className="p-3">{c.telefone}</td>

@@ -47,28 +47,39 @@ export async function GET(request: NextRequest) {
       .eq("status", "criada");
   }
 
-  let elegiveis: { nome: string; emoji: string | null }[];
-  if (deliveryLedgerEnabled(process.env)) {
-    const { data, error: premiosError } = await supabaseAdmin.rpc("listar_premios_elegiveis_v2", { p_sessao_id: sessao.id });
-    if (premiosError || !Array.isArray(data)) return NextResponse.json({ error: "Não foi possível preparar os prêmios." }, { status: 503 });
-    elegiveis = data as { nome: string; emoji: string | null }[];
-  } else {
-    // Sem migração/gate, preservar o piloto existente até a ativação aprovada.
+  let elegiveis: { nome: string; emoji: string | null; imagem_url: string | null }[];
+  // A função marca a presença da migração; o gate de entregas não decide o que
+  // a roda exibe. Se o cache da API ainda não a conhece, não mostrar físico.
+  const { data: filteredPrizes, error: eligibleError } = await supabaseAdmin.rpc("listar_premios_elegiveis_v2", { p_sessao_id: sessao.id });
+  if (!eligibleError && Array.isArray(filteredPrizes)) {
+    elegiveis = filteredPrizes as { nome: string; emoji: string | null; imagem_url: string | null }[];
+  } else if (eligibleError?.code === "PGRST202" && !deliveryLedgerEnabled(process.env)) {
+    // Migração ainda não aplicada (ou cache ainda não atualizado). O piloto
+    // antigo segue acessível, mas sem prometer prêmio físico inelegível.
     const { data: premios, error: premiosError } = await supabaseAdmin
       .from("premios_roleta")
-      .select("nome, emoji, pesos_nivel")
+      .select("nome, emoji, tipo, pesos_nivel")
       .eq("versao", 2)
       .eq("ativo", true)
       .eq("participa_roleta", true);
     if (premiosError) return NextResponse.json({ error: "Não foi possível preparar os prêmios." }, { status: 500 });
     const indiceNivel = Number(sessao.nivel) - 1;
-    elegiveis = (premios || []).filter((premio) => Number(premio.pesos_nivel?.[indiceNivel] || 0) > 0);
+    const sorteaveis = (premios || []).filter((premio) => Number(premio.pesos_nivel?.[indiceNivel] || 0) > 0);
+    // Sem a função do banco não há como garantir que a lista mostrada seja a
+    // mesma do sorteio quando há prêmio físico ativo. Falhar fechado.
+    if (sorteaveis.some((premio) => ["saideira", "expulsadeira", "sobremesa"].includes(premio.tipo))) {
+      return NextResponse.json({ error: "Não foi possível preparar os prêmios." }, { status: 503 });
+    }
+    elegiveis = sorteaveis
+      .map(({ nome, emoji }) => ({ nome, emoji, imagem_url: null }));
+  } else {
+    return NextResponse.json({ error: "Não foi possível preparar os prêmios." }, { status: 503 });
   }
   if (!elegiveis.length) return NextResponse.json({ error: "Não há prêmio disponível para esta faixa. Peça ajuda à equipe." }, { status: 409 });
 
   return NextResponse.json({
     nivel: sessao.nivel,
     expira_em: sessao.expira_em,
-    premios: elegiveis.map(({ nome, emoji }) => ({ nome, emoji })),
+    premios: elegiveis.map(({ nome, emoji, imagem_url }) => ({ nome, emoji, imagem_url })),
   });
 }

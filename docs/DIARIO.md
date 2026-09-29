@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**29/09/2026 — Codex** · `codex/baixas-reais`: incorporada a main da roleta interativa e avaliada a segunda revisão do Claude (re-roll resolvido).
+A sessão usa sempre a elegibilidade do SQL; sem ela, falha fechado se houver físico ativo. `imagem_url` local validada na API e devolvida à roda.
+113 testes (8 SQL isolados), tipos e lint OK. Faltam concorrência PostgreSQL multissessão, painel/catálogo e campo visual no admin.
+Nada aplicado ao banco ou publicado na main; conexão WhatsApp por QR no site ainda não implementada.
+
 **29/09/2026 — Codex** · `codex/baixas-reais`: correção do bloqueante identificado pelo Claude; físico inelegível sai do sorteio antes do resultado e a roda mostra a mesma lista.
 Exceção operacional vira pendência bloqueada, sem re-roll; ativação recusa cupom físico antigo aberto sem ledger.
 Opções paginadas em lotes, pré-checagem de papel explícita e SECURITY DEFINER com busca vazia; 109 testes (8 SQL isolados), tipos/lint OK.

@@ -78,7 +78,7 @@ async function database() {
 }
 
 async function spin(db: PGlite, token: string, random = 0) {
-  const result = await db.query<{ result: { ok: boolean; motivo?: string; premio?: { nome: string } } }>(
+  const result = await db.query<{ result: { ok: boolean; motivo?: string; premio?: { nome: string; imagem_url?: string | null } } }>(
     `select public.girar_roleta_v2($1, 'phone-hash-fixture', null, false, 'teste-v1', 'teste', 'ip-hash-fixture', $2, 'code-' || $1, 'final') as result`,
     [token, random]
   );
@@ -119,9 +119,15 @@ test('SQL isolado: comanda válida gera um giro e uma pendência física', async
     await db.exec('update public.entregas_configuracao set habilitado = true where id = 1');
     const display = await db.query<{ nome: string }>('select nome from public.listar_premios_elegiveis_v2($1)', [comandaSession]);
     assert.deepEqual(display.rows.map((row) => row.nome), ['Saideira', 'Prêmio de ensaio']);
+    await db.exec("update public.premios_roleta set imagem_url = '/roleta/premios/saideira.webp' where id = 1");
+    const image = await db.query<{ imagem_url: string | null }>('select imagem_url from public.listar_premios_elegiveis_v2($1) where nome = $2', [comandaSession, 'Saideira']);
+    assert.equal(image.rows[0].imagem_url, '/roleta/premios/saideira.webp');
+    await assert.rejects(db.exec("update public.premios_roleta set imagem_url = 'https://site-externo.test/foto.png' where id = 1"));
+    await assert.rejects(db.exec("update public.premios_roleta set imagem_url = '//site-externo.test/foto.png' where id = 1"));
     const result = await spin(db, 'qr-comanda', 0);
     assert.equal(result.ok, true);
     assert.equal(result.premio?.nome, 'Saideira');
+    assert.equal(result.premio?.imagem_url, '/roleta/premios/saideira.webp');
     const delivery = await db.query<{ status: string; quantidade: number }>(
       `select status, quantidade from public.entregas_premios where sessao_id = '${comandaSession}'`
     );

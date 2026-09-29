@@ -2,6 +2,12 @@ begin;
 
 -- PROPOSTA NÃO APLICADA. Sem catálogo, seed comercial, backfill ou auto-delete.
 -- Dois gates: env no servidor e configuração no banco. Ambos começam desligados.
+-- Foto aprovada do prêmio: somente caminho local servido pelo próprio site.
+alter table public.premios_roleta add column if not exists imagem_url text;
+alter table public.premios_roleta add constraint premios_roleta_imagem_url_segura
+  check (imagem_url is null or (length(imagem_url) <= 1024
+    and imagem_url ~ '^/[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*\.(png|webp|jpg|jpeg)$'));
+
 create table public.entregas_configuracao (
   id smallint primary key check (id = 1),
   habilitado boolean not null default false,
@@ -97,9 +103,9 @@ create trigger verificar_ativacao_entregas before update of habilitado on public
 -- A roda pública deve exibir o mesmo conjunto que o sorteio usa. O giro
 -- continua autoridade final sob lock caso o estado mude após a consulta.
 create function public.listar_premios_elegiveis_v2(p_sessao_id uuid)
-returns table(nome text, emoji text)
+returns table(nome text, emoji text, imagem_url text)
 language sql security definer set search_path = '' as $$
-  select p.nome, p.emoji from public.premios_roleta p
+  select p.nome, p.emoji, p.imagem_url from public.premios_roleta p
   join public.roleta_sessoes s on s.id = p_sessao_id
   join public.roleta_configuracoes r on r.id = 1
   join public.entregas_configuracao e on e.id = 1
@@ -236,7 +242,7 @@ begin
   return jsonb_build_object(
     'ok', true,
     'premio', jsonb_build_object('nome', v_premio.nome, 'descricao_vitoria', v_premio.descricao_vitoria,
-      'emoji', v_premio.emoji, 'canal_uso', v_premio.canal_uso),
+      'emoji', v_premio.emoji, 'imagem_url', v_premio.imagem_url, 'canal_uso', v_premio.canal_uso),
     'cupom_id', v_cupom_id, 'expira_em', v_expira_em, 'modo_teste', v_config.v2_modo_teste
   );
 exception

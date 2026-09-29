@@ -122,10 +122,10 @@ export async function GET(request: Request) {
       top_beneficiados
     });
 
-  } catch (err: any) {
+  } catch (err) {
     console.error("ERRO /financeiro/fidelidade:", err);
     return NextResponse.json(
-      { erro: err.message || "Erro interno." },
+      { erro: (err as { message?: string } | null)?.message || "Erro interno." },
       { status: 500 }
     );
   }

@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { CUSTO_ENTREGA_GRATIS_PONTOS, INTERVALO_ENTREGA_GRATIS_DIAS } from '@/lib/fidelidade-rules';
@@ -44,6 +45,7 @@ function firstName(value: string) {
   return value.trim().split(/\s+/)[0] || 'Cliente';
 }
 export default function ResgatePage() {
+  const router = useRouter();
   const [telefone, setTelefone] = useState('');
   const [pin, setPin] = useState('');
   const [pinLiberado, setPinLiberado] = useState(false);
@@ -92,7 +94,7 @@ export default function ResgatePage() {
       const payload = data?.data ?? data;
       if (!response.ok || !data?.ok) throw new Error(data?.error || payload?.error || 'Não foi possível entrar.');
       if (payload?.pre_cadastro) {
-        window.location.href = `/cadastro?telefone=${telefoneDigits}`;
+        router.push(`/cadastro?telefone=${telefoneDigits}`);
         return;
       }
       setDadosCliente(payload);
@@ -208,7 +210,7 @@ export default function ResgatePage() {
             <div className="club-filters" aria-label="Filtrar recompensas">{['todos', 'destaque', 'prato', 'bebida', 'sobremesa'].map((category) => <button key={category} type="button" className={filtroCategoria === category ? 'active' : ''} onClick={() => setFiltroCategoria(category)}>{category === 'destaque' ? 'Ofertas' : category}</button>)}</div>
             {visibleProducts.length > 0 ? <div className="rewards-rail">{visibleProducts.map((product) => {
               const original = Number(product.custo_em_pontos || 0); const finalCost = product.destaque ? Math.floor(original * .5) : original; const available = dadosCliente.pontos >= finalCost;
-              return <article className="reward-card" key={product.id}><div className="reward-image">{product.imagem_url ? <img src={product.imagem_url} alt={product.nome} /> : <Image src="/images/home/espetinhos.webp" alt="" fill sizes="20rem" />}{product.destaque && <span>50% OFF</span>}</div><div className="reward-body"><small>{product.categoria || 'Recompensa'}</small><h3>{product.nome}</h3><p>{product.descricao || 'Feito na hora, do jeito do Rei.'}</p></div><div className="reward-footer"><strong>{finalCost.toLocaleString('pt-BR')} <small>pts</small></strong><button type="button" disabled={!available || loading} onClick={() => setPendingReward({ tipo: 'produto', produtoId: product.id, nome: product.nome, custo: `${finalCost.toLocaleString('pt-BR')} pontos` })}>{available ? 'Resgatar' : `Faltam ${(finalCost - dadosCliente.pontos).toLocaleString('pt-BR')}`}</button></div></article>;
+              return <article className="reward-card" key={product.id}><div className="reward-image">{product.imagem_url ? <img /* eslint-disable-line @next/next/no-img-element -- imagem do catálogo com URL livre */ src={product.imagem_url} alt={product.nome} /> : <Image src="/images/home/espetinhos.webp" alt="" fill sizes="20rem" />}{product.destaque && <span>50% OFF</span>}</div><div className="reward-body"><small>{product.categoria || 'Recompensa'}</small><h3>{product.nome}</h3><p>{product.descricao || 'Feito na hora, do jeito do Rei.'}</p></div><div className="reward-footer"><strong>{finalCost.toLocaleString('pt-BR')} <small>pts</small></strong><button type="button" disabled={!available || loading} onClick={() => setPendingReward({ tipo: 'produto', produtoId: product.id, nome: product.nome, custo: `${finalCost.toLocaleString('pt-BR')} pontos` })}>{available ? 'Resgatar' : `Faltam ${(finalCost - dadosCliente.pontos).toLocaleString('pt-BR')}`}</button></div></article>;
             })}</div> : <div className="club-empty">Nenhuma recompensa nesta categoria por enquanto.</div>}
             <article className="delivery-reward"><div><span>★ Destaque do clube</span><h3>Taxa de entrega por nossa conta.</h3><p>Use {CUSTO_ENTREGA_GRATIS_PONTOS.toLocaleString('pt-BR')} pontos em pedidos diretos, uma vez a cada {INTERVALO_ENTREGA_GRATIS_DIAS} dias. Consulte disponibilidade e área de entrega.</p></div><button type="button" disabled={dadosCliente.pontos < CUSTO_ENTREGA_GRATIS_PONTOS || loading} onClick={() => setPendingReward({ tipo: 'frete', nome: 'Taxa de entrega grátis', custo: `${CUSTO_ENTREGA_GRATIS_PONTOS.toLocaleString('pt-BR')} pontos` })}>{dadosCliente.pontos >= CUSTO_ENTREGA_GRATIS_PONTOS ? 'Quero entrega grátis' : `Faltam ${(CUSTO_ENTREGA_GRATIS_PONTOS - dadosCliente.pontos).toLocaleString('pt-BR')} pts`}</button></article>
           </section>

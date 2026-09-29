@@ -30,7 +30,8 @@ export default function SorteioCard({
 
         <div className="w-full md:w-1/3">
           {imagemUrl ? (
-            <img 
+            // eslint-disable-next-line @next/next/no-img-element -- sorteio legado pausado, URL livre
+            <img
               src={imagemUrl} 
               alt="prêmio" 
               className="rounded-xl border border-gray-700 w-full object-cover"

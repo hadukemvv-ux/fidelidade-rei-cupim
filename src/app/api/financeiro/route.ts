@@ -113,10 +113,10 @@ export async function GET(request: Request) {
       impacto_pontos
     });
 
-  } catch (err: any) {
+  } catch (err) {
     console.error('ERRO /api/financeiro/overview:', err);
     return NextResponse.json(
-      { erro: err.message || 'Erro interno.' },
+      { erro: (err as { message?: string } | null)?.message || 'Erro interno.' },
       { status: 500 }
     );
   }

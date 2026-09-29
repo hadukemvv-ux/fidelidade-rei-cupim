@@ -3,11 +3,17 @@
 import { fetchAdmin } from '@/lib/adminFetch';
 import { useEffect, useState } from 'react';
 
+type SorteioInfo = { id: string | number; titulo: string; descricao?: string; data_sorteio?: string; modo?: string; status?: string };
+type LogSorteio = { mensagem?: string };
+type EventoSorteio = { tipo: string; descricao?: string; created_at?: string };
+type DadosResumo = { ganhador?: { id?: string | number; nome: string; telefone?: string; tickets?: number } };
+type Resumo = DadosResumo & { resumo?: DadosResumo; auditoria?: unknown; logs?: LogSorteio[]; eventos?: EventoSorteio[] };
+
 export default function ResumoSorteioPage() {
   const [loading, setLoading] = useState(true);
 
-  const [sorteio, setSorteio] = useState<any>(null);
-  const [resumo, setResumo] = useState<any>(null);
+  const [sorteio, setSorteio] = useState<SorteioInfo | null>(null);
+  const [resumo, setResumo] = useState<Resumo | null>(null);
 
   const [erro, setErro] = useState<string | null>(null);
 
@@ -66,7 +72,7 @@ export default function ResumoSorteioPage() {
     return <p className="text-gray-400">Nenhum resumo disponível.</p>;
   }
 
-  const dados = resumo?.resumo || resumo || {};
+  const dados: DadosResumo = resumo?.resumo || resumo || {};
   const ganhador = dados?.ganhador;
 
   // ===================== PÁGINA =====================
@@ -143,7 +149,7 @@ export default function ResumoSorteioPage() {
 
         {resumo?.logs?.length ? (
           <ul className="space-y-2">
-            {resumo.logs.map((log: any, i: number) => (
+            {resumo.logs.map((log, i) => (
               <li key={i} className="p-3 border border-[#c5a059]/20 rounded bg-black/30 text-gray-300">
                 {log.mensagem || JSON.stringify(log)}
               </li>
@@ -160,7 +166,7 @@ export default function ResumoSorteioPage() {
 
         {resumo?.eventos?.length ? (
           <ul className="space-y-2">
-            {resumo.eventos.map((ev: any, i: number) => (
+            {resumo.eventos.map((ev, i) => (
               <li key={i} className="p-3 border border-[#c5a059]/20 rounded bg-black/30 text-gray-300">
                 <strong className="text-[#c5a059]">{ev.tipo}</strong>
                 <p>{ev.descricao}</p>

@@ -28,7 +28,7 @@ function limparTel(v: string) {
 }
 
 // Converte número brasileiro (1.234,56 → 1234.56)
-function parseMoeda(v: any) {
+function parseMoeda(v: unknown) {
   if (!v) return 0;
   let s = v.toString().trim();
   s = s.replace(/\./g, "").replace(",", ".");
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
         // === 1) CLIENTE NÃO EXISTE → CRIAR NOVO ====================
         // ============================================================
         if (!existente) {
-          const { data: criado, error: erroInsert } = await supabaseAdmin
+          const { error: erroInsert } = await supabaseAdmin
             .from('base_clientes_saipos')
             .insert({
               nome,

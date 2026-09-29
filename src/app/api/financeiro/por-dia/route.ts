@@ -68,10 +68,10 @@ export async function GET(request: Request) {
       media_diaria
     });
 
-  } catch (err: any) {
+  } catch (err) {
     console.error("ERRO /financeiro/por-dia:", err);
     return NextResponse.json(
-      { erro: err.message || "Erro interno." },
+      { erro: (err as { message?: string } | null)?.message || "Erro interno." },
       { status: 500 }
     );
   }

@@ -74,10 +74,10 @@ export async function GET(request: Request) {
       meses,
       media_mensal
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("ERRO /financeiro/por-mes:", err);
     return NextResponse.json(
-      { erro: err.message || "Erro interno." },
+      { erro: (err as { message?: string } | null)?.message || "Erro interno." },
       { status: 500 }
     );
   }

@@ -3,9 +3,11 @@
 import { fetchAdmin } from '@/lib/adminFetch';
 import { useEffect, useState } from 'react';
 
+type Ganhador = { nome: string; telefone?: string; sorteio_titulo?: string; created_at?: string };
+
 export default function GanhadoresPage() {
   const [loading, setLoading] = useState(true);
-  const [ganhadores, setGanhadores] = useState<any[]>([]);
+  const [ganhadores, setGanhadores] = useState<Ganhador[]>([]);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {

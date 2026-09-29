@@ -12,7 +12,7 @@ Legenda: `[ ]` a fazer · `[~]` em andamento · `[x]` feito · **Dono**: Codex, 
 | --- | --- | --- |
 | [x] | Reorganizar documentação e regras dos agentes | Claude |
 | [~] | Remover legado sem uso — rotas mortas e garçons antigos feitos; roleta V1, sorteio e `/validar` só após o piloto (ver `referencia/LIMPEZA_DO_LEGADO.md`) | Claude |
-| [ ] | Zerar erros do lint global | Claude |
+| [x] | Zerar erros do lint global | Claude |
 | [ ] | Instalar `gh` e Node no PATH nesta máquina para PRs e testes | Claude |
 
 ## Fase 1 — Clube no salão (roleta com prêmio físico na hora)

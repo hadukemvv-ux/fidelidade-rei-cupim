@@ -35,7 +35,10 @@ function celebrate() {
 }
 
 export default function RoletaExperience({ prizes, requestSpin, demo = false }: Props) {
-  const sectors = Array.from({ length: 6 }, (_, index) => prizes[index % prizes.length]);
+  // Se o servidor sortear um prêmio que não estava desenhado (lista mudou após abrir a
+  // página), uma fatia é trocada por ele durante o giro rápido para a roda não mentir.
+  const [override, setOverride] = useState<{ index: number; prize: WheelPrize } | null>(null);
+  const sectors = Array.from({ length: 6 }, (_, index) => (override?.index === index ? override.prize : prizes[index % prizes.length]));
   const [step, setStep] = useState<'form' | 'wheel' | 'result'>('form');
   const [phone, setPhone] = useState('');
   const [marketing, setMarketing] = useState(false);
@@ -65,7 +68,10 @@ export default function RoletaExperience({ prizes, requestSpin, demo = false }: 
     const winning = await requestSpin(phone, marketing);
     pending.current = winning;
     const matches = sectors.flatMap((prize, index) => (prize.nome === winning.premio.nome ? [index] : []));
-    return matches.length ? matches[Math.floor(Math.random() * matches.length)] : 0;
+    if (matches.length) return matches[Math.floor(Math.random() * matches.length)];
+    const index = Math.floor(Math.random() * sectors.length);
+    setOverride({ index, prize: winning.premio });
+    return index;
   }
 
   function onFinished() {

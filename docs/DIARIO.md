@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**29/09/2026 — Codex** · `codex/whatsapp-qr`: worker local com sessão AES-GCM, lock exclusivo, QR transitório e API superadmin de conexão/desconexão.
+Contrato da tela e configuração no README; 100 testes do app + 11 do serviço, tipos/lint OK, incluindo reinício criptografado e HTTP autenticado.
+Sem envio/OTP; não conectado ao WhatsApp real nesta etapa. Faltam tela do Claude, endpoint HTTPS contínuo e teste de pareamento persistente.
+Nada publicado na main; serviço permanece desligado até configuração do piloto.
+
 **29/09/2026 — Codex** · `codex/whatsapp-qr`: número separado pareado em ensaio local segundo o responsável; QR não oficial para verificação/avisos, não chatbot.
 Sessão temporária sem envio/importação; base criptográfica para OTP adicionada, 5 testes do serviço + 92 do app, tipos/lint aprovados.
 Dependência Baileys 7.0.0-rc14 fixada, audit npm sem vulnerabilidades conhecidas nesta consulta; não elimina risco de bloqueio/desconexão.

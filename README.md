@@ -37,3 +37,39 @@ npm start -- --connect --test-only --dedicated-number
 
 Integração não oficial: pode haver bloqueio/desconexão. Este ensaio não liga
 cadastro, OTP, campanha ou baixas reais no site.
+
+### Serviço local persistente e contrato do admin (piloto)
+
+Em `services/whatsapp-qr`, `npm run serve -- --serve --dedicated-number` inicia
+o controle em `127.0.0.1:8787`; não conecta até receber o comando autenticado.
+Configure no ambiente privado do processo `WHATSAPP_QR_CONTROL_TOKEN` (64 hex
+aleatórios), `WHATSAPP_QR_SESSION_KEY` (outros 64 hex) e
+`WHATSAPP_QR_SESSION_DIR` (pasta absoluta privada **fora do repositório**).
+A chave de sessão fica só no worker. Restrinja a pasta e os segredos ao usuário
+do serviço, inclusive pelas permissões do Windows. Não copiar para backups públicos.
+
+No Next local: `WHATSAPP_QR_CONTROL_ENABLED=true`,
+`WHATSAPP_QR_CONTROL_URL=http://127.0.0.1:8787` e o mesmo token de controle.
+Em produção, a URL precisa ser HTTPS, chegando a um processo contínuo por proxy
+privado; a Vercel não consegue acessar o localhost deste computador.
+Esta entrega não contrata hospedagem nem configura esse endpoint público.
+
+Contrato para a tela do Claude: `/api/admin/whatsapp/conexao`, somente superadmin,
+com `Authorization: Bearer <sessão Supabase>`. GET retorna
+`{status, qr, qr_expires_at}`; POST aceita `{"action":"connect"}` ou
+`{"action":"disconnect"}`. Consultar a cada 3 segundos enquanto a tela estiver
+visível; renderizar QR com `qrcode.react`, removê-lo ao expirar/sair da página,
+e nunca salvar em localStorage, analytics ou logs. O segredo do worker não vai
+ao navegador. Após erro, consultar estado antes de repetir o comando.
+
+Estados: `disconnected`, `connecting`, `qr`, `connected`, `disconnecting`, `error`.
+Encerrar o worker preserva a sessão criptografada; reiniciar e clicar conectar
+reutiliza essa sessão. Desconectar tenta desvincular no WhatsApp antes de limpar
+as credenciais. Falha de desvinculação mantém o arquivo para investigação.
+Uma segunda instância é bloqueada por `session.lock`; após interrupção abrupta,
+confirme que o processo anterior terminou antes de remover somente esse lock.
+Não apague `session.enc` para recuperar erros de chave. Se precisar revogar o
+vínculo, use também Aparelhos conectados no celular.
+
+Testes: `npm test` nessa pasta e `npm run test:unit` na raiz. Não há método de
+envio de mensagens, OTP nem importação de conversas nesse serviço.

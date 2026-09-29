@@ -52,8 +52,12 @@ A decisão anterior de provedor oficial foi substituída apenas para este ensaio
 isolado. Baileys é integração não oficial e sua sessão tem acesso à conta.
 Não concluir que a Saipos usa essa tecnologia sem confirmação do fornecedor.
 `services/whatsapp-qr` é um pacote independente, sem importação pelo Next,
-sem envio de mensagens, credenciais em disco, sincronização de histórico ou
-integração com o cadastro/OTP. Nenhuma conta foi conectada nesta preparação.
+sem envio de mensagens, sincronização de histórico ou integração com o cadastro/OTP.
+O ensaio `connect.mjs` usa somente memória; o responsável confirmou pareamento.
+Para a continuação autorizada em 29/09, `serve.mjs` prepara persistência
+criptografada fora do Git e controle autenticado via API superadmin. Ainda precisa
+de configuração, tela do Claude e ensaio real de reinício/desconexão. Contrato e
+execução estão no README; o serviço não é iniciado pelo deploy da Vercel.
 
 O primeiro ensaio aprovado será isolado/local, sem leitura/importação de
 conversas, sem grupos, sem campanhas, sem clientes reais e somente destinos

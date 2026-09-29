@@ -39,7 +39,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | | Tarefa | Dono |
 | --- | --- | --- |
 | [~] | Número separado ativo; responsável escolheu avaliar QR não oficial em teste isolado; operação permanente/custos ainda a decidir | Você |
-| [~] | QR WhatsApp: serviço com sessão criptografada e API superadmin prontos/testados; faltam tela Claude, hospedagem contínua e pareamento persistente real; envio/OTP pendentes | Codex |
+| [~] | QR WhatsApp: serviço com sessão criptografada e API superadmin prontos/testados; tela `/admin/whatsapp` pronta em `claude/admin-whatsapp`; faltam hospedagem contínua e pareamento persistente real; envio/OTP pendentes | Codex |
 | [ ] | Ligar OTP de cadastro e testar | Codex |
 | [ ] | Verificação de conta antiga com PIN e sem telefone comprovado | Codex |
 | [ ] | Nova rotina de pontuação Saipos: só contas verificadas, idempotente, com relatório | Codex |

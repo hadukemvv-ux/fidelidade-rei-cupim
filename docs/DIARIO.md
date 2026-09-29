@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**29/09/2026 — Claude** · `claude/admin-whatsapp` (sobre `codex/whatsapp-qr` 9b0da87): tela `/admin/whatsapp` só superadmin, consulta a cada 3 s só com a tela visível, QR apenas em memória (some ao expirar/esconder), sessão vencida separada de serviço desligado, desconectar com confirmação. Revisão do worker/API OK (só 127.0.0.1, sem envio). Estados testados no navegador com respostas simuladas; pareamento real pendente. Não publicado.
+
 **29/09/2026 — Codex** · `codex/whatsapp-qr`: worker local com sessão AES-GCM, lock exclusivo, QR transitório e API superadmin de conexão/desconexão.
 Contrato da tela e configuração no README; 100 testes do app + 11 do serviço, tipos/lint OK, incluindo reinício criptografado e HTTP autenticado.
 Sem envio/OTP; não conectado ao WhatsApp real nesta etapa. Faltam tela do Claude, endpoint HTTPS contínuo e teste de pareamento persistente.

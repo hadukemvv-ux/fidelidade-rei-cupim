@@ -40,6 +40,7 @@ const navigation: NavGroup[] = [
     { href: '/admin/baixas', icon: '▤', label: 'Baixas de prêmios', hint: 'Simulador sem estoque real' },
     { href: '/admin/auditoria', icon: '◷', label: 'Auditoria', hint: 'Quem fez cada ação' },
     { href: '/admin/seguranca', icon: '⛨', label: 'Privacidade', hint: 'Incidentes e contenção' },
+    { href: '/admin/whatsapp', icon: '✆', label: 'WhatsApp', hint: 'Conexão do número dedicado' },
   ], folders: [{ label: 'Saipos', icon: '↔', hint: 'Integração e entregas', items: [
     { href: '/admin/saipos', icon: '◇', label: 'Diagnóstico', hint: 'Teste da conexão' },
     { href: '/admin/saipos/entregas', icon: '▣', label: 'Entregas', hint: 'Prazos e etapas' },
@@ -67,6 +68,7 @@ const pageInfo: Record<string, { title: string; description: string }> = {
   '/admin/saipos': { title: 'Saipos — teste de conexão', description: 'Confirme a API sem criar clientes, pontos ou benefícios.' },
   '/admin/saipos/entregas': { title: 'Saipos — entregas', description: 'Examine canal, prazo estimado e etapas de pedidos sem alterar dados.' },
   '/admin/saipos/telefones': { title: 'Saipos — telefones', description: 'Teste a presença e repetição de telefones sem expor dados pessoais.' },
+  '/admin/whatsapp': { title: 'Conexão do WhatsApp', description: 'Vincule ou desvincule o número dedicado. Exclusivo do superadmin; nenhuma mensagem é enviada.' },
   '/admin/seguranca': { title: 'Privacidade e incidentes', description: 'Contenha riscos, preserve evidências e acompanhe a investigação.' },
   '/admin/importar': { title: 'Importação', description: 'Atualize a base de clientes com uma planilha da Saipos.' },
 };

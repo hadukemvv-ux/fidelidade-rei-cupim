@@ -5,10 +5,10 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
-**29/09/2026 — Codex** · `codex/whatsapp-qr`: número separado ativo e QR não oficial escolhidos pelo responsável; finalidade é verificação/avisos do Clube, não chatbot.
-Ensaio local isolado de 5 minutos, credenciais só em memória, sem envio/importação de conversas; 5 testes do serviço + 87 do app, tipos, lint e importações aprovados.
+**29/09/2026 — Codex** · `codex/whatsapp-qr`: número separado pareado em ensaio local segundo o responsável; QR não oficial para verificação/avisos, não chatbot.
+Sessão temporária sem envio/importação; base criptográfica para OTP adicionada, 5 testes do serviço + 92 do app, tipos/lint aprovados.
 Dependência Baileys 7.0.0-rc14 fixada, audit npm sem vulnerabilidades conhecidas nesta consulta; não elimina risco de bloqueio/desconexão.
-Faltam pareamento real, teste de encerramento no celular, OTP, transporte permanente e hospedagem; nenhuma conta conectada ou produção alterada.
+Faltam conferir encerramento no celular, fila/envio/verificação OTP, transporte permanente e hospedagem; produção não foi alterada.
 Checkpoint de baixas separado: branch `codex/baixas-reais`, commit `bf1d409`, 99 testes; pedir revisão Claude e validar SQL isolado antes de aplicar.
 
 **28/09/2026 — Claude** · Limpeza do legado, parte 1: removidas rotas mortas (`/api/test-env`, `/api/debug`, `/teste`, pasta `src/pages`), o controle antigo de garçons (telas e rotas que só respondiam "desativado") e imagens sem uso. Banco não foi tocado. 87/87 testes, tipos e build OK. Pendente: roleta V1, sorteio e `/validar` após o piloto.

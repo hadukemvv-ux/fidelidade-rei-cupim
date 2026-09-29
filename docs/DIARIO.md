@@ -5,6 +5,12 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**29/09/2026 — Claude** · Revisão de `codex/baixas-reais` (bf1d409): 99 testes, tipos e lint OK; permissões e ordem de locks revisadas (revisão de código, sem teste real de concorrência). Bloqueante: gatilho aborta o giro depois do sorteio em QR manual sem comanda, permitindo girar de novo. Recado enviado ao Codex.
+
+**29/09/2026 — Claude** · Backup diário do Supabase no GitHub Actions: banco + arquivos (sem fotos de comanda), criptografado, 30 dias, com teste de restauração automático. Guia com opções e custos em `docs/referencia/BACKUP_E_MIGRACAO.md`. Aguarda 3 segredos no GitHub para a 1ª execução.
+
+**29/09/2026 — Claude** · Ícones do site trocados pelo foguinho oficial: favicon (16/32/48), ícone 256 e ícone de tela inicial do iPhone (fundo escuro). Recorte em `public/brand/logo-foguinho.png`. Arte original tem ~125 px: pedir versão vetorial.
+
 **28/09/2026 — Claude** · Lint zerado (era 23 erros e 16 avisos): `any` trocado por tipos reais, variáveis sem uso removidas, texto alternativo em imagem e exceções justificadas em comentário onde o padrão atual está correto. Sem mudança de regra ou dado. Lint, tipos, 87/87 testes e build OK.
 
 **28/09/2026 — Claude** · Limpeza do legado, parte 1: removidas rotas mortas (`/api/test-env`, `/api/debug`, `/teste`, pasta `src/pages`), o controle antigo de garçons (telas e rotas que só respondiam "desativado") e imagens sem uso. Banco não foi tocado. 87/87 testes, tipos e build OK. Pendente: roleta V1, sorteio e `/validar` após o piloto.

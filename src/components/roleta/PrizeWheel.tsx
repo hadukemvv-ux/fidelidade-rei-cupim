@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { prizePhoto, SHOW_PHOTOS_IN_WHEEL } from '@/lib/prizeVisuals';
 import { normalizeAngle, planStop, releaseVelocity, rotationAt, sectorAtRotation, type AngleSample, type StopPlan } from '@/lib/wheelPhysics';
 import styles from './PrizeWheel.module.css';
 
@@ -234,9 +235,12 @@ export default function PrizeWheel({ prizes, locked = false, onSpinStart, onFini
         <div ref={wheelRef} className={styles.wheel}>
           {sectors.map((prize, index) => {
             const angle = index * SECTOR_SIZE + SECTOR_SIZE / 2;
-            return <span className={styles.sector} key={index} data-tone={index % 2 ? 'dark' : 'light'} style={{ transform: `rotate(${angle}deg)` }}>
+            return <span className={styles.sector} key={index} style={{ transform: `rotate(${angle}deg)` }}>
               <span className={styles.sectorInner}>
-                {allSame ? <Image src="/logo.png" alt="" width={36} height={36} /> : <strong>{prize.nome}</strong>}
+                {allSame ? <Image src="/logo.png" alt="" width={36} height={36} /> : <>
+                  {SHOW_PHOTOS_IN_WHEEL && prizePhoto(prize.nome, prize.imagem_url) && <Image className={styles.photo} src={prizePhoto(prize.nome, prize.imagem_url) as string} alt="" width={96} height={96} />}
+                  <strong>{prize.nome}</strong>
+                </>}
               </span>
             </span>;
           })}

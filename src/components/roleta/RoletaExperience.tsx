@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 import Image from 'next/image';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import styles from '@/app/roleta/v2/roleta.module.css';
-import { prizePhoto } from '@/lib/prizeVisuals';
+import { prizePhoto, ROLETA_BACKDROP } from '@/lib/prizeVisuals';
 import { bodyFont, displayFont } from './fonts';
 import PrizeWheel, { type WheelPrize } from './PrizeWheel';
 
@@ -86,7 +86,7 @@ export default function RoletaExperience({ prizes, requestSpin, demo = false }: 
   const resultPhoto = result && !result.modo_teste ? prizePhoto(result.premio.nome, result.premio.imagem_url) : null;
 
   return <main className={`${styles.page} ${displayFont.variable} ${bodyFont.variable}`}>
-    <div className={styles.backdrop} aria-hidden="true"><Image src="/images/home/hero-cupim.webp" alt="" fill priority sizes="100vw" /></div>
+    <div className={styles.backdrop} aria-hidden="true"><Image src={ROLETA_BACKDROP.src} alt="" fill priority sizes="100vw" style={{ objectPosition: ROLETA_BACKDROP.position }} /></div>
     <div className={styles.embers} aria-hidden="true">{Array.from({ length: 14 }, (_, index) => <i key={index} />)}</div>
     {flash && <div className={styles.flash} aria-hidden="true" />}
     <div className={styles.shell}>

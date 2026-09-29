@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**29/09/2026 — Claude** · Roleta interativa: arrastar com o dedo, botão PARAR, parada automática em 4 s, desaceleração lenta com pinos e som, confete nas cores da marca e revelação com foto. Resultado continua 100% do servidor (a animação só decide o caminho). Demonstração sem registro em `/roleta/demo`. Física com 900 combinações testadas; fluxo testado no navegador. Faltam fotos reais e celulares reais.
+
 **29/09/2026 — Claude** · Revisão de `codex/baixas-reais` (bf1d409): 99 testes, tipos e lint OK; permissões e ordem de locks revisadas (revisão de código, sem teste real de concorrência). Bloqueante: gatilho aborta o giro depois do sorteio em QR manual sem comanda, permitindo girar de novo. Recado enviado ao Codex.
 
 **29/09/2026 — Claude** · Backup diário do Supabase no GitHub Actions: banco + arquivos (sem fotos de comanda), criptografado, 30 dias, com teste de restauração automático. Guia com opções e custos em `docs/referencia/BACKUP_E_MIGRACAO.md`. Aguarda 3 segredos no GitHub para a 1ª execução.

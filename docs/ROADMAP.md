@@ -25,7 +25,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [ ] | Aprovar prêmios, custos, pesos por faixa e validade | Você |
 | [ ] | Contratar hospedagem com uso comercial (Vercel Pro ou alternativa) | Você |
 | [ ] | Backup e teste de restauração do Supabase (plano Free não tem backup) | Claude prepara, Você aprova custo |
-| [ ] | Baixas reais: gravar escolha → entrega → baixa no banco, com operador e QR reais | Codex |
+| [~] | Baixas reais: base/API em `codex/baixas-reais`, 99 testes unitários aprovados; faltam revisão Claude, catálogo/opções, painel e validação isolada do SQL (não aplicado) | Codex |
 | [ ] | Visual da roleta no celular: menos texto, roda mais imersiva, resultado claro | Claude |
 | [ ] | Arte oficial (logo) e ícones do site/favicon | Você envia a arte, Claude aplica |
 | [ ] | Piloto Saipos de 3 cenários: venda concluída, cancelada, mesa sem venda | Você executa, Codex analisa |

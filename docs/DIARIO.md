@@ -5,6 +5,12 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**29/09/2026 — Codex** · `codex/baixas-reais`: checkpoint da base/API e proposta SQL, gates desligados; 99 testes, tipos e lint dos novos arquivos aprovados.
+Faltam execução isolada do SQL (inclusive concorrência/RLS), catálogo/opções por conta, painel e revisão Claude; nada aplicado em produção.
+SPA, FAQ 59: benefício objetivo sem aleatoriedade difere de promoção com sorte; pontos sorteados não têm dispensa confirmada.
+Fonte: https://www.gov.br/fazenda/pt-br/composicao/orgaos/secretaria-de-premios-e-apostas/promocao-comercial/promocao-comercial
+Nenhuma mudança de mecânica, prêmios ou aprovação jurídica decidida.
+
 **28/09/2026 — Claude** · Documentação reorganizada: `AGENTS.md` com divisão de trabalho
 e fluxo de branches/PR; novos `COMECE_AQUI`, `ROADMAP` por fases com dono e este diário.
 Documentos de tema movidos para `docs/referencia/`, antigos para `docs/historico/`.

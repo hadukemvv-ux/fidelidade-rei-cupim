@@ -1,7 +1,16 @@
 'use client';
 
+interface Ganhador {
+  sorteio_id: string | number;
+  cliente_id: string | number;
+  nome_cliente: string;
+  telefone_cliente?: string;
+  tickets_no_sorteio: number;
+  criado_em: string;
+}
+
 interface Props {
-  ganhadores: any[];
+  ganhadores: Ganhador[];
 }
 
 export default function GanhadoresList({ ganhadores }: Props) {
@@ -16,7 +25,7 @@ export default function GanhadoresList({ ganhadores }: Props) {
         <p className="text-gray-500">Nenhum ganhador registrado ainda.</p>
       ) : (
         <div className="space-y-4">
-          {ganhadores.map((g: any) => (
+          {ganhadores.map((g) => (
             <div 
               key={g.sorteio_id + ':' + g.cliente_id + ':' + g.criado_em}
               className="p-4 bg-gray-900 rounded-xl border border-gray-700"

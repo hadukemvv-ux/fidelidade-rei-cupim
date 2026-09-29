@@ -11,7 +11,7 @@ function ValidarContent() {
   
   const [cupom, setCupom] = useState(cupomUrl || '');
   const [loading, setLoading] = useState(false);
-  const [resultado, setResultado] = useState<any>(null);
+  const [resultado, setResultado] = useState<ResultadoValidacao | null>(null);
   const [showScanner, setShowScanner] = useState(false); 
 
   useEffect(() => {
@@ -39,7 +39,7 @@ function ValidarContent() {
       });
       const data = await res.json();
       setResultado(data);
-    } catch (error) {
+    } catch {
       setResultado({ ok: false, error: 'Erro de conexão.' });
     } finally {
       setLoading(false);
@@ -64,7 +64,7 @@ function ValidarContent() {
       } else {
         alert('Erro: ' + data.error);
       }
-    } catch (error) {
+    } catch {
       alert('Erro ao processar.');
     } finally {
       setLoading(false);
@@ -188,6 +188,10 @@ function ValidarContent() {
     </div>
   );
 }
+
+type ResultadoValidacao =
+  | { ok: true; detalhes: { descricao_amigavel: string; telefone: string; criado_em: string } }
+  | { ok: false; mensagem?: string; error?: string };
 
 export default function ValidarPage() {
   return (

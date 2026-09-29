@@ -1,7 +1,7 @@
 /* Brasa Premium — preto carvão, osso, vermelho da marca só nos pontos de ação, brilho de brasa. */
 .page{--bone:#efe6d8;--coal:#141110;--red:#dc251b;--ember:#ff6a00;position:relative;min-height:100vh;min-height:100dvh;overflow-x:hidden;color:var(--bone);background:#0c0a09;font-family:var(--font-body),Arial,Helvetica,sans-serif;isolation:isolate}
 .backdrop{position:absolute;inset:0 0 auto;height:min(70vh,560px);z-index:-2;opacity:.26;filter:saturate(1.2) contrast(1.1)}
-.backdrop img{object-fit:cover;object-position:50% 40%}
+.backdrop img{object-fit:cover}
 .backdrop:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#0c0a0966 0%,#0c0a09cc 55%,#0c0a09 100%)}
 
 /* Faíscas subindo, discretas. */

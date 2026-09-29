@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**28/09/2026 — Claude** · Lint zerado (era 23 erros e 16 avisos): `any` trocado por tipos reais, variáveis sem uso removidas, texto alternativo em imagem e exceções justificadas em comentário onde o padrão atual está correto. Sem mudança de regra ou dado. Lint, tipos, 87/87 testes e build OK.
+
 **28/09/2026 — Claude** · Limpeza do legado, parte 1: removidas rotas mortas (`/api/test-env`, `/api/debug`, `/teste`, pasta `src/pages`), o controle antigo de garçons (telas e rotas que só respondiam "desativado") e imagens sem uso. Banco não foi tocado. 87/87 testes, tipos e build OK. Pendente: roleta V1, sorteio e `/validar` após o piloto.
 
 **28/09/2026 — Claude** · Documentação reorganizada: `AGENTS.md` com divisão de trabalho

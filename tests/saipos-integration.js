@@ -12,6 +12,7 @@
  *     2. ADMIN_SECRET_TOKEN (legado, fallback temporario)
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports -- script CommonJS executado direto pelo node */
 const fs = require("fs");
 const envRaw = fs.existsSync(".env.local") ? fs.readFileSync(".env.local", "utf8") : "";
 const getEnv = (k) => {

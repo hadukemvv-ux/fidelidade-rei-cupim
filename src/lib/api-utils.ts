@@ -25,7 +25,7 @@ export interface ApiSuccessResponse<T> {
 /**
  * Structured logging
  */
-export function logError(endpoint: string, error: Error, context?: Record<string, any>) {
+export function logError(endpoint: string, error: Error, context?: Record<string, unknown>) {
   const errorLog = {
     timestamp: new Date().toISOString(),
     endpoint,
@@ -38,7 +38,7 @@ export function logError(endpoint: string, error: Error, context?: Record<string
   return errorLog;
 }
 
-export function logInfo(endpoint: string, message: string, data?: Record<string, any>) {
+export function logInfo(endpoint: string, message: string, data?: Record<string, unknown>) {
   const infoLog = {
     timestamp: new Date().toISOString(),
     endpoint,

@@ -95,10 +95,10 @@ export async function GET(request: Request) {
       top_produtos,
       total_resgates: resgates.length,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("ERRO /financeiro/categorias:", err);
     return NextResponse.json(
-      { erro: err.message || "Erro interno." },
+      { erro: (err as { message?: string } | null)?.message || "Erro interno." },
       { status: 500 }
     );
   }

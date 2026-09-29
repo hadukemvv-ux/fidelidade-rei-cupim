@@ -26,7 +26,7 @@ interface Props {
 export default function SorteioForm({
   titulo, setTitulo,
   descricao, setDescricao,
-  imagemUrl, setImagemUrl,
+  setImagemUrl,
   dataSorteio, setDataSorteio,
   modo, setModo,
   salvar, saving

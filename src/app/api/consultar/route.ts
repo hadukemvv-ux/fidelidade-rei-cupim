@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
         multiplicador: nivelAtual.beneficio.pontos,
       },
     });
-  } catch (error: any) {
+  } catch (error) {
     return handleApiError(error, 'GET /api/consultar', requestId);
   }
 }

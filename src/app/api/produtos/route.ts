@@ -15,7 +15,7 @@ export async function GET() {
     // RETORNA DIRETO O ARRAY (IMPORTANTE!)
     return NextResponse.json(data || []);
 
-  } catch (err: any) {
+  } catch (err) {
     console.error('[GET /produtos] ERROR:', err);
     return NextResponse.json(
       { ok: false, error: 'Erro ao carregar produtos.' },

@@ -35,25 +35,27 @@
   de 73h demonstra alerta sem exclusão. Recarregar/sair descarta o ensaio.
   Não lê clientes/catálogo real, não altera cupons nem chama a Saipos.
 
-Não existe ainda conexão QR, processo WhatsApp Web, worker de envio,
+Não existe ainda conexão QR ativa/persistente, worker de envio,
 processador de respostas, vínculo de celular do operador, painel de baixas reais,
 catálogo de itens físicos nem integração com o giro. Não habilitar o webhook
 antes de aplicar/revisar a inbox e concluir o consumidor autenticado.
 
-## Escolha de canal em aberto
+## Escolha de canal — ensaio aprovado em 29/09
 
-O responsável decidiu aguardar um número separado e não conectar seu
-WhatsApp pessoal. Enquanto isso, validar o fluxo pelo simulador sem mensagens.
-O canal definitivo continua em aberto; não contratar provedor nem conectar
-sessão automaticamente. Um número separado não elimina risco de bloqueio.
+O responsável confirmou número separado ativado, recebendo SMS/ligações,
+e escolheu avaliar conexão não oficial por QR após aviso dos riscos.
+A finalidade é um número de verificação e avisos do próprio Clube, não um
+chatbot de conversa. Isso não muda a natureza da conexão nem elimina risco
+de bloqueio/desconexão. Não conectar o WhatsApp pessoal.
 
-A decisão anterior do projeto era usar apenas provedor oficial. A nova rota
-por WhatsApp Web exige confirmação informada: Baileys/whatsapp-web.js são
-integrações não oficiais, com risco de bloqueio/desconexão e acesso de sessão
-à conta. Não concluir que o QR da Saipos usa essa tecnologia sem confirmação
-do fornecedor. Nenhuma dependência não oficial foi instalada ou conectada.
+A decisão anterior de provedor oficial foi substituída apenas para este ensaio
+isolado. Baileys é integração não oficial e sua sessão tem acesso à conta.
+Não concluir que a Saipos usa essa tecnologia sem confirmação do fornecedor.
+`services/whatsapp-qr` é um pacote independente, sem importação pelo Next,
+sem envio de mensagens, credenciais em disco, sincronização de histórico ou
+integração com o cadastro/OTP. Nenhuma conta foi conectada nesta preparação.
 
-Se aprovada, o primeiro ensaio será isolado/local, sem leitura/importação de
+O primeiro ensaio aprovado será isolado/local, sem leitura/importação de
 conversas, sem grupos, sem campanhas, sem clientes reais e somente destinos
 de teste autorizados. Não rodar sessão permanente em Route Handler Vercel;
 o processo precisa de máquina/serviço contínuo, credenciais privadas fora do
@@ -75,8 +77,9 @@ seleção numerada determinística ou formulário autenticado.
 
 ## Próximos passos
 
-1. Aguardar número separado, aprovar canal e riscos; definir remetente/destinos de teste sem expor
-   números ou segredos em Git, relatórios ou chat.
+1. Realizar pareamento do número separado no ensaio aprovado por QR e conferir
+   encerramento/desvinculação no celular; depois autorizar destinos de teste
+   antes de implementar envios. Não expor números, QR ou segredos em Git/chat.
 2. Cadastrar o celular do garçom com comprovação, vínculo ao perfil ativo e
    aceite operacional; expansão de permissões explicitamente auditada.
 3. Criar catálogo físico mínimo e mapear cervejas consumidas. Não tratar OCR

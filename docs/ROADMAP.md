@@ -37,7 +37,8 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 
 | | Tarefa | Dono |
 | --- | --- | --- |
-| [ ] | Número de WhatsApp comercial e provedor oficial (custos e templates) | Você |
+| [~] | Número separado ativo; responsável escolheu avaliar QR não oficial em teste isolado; operação permanente/custos ainda a decidir | Você |
+| [~] | Conexão do número de verificação por QR: ensaio local em `codex/whatsapp-qr`, sem envio; falta pareamento real, depois OTP e hospedagem | Codex |
 | [ ] | Ligar OTP de cadastro e testar | Codex |
 | [ ] | Verificação de conta antiga com PIN e sem telefone comprovado | Codex |
 | [ ] | Nova rotina de pontuação Saipos: só contas verificadas, idempotente, com relatório | Codex |

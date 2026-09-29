@@ -20,3 +20,20 @@ npx tsc --noEmit
 
 Variáveis em `.env.local` (modelo em `.env.example`). Nunca commitar `.env.local`.
 Regras de cada segredo: [docs/referencia/SEGREDOS_E_ACESSOS.md](docs/referencia/SEGREDOS_E_ACESSOS.md).
+
+### Teste isolado de conexão WhatsApp por QR (não é OTP pronto)
+
+Somente número separado, em terminal local privado, Node 24+. Não roda na Vercel.
+Não envia mensagens nem importa conversas. Sessão apenas em memória: ao reiniciar,
+é necessário escanear novamente. Encerra em 5 minutos ou com Ctrl+C; confira no
+celular e remova o aparelho de teste caso continue vinculado. Não compartilhe o QR.
+
+```bash
+cd services/whatsapp-qr
+npm ci --ignore-scripts
+npm test
+npm start -- --connect --test-only --dedicated-number
+```
+
+Integração não oficial: pode haver bloqueio/desconexão. Este ensaio não liga
+cadastro, OTP, campanha ou baixas reais no site.

@@ -27,7 +27,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [ ] | Backup e teste de restauração do Supabase (plano Free não tem backup) | Claude prepara, Você aprova custo |
 | [ ] | Baixas reais: gravar escolha → entrega → baixa no banco, com operador e QR reais | Codex |
 | [ ] | Visual da roleta no celular: menos texto, roda mais imersiva, resultado claro | Claude |
-| [ ] | Arte oficial (logo) e ícones do site/favicon | Você envia a arte, Claude aplica |
+| [x] | Arte oficial (logo) e ícones do site/favicon — foguinho aplicado; pedir versão vetorial (SVG/PDF) para uso grande | Você envia a arte, Claude aplica |
 | [ ] | Piloto Saipos de 3 cenários: venda concluída, cancelada, mesa sem venda | Você executa, Codex analisa |
 | [ ] | Testar os 4 acessos reais (garçom, caixa, gestor, superadmin) em produção | Você executa, Claude acompanha |
 | [ ] | Roteiro `referencia/TESTES_PENDENTES_PRE_LANCAMENTO.md` — itens da Fase 1 | Todos |

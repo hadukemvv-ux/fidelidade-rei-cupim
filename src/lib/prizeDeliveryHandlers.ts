@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { canChangeDelivery, canReadDelivery, deliveryAlert, deliveryDailySummary, type DeliveryRecord } from './prizeDeliveryLedger.ts';
+import { canAttemptDeliveryAction, canReadDelivery, deliveryAlert, deliveryDailySummary, type DeliveryRecord } from './prizeDeliveryLedger.ts';
 import type { OperationalRole } from './operationalRoles.ts';
 
 export type DeliveryActor = { userId: string; papel: OperationalRole };
@@ -19,6 +19,13 @@ export const DeliveryCommandSchema = z.object({
 
 const respond = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
 
+/** Limite conservador para não exceder URLs de filtros PostgREST. */
+export function deliveryIdBatches(ids: string[]) {
+  const batches: string[][] = [];
+  for (let index = 0; index < ids.length; index += 75) batches.push(ids.slice(index, index + 75));
+  return batches;
+}
+
 /** Store injetável para testar autorização sem tocar no banco real. */
 export async function listDeliveries(actor: DeliveryActor, store: DeliveryStore, now = new Date()) {
   try {
@@ -32,8 +39,9 @@ export async function changeDelivery(request: Request, actor: DeliveryActor, sto
   const parsed = DeliveryCommandSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return respond({ error: 'Ação de entrega inválida.' }, 400);
   const input = parsed.data;
-  // O SQL verifica novamente dono/perfil sob lock. Nunca aceitar ator do corpo.
-  if (!canChangeDelivery(actor.papel, actor.userId, actor.userId, input.acao)) {
+  // Só o papel é pré-checado aqui; não fingir que já conhecemos o dono real.
+  // O SQL verifica perfil e operador_id sob lock. Nunca aceitar ator do corpo.
+  if (!canAttemptDeliveryAction(actor.papel, input.acao)) {
     return respond({ error: 'Seu perfil não permite esta ação.' }, 403);
   }
   try {

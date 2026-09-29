@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canChangeDelivery, canReadDelivery, deliveryAlert, deliveryDailySummary, deliveryDay, deliveryLedgerEnabled, type DeliveryRecord } from '../src/lib/prizeDeliveryLedger.ts';
-import { changeDelivery, listDeliveries, type DeliveryStore } from '../src/lib/prizeDeliveryHandlers.ts';
+import { canAttemptDeliveryAction, canChangeDelivery, canReadDelivery, deliveryAlert, deliveryDailySummary, deliveryDay, deliveryLedgerEnabled, type DeliveryRecord } from '../src/lib/prizeDeliveryLedger.ts';
+import { changeDelivery, deliveryIdBatches, listDeliveries, type DeliveryStore } from '../src/lib/prizeDeliveryHandlers.ts';
 
 const deliveryId = '10000000-0000-4000-8000-000000000001';
 const productId = '20000000-0000-4000-8000-000000000001';
@@ -37,8 +37,24 @@ test('entrega pertence ao garçom responsável; caixa só registra lançamento',
   assert.equal(canChangeDelivery('caixa', 'a', 'b', 'lancar'), true);
   assert.equal(canChangeDelivery('caixa', 'a', 'b', 'entregar'), false);
 });
+test('API só pré-checa o papel; SQL decide o dono real', () => {
+  assert.equal(canAttemptDeliveryAction('garcom', 'entregar'), true);
+  assert.equal(canAttemptDeliveryAction('garcom', 'lancar'), false);
+  assert.equal(canAttemptDeliveryAction('caixa', 'entregar'), false);
+  assert.equal(canAttemptDeliveryAction('caixa', 'lancar'), true);
+  assert.equal(canAttemptDeliveryAction('gestor', 'entregar'), false);
+  assert.equal(canChangeDelivery('garcom', 'garcom-a', 'garcom-b', 'entregar'), false);
+});
+test('opções são consultadas em lotes conservadores para evitar URL 414', () => {
+  assert.deepEqual(deliveryIdBatches([]), []);
+  const ids = Array.from({ length: 500 }, (_, index) => `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`);
+  const batches = deliveryIdBatches(ids);
+  assert.equal(batches.length, 7);
+  assert.equal(Math.max(...batches.map((batch) => batch.length)), 75);
+  assert.deepEqual(batches.flat(), ids);
+});
 test('seleção e ensaio não somam no fechamento físico', () => {
-  assert.deepEqual(deliveryDailySummary([sample({ status: 'selecionada', produto_id: productId }), sample({ modo_teste: true, status: 'entregue', entregue_em: now.toISOString(), produto_id: productId, produto_nome: 'Item fictício', unidade: 'unidade' })]), []);
+  assert.deepEqual(deliveryDailySummary([sample({ status: 'selecionada', produto_id: productId }), sample({ status: 'bloqueada' }), sample({ modo_teste: true, status: 'entregue', entregue_em: now.toISOString(), produto_id: productId, produto_nome: 'Item fictício', unidade: 'unidade' })]), []);
 });
 test('resumo usa data da entrega em Fortaleza e soma quantidade, não número de cupons', () => {
   const record = sample({ status: 'entregue', entregue_em: '2026-09-29T02:59:59Z', produto_id: productId, produto_nome: 'Item fictício', unidade: 'garrafa 600 ml' });

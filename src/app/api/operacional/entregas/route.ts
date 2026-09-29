@@ -3,7 +3,7 @@ import { requireOperationalActor } from '@/lib/operationalAuth';
 import { bloquearSeContencaoAtiva } from '@/lib/operationalContainment';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { deliveryLedgerEnabled, type DeliveryRecord } from '@/lib/prizeDeliveryLedger';
-import { changeDelivery, listDeliveries, type DeliveryStore } from '@/lib/prizeDeliveryHandlers';
+import { changeDelivery, deliveryIdBatches, listDeliveries, type DeliveryStore } from '@/lib/prizeDeliveryHandlers';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,11 +19,16 @@ const store: DeliveryStore = {
     return (data ?? []) as DeliveryRecord[];
   },
   async options(deliveryIds) {
-    const { data, error } = await supabaseAdmin.from('entregas_opcoes')
-      .select('entrega_id,produto_id,entregas_produtos!inner(nome,unidade,ativo)')
-      .in('entrega_id', deliveryIds).eq('entregas_produtos.ativo', true).limit(5001);
-    if (error || (data?.length ?? 0) > 5000) throw new Error('Opções indisponíveis.');
-    return (data ?? []).map((row) => {
+    const rows = [];
+    for (const ids of deliveryIdBatches(deliveryIds)) {
+      const { data, error } = await supabaseAdmin.from('entregas_opcoes')
+        .select('entrega_id,produto_id,entregas_produtos!inner(nome,unidade,ativo)')
+        .in('entrega_id', ids).eq('entregas_produtos.ativo', true).limit(5001);
+      if (error || (data?.length ?? 0) > 5000) throw new Error('Opções indisponíveis.');
+      rows.push(...(data ?? []));
+      if (rows.length > 5000) throw new Error('Opções indisponíveis.');
+    }
+    return rows.map((row) => {
       const product = Array.isArray(row.entregas_produtos) ? row.entregas_produtos[0] : row.entregas_produtos;
       return { entrega_id: row.entrega_id, produto_id: row.produto_id, nome: product.nome, unidade: product.unidade };
     });

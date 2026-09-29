@@ -4,7 +4,7 @@ import type { OperationalRole } from './operationalRoles.ts';
 export type DeliveryAction = 'selecionar' | 'entregar' | 'lancar';
 export type DeliveryRecord = {
   id: string; operador_id: string | null; modo_teste: boolean;
-  status: 'pendente' | 'selecionada' | 'entregue'; versao: number;
+  status: 'pendente' | 'selecionada' | 'entregue' | 'bloqueada'; versao: number;
   criado_em: string; entregue_em: string | null; lancado_em: string | null;
   produto_id: string | null; produto_nome: string | null; unidade: string | null;
   quantidade: number;
@@ -23,6 +23,12 @@ export function canReadDelivery(role: OperationalRole, userId: string, owner: st
 export function canChangeDelivery(role: OperationalRole, userId: string, owner: string | null, action: DeliveryAction) {
   if (action === 'lancar') return role === 'caixa' || role === 'superadmin';
   return role === 'superadmin' || (role === 'garcom' && owner === userId);
+}
+
+/** Apenas pré-checagem de papel: o SQL verifica dono real sob lock. */
+export function canAttemptDeliveryAction(role: OperationalRole, action: DeliveryAction) {
+  if (action === 'lancar') return role === 'caixa' || role === 'superadmin';
+  return role === 'superadmin' || role === 'garcom';
 }
 
 export function deliveryDay(date: string) {

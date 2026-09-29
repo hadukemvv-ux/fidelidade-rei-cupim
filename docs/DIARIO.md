@@ -5,6 +5,12 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**29/09/2026 — Codex** · `codex/baixas-reais`: correção do bloqueante identificado pelo Claude; físico inelegível sai do sorteio antes do resultado e a roda mostra a mesma lista.
+Exceção operacional vira pendência bloqueada, sem re-roll; ativação recusa cupom físico antigo aberto sem ledger.
+Opções paginadas em lotes, pré-checagem de papel explícita e SECURITY DEFINER com busca vazia; 109 testes (8 SQL isolados), tipos/lint OK.
+Migração não aplicada; falta nova revisão Claude, concorrência em PostgreSQL multissessão, catálogo/opções reais e painel.
+Decisão pendente do responsável: quem assume entrega quando o garçom sai do turno; piloto mantém só superadmin.
+
 **29/09/2026 — Codex** · `codex/baixas-reais`: checkpoint da base/API e proposta SQL, gates desligados; 99 testes, tipos e lint dos novos arquivos aprovados.
 Faltam execução isolada do SQL (inclusive concorrência/RLS), catálogo/opções por conta, painel e revisão Claude; nada aplicado em produção.
 SPA, FAQ 59: benefício objetivo sem aleatoriedade difere de promoção com sorte; pontos sorteados não têm dispensa confirmada.

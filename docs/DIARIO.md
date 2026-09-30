@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**30/09/2026 — Codex** · Diagnóstico do piloto `603a5f5`: responsável confirmou não recebimento; aceitação do transporte não comprovou entrega.
+Consulta real `onWhatsApp` do único destino reconheceu uma conta e retornou JID sem nono dígito, diferente do endereço usado pelo piloto; sem registrar telefone/JID nem novo envio.
+Worker reconectado após diagnóstico; gate de envio 503, registro anterior preservado e rota pública continua não exposta.
+Pendente: resolver endereço pelo provedor, distinguir estados de envio/entrega e solicitar autorização para novo teste; não remover dígitos cegamente nem apagar reserva.
+
 **30/09/2026 — Codex** · `codex/whatsapp-mensagens`: SSH temporário /32 ajustado; um teste manual fixo aceito pelo transporte, recebimento no celular ainda pendente.
 Piloto Oracle fechado após o envio: destino temporário removido, rota interna 503 e pública 404; registro criptografado único preservado após reinício/reconexão sem novo QR.
 Modelos de verificação/cadastro/garçom em rascunho; 104 testes do app + 17 worker e tipos OK, sem campanha/OTP ou publicação na main.

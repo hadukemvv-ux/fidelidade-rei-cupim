@@ -1,6 +1,6 @@
 # WhatsApp: hospedagem, recuperação e migração
 
-Guia solicitado pelo responsável em 29/09/2026. Atualização em 30/09: **worker/HTTPS, pareamento e reinício/reconexão reais validados; um teste manual aceito pelo transporte, recebimento aguardando confirmação; envio fechado**.
+Guia solicitado pelo responsável em 29/09/2026. Atualização em 30/09: **worker/HTTPS, pareamento e reinício/reconexão validados; teste não recebido pelo destinatário, endereço divergente confirmado; envio fechado**.
 Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 
 ## Para o responsável
@@ -120,7 +120,11 @@ VM, preservando sessão/chave e validando o destino antes de desligar a origem.
    Medir memória, disco e disponibilidade; acompanhar também notificações da Oracle.
 
 Em 30/09, piloto de mensagem fixa instalado no worker Oracle com destino aprovado.
-Um envio foi aceito pelo transporte; entrega/leitura no celular não está comprovada.
+Um envio foi aceito pelo transporte, mas o responsável confirmou não recebimento.
+Consulta real do único destinatário retornou endereço interno sem nono dígito,
+diferente do endereço montado no piloto. Resolver pelo WhatsApp antes do próximo
+envio, sem alterar cadastro/remover dígitos cegamente. Novo teste exige autorização;
+preservar a reserva anterior mesmo sem entrega confirmada.
 Modo de teste encerrado e destino temporário removido; gate interno retorna 503,
 rota pública retorna 404. Nenhum envio automático/OTP/campanha foi habilitado.
 O registro único criptografado foi preservado após reinício, sem outro QR.
@@ -179,7 +183,7 @@ Antes de OTP: fila persistente, limites antiabuso, reserva/expiração e revisã
 | Autenticação na VM / isolamento | Sem token e token errado: 401; Origin presente: 400; autenticado: 200; somente loopback |
 | Reinício real do processo, sem pareamento | Aprovado: serviço ativo e controle autenticado após reinício limpo |
 | Reinício com número dedicado | Aprovado em 30/09: sessão recuperada sem QR, antes/depois do único teste manual |
-| Mensagem fixa manual | Um envio aceito pelo transporte; recebimento ainda aguardando responsável; envio fechado após teste |
+| Mensagem fixa manual | Destinatário confirmou não recebimento; consulta real encontrou endereço interno diferente; correção/novo ensaio pendentes, envio fechado |
 | Backup/restauração real | Pendente |
 | Migração entre máquinas | Pendente |
 | Aviso externo de falha | Pendente |

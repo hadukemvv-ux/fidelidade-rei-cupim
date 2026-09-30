@@ -40,7 +40,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | --- | --- | --- |
 | [~] | Número separado ativo; responsável escolheu avaliar QR não oficial em teste isolado; operação permanente/custos ainda a decidir | Você |
 | [~] | QR WhatsApp: controle publicado em 26a5743; pareamento e reinício/reconexão reais validados em 30/09; faltam auditoria das transições e acesso administrativo entre redes | Codex |
-| [~] | Mensagens QR: um teste manual aceito em 30/09, aguardando confirmação no celular; envio fechado, modelos de verificação/cadastro/garçom em rascunho; fila/gatilhos/OTP pendentes, código só na branch | Codex |
+| [~] | Mensagens QR: destinatário não recebeu o teste em 30/09; consulta real confirmou JID diferente do endereço montado; corrigir resolução pelo WhatsApp e autorizar novo ensaio, sem apagar reserva; envio fechado, fila/gatilhos/OTP pendentes | Codex |
 | [ ] | Ligar OTP de cadastro e testar | Codex |
 | [~] | Hospedagem WhatsApp: VM gratuita, DNS Registro.br e HTTPS Caddy validados; faltam teste conectado, backup/restauração reais e monitor externo | Codex, Você acessa a conta |
 | [ ] | Verificação de conta antiga com PIN e sem telefone comprovado | Codex |

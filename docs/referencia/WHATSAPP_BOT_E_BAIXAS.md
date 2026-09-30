@@ -69,7 +69,9 @@ Git, parada imediata e restrição de acesso ao QR.
 Atualização em 30/09: worker Oracle/HTTPS e painel superadmin publicados; número
 dedicado pareado e reconexão após reinício validada sem novo QR. Um teste manual
 fixo foi aceito pelo transporte para o destino pessoal autorizado; recebimento no
-celular ainda aguardando confirmação. Envios ficaram desligados depois do teste,
+celular negado pelo responsável posteriormente. Consulta real do único destino
+confirmou endereço interno diferente daquele montado pelo piloto; corrigir a
+resolução pelo WhatsApp, sem retirar dígitos indiscriminadamente. Envios ficaram desligados depois do teste,
 destino temporário removido e registro criptografado de não repetição preservado.
 Rota de envio só em loopback; código do piloto está na branch, sem publicação na main.
 Modelos em `src/lib/whatsappMessageCatalog.ts` são apenas rascunhos, sem fila/gatilho.

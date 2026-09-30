@@ -33,6 +33,20 @@ jobs:
             if [ -z "${!name}" ]; then echo "::error::Segredo não configurado no GitHub: $name"; exit 1; fi
           done
 
+      - name: Testar acesso ao banco
+        run: |
+          part() { python3 -c 'import os,sys,urllib.parse as u; p=u.urlsplit(os.environ["SUPABASE_DB_URL"]); v=getattr(p,sys.argv[1]) or ""; print(u.unquote(str(v)))' "$1"; }
+          password=$(part password)
+          # Esconde a senha nos registros mesmo quando ela aparece fora do endereço completo.
+          if [ -n "$password" ]; then echo "::add-mask::$password"; fi
+          if printf '%s' "$SUPABASE_DB_URL" | grep -q '[[:space:]]'; then
+            echo "::error::SUPABASE_DB_URL contém espaço ou quebra de linha. Recadastre sem espaços."; exit 1
+          fi
+          echo "Usuário: $(part username) | Servidor: $(part hostname):$(part port) | Senha com ${#password} caracteres"
+          if psql "$SUPABASE_DB_URL" -tAc "select 'Banco aceitou a senha. Conectado como ' || current_user"; then :; else
+            echo "::error::O banco recusou a senha deste endereço. Confira se é a senha atual do Supabase e recadastre SUPABASE_DB_URL."; exit 1
+          fi
+
       - uses: supabase/setup-cli@v1
         with:
           version: latest

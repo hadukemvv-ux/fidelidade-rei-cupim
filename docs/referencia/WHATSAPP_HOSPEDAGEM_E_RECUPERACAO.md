@@ -1,6 +1,6 @@
 # WhatsApp: hospedagem, recuperação e migração
 
-Guia solicitado pelo responsável em 29/09/2026. Estado: **worker e HTTPS validados; integração Production configurada/publicação autorizada, pareamento pendente**.
+Guia solicitado pelo responsável em 29/09/2026. Estado: **worker/HTTPS e painel de produção validados; QR gerado, pareamento pendente**.
 Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 
 ## Para o responsável
@@ -8,7 +8,7 @@ Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 - O admin deverá mostrar conexão, última verificação e ação recomendada.
 - Uma queda não significa necessidade de migração: pode ser celular desvinculado,
   serviço parado, falha de rede, credencial ou limite do provedor.
-- O painel do Claude foi integrado para publicação autorizada. Monitoramento externo
+- O painel do Claude está publicado para o superadmin. Monitoramento externo
   e avisos de limite ainda não existem; não contar com alertas automáticos hoje.
 - Custo zero depende das cotas e disponibilidade do provedor. A Oracle pode
   recolher recursos gratuitos ociosos. Não gerar carga artificial para evitar isso.
@@ -89,8 +89,10 @@ Responsável autorizou publicação e configuração: `WHATSAPP_QR_CONTROL_ENABL
 Secret somente em Production. Nenhuma chave de sessão foi enviada à Vercel;
 Preview/Development não recebem o segredo de controle. Envios/OTP não habilitados.
 
-Próximo passo: conferir implantação no site, parear número dedicado e testar
-reconexão/restauração reais.
+Publicação `26a5743` confirmada Ready na Vercel: consulta sem login recusada com
+401/no-store; superadmin consultou estado desconectado e gerou QR no domínio real.
+Próximo passo: responsável escanear com o número dedicado e testar
+reconexão/restauração reais. Textos locais antigos da tela precisam de ajuste pelo Claude.
 Para mudar o proxy com admin API desligada, validar
 o arquivo com `caddy validate` e usar `sudo systemctl restart caddy`.
 Não expor a porta 8787 nem apontar produção para HTTP/IP sem certificado.

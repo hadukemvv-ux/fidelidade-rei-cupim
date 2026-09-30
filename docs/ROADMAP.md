@@ -39,7 +39,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | | Tarefa | Dono |
 | --- | --- | --- |
 | [~] | Número separado ativo; responsável escolheu avaliar QR não oficial em teste isolado; operação permanente/custos ainda a decidir | Você |
-| [~] | QR WhatsApp: publicação autorizada, tela do Claude integrada e controle Oracle/HTTPS configurado só em Production; faltam pareamento persistente real e auditoria das transições; envio/OTP pendentes | Codex |
+| [~] | QR WhatsApp: publicado em 26a5743, status e geração de QR validados pelo superadmin em produção; faltam pareamento persistente real e auditoria das transições; envio/OTP pendentes | Codex |
 | [ ] | Ligar OTP de cadastro e testar | Codex |
 | [~] | Hospedagem WhatsApp: VM gratuita, DNS Registro.br e HTTPS Caddy validados; faltam teste conectado, backup/restauração reais e monitor externo | Codex, Você acessa a conta |
 | [ ] | Verificação de conta antiga com PIN e sem telefone comprovado | Codex |

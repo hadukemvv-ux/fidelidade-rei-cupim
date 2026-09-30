@@ -87,10 +87,17 @@ mídia, grupos, agendamento ou código OTP. Não existe botão/rota de envio no 
 
 Reserva criptografada precede o transporte. Cada destino admite um teste:
 novo UUID, chamadas simultâneas, reinício ou desvinculação não permitem repetir.
+Antes do envio, consultar somente o destino aprovado com `onWhatsApp` e usar
+seu endereço retornado; resposta ausente/ambígua/inesperada bloqueia o envio.
+Não remover o nono dígito do cadastro nem gerar o destino por tentativa.
+Se o responsável autorizar explicitamente outro ensaio após investigação,
+`WHATSAPP_QR_TEST_APPROVED_REQUEST_ID` no worker deve fixar um UUID novo:
+só esse ID admite uma tentativa adicional, inclusive após reinício, sem apagar
+registros anteriores. Não renovar o ID automaticamente ou por erro de rede.
 Resultado `accepted` significa aceito pelo transporte, não entregue/lido;
 `unknown` exige investigação e **nunca reenvio cego**. O registro limitado a 20
 reservas guarda UUID, HMAC do destino e estado, não telefone/texto.
-Ao encerrar, usar `WHATSAPP_QR_SEND_MODE=disabled`, remover a lista temporária,
+Ao encerrar, usar `WHATSAPP_QR_SEND_MODE=disabled`, remover a lista e o ID temporários,
 reiniciar e reconectar a sessão. Não apagar o registro para permitir novo envio.
 Modelos de verificação/cadastro/garçom em `src/lib/whatsappMessageCatalog.ts`
 são rascunhos testados, sem disparo automático ou integração operacional.

@@ -12,9 +12,10 @@ import { createTestSender, CONNECTION_TEST_TEXT } from './test-send.mjs';
 
 const recipient = '+5585988887777'; // Fictional fixture, not the authorized live phone.
 const env = { WHATSAPP_QR_SEND_MODE: 'test', WHATSAPP_QR_TEST_RECIPIENTS: recipient, WHATSAPP_QR_SESSION_KEY: 'ab'.repeat(32) };
-async function harness(directory, sendMessage = async () => ({ key: { id: 'fixture-id' } }), config = env) {
+async function harness(directory, sendMessage = async () => ({ key: { id: 'fixture-id' } }), config = env,
+  onWhatsApp = async number => [{ exists: true, jid: `${number.slice(1)}@s.whatsapp.net` }]) {
   const store = await openSessionStore({ directory, keyHex: env.WHATSAPP_QR_SESSION_KEY, initCredentials: () => ({ registered: false }) });
-  const socket = { ev: new EventEmitter(), sendMessage, end() {}, async logout() {} };
+  const socket = { ev: new EventEmitter(), sendMessage, onWhatsApp, end() {}, async logout() {} };
   const controller = createSessionController({ store, makeSocket: () => socket, restartRequired: 515, loggedOut: 401 });
   const sender = createTestSender({ env: config, store, controller, timeoutMs: 20 });
   await controller.command('connect');
@@ -23,9 +24,69 @@ async function harness(directory, sendMessage = async () => ({ key: { id: 'fixtu
 }
 
 test('test sender rejects default/commercial mode, empty list and malformed configuration', () => {
-  for (const config of [{}, { ...env, WHATSAPP_QR_SEND_MODE: 'production' }, { ...env, WHATSAPP_QR_TEST_RECIPIENTS: '' }, { ...env, WHATSAPP_QR_TEST_RECIPIENTS: recipient + ',bad' }]) {
+  for (const config of [{}, { ...env, WHATSAPP_QR_SEND_MODE: 'production' }, { ...env, WHATSAPP_QR_TEST_RECIPIENTS: '' }, { ...env, WHATSAPP_QR_TEST_RECIPIENTS: recipient + ',bad' }, { ...env, WHATSAPP_QR_TEST_APPROVED_REQUEST_ID: '' }, { ...env, WHATSAPP_QR_TEST_APPROVED_REQUEST_ID: 'bad' }]) {
     assert.equal(createTestSender({ env: config }).enabled, false);
   }
+});
+
+test('uses only the account address returned for the approved number, including the Brazilian ninth-digit mapping', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'cupim-resolve-test-'));
+  let h, calls = 0, lookups = 0;
+  const jid = '558588887777@s.whatsapp.net';
+  try {
+    h = await harness(directory, async (target, content) => {
+      calls++; assert.equal(target, jid); assert.deepEqual(content, { text: CONNECTION_TEST_TEXT });
+      return { key: { id: 'fixture' } };
+    }, env, async number => { lookups++; assert.equal(number, recipient); return [{ exists: true, jid }]; });
+    assert.deepEqual(await h.sender.send({ request_id: randomUUID(), recipient }), { status: 'accepted', duplicate: false });
+    assert.equal(calls, 1); assert.equal(lookups, 1);
+  } finally { await h?.controller.close(); await rm(directory, { recursive: true, force: true }); }
+});
+
+test('missing, ambiguous, unrelated, group, malformed and timed-out recipient lookups never send or reserve', async () => {
+  const direct = '5585988887777@s.whatsapp.net';
+  const lookups = [async () => [], async () => undefined, async () => [{ exists: false, jid: direct }],
+    async () => [{ exists: true, jid: direct }, { exists: true, jid: direct }],
+    async () => [{ exists: true, jid: '5585999999999@s.whatsapp.net' }],
+    async () => [{ exists: true, jid: '123@g.us' }], async () => [{ exists: true }],
+    async () => { throw new Error('private lookup failure'); }, () => new Promise(() => {})];
+  for (const lookup of lookups) {
+    const directory = await mkdtemp(join(tmpdir(), 'cupim-lookup-reject-'));
+    let h, calls = 0, reservations = 0;
+    try {
+      h = await harness(directory, async () => { calls++; }, env, lookup);
+      const reserve = h.store.reserveTestSend;
+      h.store.reserveTestSend = (...args) => { reservations++; return reserve(...args); };
+      await assert.rejects(h.sender.send({ request_id: randomUUID(), recipient }));
+      assert.equal(calls, 0); assert.equal(reservations, 0);
+    } finally { await h?.controller.close(); await rm(directory, { recursive: true, force: true }); }
+  }
+});
+
+test('explicit approved repeat preserves the old reservation and permits only its configured ID once across restart', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'cupim-approval-test-'));
+  const approvedId = randomUUID(), originalId = randomUUID();
+  let h, calls = 0;
+  const send = async () => { calls++; return { key: { id: 'fixture' } }; };
+  try {
+    h = await harness(directory, send);
+    await h.sender.send({ request_id: originalId, recipient });
+    await h.controller.close(); h = null;
+    const config = { ...env, WHATSAPP_QR_TEST_APPROVED_REQUEST_ID: approvedId };
+    h = await harness(directory, send, config);
+    await assert.rejects(h.sender.send({ request_id: randomUUID(), recipient }), /Invalid approved test request/);
+    const input = { request_id: approvedId, recipient };
+    const result = await Promise.all([h.sender.send(input), h.sender.send(input)]);
+    assert.deepEqual(result, [{ status: 'accepted', duplicate: false }, { status: 'accepted', duplicate: true }]);
+    await h.controller.close(); h = null;
+    h = await harness(directory, send, config);
+    assert.equal((await h.sender.send(input)).duplicate, true);
+    await h.controller.close(); h = null;
+    h = await harness(directory, send);
+    assert.equal((await h.sender.send({ request_id: originalId, recipient })).duplicate, true);
+    assert.equal((await h.sender.send({ request_id: randomUUID(), recipient })).duplicate, true);
+    assert.equal(calls, 2);
+  } finally { await h?.controller.close(); await rm(directory, { recursive: true, force: true }); }
 });
 test('one fixed message only, concurrent calls and new IDs cannot resend; ledger survives restart and unlink', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'cupim-send-test-'));

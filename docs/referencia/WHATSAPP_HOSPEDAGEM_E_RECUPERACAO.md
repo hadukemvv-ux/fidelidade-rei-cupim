@@ -1,6 +1,6 @@
 # WhatsApp: hospedagem, recuperação e migração
 
-Guia solicitado pelo responsável em 29/09/2026. Atualização em 30/09: **worker/HTTPS, pareamento e reinício/reconexão validados; teste não recebido pelo destinatário, endereço divergente confirmado; envio fechado**.
+Guia solicitado pelo responsável em 29/09/2026. Atualização em 30/09: **worker/HTTPS, pareamento/reinício e recebimento real confirmados; destino resolvido pelo WhatsApp; envio fechado**.
 Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 
 ## Para o responsável
@@ -120,14 +120,16 @@ VM, preservando sessão/chave e validando o destino antes de desligar a origem.
    Medir memória, disco e disponibilidade; acompanhar também notificações da Oracle.
 
 Em 30/09, piloto de mensagem fixa instalado no worker Oracle com destino aprovado.
-Um envio foi aceito pelo transporte, mas o responsável confirmou não recebimento.
+Um envio inicial foi aceito pelo transporte, mas o responsável informou não recebimento.
 Consulta real do único destinatário retornou endereço interno sem nono dígito,
-diferente do endereço montado no piloto. Resolver pelo WhatsApp antes do próximo
-envio, sem alterar cadastro/remover dígitos cegamente. Novo teste exige autorização;
-preservar a reserva anterior mesmo sem entrega confirmada.
-Modo de teste encerrado e destino temporário removido; gate interno retorna 503,
+diferente do endereço montado no piloto. Correção usa somente o endereço retornado
+pelo WhatsApp para o destino autorizado, sem alterar o telefone cadastrado.
+Responsável autorizou um novo ensaio e confirmou recebimento com print depois dele.
+Um UUID privado fixou a tentativa adicional; não há liberação por novo UUID arbitrário,
+retry de rede ou reinício. Os dois registros anteriores continuam preservados.
+Modo de teste encerrado, destino e autorização temporários removidos; gate interno retorna 503,
 rota pública retorna 404. Nenhum envio automático/OTP/campanha foi habilitado.
-O registro único criptografado foi preservado após reinício, sem outro QR.
+Os dois registros criptografados foram preservados após reinício, sem outro QR.
 Código permanece na branch de trabalho, não publicado na main da Vercel.
 Cópia de código, configuração e sessão em diretório privado de rollback na mesma VM
 não substitui backup externo nem ensaio de restauração. Não restaurar cópia anterior
@@ -182,8 +184,8 @@ Antes de OTP: fila persistente, limites antiabuso, reserva/expiração e revisã
 | Controle HTTPS real | 401 sem/token errado, 400 com Origin, 200 autenticado; demais rotas 404, HTTP→HTTPS 308; nenhum envio |
 | Autenticação na VM / isolamento | Sem token e token errado: 401; Origin presente: 400; autenticado: 200; somente loopback |
 | Reinício real do processo, sem pareamento | Aprovado: serviço ativo e controle autenticado após reinício limpo |
-| Reinício com número dedicado | Aprovado em 30/09: sessão recuperada sem QR, antes/depois do único teste manual |
-| Mensagem fixa manual | Destinatário confirmou não recebimento; consulta real encontrou endereço interno diferente; correção/novo ensaio pendentes, envio fechado |
+| Reinício com número dedicado | Aprovado em 30/09: sessão recuperada sem QR antes/depois dos testes manuais |
+| Mensagem fixa manual | Destino resolvido pelo WhatsApp; responsável confirmou recebimento com print após novo ensaio autorizado; envio fechado, dois registros preservados |
 | Backup/restauração real | Pendente |
 | Migração entre máquinas | Pendente |
 | Aviso externo de falha | Pendente |

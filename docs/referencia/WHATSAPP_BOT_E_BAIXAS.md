@@ -67,12 +67,12 @@ o processo precisa de máquina/serviço contínuo, credenciais privadas fora do
 Git, parada imediata e restrição de acesso ao QR.
 
 Atualização em 30/09: worker Oracle/HTTPS e painel superadmin publicados; número
-dedicado pareado e reconexão após reinício validada sem novo QR. Um teste manual
-fixo foi aceito pelo transporte para o destino pessoal autorizado; recebimento no
-celular negado pelo responsável posteriormente. Consulta real do único destino
-confirmou endereço interno diferente daquele montado pelo piloto; corrigir a
-resolução pelo WhatsApp, sem retirar dígitos indiscriminadamente. Envios ficaram desligados depois do teste,
-destino temporário removido e registro criptografado de não repetição preservado.
+dedicado pareado e reconexão após reinício validada sem novo QR. Primeiro envio
+foi informado como não recebido; consulta confirmou endereço interno divergente.
+Resolução pelo WhatsApp corrigida, sem alterar cadastro/remover dígitos cegamente.
+Responsável autorizou outro ensaio e confirmou recebimento com print depois dele.
+UUID privado limita a tentativa adicional; os dois registros foram preservados.
+Envios desligados depois do teste, destino/autorização temporários removidos.
 Rota de envio só em loopback; código do piloto está na branch, sem publicação na main.
 Modelos em `src/lib/whatsappMessageCatalog.ts` são apenas rascunhos, sem fila/gatilho.
 Não confundir aviso ao garçom com entrega/baixa ou conexão com telefone comprovado.

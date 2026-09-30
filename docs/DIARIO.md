@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**30/09/2026 — Codex** · `codex/whatsapp-mensagens`: resolução do destino via `onWhatsApp`, sem alterar telefone do cadastro; recebimento real confirmado pelo responsável e print após novo ensaio autorizado.
+UUID privado fixou só uma tentativa adicional; dois registros criptografados preservados após restart/reconexão, envio fechado (503), destino e autorização temporários removidos.
+104 testes do app + 20 worker e tipos OK; falha/ambiguidade de consulta bloqueia envio, nenhum retry cego ou exclusão do registro anterior.
+Sem publicação na main, campanha ou OTP; faltam fila/gatilhos, observabilidade das entregas e acesso administrativo entre redes.
+
 **30/09/2026 — Codex** · Diagnóstico do piloto `603a5f5`: responsável confirmou não recebimento; aceitação do transporte não comprovou entrega.
 Consulta real `onWhatsApp` do único destino reconheceu uma conta e retornou JID sem nono dígito, diferente do endereço usado pelo piloto; sem registrar telefone/JID nem novo envio.
 Worker reconectado após diagnóstico; gate de envio 503, registro anterior preservado e rota pública continua não exposta.

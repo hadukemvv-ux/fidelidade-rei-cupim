@@ -53,18 +53,20 @@ export async function openSessionStore({ directory, keyHex, initCredentials, cod
   }
   return {
     // A tiny pilot ledger, encrypted with the session. Never store phone/text.
-    // Keep it through unlinking; a new request ID must not resend the same test.
-    async reserveTestSend(id, recipientHash) {
+    // Keep it through unlinking; a new request ID alone cannot repeat a test.
+    // An explicitly approved repeat must match the private worker configuration.
+    async reserveTestSend(id, recipientHash, approvedRequestId) {
       if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id) || !/^[a-f0-9]{64}$/.test(recipientHash)) throw new Error('Invalid test reservation');
+      if (approvedRequestId !== undefined && approvedRequestId !== id) throw new Error('Invalid test approval');
       document.testSends ??= [];
       if (!Array.isArray(document.testSends) || document.testSends.length > 20 || document.testSends.some(row =>
         !row || typeof row.id !== 'string' || !/^[a-f0-9]{64}$/.test(row.recipientHash) || !['pending', 'accepted', 'unknown'].includes(row.status))) throw new Error('Invalid test ledger');
       const byId = document.testSends.find(row => row.id === id);
       if (byId && byId.recipientHash !== recipientHash) throw new Error('Test request conflict');
-      const existing = byId || document.testSends.find(row => row.recipientHash === recipientHash);
+      const existing = byId || (approvedRequestId === undefined ? document.testSends.find(row => row.recipientHash === recipientHash) : undefined);
       if (existing) return { reserved: false, status: existing.status === 'pending' ? 'unknown' : existing.status };
       if (document.testSends.length >= 20) throw new Error('Test limit reached');
-      document.testSends.push({ id, recipientHash, status: 'pending' });
+      document.testSends.push({ id, recipientHash, status: 'pending', ...(approvedRequestId ? { explicitlyApproved: true } : {}) });
       await persist();
       return { reserved: true };
     },

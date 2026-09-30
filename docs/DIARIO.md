@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**29/09/2026 — Codex** · Responsável autorizou publicar conexão QR; main atual integrada preservando a roleta do Claude, 100 testes + 11 worker e tipos OK.
+Vercel: três variáveis de controle como Secret, exclusivamente Production; chave de sessão permanece somente na Oracle, sem envios/OTP.
+Git lê OpenSSL do `.gitconfig` do usuário e push normal da branch passou; não prova ausência de falhas futuras.
+Pareamento/reconexão reais, auditoria de transições, backup/monitor e transporte de mensagens continuam pendentes.
+
 **29/09/2026 — Codex** · DNS `whatsapp.clubecupim.com.br` salvo e confirmado; site/e-mail preservados, sem upgrade pago.
 Caddy 2.11.4 oficial instalado, admin API/access log desligados; rotas restritas, worker segue em loopback e testes de autenticação aprovados.
 TCP 80/443 liberadas na VM/Oracle; certificado externo válido, controle HTTPS 401/400/200, demais rotas 404 e HTTP→HTTPS 308; 100 testes/tipos OK.

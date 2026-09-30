@@ -1,6 +1,6 @@
 # WhatsApp: hospedagem, recuperação e migração
 
-Guia solicitado pelo responsável em 29/09/2026. Estado: **worker e HTTPS implantados e validados; publicação no site e pareamento pendentes**.
+Guia solicitado pelo responsável em 29/09/2026. Estado: **worker e HTTPS validados; integração Production configurada/publicação autorizada, pareamento pendente**.
 Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 
 ## Para o responsável
@@ -8,7 +8,7 @@ Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 - O admin deverá mostrar conexão, última verificação e ação recomendada.
 - Uma queda não significa necessidade de migração: pode ser celular desvinculado,
   serviço parado, falha de rede, credencial ou limite do provedor.
-- O painel do Claude já foi integrado à branch, ainda sem publicação. Monitoramento externo
+- O painel do Claude foi integrado para publicação autorizada. Monitoramento externo
   e avisos de limite ainda não existem; não contar com alertas automáticos hoje.
 - Custo zero depende das cotas e disponibilidade do provedor. A Oracle pode
   recolher recursos gratuitos ociosos. Não gerar carga artificial para evitar isso.
@@ -84,8 +84,13 @@ rotas 404 e HTTP redireciona para HTTPS com 308. Cabeçalhos de cache bloqueiam
 armazenamento. Sem pareamento ou envio. Caddy ~13 MB e worker ~78 MB no cgroup,
 zero reinícios inesperados na consulta; consumo conectado ainda não validado.
 
-Próximo passo: integrar ao site com autorização de publicação, mantendo o token
-somente no backend; parear número dedicado e testar reconexão/restauração reais.
+Responsável autorizou publicação e configuração: `WHATSAPP_QR_CONTROL_ENABLED`,
+`WHATSAPP_QR_CONTROL_URL` e `WHATSAPP_QR_CONTROL_TOKEN` salvos na Vercel como
+Secret somente em Production. Nenhuma chave de sessão foi enviada à Vercel;
+Preview/Development não recebem o segredo de controle. Envios/OTP não habilitados.
+
+Próximo passo: conferir implantação no site, parear número dedicado e testar
+reconexão/restauração reais.
 Para mudar o proxy com admin API desligada, validar
 o arquivo com `caddy validate` e usar `sudo systemctl restart caddy`.
 Não expor a porta 8787 nem apontar produção para HTTP/IP sem certificado.

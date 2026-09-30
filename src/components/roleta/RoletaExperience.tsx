@@ -86,7 +86,7 @@ export default function RoletaExperience({ prizes, requestSpin, demo = false }: 
   const resultPhoto = result && !result.modo_teste ? prizePhoto(result.premio.nome, result.premio.imagem_url) : null;
 
   return <main className={`${styles.page} ${displayFont.variable} ${bodyFont.variable}`}>
-    <div className={styles.backdrop} aria-hidden="true"><Image src={ROLETA_BACKDROP.src} alt="" fill priority sizes="100vw" style={{ objectPosition: ROLETA_BACKDROP.position }} /></div>
+    <div className={styles.backdrop} aria-hidden="true"><Image src={ROLETA_BACKDROP.src} alt="" fill priority sizes="100vw" style={{ objectPosition: ROLETA_BACKDROP.position, transform: `scale(${ROLETA_BACKDROP.zoom})`, transformOrigin: ROLETA_BACKDROP.position }} /></div>
     <div className={styles.embers} aria-hidden="true">{Array.from({ length: 14 }, (_, index) => <i key={index} />)}</div>
     {flash && <div className={styles.flash} aria-hidden="true" />}
     <div className={styles.shell}>

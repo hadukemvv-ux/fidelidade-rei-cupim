@@ -3,9 +3,9 @@
  * public/roleta/ e ajustar aqui. Nenhum outro arquivo precisa mudar.
  */
 
-/** Fundo da página. Provisório: parte do cupim da foto da home, até chegar a foto do cupim trinchado
- * (destino previsto: '/roleta/fundo-cupim.webp'). `position` escolhe o enquadramento (x% y%). */
-export const ROLETA_BACKDROP = { src: '/images/home/hero-cupim.webp', position: '50% 90%' };
+/** Fundo da página: cupim trinchado na tábua (foto do responsável, 29/09/2026).
+ * `position` escolhe o ponto de foco (x% y%) e `zoom` aproxima esse ponto. */
+export const ROLETA_BACKDROP = { src: '/roleta/fundo-cupim.webp', position: '50% 40%', zoom: 1.45 };
 
 /**
  * Foto de cada prêmio pelo nome, enquanto a API não envia `imagem_url`.

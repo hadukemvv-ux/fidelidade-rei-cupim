@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**29/09/2026 — Codex** · Tela `claude/admin-whatsapp` integrada em `d7386e6`; guard de autenticação com mensagem neutra, sem mudar permissões.
+Oracle gratuita: A1 sem capacidade; E2.1.Micro criada, worker Node 24 instalado, sessão/chaves privadas e systemd, somente loopback; sem pareamento/envios.
+Testes reais: 401 sem/token errado, 400 com Origin, 200 autenticado antes/depois de restart limpo; ~49 MB em repouso, sem validar carga conectada.
+Guia de hospedagem atualizado a pedido do responsável; faltam DNS/HTTPS no Registro.br, auditoria de transições, pareamento persistente, backup e monitor. Não publicado na main.
+
 **29/09/2026 — Codex** · A pedido do responsável, guia `WHATSAPP_HOSPEDAGEM_E_RECUPERACAO.md` registra implantação gratuita inicial, recuperação, migração e evidências pendentes.
 Oracle Always Free é o ponto de partida; plano pago depende de decisão. Conta, máquina, HTTPS, monitor externo e backup real ainda não configurados.
 Guia diferencia testes simulados de pareamento/restauração reais; envio/OTP continuam pendentes. Nenhuma infraestrutura criada.

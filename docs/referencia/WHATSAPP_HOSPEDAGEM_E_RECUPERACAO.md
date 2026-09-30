@@ -1,6 +1,6 @@
 # WhatsApp: hospedagem, recuperação e migração
 
-Guia solicitado pelo responsável em 29/09/2026. Estado: **preparação**, não implantado.
+Guia solicitado pelo responsável em 29/09/2026. Estado: **worker implantado; integração HTTPS e pareamento pendentes**.
 Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 
 ## Para o responsável
@@ -8,7 +8,7 @@ Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 - O admin deverá mostrar conexão, última verificação e ação recomendada.
 - Uma queda não significa necessidade de migração: pode ser celular desvinculado,
   serviço parado, falha de rede, credencial ou limite do provedor.
-- O painel de conexão ainda depende da entrega do Claude. Monitoramento externo
+- O painel do Claude já foi integrado à branch, ainda sem publicação. Monitoramento externo
   e avisos de limite ainda não existem; não contar com alertas automáticos hoje.
 - Custo zero depende das cotas e disponibilidade do provedor. A Oracle pode
   recolher recursos gratuitos ociosos. Não gerar carga artificial para evitar isso.
@@ -18,10 +18,10 @@ Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 
 | Item | Estado |
 | --- | --- |
-| Conta Oracle / região / máquina | Pendente de acesso e disponibilidade |
+| Conta Oracle / região / máquina | Conta gratuita; São Paulo (`sa-saopaulo-1`); `clubecupim-whatsapp`, Ubuntu 24.04, E2.1.Micro (1 GB), disco 46,6 GB |
 | Plano e custo autorizado | Always Free, R$ 0 dentro das cotas |
 | Endereço HTTPS do serviço | Pendente; não usar localhost em produção |
-| Sessão e chave | Ainda não criadas para o piloto persistente |
+| Sessão e chave | Chave/token distintos criados na VM; nenhuma sessão WhatsApp real pareada nela |
 | Backup externo privado | Pendente de configurar e testar |
 | Último pareamento persistente real | Não realizado |
 | Última restauração real | Não realizada |
@@ -29,6 +29,52 @@ Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 
 Não escrever neste inventário telefone, token, chave, senha ou conteúdo do QR.
 As variáveis, permissões e o contrato da API estão no README.
+
+## Instalação realizada em 29/09/2026
+
+- A1.Flex (1 OCPU/6 GB) recusada por falta de capacidade em AD-1; E2.1.Micro
+  marcada Always Free foi criada e está rodando. Não houve upgrade da conta.
+- Rede exclusiva `clubecupim-whatsapp-vcn`, sub-rede pública, gateway e rota.
+  SSH por chave limitado ao IP administrativo atual; portas 80/443 ainda fechadas.
+  Se o IP do responsável mudar, atualizar somente a origem `/32` da regra SSH.
+- Node 24.21.0 x64 obtido do site oficial e SHA-256 verificado; dependências
+  do worker instaladas com `npm ci --omit=dev --ignore-scripts` pelo lockfile.
+- Código em `/opt/clubecupim/services/whatsapp-qr`; usuário sem login
+  `clubecupim-wa`; sessão em `/var/lib/clubecupim-whatsapp` (0700);
+  chaves em `/etc/clubecupim-whatsapp.env` (0600, root). Nunca imprimir esse arquivo.
+- Unidade `clubecupim-whatsapp.service`: inicia no boot, restart em falha limitado
+  a 3 tentativas/5 min, UMask 0077, sem privilégios adicionais, sistema/home
+  protegidos, escrita só no diretório de sessão, core dump desligado;
+  MemoryHigh=400 MB, MemoryMax=550 MB. Worker escuta **somente 127.0.0.1:8787**.
+- Chave SSH e host conhecido guardados fora do repositório na pasta local
+  `Documents/Codex/private-keys`; auxiliares de implantação em `Documents/Codex/oracle-tools`.
+  A chave operacional é `clubecupim-oracle-user`; não copiar para Git/chat.
+- Repouso sem conexão: cerca de 49 MB no cgroup, zero reinícios inesperados.
+  Isso **não** valida consumo com o WhatsApp conectado nem com envios.
+
+Diagnóstico sem segredos, via SSH autenticado:
+
+```sh
+sudo systemctl status clubecupim-whatsapp --no-pager
+sudo systemctl show clubecupim-whatsapp -p ActiveState -p MemoryCurrent -p NRestarts
+sudo journalctl -u clubecupim-whatsapp -n 20 --no-pager
+sudo ss -ltnp | grep ':8787'
+free -m
+df -h /
+```
+
+Parar de forma limpa: `sudo systemctl stop clubecupim-whatsapp`.
+Reiniciar: `sudo systemctl restart clubecupim-whatsapp`. O worker atual **não
+reconecta automaticamente**: depois do restart, consultar estado e usar Conectar
+no admin. A sessão salva deve ser reutilizada, mas isso aguarda ensaio real.
+Nunca remover `session.enc`/trocar a chave para resolver um erro de lock.
+Não coletar corpo do QR nem cabeçalhos de autorização nos diagnósticos.
+
+Próximo passo: criar DNS de `whatsapp.clubecupim.com.br` (zona no Registro.br),
+configurar proxy HTTPS com certificado válido e só então integrar ao site.
+Não expor a porta 8787 nem apontar produção para HTTP/IP sem certificado.
+E2.1.Micro não admite resize: aumento de capacidade exige migração para outra
+VM, preservando sessão/chave e validando o destino antes de desligar a origem.
 
 ## Implantação do piloto — Codex
 
@@ -98,7 +144,9 @@ teste aprovados, limites e tratamento de resultado incerto; depois ligar OTP.
 | QR temporário local | Responsável confirmou conexão; sem mensagens |
 | Sessão criptografada e reinício | Teste automatizado com dados fictícios aprovado |
 | Controle HTTP autenticado | Teste local com conexão simulada aprovado |
-| Hospedagem Oracle / HTTPS | Pendente |
+| Hospedagem Oracle / HTTPS | VM e worker implantados; DNS/HTTPS pendentes |
+| Autenticação na VM / isolamento | Sem token e token errado: 401; Origin presente: 400; autenticado: 200; somente loopback |
+| Reinício real do processo, sem pareamento | Aprovado: serviço ativo e controle autenticado após reinício limpo |
 | Reinício com número dedicado | Pendente |
 | Backup/restauração real | Pendente |
 | Migração entre máquinas | Pendente |

@@ -18,7 +18,7 @@ export async function requireOperationalActor(
 ): Promise<OperationalActor | NextResponse> {
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
   if (!token) {
-    return NextResponse.json({ error: "Faça login para acessar a validação de cupons." }, { status: 401 });
+    return NextResponse.json({ error: "Faça login para acessar esta operação." }, { status: 401 });
   }
 
   const { data: auth, error: authError } = await supabaseAdmin.auth.getUser(token);

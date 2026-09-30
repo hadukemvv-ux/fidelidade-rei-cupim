@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { prizePhoto } from '@/lib/prizeVisuals';
+import { prizePhoto, SHOW_PHOTOS_IN_WHEEL } from '@/lib/prizeVisuals';
 import { normalizeAngle, planStop, releaseVelocity, rotationAt, sectorAtRotation, type AngleSample, type StopPlan } from '@/lib/wheelPhysics';
 import styles from './PrizeWheel.module.css';
 
@@ -220,7 +220,9 @@ export default function PrizeWheel({ prizes, locked = false, onSpinStart, onFini
 
   return <div className={styles.stageWrap} data-phase={phase} data-locked={locked || undefined}>
     <div className={styles.stage}>
-      <span ref={pointerRef} className={styles.pointer} aria-hidden="true" />
+      <span ref={pointerRef} className={styles.pointer} aria-hidden="true">
+        <svg viewBox="0 0 48 64" width="48" height="64"><path d="M14 2h20v28h12L24 62 2 30h12z" /></svg>
+      </span>
       <div
         className={styles.touchArea}
         onPointerDown={onPointerDown}
@@ -233,30 +235,29 @@ export default function PrizeWheel({ prizes, locked = false, onSpinStart, onFini
         <div ref={wheelRef} className={styles.wheel}>
           {sectors.map((prize, index) => {
             const angle = index * SECTOR_SIZE + SECTOR_SIZE / 2;
-            const photo = allSame ? null : prizePhoto(prize.nome, prize.imagem_url);
             return <span className={styles.sector} key={index} style={{ transform: `rotate(${angle}deg)` }}>
               <span className={styles.sectorInner}>
-                {allSame ? <Image src="/logo.png" alt="" width={40} height={40} />
-                  : photo ? <Image className={styles.photo} src={photo} alt="" width={120} height={120} />
-                  : <span className={styles.emoji}>{prize.emoji}</span>}
-                {!allSame && <small>{prize.nome}</small>}
+                {allSame ? <Image src="/logo.png" alt="" width={36} height={36} /> : <>
+                  {SHOW_PHOTOS_IN_WHEEL && prizePhoto(prize.nome, prize.imagem_url) && <Image className={styles.photo} src={prizePhoto(prize.nome, prize.imagem_url) as string} alt="" width={96} height={96} />}
+                  <strong>{prize.nome}</strong>
+                </>}
               </span>
             </span>;
           })}
+          {Array.from({ length: SECTORS }, (_, index) => <i key={index} className={styles.peg} style={{ transform: `rotate(${index * SECTOR_SIZE}deg)` }} aria-hidden="true" />)}
         </div>
-        <span className={styles.lights} aria-hidden="true">{Array.from({ length: 18 }, (_, index) => <i key={index} style={{ transform: `rotate(${index * 20}deg)` }} />)}</span>
         <span className={styles.hub} aria-hidden="true"><Image src="/logo.png" alt="" width={60} height={60} /></span>
       </div>
     </div>
 
     <div className={styles.controls}>
       {phase === 'idle' && !locked && <>
-        <p className={styles.hint}>{hint || '👆 Arraste a roleta com o dedo'}</p>
-        <button type="button" className={styles.spinButton} onClick={() => startSpin(BUTTON_SPIN)}>GIRAR</button>
+        <p className={styles.hint}>{hint || 'Arraste a roleta com o dedo'}</p>
+        <button type="button" className={styles.spinButton} onClick={() => startSpin(BUTTON_SPIN)}>Girar</button>
       </>}
-      {phase === 'dragging' && <p className={styles.hint}>Solte com força!</p>}
+      {phase === 'dragging' && <p className={styles.hint}>Solte com força</p>}
       {phase === 'spinning' && <button type="button" className={styles.stopButton} onClick={() => { stopRequested.current = true; setStopPressed(true); }} disabled={stopPressed}>
-        {stopPressed ? 'PARANDO…' : 'PARAR'}
+        {stopPressed ? 'Parando…' : 'Parar'}
       </button>}
       {phase === 'stopping' && <p className={styles.suspense}>Vai parar em…</p>}
       <button type="button" className={styles.mute} onClick={() => setMuted((value) => !value)} aria-pressed={muted} aria-label={muted ? 'Ligar som' : 'Desligar som'}>{muted ? '🔇' : '🔊'}</button>

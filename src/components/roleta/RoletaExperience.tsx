@@ -4,7 +4,8 @@ import confetti from 'canvas-confetti';
 import Image from 'next/image';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import styles from '@/app/roleta/v2/roleta.module.css';
-import { prizePhoto } from '@/lib/prizeVisuals';
+import { prizePhoto, ROLETA_BACKDROP } from '@/lib/prizeVisuals';
+import { bodyFont, displayFont } from './fonts';
 import PrizeWheel, { type WheelPrize } from './PrizeWheel';
 
 export type SpinResult = {
@@ -21,16 +22,16 @@ type Props = {
   demo?: boolean;
 };
 
-const BRAND_COLORS = ['#dc251b', '#f2bb5f', '#fff1cb', '#ff7a1a', '#ffd784'];
+const EMBER_COLORS = ['#ff6a00', '#ff8c1a', '#ffb347', '#ffd27a', '#dc251b'];
 
+/** Faíscas de brasa: explodem do centro da roda e sobem, em vez de confete colorido. */
 function celebrate() {
-  const base = { colors: BRAND_COLORS, disableForReducedMotion: true, zIndex: 60 };
-  confetti({ ...base, particleCount: 170, spread: 110, startVelocity: 58, origin: { y: 0.42 }, scalar: 1.15 });
+  const base = { colors: EMBER_COLORS, shapes: ['circle' as const], disableForReducedMotion: true, zIndex: 60 };
+  confetti({ ...base, particleCount: 140, spread: 360, startVelocity: 32, gravity: 0.35, decay: 0.92, scalar: 0.55, ticks: 160, origin: { y: 0.5 } });
   window.setTimeout(() => {
-    confetti({ ...base, particleCount: 90, angle: 60, spread: 70, startVelocity: 65, origin: { x: 0, y: 0.75 } });
-    confetti({ ...base, particleCount: 90, angle: 120, spread: 70, startVelocity: 65, origin: { x: 1, y: 0.75 } });
-  }, 260);
-  window.setTimeout(() => confetti({ ...base, particleCount: 60, spread: 160, startVelocity: 30, origin: { y: 0.3 }, shapes: ['star'] }), 700);
+    confetti({ ...base, particleCount: 90, angle: 90, spread: 55, startVelocity: 55, gravity: 0.5, scalar: 0.45, ticks: 220, origin: { x: 0.3, y: 1 } });
+    confetti({ ...base, particleCount: 90, angle: 90, spread: 55, startVelocity: 55, gravity: 0.5, scalar: 0.45, ticks: 220, origin: { x: 0.7, y: 1 } });
+  }, 220);
   if ('vibrate' in navigator) navigator.vibrate?.([40, 60, 120]);
 }
 
@@ -84,42 +85,48 @@ export default function RoletaExperience({ prizes, requestSpin, demo = false }: 
 
   const resultPhoto = result && !result.modo_teste ? prizePhoto(result.premio.nome, result.premio.imagem_url) : null;
 
-  return <main className={styles.page}><div className={styles.shell}>
+  return <main className={`${styles.page} ${displayFont.variable} ${bodyFont.variable}`}>
+    <div className={styles.backdrop} aria-hidden="true"><Image src={ROLETA_BACKDROP.src} alt="" fill priority sizes="100vw" style={{ objectPosition: ROLETA_BACKDROP.position, transform: `scale(${ROLETA_BACKDROP.zoom})`, transformOrigin: ROLETA_BACKDROP.position }} /></div>
+    <div className={styles.embers} aria-hidden="true">{Array.from({ length: 14 }, (_, index) => <i key={index} />)}</div>
     {flash && <div className={styles.flash} aria-hidden="true" />}
-    <header className={styles.header}><Image src="/logo.png" alt="" width={36} height={36} /><span>O REI DO CUPIM <small>CLUBE CUPIM</small></span></header>
-    {demo && <p className={styles.demoBanner}>DEMONSTRAÇÃO · prêmios fictícios, nada é registrado</p>}
+    <div className={styles.shell}>
+      <header className={styles.header}>
+        <Image src="/logo.png" alt="" width={30} height={30} />
+        <span>O Rei do Cupim</span>
+        {demo && <em className={styles.demoPill} title="Prêmios fictícios. Nada é registrado.">Demonstração</em>}
+      </header>
 
-    {step !== 'result' && <section className={styles.hero}>
-      <p className={styles.eyebrow}>A ROLETA DO REI</p>
-      <h1>{step === 'form' ? <>Libere <em>seu giro.</em></> : <>É sua vez <em>de girar.</em></>}</h1>
-    </section>}
+      {step !== 'result' && <section className={styles.hero}>
+        <p className={styles.eyebrow}>Roleta do Rei</p>
+        <h1>{step === 'form' ? 'Libere seu giro' : 'Sua vez de girar'}</h1>
+      </section>}
 
-    {notice && <p className={styles.error} role="alert">{notice}</p>}
+      {notice && <p className={styles.error} role="alert">{notice}</p>}
 
-    {step !== 'result' && <div className={styles.game}>
-      <PrizeWheel prizes={sectors} locked={step === 'form'} onSpinStart={onSpinStart} onFinished={onFinished} onError={setNotice} />
-      {step === 'form' && <form className={styles.form} onSubmit={unlock}>
-        <label className={styles.phoneLabel}>Seu WhatsApp<input required inputMode="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="(85) 99999-9999" /></label>
-        <div className={styles.consentRow}><label className={styles.optIn}><input type="checkbox" checked={marketing} onChange={(event) => setMarketing(event.target.checked)} /><span>Receber ofertas no WhatsApp</span></label><button type="button" className={styles.learnMore} onClick={() => setPrivacyOpen(true)}>Saiba mais</button></div>
-        <button className={styles.spinButton} type="submit">LIBERAR ROLETA<span aria-hidden="true">🔥</span></button>
-        <small className={styles.privacy}>Um giro por QR. Ofertas são opcionais.</small>
-      </form>}
-    </div>}
+      {step !== 'result' && <div className={styles.game}>
+        <PrizeWheel prizes={sectors} locked={step === 'form'} onSpinStart={onSpinStart} onFinished={onFinished} onError={setNotice} />
+        {step === 'form' && <form className={styles.form} onSubmit={unlock}>
+          <label className={styles.phoneLabel}>Seu WhatsApp<input required inputMode="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="(85) 99999-9999" /></label>
+          <div className={styles.consentRow}><label className={styles.optIn}><input type="checkbox" checked={marketing} onChange={(event) => setMarketing(event.target.checked)} /><span>Quero receber ofertas no WhatsApp</span></label><button type="button" className={styles.learnMore} onClick={() => setPrivacyOpen(true)}>Saiba mais</button></div>
+          <button className={styles.spinButton} type="submit">Liberar roleta</button>
+          <small className={styles.privacy}>Um giro por QR. Ofertas são opcionais.</small>
+        </form>}
+      </div>}
 
-    {step === 'result' && result && <section className={styles.result} aria-live="polite">
-      <div className={styles.reveal}>
-        {result.modo_teste ? <Image className={styles.resultLogo} src="/logo.png" alt="" width={96} height={96} />
-          : resultPhoto ? <Image className={styles.resultPhoto} src={resultPhoto} alt={result.premio.nome} width={220} height={220} />
-          : <span className={styles.resultEmoji} aria-hidden="true">{result.premio.emoji}</span>}
-      </div>
-      <p className={styles.eyebrow}>{result.modo_teste ? 'SIMULAÇÃO CONCLUÍDA' : 'VOCÊ GANHOU'}</p>
-      <h2>{result.premio.nome}</h2>
-      {result.modo_teste ? <p className={styles.testWarning}>Teste do Clube — sem benefício para resgatar.</p> : <>
-        <p>{result.premio.descricao_vitoria}</p>
-        <div className={styles.coupon}><span>MOSTRE ESTE CÓDIGO À EQUIPE</span><strong>{result.cupom}</strong><small>Válido até {new Date(result.expira_em).toLocaleDateString('pt-BR')}.</small></div>
-      </>}
-    </section>}
+      {step === 'result' && result && <section className={styles.result} aria-live="polite">
+        <div className={styles.reveal}>
+          {resultPhoto ? <Image className={styles.resultPhoto} src={resultPhoto} alt={result.premio.nome} width={240} height={240} />
+            : <span className={styles.resultMark}><Image src="/logo.png" alt="" width={84} height={84} /></span>}
+        </div>
+        <p className={styles.eyebrow}>{result.modo_teste ? 'Simulação concluída' : 'Você ganhou'}</p>
+        <h2>{result.premio.nome}</h2>
+        {result.modo_teste ? <p className={styles.testWarning}>Teste do Clube — sem benefício para resgatar.</p> : <>
+          <p>{result.premio.descricao_vitoria}</p>
+          <div className={styles.coupon}><span>Mostre este código à equipe</span><strong>{result.cupom}</strong><small>Válido até {new Date(result.expira_em).toLocaleDateString('pt-BR')}</small></div>
+        </>}
+      </section>}
+    </div>
 
-    <dialog ref={privacyDialog} className={styles.privacyDialog} aria-labelledby="privacy-title" onClose={() => setPrivacyOpen(false)}><div className={styles.dialogInner}><button type="button" className={styles.closeDialog} aria-label="Fechar" onClick={() => setPrivacyOpen(false)}>×</button><p className={styles.eyebrow}>JOGUE COM TRANQUILIDADE</p><h2 id="privacy-title">Seu giro, suas escolhas</h2><p>Seu WhatsApp vincula o resultado a este QR. Cada QR dá direito a um giro.</p><p>Receber ofertas é opcional: só enviaremos promoções se você marcar a opção. Você poderá cancelar quando quiser.</p><a href="/privacidade" target="_blank" rel="noopener noreferrer">Ler o aviso de privacidade completo ↗</a><button type="button" className={styles.dialogButton} onClick={() => setPrivacyOpen(false)}>Entendi</button></div></dialog>
-  </div></main>;
+    <dialog ref={privacyDialog} className={styles.privacyDialog} aria-labelledby="privacy-title" onClose={() => setPrivacyOpen(false)}><div className={styles.dialogInner}><button type="button" className={styles.closeDialog} aria-label="Fechar" onClick={() => setPrivacyOpen(false)}>×</button><p className={styles.eyebrow}>Jogue com tranquilidade</p><h2 id="privacy-title">Seu giro, suas escolhas</h2><p>Seu WhatsApp vincula o resultado a este QR. Cada QR dá direito a um giro.</p><p>Receber ofertas é opcional: só enviaremos promoções se você marcar a opção. Você poderá cancelar quando quiser.</p><a href="/privacidade" target="_blank" rel="noopener noreferrer">Ler o aviso de privacidade completo ↗</a><button type="button" className={styles.dialogButton} onClick={() => setPrivacyOpen(false)}>Entendi</button></div></dialog>
+  </main>;
 }

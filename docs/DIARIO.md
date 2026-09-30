@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**30/09/2026 — Codex** · `codex/whatsapp-mensagens`: SSH temporário /32 ajustado; um teste manual fixo aceito pelo transporte, recebimento no celular ainda pendente.
+Piloto Oracle fechado após o envio: destino temporário removido, rota interna 503 e pública 404; registro criptografado único preservado após reinício/reconexão sem novo QR.
+Modelos de verificação/cadastro/garçom em rascunho; 104 testes do app + 17 worker e tipos OK, sem campanha/OTP ou publicação na main.
+Cópia privada local para rollback na VM não equivale a backup externo/restauração; faltam acesso entre redes, auditoria e fila/gatilhos reais.
+
 **29/09/2026 — Codex** · Conexão QR publicada com autorização em 26a5743; main integrada preservando a roleta do Claude, 100 testes + 11 worker e tipos OK.
 Vercel: três variáveis de controle como Secret, exclusivamente Production; chave de sessão permanece somente na Oracle, sem envios/OTP.
 Git lê OpenSSL do `.gitconfig` do usuário e push normal da branch passou; não prova ausência de falhas futuras.

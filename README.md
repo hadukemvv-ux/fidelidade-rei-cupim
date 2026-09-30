@@ -52,7 +52,8 @@ No Next local: `WHATSAPP_QR_CONTROL_ENABLED=true`,
 `WHATSAPP_QR_CONTROL_URL=http://127.0.0.1:8787` e o mesmo token de controle.
 Em produção, a URL precisa ser HTTPS, chegando a um processo contínuo por proxy
 privado; a Vercel não consegue acessar o localhost deste computador.
-Esta entrega não contrata hospedagem nem configura esse endpoint público.
+A implantação Oracle/HTTPS e os procedimentos de recuperação estão em
+[docs/referencia/WHATSAPP_HOSPEDAGEM_E_RECUPERACAO.md](docs/referencia/WHATSAPP_HOSPEDAGEM_E_RECUPERACAO.md).
 
 Contrato para a tela do Claude: `/api/admin/whatsapp/conexao`, somente superadmin,
 com `Authorization: Bearer <sessão Supabase>`. GET retorna
@@ -71,5 +72,25 @@ confirme que o processo anterior terminou antes de remover somente esse lock.
 Não apague `session.enc` para recuperar erros de chave. Se precisar revogar o
 vínculo, use também Aparelhos conectados no celular.
 
-Testes: `npm test` nessa pasta e `npm run test:unit` na raiz. Não há método de
-envio de mensagens, OTP nem importação de conversas nesse serviço.
+Testes: `npm test` nessa pasta e `npm run test:unit` na raiz. Por padrão não há
+envio; OTP, campanhas e importação de conversas continuam sem integração.
+
+### Envio manual fechado (somente piloto autorizado)
+
+No ambiente privado do **worker**, `WHATSAPP_QR_SEND_MODE=test` e
+`WHATSAPP_QR_TEST_RECIPIENTS` (lista E.164 aprovada, até três destinos) habilitam
+`POST /messages/test`, com o mesmo token de controle e corpo
+`{"request_id":"<UUID>","recipient":"<destino aprovado>"}`. Essa rota é somente
+loopback: **não acrescentar ao proxy público**, nem guardar destinos no Git.
+O worker aceita apenas a mensagem fixa de conexão; não recebe texto livre,
+mídia, grupos, agendamento ou código OTP. Não existe botão/rota de envio no Next.
+
+Reserva criptografada precede o transporte. Cada destino admite um teste:
+novo UUID, chamadas simultâneas, reinício ou desvinculação não permitem repetir.
+Resultado `accepted` significa aceito pelo transporte, não entregue/lido;
+`unknown` exige investigação e **nunca reenvio cego**. O registro limitado a 20
+reservas guarda UUID, HMAC do destino e estado, não telefone/texto.
+Ao encerrar, usar `WHATSAPP_QR_SEND_MODE=disabled`, remover a lista temporária,
+reiniciar e reconectar a sessão. Não apagar o registro para permitir novo envio.
+Modelos de verificação/cadastro/garçom em `src/lib/whatsappMessageCatalog.ts`
+são rascunhos testados, sem disparo automático ou integração operacional.

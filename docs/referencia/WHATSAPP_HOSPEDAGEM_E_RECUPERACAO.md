@@ -1,6 +1,6 @@
 # WhatsApp: hospedagem, recuperação e migração
 
-Guia solicitado pelo responsável em 29/09/2026. Estado: **worker/HTTPS e painel de produção validados; QR gerado, pareamento pendente**.
+Guia solicitado pelo responsável em 29/09/2026. Atualização em 30/09: **worker/HTTPS, pareamento e reinício/reconexão reais validados; um teste manual aceito pelo transporte, recebimento aguardando confirmação; envio fechado**.
 Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 
 ## Para o responsável
@@ -21,9 +21,9 @@ Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 | Conta Oracle / região / máquina | Conta gratuita; São Paulo (`sa-saopaulo-1`); `clubecupim-whatsapp`, Ubuntu 24.04, E2.1.Micro (1 GB), disco 46,6 GB |
 | Plano e custo autorizado | Always Free, R$ 0 dentro das cotas |
 | Endereço HTTPS do serviço | `https://whatsapp.clubecupim.com.br`; DNS e certificado válido confirmados, controle HTTPS autenticado testado |
-| Sessão e chave | Chave/token distintos criados na VM; nenhuma sessão WhatsApp real pareada nela |
+| Sessão e chave | Chave/token distintos na VM; sessão real do número dedicado criptografada, permissões privadas |
 | Backup externo privado | Pendente de configurar e testar |
-| Último pareamento persistente real | Não realizado |
+| Último pareamento persistente real | Confirmado em 29/09; reinício/reconexão sem novo QR validados em 30/09 |
 | Última restauração real | Não realizada |
 | Monitor externo / destino do alerta | Pendente de definir e configurar |
 
@@ -67,7 +67,7 @@ df -h /
 Parar de forma limpa: `sudo systemctl stop clubecupim-whatsapp`.
 Reiniciar: `sudo systemctl restart clubecupim-whatsapp`. O worker atual **não
 reconecta automaticamente**: depois do restart, consultar estado e usar Conectar
-no admin. A sessão salva deve ser reutilizada, mas isso aguarda ensaio real.
+no admin. A reutilização da sessão salva após reinício foi validada em 30/09.
 Nunca remover `session.enc`/trocar a chave para resolver um erro de lock.
 Não coletar corpo do QR nem cabeçalhos de autorização nos diagnósticos.
 
@@ -91,8 +91,8 @@ Preview/Development não recebem o segredo de controle. Envios/OTP não habilita
 
 Publicação `26a5743` confirmada Ready na Vercel: consulta sem login recusada com
 401/no-store; superadmin consultou estado desconectado e gerou QR no domínio real.
-Próximo passo: responsável escanear com o número dedicado e testar
-reconexão/restauração reais. Textos locais antigos da tela precisam de ajuste pelo Claude.
+Pareamento/reconexão foram confirmados posteriormente; restauração externa continua
+pendente. Textos locais antigos da tela precisam de ajuste pelo Claude.
 Para mudar o proxy com admin API desligada, validar
 o arquivo com `caddy validate` e usar `sudo systemctl restart caddy`.
 Não expor a porta 8787 nem apontar produção para HTTP/IP sem certificado.
@@ -119,9 +119,16 @@ VM, preservando sessão/chave e validando o destino antes de desligar a origem.
 8. Configurar verificação externa com alerta que não dependa deste WhatsApp.
    Medir memória, disco e disponibilidade; acompanhar também notificações da Oracle.
 
-O serviço atual só conecta/desconecta. Não há envio implementado nesse worker.
-Antes do primeiro envio: implementar transporte restrito aos destinatários de
-teste aprovados, limites e tratamento de resultado incerto; depois ligar OTP.
+Em 30/09, piloto de mensagem fixa instalado no worker Oracle com destino aprovado.
+Um envio foi aceito pelo transporte; entrega/leitura no celular não está comprovada.
+Modo de teste encerrado e destino temporário removido; gate interno retorna 503,
+rota pública retorna 404. Nenhum envio automático/OTP/campanha foi habilitado.
+O registro único criptografado foi preservado após reinício, sem outro QR.
+Código permanece na branch de trabalho, não publicado na main da Vercel.
+Cópia de código, configuração e sessão em diretório privado de rollback na mesma VM
+não substitui backup externo nem ensaio de restauração. Não restaurar cópia anterior
+ao envio como forma de apagar sua reserva e repetir uma mensagem.
+Antes de OTP: fila persistente, limites antiabuso, reserva/expiração e revisão do fluxo.
 
 ## Como interpretar um problema
 
@@ -162,7 +169,7 @@ teste aprovados, limites e tratamento de resultado incerto; depois ligar OTP.
 
 ## Registro dos ensaios
 
-| Ensaio | Resultado até 29/09/2026 |
+| Ensaio | Resultado até 30/09/2026 |
 | --- | --- |
 | QR temporário local | Responsável confirmou conexão; sem mensagens |
 | Sessão criptografada e reinício | Teste automatizado com dados fictícios aprovado |
@@ -171,7 +178,8 @@ teste aprovados, limites e tratamento de resultado incerto; depois ligar OTP.
 | Controle HTTPS real | 401 sem/token errado, 400 com Origin, 200 autenticado; demais rotas 404, HTTP→HTTPS 308; nenhum envio |
 | Autenticação na VM / isolamento | Sem token e token errado: 401; Origin presente: 400; autenticado: 200; somente loopback |
 | Reinício real do processo, sem pareamento | Aprovado: serviço ativo e controle autenticado após reinício limpo |
-| Reinício com número dedicado | Pendente |
+| Reinício com número dedicado | Aprovado em 30/09: sessão recuperada sem QR, antes/depois do único teste manual |
+| Mensagem fixa manual | Um envio aceito pelo transporte; recebimento ainda aguardando responsável; envio fechado após teste |
 | Backup/restauração real | Pendente |
 | Migração entre máquinas | Pendente |
 | Aviso externo de falha | Pendente |

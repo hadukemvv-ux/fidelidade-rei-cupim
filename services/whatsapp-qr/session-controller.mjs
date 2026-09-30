@@ -1,4 +1,4 @@
-// No message handlers or send method. The controller owns one socket and its QR.
+// No inbound message handlers. One socket, serialized control and isolated test sends.
 export function createSessionController({ makeSocket, store, restartRequired, loggedOut, now = Date.now }) {
   let socket;
   let status = 'disconnected';
@@ -50,6 +50,17 @@ export function createSessionController({ makeSocket, store, restartRequired, lo
   }
   return {
     snapshot,
+    async runConnected(action) {
+      const run = pending.then(async () => {
+        if (fatal || status !== 'connected' || !socket) throw new Error('Session unavailable');
+        const current = socket, id = generation;
+        const result = await action(current);
+        if (id !== generation || current !== socket || status !== 'connected') throw new Error('Session changed');
+        return result;
+      });
+      pending = run.catch(() => {});
+      return run;
+    },
     async command(action) {
       const run = pending.then(async () => {
         if (fatal) throw new Error('Session unavailable');

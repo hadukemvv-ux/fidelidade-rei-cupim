@@ -41,6 +41,10 @@ export async function openSessionStore({ directory, keyHex, initCredentials, cod
       try { await handle.writeFile(Buffer.concat([Buffer.from([1]), nonce, cipher.getAuthTag(), encrypted])); await handle.sync(); }
       finally { await handle.close(); }
       await rename(`${file}.tmp`, file);
+      if (process.platform !== 'win32') {
+        const parent = await open(directory, 'r');
+        try { await parent.sync(); } finally { await parent.close(); }
+      }
     });
     // Key writes happen inside Baileys too; notify the controller even when the
     // library consumes the rejected promise internally.
@@ -48,6 +52,29 @@ export async function openSessionStore({ directory, keyHex, initCredentials, cod
     return queue;
   }
   return {
+    // A tiny pilot ledger, encrypted with the session. Never store phone/text.
+    // Keep it through unlinking; a new request ID must not resend the same test.
+    async reserveTestSend(id, recipientHash) {
+      if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id) || !/^[a-f0-9]{64}$/.test(recipientHash)) throw new Error('Invalid test reservation');
+      document.testSends ??= [];
+      if (!Array.isArray(document.testSends) || document.testSends.length > 20 || document.testSends.some(row =>
+        !row || typeof row.id !== 'string' || !/^[a-f0-9]{64}$/.test(row.recipientHash) || !['pending', 'accepted', 'unknown'].includes(row.status))) throw new Error('Invalid test ledger');
+      const byId = document.testSends.find(row => row.id === id);
+      if (byId && byId.recipientHash !== recipientHash) throw new Error('Test request conflict');
+      const existing = byId || document.testSends.find(row => row.recipientHash === recipientHash);
+      if (existing) return { reserved: false, status: existing.status === 'pending' ? 'unknown' : existing.status };
+      if (document.testSends.length >= 20) throw new Error('Test limit reached');
+      document.testSends.push({ id, recipientHash, status: 'pending' });
+      await persist();
+      return { reserved: true };
+    },
+    async finishTestSend(id, status) {
+      if (!['accepted', 'unknown'].includes(status)) throw new Error('Invalid test result');
+      const row = document.testSends?.find(row => row.id === id);
+      if (!row || row.status !== 'pending') throw new Error('Missing test reservation');
+      row.status = status;
+      await persist();
+    },
     setFailureHandler(handler) { onFailure = handler; },
     state: {
       creds: document.creds,

@@ -35,9 +35,10 @@
   de 73h demonstra alerta sem exclusão. Recarregar/sair descarta o ensaio.
   Não lê clientes/catálogo real, não altera cupons nem chama a Saipos.
 
-Não existe ainda conexão QR ativa/persistente, worker de envio,
-processador de respostas, vínculo de celular do operador, painel de baixas reais,
-catálogo de itens físicos nem integração com o giro. Não habilitar o webhook
+Na etapa de 28/09 ainda não existia conexão QR ativa/persistente nem worker de envio;
+o piloto posterior está descrito abaixo. Continuam pendentes processador de respostas,
+vínculo de celular do operador, painel de baixas reais, catálogo de itens físicos
+e integração com o giro. Não habilitar o webhook
 antes de aplicar/revisar a inbox e concluir o consumidor autenticado.
 
 ## Escolha de canal — ensaio aprovado em 29/09
@@ -52,11 +53,11 @@ A decisão anterior de provedor oficial foi substituída apenas para este ensaio
 isolado. Baileys é integração não oficial e sua sessão tem acesso à conta.
 Não concluir que a Saipos usa essa tecnologia sem confirmação do fornecedor.
 `services/whatsapp-qr` é um pacote independente, sem importação pelo Next,
-sem envio de mensagens, sincronização de histórico ou integração com o cadastro/OTP.
+sem sincronização de histórico ou integração com o cadastro/OTP.
 O ensaio `connect.mjs` usa somente memória; o responsável confirmou pareamento.
 Para a continuação autorizada em 29/09, `serve.mjs` prepara persistência
 criptografada fora do Git e controle autenticado via API superadmin. Ainda precisa
-de configuração, tela do Claude e ensaio real de reinício/desconexão. Contrato e
+de configuração, tela do Claude e ensaios reais naquela etapa. Contrato e
 execução estão no README; o serviço não é iniciado pelo deploy da Vercel.
 
 O primeiro ensaio aprovado será isolado/local, sem leitura/importação de
@@ -64,6 +65,15 @@ conversas, sem grupos, sem campanhas, sem clientes reais e somente destinos
 de teste autorizados. Não rodar sessão permanente em Route Handler Vercel;
 o processo precisa de máquina/serviço contínuo, credenciais privadas fora do
 Git, parada imediata e restrição de acesso ao QR.
+
+Atualização em 30/09: worker Oracle/HTTPS e painel superadmin publicados; número
+dedicado pareado e reconexão após reinício validada sem novo QR. Um teste manual
+fixo foi aceito pelo transporte para o destino pessoal autorizado; recebimento no
+celular ainda aguardando confirmação. Envios ficaram desligados depois do teste,
+destino temporário removido e registro criptografado de não repetição preservado.
+Rota de envio só em loopback; código do piloto está na branch, sem publicação na main.
+Modelos em `src/lib/whatsappMessageCatalog.ts` são apenas rascunhos, sem fila/gatilho.
+Não confundir aviso ao garçom com entrega/baixa ou conexão com telefone comprovado.
 
 O núcleo de entregas independe do número, mas mudar remetente exige nova
 autenticação/sessão e revalidar permissões. Botões/listas de API oficial não

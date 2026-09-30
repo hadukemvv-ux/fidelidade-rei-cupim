@@ -1,6 +1,6 @@
 # Comece aqui — Clube Cupim em uma página
 
-Atualizado em 29/09/2026. Só muda quando o estado geral do projeto muda.
+Atualizado em 30/09/2026. Só muda quando o estado geral do projeto muda.
 
 ## O que é
 
@@ -17,7 +17,7 @@ Push/merge em `main` = deploy automático em produção.
 | Roleta V2 | **Piloto técnico** — prêmio interno de R$ 0, sem valor comercial |
 | Comanda (2 fotos + QR) e reconciliação Saipos | Funciona no piloto; cron diário confere, não credita nada |
 | Pontos/cashback pela Saipos | **Pausado** — processador antigo não pode ser religado |
-| Conexão WhatsApp QR | Worker Oracle/HTTPS e painel superadmin `/admin/whatsapp`; número separado ativo, falta pareamento persistente real |
+| Conexão WhatsApp QR | Worker Oracle/HTTPS e painel superadmin; número separado pareado, reinício/reconexão sem novo QR testados; um envio manual aceito, recebimento ainda aguardando confirmação; envios fechados |
 | Cadastro com WhatsApp OTP | Fluxo preparado, **desligado**; transporte de envio pelo QR ainda não implementado/testado |
 | Bot e baixas de prêmios | Só simulador em memória (`/admin/baixas`) |
 | Sorteio, roleta V1, garçons antigos | Legado pausado, a remover |

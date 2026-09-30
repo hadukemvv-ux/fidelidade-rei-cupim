@@ -1,6 +1,6 @@
 # WhatsApp: hospedagem, recuperação e migração
 
-Guia solicitado pelo responsável em 29/09/2026. Estado: **worker implantado; integração HTTPS e pareamento pendentes**.
+Guia solicitado pelo responsável em 29/09/2026. Estado: **worker e HTTPS implantados e validados; publicação no site e pareamento pendentes**.
 Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 
 ## Para o responsável
@@ -20,7 +20,7 @@ Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 | --- | --- |
 | Conta Oracle / região / máquina | Conta gratuita; São Paulo (`sa-saopaulo-1`); `clubecupim-whatsapp`, Ubuntu 24.04, E2.1.Micro (1 GB), disco 46,6 GB |
 | Plano e custo autorizado | Always Free, R$ 0 dentro das cotas |
-| Endereço HTTPS do serviço | Pendente; não usar localhost em produção |
+| Endereço HTTPS do serviço | `https://whatsapp.clubecupim.com.br`; DNS e certificado válido confirmados, controle HTTPS autenticado testado |
 | Sessão e chave | Chave/token distintos criados na VM; nenhuma sessão WhatsApp real pareada nela |
 | Backup externo privado | Pendente de configurar e testar |
 | Último pareamento persistente real | Não realizado |
@@ -35,7 +35,8 @@ As variáveis, permissões e o contrato da API estão no README.
 - A1.Flex (1 OCPU/6 GB) recusada por falta de capacidade em AD-1; E2.1.Micro
   marcada Always Free foi criada e está rodando. Não houve upgrade da conta.
 - Rede exclusiva `clubecupim-whatsapp-vcn`, sub-rede pública, gateway e rota.
-  SSH por chave limitado ao IP administrativo atual; portas 80/443 ainda fechadas.
+  SSH por chave limitado ao IP administrativo atual; TCP 80/443 liberadas no
+  firewall da VM e na lista de segurança Oracle; nenhuma regra pública para 8787.
   Se o IP do responsável mudar, atualizar somente a origem `/32` da regra SSH.
 - Node 24.21.0 x64 obtido do site oficial e SHA-256 verificado; dependências
   do worker instaladas com `npm ci --omit=dev --ignore-scripts` pelo lockfile.
@@ -70,8 +71,23 @@ no admin. A sessão salva deve ser reutilizada, mas isso aguarda ensaio real.
 Nunca remover `session.enc`/trocar a chave para resolver um erro de lock.
 Não coletar corpo do QR nem cabeçalhos de autorização nos diagnósticos.
 
-Próximo passo: criar DNS de `whatsapp.clubecupim.com.br` (zona no Registro.br),
-configurar proxy HTTPS com certificado válido e só então integrar ao site.
+DNS A de `whatsapp.clubecupim.com.br` salvo no Registro.br e confirmado no
+servidor autoritativo; registros do site/e-mail preservados. Caddy 2.11.4 instalado
+pelo repositório estável oficial, supervisionado pelo systemd; configuração em
+`/etc/caddy/Caddyfile`, admin API desligada, sem access log. Só encaminha as três
+rotas de controle ao worker; demais caminhos retornam 404. Regras TCP 80/443
+persistidas com netfilter-persistent, sem liberar 8787.
+
+HTTPS externo verificado com validação TLS normal: sem token/token errado 401,
+Origin com token correto 400, token correto 200 (desconectado, QR nulo), demais
+rotas 404 e HTTP redireciona para HTTPS com 308. Cabeçalhos de cache bloqueiam
+armazenamento. Sem pareamento ou envio. Caddy ~13 MB e worker ~78 MB no cgroup,
+zero reinícios inesperados na consulta; consumo conectado ainda não validado.
+
+Próximo passo: integrar ao site com autorização de publicação, mantendo o token
+somente no backend; parear número dedicado e testar reconexão/restauração reais.
+Para mudar o proxy com admin API desligada, validar
+o arquivo com `caddy validate` e usar `sudo systemctl restart caddy`.
 Não expor a porta 8787 nem apontar produção para HTTP/IP sem certificado.
 E2.1.Micro não admite resize: aumento de capacidade exige migração para outra
 VM, preservando sessão/chave e validando o destino antes de desligar a origem.
@@ -144,7 +160,8 @@ teste aprovados, limites e tratamento de resultado incerto; depois ligar OTP.
 | QR temporário local | Responsável confirmou conexão; sem mensagens |
 | Sessão criptografada e reinício | Teste automatizado com dados fictícios aprovado |
 | Controle HTTP autenticado | Teste local com conexão simulada aprovado |
-| Hospedagem Oracle / HTTPS | VM e worker implantados; DNS/HTTPS pendentes |
+| Hospedagem Oracle / HTTPS | VM, worker, DNS e Caddy instalados; ingress 80/443 e certificado externo aprovados nos testes |
+| Controle HTTPS real | 401 sem/token errado, 400 com Origin, 200 autenticado; demais rotas 404, HTTP→HTTPS 308; nenhum envio |
 | Autenticação na VM / isolamento | Sem token e token errado: 401; Origin presente: 400; autenticado: 200; somente loopback |
 | Reinício real do processo, sem pareamento | Aprovado: serviço ativo e controle autenticado após reinício limpo |
 | Reinício com número dedicado | Pendente |

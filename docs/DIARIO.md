@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**29/09/2026 — Codex** · DNS `whatsapp.clubecupim.com.br` salvo e confirmado; site/e-mail preservados, sem upgrade pago.
+Caddy 2.11.4 oficial instalado, admin API/access log desligados; rotas restritas, worker segue em loopback e testes de autenticação aprovados.
+TCP 80/443 liberadas na VM/Oracle; certificado externo válido, controle HTTPS 401/400/200, demais rotas 404 e HTTP→HTTPS 308; 100 testes/tipos OK.
+Guia atualizado a pedido do responsável; autorização de publicação, pareamento persistente, backup/monitor e envios ainda pendentes; main preservada.
+
 **29/09/2026 — Codex** · Tela `claude/admin-whatsapp` integrada em `d7386e6`; guard de autenticação com mensagem neutra, sem mudar permissões.
 Oracle gratuita: A1 sem capacidade; E2.1.Micro criada, worker Node 24 instalado, sessão/chaves privadas e systemd, somente loopback; sem pareamento/envios.
 Testes reais: 401 sem/token errado, 400 com Origin, 200 autenticado antes/depois de restart limpo; ~49 MB em repouso, sem validar carga conectada.

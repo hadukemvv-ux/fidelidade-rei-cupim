@@ -39,9 +39,9 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | | Tarefa | Dono |
 | --- | --- | --- |
 | [~] | Número separado ativo; responsável escolheu avaliar QR não oficial em teste isolado; operação permanente/custos ainda a decidir | Você |
-| [~] | QR WhatsApp: tela do Claude integrada à branch, worker implantado na Oracle e reinício sem pareamento testado; faltam HTTPS, pareamento persistente real e auditoria das transições; envio/OTP pendentes | Codex |
+| [~] | QR WhatsApp: tela do Claude integrada, worker/HTTPS Oracle testados; faltam publicação autorizada, pareamento persistente real e auditoria das transições; envio/OTP pendentes | Codex |
 | [ ] | Ligar OTP de cadastro e testar | Codex |
-| [~] | Hospedagem WhatsApp: Oracle Always Free E2.1.Micro ativa, worker privado supervisionado; A1 sem capacidade; faltam DNS no Registro.br/HTTPS, teste conectado, backup real e monitor externo | Codex, Você acessa a conta |
+| [~] | Hospedagem WhatsApp: VM gratuita, DNS Registro.br e HTTPS Caddy validados; faltam teste conectado, backup/restauração reais e monitor externo | Codex, Você acessa a conta |
 | [ ] | Verificação de conta antiga com PIN e sem telefone comprovado | Codex |
 | [ ] | Nova rotina de pontuação Saipos: só contas verificadas, idempotente, com relatório | Codex |
 | [ ] | Nível por janela móvel real de 90 dias (subir e descer) | Codex |

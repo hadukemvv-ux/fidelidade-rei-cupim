@@ -27,7 +27,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [~] | Backup Supabase **adiado expressamente pelo responsável** em 01/10: robô e 3 segredos prontos, banco recusa a senha em `SUPABASE_DB_URL`, sem restauração validada. Não retomar até ele pedir; caminho em `claude/backup-diagnostico` | Claude prepara, Você decide retomar |
 | [~] | Baixas reais: SQL `202609290001` aplicado em 01/10 com autorização; gates de entregas/comercial desligados; faltam concorrência real, catálogo/opções e painel | Codex |
 | [~] | Roleta interativa "Brasa Premium" com fotos de cerveja, sobremesa e entrega grátis; faltam fotos próprias de dindim e teste em celulares reais | Claude |
-| [~] | Prêmios no painel: API/tela publicadas em 91616d7 (Ready), SQL `202610010001`/`202610010002` aplicado em 01/10; campos conferidos, falta ensaio real de salvar foto/textos | Codex API, Claude UI |
+| [~] | Prêmios no painel: API/tela publicadas em 91616d7 (Ready), SQL `202610010001`/`202610010002` aplicado em 01/10; campos conferidos, falta ensaio real de salvar foto/textos; botão "Ver prévia da roleta" (sem gravar nada) | Codex API, Claude UI |
 | [x] | Telas do cliente (cadastro, login/pontos, PIN) com a identidade da roleta; foto do cupim trinchado na home | Claude |
 | [x] | Arte oficial (logo) e ícones do site/favicon — foguinho aplicado; pedir versão vetorial (SVG/PDF) para uso grande | Você envia a arte, Claude aplica |
 | [ ] | Piloto Saipos de 3 cenários: venda concluída, cancelada, mesa sem venda | Você executa, Codex analisa |

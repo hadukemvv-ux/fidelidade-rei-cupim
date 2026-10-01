@@ -19,7 +19,8 @@ type Props = {
   prizes: WheelPrize[];
   /** Registra o giro no servidor (ou simula, na demonstração) e devolve o prêmio sorteado. */
   requestSpin: (phone: string, marketing: boolean) => Promise<SpinResult>;
-  demo?: boolean;
+  /** Etiqueta no topo quando não é giro de verdade (demonstração ou prévia do painel). */
+  demo?: boolean | string;
 };
 
 const EMBER_COLORS = ['#ff6a00', '#ff8c1a', '#ffb347', '#ffd27a', '#dc251b'];
@@ -97,7 +98,7 @@ export default function RoletaExperience({ prizes, requestSpin, demo = false }: 
       <header className={styles.header}>
         <Image src="/logo.png" alt="" width={30} height={30} />
         <span>O Rei do Cupim</span>
-        {demo && <em className={styles.demoPill} title="Prêmios fictícios. Nada é registrado.">Demonstração</em>}
+        {demo && <em className={styles.demoPill} title="Nada é registrado.">{typeof demo === 'string' ? demo : 'Demonstração'}</em>}
       </header>
 
       {step !== 'result' && <section className={styles.hero}>

@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**01/10/2026 — Claude** · `claude/previa-roleta`: botão "Ver prévia da roleta" em `/admin/roleta` abre a mesma tela do cliente com os prêmios do painel (inclusive o que ainda não foi salvo), na faixa escolhida. Modos "Como está agora" (só ativos; resultado de simulação no modo teste) e "Catálogo completo" (rascunhos com peso). Sorteio só no navegador pelos pesos; sem sessão, QR, cupom ou gravação. Correção da foto do prêmio de teste publicada (7bbcbc0).
+
 **01/10/2026 — Claude** · Conferência em produção com login do responsável, só leitura: `/admin/roleta` mostra foto, "Trocar foto", nome e mensagem nos 7 prêmios; modo teste visível; sem login, PUT e upload respondem 401. Corrigido (branch `claude/premio-teste-sem-foto`): prêmio interno do piloto herdava a foto do cachorro por compartilhar o tipo `frete_gratis`. 181 testes OK.
 
 **01/10/2026 — Codex** · Responsável confirmou autorização própria, ciente do backup adiado: SQL `202609290001` → `202609300001` → `202610010001` → `202610010002` aplicado com sucesso no projeto correto e permissões conferidas.

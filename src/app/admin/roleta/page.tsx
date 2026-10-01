@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchAdmin } from "@/lib/adminFetch";
 import { prizePhoto } from "@/lib/prizeVisuals";
 import { useAdminCanChange } from "../adminAccessContext";
+import RoletaPreview from "./RoletaPreview";
 import styles from "./roleta-admin.module.css";
 
 type Prize = {
@@ -102,6 +103,8 @@ export default function AdminRoletaV2() {
   const [saving, setSaving] = useState<number | null>(null);
   const [selectedLevel, setSelectedLevel] = useState(0);
   const [view, setView] = useState<"pilot" | "drafts">("pilot");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const closePreview = useCallback(() => setPreviewOpen(false), []);
 
   const load = useCallback(async () => {
     const response = await fetchAdmin("/api/admin/premios", { cache: "no-store" });
@@ -155,7 +158,7 @@ export default function AdminRoletaV2() {
     <section className={styles.status}><span className={styles.statusDot} /><div><strong>{config?.v2_modo_teste ? "PILOTO EM MODO DE TESTE" : config?.v2_publicada ? "ROLETA PUBLICADA" : "ROLETA NÃO PUBLICADA"}</strong><p>{config?.v2_modo_teste ? "Somente o prêmio interno, sem valor comercial, pode entrar nos giros. Os demais continuam como rascunho." : "Confira cuidadosamente os prêmios ativos e suas chances antes de operar."}</p></div></section>
     {notice && <p className={styles.notice} role="status">{notice}</p>}
     <div className={styles.metrics}><article><span>PRÊMIO DE TESTE</span><strong>{pilot.filter((item) => item.ativo).length}</strong><small>ativo no piloto</small></article><article><span>CATÁLOGO COMERCIAL</span><strong>{drafts.length}</strong><small>rascunhos para revisar</small></article><article><span>FAIXAS DA CONTA</span><strong>06</strong><small>pesos independentes</small></article></div>
-    <div className={styles.toolbar}><div className={styles.tabs}><button type="button" className={view === "pilot" ? styles.activeTab : ""} onClick={() => setView("pilot")}>Em teste <span>{pilot.length}</span></button><button type="button" className={view === "drafts" ? styles.activeTab : ""} onClick={() => setView("drafts")}>Rascunhos <span>{drafts.length}</span></button></div><label>Simular chances na faixa <select value={selectedLevel} onChange={(event) => setSelectedLevel(Number(event.target.value))}>{levels.map((level, index) => <option key={level} value={index}>{level}</option>)}</select></label></div>
+    <div className={styles.toolbar}><div className={styles.tabs}><button type="button" className={view === "pilot" ? styles.activeTab : ""} onClick={() => setView("pilot")}>Em teste <span>{pilot.length}</span></button><button type="button" className={view === "drafts" ? styles.activeTab : ""} onClick={() => setView("drafts")}>Rascunhos <span>{drafts.length}</span></button></div><label>Simular chances na faixa <select value={selectedLevel} onChange={(event) => setSelectedLevel(Number(event.target.value))}>{levels.map((level, index) => <option key={level} value={index}>{level}</option>)}</select></label><button type="button" className={styles.previewButton} disabled={!prizes.length} onClick={() => setPreviewOpen(true)}>Ver prévia da roleta</button></div>
     {view === "drafts" && <p className={styles.guidance}>Estes são os tipos de prêmio antigos preservados para revisão. Alterar custo, validade ou pesos não os ativa. A publicação comercial dependerá de sua aprovação e de regras finais para descontos, frete e resgate.</p>}
     <section className={styles.cards}>{shown.map((prize) => <article className={styles.card} key={prize.id}>
       <div className={styles.cardTop}><span className={styles.emoji}>{prize.emoji}</span><div><span className={prize.ativo ? styles.activeBadge : styles.draftBadge}>{prize.ativo ? "ATIVO NO PILOTO" : "RASCUNHO"}</span><h2>{prize.nome}</h2><p>{prize.descricao_vitoria}</p></div><strong className={styles.chance}>{odds.has(prize.id) ? `${odds.get(prize.id)}%` : "—"}<small>CHANCE ATUAL</small></strong></div>
@@ -169,5 +172,6 @@ export default function AdminRoletaV2() {
       <div className={styles.cardFoot}><span>{prize.ativo ? "Aparece na roleta enquanto elegível" : "Não aparece na roleta"}</span>{canChange && <button type="button" disabled={saving !== null} onClick={() => save(prize)}>{saving === prize.id ? "Salvando…" : "Salvar alterações"}</button>}</div>
     </article>)}</section>
     {!canChange && <p className={styles.guidance}>Seu acesso é somente de consulta. A edição é restrita ao superadministrador.</p>}
+    {previewOpen && <RoletaPreview prizes={prizes} level={selectedLevel} levelLabel={levels[selectedLevel]} testMode={Boolean(config?.v2_modo_teste)} onClose={closePreview} />}
   </main>;
 }

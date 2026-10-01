@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import type { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { isPhoneInBetaList, normalizeBrazilPhone, privateIdentifier as hashIdentifier } from '@/lib/otpCore';
+import { qrOtpEnabled } from '@/lib/qrOtpCore';
 
 export { normalizeBrazilPhone } from '@/lib/otpCore';
 
@@ -29,7 +30,9 @@ export function getRequestIp(request: Request) {
 }
 
 export function isOtpEnabled() {
-  return process.env.WHATSAPP_OTP_ENABLED === 'true';
+  const provider = process.env.WHATSAPP_OTP_PROVIDER || 'twilio';
+  if (provider === 'qr') return qrOtpEnabled(process.env) && process.env.WHATSAPP_OTP_BETA_ONLY === 'true';
+  return provider === 'twilio' && process.env.WHATSAPP_OTP_ENABLED === 'true';
 }
 
 export function isBetaPhoneAllowed(phone: string) {
@@ -67,7 +70,7 @@ async function twilioPost(path: string, params: URLSearchParams) {
   });
 
   const data = (await response.json().catch(() => ({}))) as { sid?: string; status?: string; message?: string };
-  if (!response.ok) throw new Error(data.message || 'O provedor não conseguiu processar o código.');
+  if (!response.ok) throw new Error('O provedor não conseguiu processar o código.');
   return data;
 }
 

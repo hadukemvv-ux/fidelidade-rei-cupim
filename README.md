@@ -101,3 +101,51 @@ Ao encerrar, usar `WHATSAPP_QR_SEND_MODE=disabled`, remover a lista e o ID tempo
 reiniciar e reconectar a sessão. Não apagar o registro para permitir novo envio.
 Modelos de verificação/cadastro/garçom em `src/lib/whatsappMessageCatalog.ts`
 são rascunhos testados, sem disparo automático ou integração operacional.
+
+### OTP pelo QR — código preparado, não ativado
+
+A branch de OTP integra `/api/otp/solicitar` e `/api/otp/verificar` ao worker,
+sem mudar layout ou enviar mensagens em produção. Antes do piloto, revisar
+com Claude a migração `202609300001_whatsapp_otp_qr.sql`, testar concorrência
+com duas conexões PostgreSQL e obter autorização para aplicação/ativação.
+`npm run test:unit` usa PGlite **em memória**, sem credenciais ou banco real;
+`npm test --prefix services/whatsapp-qr` usa socket fictício. Testes isolados não
+provam cadastro/reset de PIN no celular nem concorrência entre conexões reais.
+
+Configuração futura (valores somente nos gerenciadores privados de segredos):
+
+- Next: `WHATSAPP_OTP_PROVIDER=qr`, `WHATSAPP_OTP_ENABLED=true`,
+  `WHATSAPP_QR_OTP_ENABLED=true`, `WHATSAPP_OTP_BETA_ONLY=true` e
+  `WHATSAPP_OTP_BETA_PHONES` com 1–3 destinos de teste aprovados.
+- Next: `WHATSAPP_QR_OTP_CODE_KEY` (32 bytes aleatórios em base64url),
+  `WHATSAPP_QR_OTP_URL` (origem HTTPS; HTTP loopback só em desenvolvimento).
+- Next e worker: `WHATSAPP_QR_OTP_TOKEN` (64 hex aleatórios), distinto do token
+  de controle, chave de sessão e chave do código. A chave de código fica só no Next.
+- Worker: `WHATSAPP_QR_OTP_ENABLED=true` e `WHATSAPP_QR_OTP_RECIPIENTS` com os
+  mesmos destinos em E.164 (`+55` + DDD + telefone). O modo de teste fixo continua
+  desligado; não é preciso habilitar `WHATSAPP_QR_SEND_MODE` para OTP.
+
+O worker não precisa da senha/chave de serviço do Supabase. `POST /messages/otp`
+usa **token próprio**, corpo estrito `{request_id, recipient, code, expires_at}`,
+512 bytes, sem Origin, apenas mensagem fixa com código de seis dígitos. A rota
+existe só em loopback por enquanto: **o Caddy atual não a publica**. A liberação
+HTTPS dessa rota será uma implantação separada autorizada; não expor outras
+rotas, texto livre ou `8787` público, nem colocar token no navegador.
+
+Código válido por 10 minutos desde a reserva. O banco guarda HMAC vinculado ao
+UUID, conta todas as reservas (inclusive falhas), limita telefone/IP/24h e cinco
+palpites. A confirmação é transacional e emite autorização de cadastro/reset
+de uso único, pelo cookie HttpOnly já existente. Reenvio explícito substitui
+o código anterior do mesmo propósito; nunca retentar automaticamente um envio.
+O worker mantém ledger criptografado separado: UUID, HMAC do conteúdo/destino,
+horário e estado, sem telefone/código/texto em claro. Reserva precede `sendMessage`,
+inclusive sob chamadas simultâneas; pendência/timeout não podem ser reenviados
+após restart. Tetos do piloto: 60s, 3/telefone/hora, 30 em 24h, 1.000 registros;
+ao atingir o cap, bloquear e revisar retenção, **não apagar para repetir envio**.
+
+Contrato adicional para Claude: solicitar retorna `envio: 'aceito' | 'indeterminado'`.
+Nenhum deles comprova entrega. Em `indeterminado`, permitir conferir o código
+caso ele chegue, avisar que não há confirmação e respeitar o cooldown; não mostrar
+“enviado com sucesso” nem repetir a requisição automaticamente. O identificador
+da solicitação e código entram na confirmação, nunca em logs/analytics.
+OTP não concede consentimento promocional e não ativa avisos a garçons/campanhas.

@@ -3,7 +3,7 @@ import { createHmac } from 'node:crypto';
 export const CONNECTION_TEST_TEXT = 'Clube Cupim: conexão de teste funcionando. Nenhuma campanha foi ativada.';
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 
-async function resolveRecipient(socket, recipient, timeoutMs) {
+export async function resolveRecipient(socket, recipient, timeoutMs) {
   let timer;
   try {
     // Query only the supplied, allowlisted number. Never probe nearby numbers.

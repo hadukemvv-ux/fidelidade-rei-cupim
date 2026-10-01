@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**30/09/2026 — Codex** · `codex/whatsapp-otp`: OTP QR fechado (1–3 destinos), token separado, ledger persistente sem replay e confirmação/grant transacionais; Twilio preservado como padrão desligado.
+Migração `202609300001` preparada: falhas contam na quota; código com HMAC/10min/5 tentativas, propósito/telefone vinculados, reenvio invalida anterior e grants exclusivos de serviço.
+129 testes do app (PGlite/HTTP com socket fictício), 28 worker, tipos e lint OK; nenhuma mensagem, SQL em produção, campanha, deploy ou mudança visual nesta etapa.
+Pendentes revisão Claude, concorrência com duas conexões reais, UI para envio indeterminado e implantação/piloto celular autorizados; README traz contrato/configuração sem segredos.
+
 **30/09/2026 — Codex** · `codex/whatsapp-mensagens`: resolução do destino via `onWhatsApp`, sem alterar telefone do cadastro; recebimento real confirmado pelo responsável e print após novo ensaio autorizado.
 UUID privado fixou só uma tentativa adicional; dois registros criptografados preservados após restart/reconexão, envio fechado (503), destino e autorização temporários removidos.
 104 testes do app + 20 worker e tipos OK; falha/ambiguidade de consulta bloqueia envio, nenhum retry cego ou exclusão do registro anterior.

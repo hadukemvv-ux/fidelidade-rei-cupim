@@ -52,6 +52,37 @@ export async function openSessionStore({ directory, keyHex, initCredentials, cod
     return queue;
   }
   return {
+    // OTP ledger is separate from the fixed-test ledger and contains no code,
+    // phone or text. Fail closed at the pilot cap; no automatic deletion.
+    async reserveOtpSend(id, fingerprint, phoneHash, nowMs) {
+      if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(id) ||
+        !/^[a-f0-9]{64}$/.test(fingerprint) || !/^[a-f0-9]{64}$/.test(phoneHash) || !Number.isFinite(nowMs)) throw new Error('Invalid OTP reservation');
+      document.otpSends ??= [];
+      const rows = document.otpSends;
+      if (!Array.isArray(rows) || rows.length > 1000 || rows.some(row => !row ||
+        typeof row.id !== 'string' || !/^[a-f0-9]{64}$/.test(row.fingerprint) || !/^[a-f0-9]{64}$/.test(row.phoneHash) ||
+        !Number.isFinite(row.createdAt) || !['pending', 'accepted', 'unknown'].includes(row.status))) throw new Error('Invalid OTP ledger');
+      const existing = rows.find(row => row.id === id);
+      if (existing) {
+        if (existing.fingerprint !== fingerprint || existing.phoneHash !== phoneHash) throw new Error('OTP conflict');
+        return { reserved: false, status: existing.status === 'pending' ? 'unknown' : existing.status };
+      }
+      // Same hard limits on the worker even if the upstream service misbehaves.
+      const recent = rows.filter(row => row.createdAt > nowMs - 86_400_000);
+      const phoneRows = recent.filter(row => row.phoneHash === phoneHash);
+      if (rows.length >= 1000 || recent.length >= 30 ||
+        phoneRows.filter(row => row.createdAt > nowMs - 3_600_000).length >= 3 ||
+        phoneRows.some(row => row.createdAt > nowMs - 60_000)) throw new Error('OTP limit');
+      rows.push({ id, fingerprint, phoneHash, createdAt: nowMs, status: 'pending' });
+      await persist();
+      return { reserved: true };
+    },
+    async finishOtpSend(id, status) {
+      const row = document.otpSends?.find(row => row.id === id);
+      if (!row || row.status !== 'pending' || !['accepted', 'unknown'].includes(status)) throw new Error('Invalid OTP result');
+      row.status = status;
+      await persist();
+    },
     // A tiny pilot ledger, encrypted with the session. Never store phone/text.
     // Keep it through unlinking; a new request ID alone cannot repeat a test.
     // An explicitly approved repeat must match the private worker configuration.

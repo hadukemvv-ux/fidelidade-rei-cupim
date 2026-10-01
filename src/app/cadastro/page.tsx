@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useEffect } from 'react';
 import WhatsappOtpVerification from '@/components/WhatsappOtpVerification';
+import { brandFontClass } from '@/components/brandFonts';
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
@@ -142,7 +143,7 @@ export default function CadastroPage() {
   }
 
   return (
-    <main className="signup-page">
+    <main className={`signup-page ${brandFontClass}`}>
       <section className="signup-promise" aria-labelledby="signup-title">
         <Image src="/images/home/hero-cupim.webp" alt="Cupim assado na brasa" fill priority sizes="(max-width: 899px) 100vw, 48vw" />
         <div className="signup-promise-shade" />

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { brandFontClass } from '@/components/brandFonts';
 import { CUSTO_ENTREGA_GRATIS_PONTOS, INTERVALO_ENTREGA_GRATIS_DIAS } from '@/lib/fidelidade-rules';
 
 type Feedback = { type: 'success' | 'error'; text: string } | null;
@@ -150,11 +151,11 @@ export default function ResgatePage() {
     }
   }
 
-  if (restoringSession) return <main className="club-loading" aria-live="polite"><Image src="/logo.png" alt="" width={76} height={76} priority /><span>Acendendo a brasa...</span></main>;
+  if (restoringSession) return <main className={`club-loading ${brandFontClass}`} aria-live="polite"><Image src="/logo.png" alt="" width={76} height={76} priority /><span>Acendendo a brasa...</span></main>;
 
   if (!dadosCliente) {
     return (
-      <main className="club-login-page">
+      <main className={`club-login-page ${brandFontClass}`}>
         <div className="club-login-photo"><Image src="/images/home/hero-cupim.webp" alt="Cupim assado na brasa" fill priority sizes="(max-width: 799px) 100vw, 50vw" /></div>
         <section className="club-login-content" aria-labelledby="club-login-title">
           <Link href="/" className="club-login-brand" aria-label="Voltar ao início"><Image src="/logo.png" alt="" width={52} height={52} /><span>O Rei do Cupim</span></Link>
@@ -189,7 +190,7 @@ export default function ResgatePage() {
   return (
     <div className="club-page">
       <header className="club-header"><Link href="/" className="club-brand"><Image src="/logo.png" alt="" width={44} height={44} /><span><small>CLUBE</small><strong>O Rei do Cupim</strong></span></Link><button type="button" onClick={sair} className="club-logout">Sair</button></header>
-      <main className="club-dashboard">
+      <main className={`club-dashboard ${brandFontClass}`}>
         {feedback && <div className={`club-feedback ${feedback.type}`} role="status">{feedback.text}</div>}
         <section className="club-overview" aria-labelledby="welcome-title">
           <div className="club-welcome"><p>Que bom ter você de volta,</p><h1 id="welcome-title">{firstName(dadosCliente.cliente.nome)}<em>.</em></h1><span>Seu próximo benefício já está mais perto.</span></div>

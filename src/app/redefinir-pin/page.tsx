@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
 import WhatsappOtpVerification from '@/components/WhatsappOtpVerification';
+import { brandFontClass } from '@/components/brandFonts';
 
 function digits(value: string) {
   return value.replace(/\D/g, '');
@@ -51,8 +52,8 @@ export default function RedefinirPinPage() {
   }
 
   return (
-    <main className="portal-page portal-static min-h-screen bg-[#280404] px-5 py-12 text-white">
-      <div className="mx-auto max-w-md rounded-2xl border border-[#c5a059]/30 bg-[#4d0808] p-7 shadow-2xl">
+    <main className={`portal-page portal-static min-h-screen bg-[#130b09] px-5 py-12 text-white ${brandFontClass}`}>
+      <div className="mx-auto max-w-md rounded-2xl border border-[#c5a059]/30 bg-[#1e1411] p-7 shadow-2xl">
         <h1 className="text-center text-2xl font-black text-[#c5a059]">RECUPERAR PIN</h1>
         <p className="mb-6 mt-2 text-center text-sm text-zinc-300">
           Uma única confirmação pelo WhatsApp protege seus pontos. Depois, volte a entrar normalmente com o novo PIN.
@@ -76,7 +77,7 @@ export default function RedefinirPinPage() {
                 onChange={(event) => setTelefone(formatPhone(event.target.value))}
                 inputMode="tel"
                 placeholder="(85) 9XXXX-XXXX"
-                className="w-full rounded-lg border border-[#c5a059]/30 bg-[#280404] px-4 py-3"
+                className="w-full rounded-lg border border-[#c5a059]/30 bg-[#0c0a09] px-4 py-3"
               />
             </div>
 
@@ -90,7 +91,7 @@ export default function RedefinirPinPage() {
                   inputMode="numeric"
                   type="password"
                   placeholder="Novo PIN de 4 números"
-                  className="w-full rounded-lg border border-[#c5a059]/30 bg-[#280404] px-4 py-3"
+                  className="w-full rounded-lg border border-[#c5a059]/30 bg-[#0c0a09] px-4 py-3"
                 />
                 <input
                   value={confirmacao}
@@ -98,7 +99,7 @@ export default function RedefinirPinPage() {
                   inputMode="numeric"
                   type="password"
                   placeholder="Repita o novo PIN"
-                  className="w-full rounded-lg border border-[#c5a059]/30 bg-[#280404] px-4 py-3"
+                  className="w-full rounded-lg border border-[#c5a059]/30 bg-[#0c0a09] px-4 py-3"
                 />
               </>
             )}

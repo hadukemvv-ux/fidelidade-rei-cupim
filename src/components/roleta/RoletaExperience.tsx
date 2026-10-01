@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import styles from '@/app/roleta/v2/roleta.module.css';
 import { prizeNotes, prizePhoto, ROLETA_BACKDROP } from '@/lib/prizeVisuals';
-import { bodyFont, displayFont } from './fonts';
+import { bodyFont, displayFont } from '@/components/brandFonts';
 import PrizeWheel, { type WheelPrize } from './PrizeWheel';
 
 export type SpinResult = {

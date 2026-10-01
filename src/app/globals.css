@@ -991,3 +991,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
   background: #991b1b !important;
   color: #fff !important;
 }
+
+/* Telas do cliente com a identidade "Brasa Premium" (fontes da roleta). A home mantém Impact/Arial. */
+.brand-fonts { font-family: var(--font-body), Arial, Helvetica, sans-serif; }
+.brand-fonts h1, .brand-fonts h2, .brand-fonts h3 { font-family: var(--font-display), 'Arial Narrow', Arial, sans-serif; letter-spacing: .01em; }

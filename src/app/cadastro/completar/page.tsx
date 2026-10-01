@@ -1,9 +1,10 @@
 import Link from 'next/link';
+import { brandFontClass } from '@/components/brandFonts';
 
 export default function CompletarCadastroPage() {
   return (
-    <div className="portal-page portal-static min-h-screen bg-[#280404] text-white px-6 py-16 flex items-center justify-center">
-      <div className="w-full max-w-md bg-[#4d0808] p-8 rounded-2xl border border-[#c5a059]/30 text-center shadow-2xl">
+    <div className={`portal-page portal-static min-h-screen bg-[#130b09] text-white px-6 py-16 flex items-center justify-center ${brandFontClass}`}>
+      <div className="w-full max-w-md bg-[#1e1411] p-8 rounded-2xl border border-[#c5a059]/30 text-center shadow-2xl">
         <h1 className="text-2xl font-black mb-4 text-[#c5a059]">
           Confirmação necessária
         </h1>

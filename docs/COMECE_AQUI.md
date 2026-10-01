@@ -32,7 +32,7 @@ Revisado pelos dois agentes; responsável autorizou publicação e as quatro mig
 
 | Branch | O que traz |
 | --- | --- |
-| `claude/consolidacao` + `claude/foto-entrega` | **Duas frentes integradas** em `codex/publicacao-consolidada` para publicação autorizada: OTP fechado e diagnóstico de relógio; estrutura de baixas reais; troca de foto e de nome/mensagem pelo painel; roleta por `id`/`tipo` e foto de entrega grátis |
+| `claude/consolidacao` + `claude/foto-entrega` | **Duas frentes publicadas na main** em 91616d7, deploy Ready conferido: OTP fechado e diagnóstico de relógio; estrutura de baixas reais; troca de foto e de nome/mensagem pelo painel; roleta por `id`/`tipo` e foto de entrega grátis |
 | (origens) | `codex/whatsapp-otp` (5ec320c) e `claude/premios-textos` (b7cd04e), preservadas |
 
 Conferência do banco: roleta em modo teste; zero prêmios comerciais ativos; entregas `habilitado=false` e `permitir_comercial=false`; RPCs restritas ao serviço. **Não ativar/enviar OTP nem piloto sem nova autorização**; implantação do worker não é feita pelo deploy da Vercel.

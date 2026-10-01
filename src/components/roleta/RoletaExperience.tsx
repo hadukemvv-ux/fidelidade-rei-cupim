@@ -68,7 +68,11 @@ export default function RoletaExperience({ prizes, requestSpin, demo = false }: 
     setNotice('');
     const winning = await requestSpin(phone, marketing);
     pending.current = winning;
-    const matches = sectors.flatMap((prize, index) => (prize.nome === winning.premio.nome ? [index] : []));
+    // Pelo ID quando a API envia (nome é editável e pode repetir); pelo nome só como reserva.
+    const sameId = winning.premio.id != null;
+    const matches = sectors.flatMap((prize, index) => (
+      (sameId ? prize.id === winning.premio.id : prize.nome === winning.premio.nome) ? [index] : []
+    ));
     if (matches.length) return matches[Math.floor(Math.random() * matches.length)];
     const index = Math.floor(Math.random() * sectors.length);
     setOverride({ index, prize: winning.premio });
@@ -83,7 +87,7 @@ export default function RoletaExperience({ prizes, requestSpin, demo = false }: 
     window.setTimeout(() => { setResult(winning); setStep('result'); setFlash(false); }, 650);
   }
 
-  const resultPhoto = result && !result.modo_teste ? prizePhoto(result.premio.nome, result.premio.imagem_url) : null;
+  const resultPhoto = result && !result.modo_teste ? prizePhoto(result.premio) : null;
 
   return <main className={`${styles.page} ${displayFont.variable} ${bodyFont.variable}`}>
     <div className={styles.backdrop} aria-hidden="true"><Image src={ROLETA_BACKDROP.src} alt="" fill priority sizes="100vw" style={{ objectPosition: ROLETA_BACKDROP.position, transform: `scale(${ROLETA_BACKDROP.zoom})`, transformOrigin: ROLETA_BACKDROP.position }} /></div>
@@ -122,8 +126,8 @@ export default function RoletaExperience({ prizes, requestSpin, demo = false }: 
         <h2>{result.premio.nome}</h2>
         {result.modo_teste ? <p className={styles.testWarning}>Teste do Clube — sem benefício para resgatar.</p> : <>
           <p>{result.premio.descricao_vitoria}</p>
-          {prizeNotes(result.premio.nome).length > 0 && <ul className={styles.prizeNotes}>
-            {prizeNotes(result.premio.nome).map((note) => <li key={note}>{note}</li>)}
+          {prizeNotes(result.premio).length > 0 && <ul className={styles.prizeNotes}>
+            {prizeNotes(result.premio).map((note) => <li key={note}>{note}</li>)}
           </ul>}
           {resultPhoto && <small className={styles.photoNote}>Foto ilustrativa.</small>}
           <div className={styles.coupon}><span>Mostre este código à equipe</span><strong>{result.cupom}</strong><small>Válido até {new Date(result.expira_em).toLocaleDateString('pt-BR')}</small></div>

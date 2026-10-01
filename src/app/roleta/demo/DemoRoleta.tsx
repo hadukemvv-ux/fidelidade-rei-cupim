@@ -4,12 +4,12 @@ import RoletaExperience, { type SpinResult } from '@/components/roleta/RoletaExp
 
 // Prêmios fictícios para ensaiar a experiência. Nada é enviado ao servidor.
 const PRIZES = [
-  { nome: 'Saideira', emoji: '🍺', descricao_vitoria: 'Você ganhou uma cerveja.' },
-  { nome: 'Sobremesa do Rei', emoji: '🍮', descricao_vitoria: 'Escolha pudim, brownie ou dindim gourmet.' },
-  { nome: 'Expulsadeira', emoji: '🍻', descricao_vitoria: 'Você ganhou duas cervejas.' },
-  { nome: 'Taxa de entrega grátis', emoji: '🛵', descricao_vitoria: 'A próxima entrega é por nossa conta.' },
-  { nome: '10% presencial', emoji: '🏪', descricao_vitoria: '10% na sua próxima compra no salão.' },
-  { nome: 'Sobremesa do Rei', emoji: '🍮', descricao_vitoria: 'Escolha pudim, brownie ou dindim gourmet.' },
+  { id: 1, tipo: 'saideira', nome: 'Saideira', emoji: '🍺', descricao_vitoria: 'Você ganhou uma cerveja.' },
+  { id: 2, tipo: 'sobremesa', nome: 'Sobremesa do Rei', emoji: '🍮', descricao_vitoria: 'Escolha pudim, brownie ou dindim gourmet.' },
+  { id: 3, tipo: 'expulsadeira', nome: 'Expulsadeira', emoji: '🍻', descricao_vitoria: 'Você ganhou duas cervejas.' },
+  { id: 4, tipo: 'frete_gratis', nome: 'Taxa de entrega grátis', emoji: '🛵', descricao_vitoria: 'A próxima entrega é por nossa conta.' },
+  { id: 5, tipo: 'desconto_presencial_10', nome: '10% presencial', emoji: '🏪', descricao_vitoria: '10% na sua próxima compra no salão.' },
+  { id: 2, tipo: 'sobremesa', nome: 'Sobremesa do Rei', emoji: '🍮', descricao_vitoria: 'Escolha pudim, brownie ou dindim gourmet.' },
 ];
 
 async function fakeSpin(): Promise<SpinResult> {

@@ -21,6 +21,43 @@ npx tsc --noEmit
 Variáveis em `.env.local` (modelo em `.env.example`). Nunca commitar `.env.local`.
 Regras de cada segredo: [docs/referencia/SEGREDOS_E_ACESSOS.md](docs/referencia/SEGREDOS_E_ACESSOS.md).
 
+### Fotos de prêmios pelo painel — backend preparado
+
+Depende das migrações revisadas `202609290001_entregas_premios.sql` e
+`202610010001_imagens_premios.sql`, nesta ordem. Não aplicadas por esta entrega.
+Não habilitar gates comerciais/entregas como efeito de instalar fotos.
+Claude integra a tela com `POST /api/admin/premios/{id}/imagem`, Bearer operacional
+e `FormData` contendo somente `foto` (um JPG/PNG/WebP até 2 MB). Não definir
+Content-Type manualmente: o navegador monta o boundary. Apenas superadmin ativo.
+Sucesso: `{ok:true,data:{premio_id,imagem_url}}`; erros 400/413/403/404/409/503.
+`GET /api/admin/premios` já inclui `imagem_url`. O PUT genérico rejeita esse campo.
+
+O servidor decodifica/limita a 16 MP, remove metadados e gera WebP de até 1024 px
+e 512 KB em caminho novo no bucket público `premios`. Só fotos de produtos,
+sem comandas/pessoas; upload direto por anon/authenticated é bloqueado. A URL
+aparece na sessão, elegibilidade e resultado do giro; sem foto, o fallback local
+do Claude continua. Migração não altera pesos, chances ou gates.
+Vínculo da foto e auditoria são atômicos, mas Storage e banco não são uma única
+transação. Em erro/timeout, atualizar o painel antes de qualquer nova tentativa;
+não retentar automaticamente. Fotos antigas/candidatas são preservadas, nunca
+apagadas ou sobrescritas automaticamente; limpeza exige decisão separada.
+
+### Edição de nomes e mensagens — backend preparado
+
+Antes de publicar o novo PUT, aplicar a migração revisada/autorizada
+`202610010002_edicao_premios_auditada.sql`. Sem ela, a escrita falha fechada;
+não há fallback sem auditoria. `PUT /api/admin/premios` recebe JSON `{id,nome?,
+descricao_vitoria?,...campos_operacionais_existentes}` com Bearer superadmin.
+Nome: texto não vazio até 255 caracteres; mensagem: até 500, `null`/vazia para
+limpar. Campos omitidos permanecem intactos; tipo/código/foto não são editáveis
+nesse PUT. Banco reconfirma ator/pausa/piloto e salva alteração + auditoria em
+uma transação; erro/timeout não retenta. `GET` e sucesso `{ok:true,data:{premio}}`
+mantêm o contrato. Tela de textos fica com Claude.
+O SQL de entregas `202609290001`, ainda não aplicado, agora também retorna
+`id` e `tipo` na lista pública e no giro. Claude deve usar ID para associar a
+fatia ao resultado e tipo para fotos padrão/avisos; nunca inferir regra pelo
+nome editável. Essa alteração de metadados exige nova revisão da migração.
+
 ### Teste isolado de conexão WhatsApp por QR (não é OTP pronto)
 
 Somente número separado, em terminal local privado, Node 24+. Não roda na Vercel.

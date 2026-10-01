@@ -7,6 +7,20 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 **01/10/2026 — Claude** · `claude/telas-cliente`: cadastro, login/pontos, redefinir PIN e completar cadastro com as fontes da roleta (Oswald/Inter, só nessas telas; home mantém as dela) e fundo carvão alinhado. Foto da home/cadastro/login trocada pelo cupim trinchado do responsável (arquivo renomeado para não servir cache do baião). `COMECE_AQUI` atualizado com o que espera autorização. Testado em 375 px sem vazamento; lint, tipos, 100 testes e build OK.
 
+**01/10/2026 — Claude** · `claude/premios-textos` (sobre b190f6f): `/admin/roleta` edita nome e mensagem de vitória (nome vazio barrado, um envio por clique, painel relido em erro/timeout). Roleta associa resultado à fatia por `id` e escolhe foto/aviso de cerveja por `tipo` (nome só como reserva para respostas antigas); 4 testes novos incluindo prêmio renomeado. Revisão da migração `202610010002` OK. Não publicado nem aplicado.
+
+**01/10/2026 — Codex** · `codex/premios-textos`: integrada tela de fotos revisada `claude/upload-fotos` (4d6edda), com main atual; registrada recuperação das fotos em outro projeto Supabase.
+PUT de prêmios normaliza/valida nome e mensagem, mantém campos omitidos e grava edição/auditoria juntas via RPC `202610010002`; ator/pausa/piloto reconferidos no banco.
+SQL de entregas ainda não aplicado ganhou somente ID/tipo nos retornos públicos para não depender de nome editável; sem mudar elegibilidade, pesos ou quantidades.
+145 testes, tipos/lint e build fictício OK; revisão Claude e campos/associação/avisos na UI pendentes; sem SQL aplicado, publicação na main ou ativação comercial/OTP.
+
+**01/10/2026 — Claude** · Tela de upload de foto em `/admin/roleta` (branch `claude/upload-fotos`, sobre `codex/premios-imagens`): foto atual em cada prêmio, prévia antes de enviar, só superadmin troca, JPG/PNG/WebP até 2 MB, um envio por clique e painel relido após sucesso, erro ou demora. Revisão da migração `202610010001` OK. Não publicado nem aplicado.
+
+**01/10/2026 — Codex** · `codex/premios-imagens`: reutilizada branch de baixas para preservar elegibilidade/re-roll; API superadmin de foto JPG/PNG/WebP até 2 MB, WebP até 1024 px/512 KB sem metadados.
+Migração `202610010001` preparada: bucket público exclusivo de produtos, escrita só pelo backend, vínculo com ator ativo/sem contenção e auditoria atômica; conflito de troca simultânea recusado.
+135 testes (incluindo decoder, RLS, falha de auditoria e imagem na elegibilidade/giro), tipos/lint e build fictício OK; sem arquivos reais, alteração de chances, SQL aplicado ou publicação na main.
+Próximo: revisão Claude, tela upload no admin e implantação/ensaio autorizados; imagens anteriores/candidatas preservadas, sem delete ou retry após resultado incerto.
+
 **01/10/2026 — Claude** · Fotos dos prêmios na roleta (Pexels, licença comercial, sem marcas; autorizadas pelo responsável): saideira (1 garrafa), expulsadeira (2), pudim, brownie e sobremesa (pudim+brownie). Tela do prêmio avisa "1/2 unidades da mesma cerveja que você consumiu", "Beba com moderação. Proibido para menores de 18 anos" e "Foto ilustrativa". Faltam fotos próprias de dindim e entrega; troca de foto pelo painel depende de `imagem_url` (Codex).
 
 **29/09/2026 — Codex** · Responsável autorizou publicar conexão QR; main atual integrada preservando a roleta do Claude, 100 testes + 11 worker e tipos OK.
@@ -41,6 +55,22 @@ Dependência Baileys 7.0.0-rc14 fixada, audit npm sem vulnerabilidades conhecida
 Faltam conferir encerramento no celular, fila/envio/verificação OTP, transporte permanente e hospedagem; produção não foi alterada.
 Checkpoint de baixas separado: branch `codex/baixas-reais`, commit `bf1d409`, 99 testes; pedir revisão Claude e validar SQL isolado antes de aplicar.
 **29/09/2026 — Claude** · Roleta "Brasa Premium" (escolha do responsável): roda bicolor osso/grafite só com texto, seta vermelha, fontes Oswald + Inter, fundo carvão com foto e faíscas, comemoração com faíscas de brasa em vez de confete. Também: correção de setor trocado (c414c34) e Git do usuário com `http.sslBackend=openssl` para testar o erro ao publicar. Visual em iteração com o responsável.
+**29/09/2026 — Codex** · `codex/baixas-reais`: incorporada a main da roleta interativa e avaliada a segunda revisão do Claude (re-roll resolvido).
+A sessão usa sempre a elegibilidade do SQL; sem ela, falha fechado se houver físico ativo. `imagem_url` local validada na API e devolvida à roda.
+113 testes (8 SQL isolados), tipos e lint OK. Faltam concorrência PostgreSQL multissessão, painel/catálogo e campo visual no admin.
+Nada aplicado ao banco ou publicado na main; conexão WhatsApp por QR no site ainda não implementada.
+
+**29/09/2026 — Codex** · `codex/baixas-reais`: correção do bloqueante identificado pelo Claude; físico inelegível sai do sorteio antes do resultado e a roda mostra a mesma lista.
+Exceção operacional vira pendência bloqueada, sem re-roll; ativação recusa cupom físico antigo aberto sem ledger.
+Opções paginadas em lotes, pré-checagem de papel explícita e SECURITY DEFINER com busca vazia; 109 testes (8 SQL isolados), tipos/lint OK.
+Migração não aplicada; falta nova revisão Claude, concorrência em PostgreSQL multissessão, catálogo/opções reais e painel.
+Decisão pendente do responsável: quem assume entrega quando o garçom sai do turno; piloto mantém só superadmin.
+
+**29/09/2026 — Codex** · `codex/baixas-reais`: checkpoint da base/API e proposta SQL, gates desligados; 99 testes, tipos e lint dos novos arquivos aprovados.
+Faltam execução isolada do SQL (inclusive concorrência/RLS), catálogo/opções por conta, painel e revisão Claude; nada aplicado em produção.
+SPA, FAQ 59: benefício objetivo sem aleatoriedade difere de promoção com sorte; pontos sorteados não têm dispensa confirmada.
+Fonte: https://www.gov.br/fazenda/pt-br/composicao/orgaos/secretaria-de-premios-e-apostas/promocao-comercial/promocao-comercial
+Nenhuma mudança de mecânica, prêmios ou aprovação jurídica decidida.
 
 **29/09/2026 — Claude** · Roleta interativa: arrastar com o dedo, botão PARAR, parada automática em 4 s, desaceleração lenta com pinos e som, confete nas cores da marca e revelação com foto. Resultado continua 100% do servidor (a animação só decide o caminho). Demonstração sem registro em `/roleta/demo`. Física com 900 combinações testadas; fluxo testado no navegador. Faltam fotos reais e celulares reais.
 

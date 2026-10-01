@@ -1,6 +1,6 @@
 # Roadmap — Clube Cupim
 
-Atualizado em 28/09/2026. Uma linha por tarefa. Detalhes vão no PR e no `DIARIO.md`.
+Atualizado em 29/09/2026. Uma linha por tarefa. Detalhes vão no PR e no `DIARIO.md`.
 Investigações e decisões anteriores (Saipos, telefones, entregas, custos) estão em
 `docs/historico/ROADMAP_ATE_2026-09-28.md`.
 
@@ -24,10 +24,10 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [ ] | Parecer jurídico sobre a roleta (promoção com sorte) | Você |
 | [ ] | Aprovar prêmios, custos, pesos por faixa e validade | Você |
 | [ ] | Contratar hospedagem com uso comercial (Vercel Pro ou alternativa) | Você |
-| [~] | Backup diário pronto e 3 segredos cadastrados; **pausado**: banco recusa a senha em `SUPABASE_DB_URL`. Retomar com reset da senha no navegador normal e teste na branch `claude/backup-diagnostico` | Claude guia, Você executa |
-| [~] | Baixas reais: escolha → entrega → baixa no banco, com operador e QR reais — pronto em branch, espera autorização para aplicar SQL e publicar | Codex |
+| [~] | Backup diário pronto e 3 segredos cadastrados; **adiado expressamente pelo responsável** (banco recusa a senha em `SUPABASE_DB_URL`). Não retomar até ele pedir; caminho em `claude/backup-diagnostico` | Claude guia, Você executa |
+| [~] | Baixas reais: escolha → entrega → baixa no banco, com operador e QR reais; re-roll revisado, 113 testes (8 SQL isolados); faltam concorrência real, catálogo/opções e painel; SQL não aplicado | Codex |
 | [~] | Roleta interativa "Brasa Premium" publicada, com fotos de cerveja e sobremesa e avisos de bebida; faltam fotos próprias de dindim/entrega e teste em celulares reais | Claude |
-| [~] | Trocar foto, nome e mensagem dos prêmios pelo `/admin/roleta`; roleta por `id`/`tipo` — pronto em branch, espera autorização para aplicar SQL e publicar | Codex (API) + Claude (tela) |
+| [~] | Prêmios no painel: troca de foto, nome e mensagem com auditoria atômica; roleta por `id`/`tipo`; API e tela revisadas e integradas em `claude/consolidacao`; faltam SQL autorizado e ensaio | Codex API, Claude UI |
 | [x] | Telas do cliente (cadastro, login/pontos, PIN) com a identidade da roleta; foto do cupim trinchado na home | Claude |
 | [x] | Arte oficial (logo) e ícones do site/favicon — foguinho aplicado; pedir versão vetorial (SVG/PDF) para uso grande | Você envia a arte, Claude aplica |
 | [ ] | Piloto Saipos de 3 cenários: venda concluída, cancelada, mesa sem venda | Você executa, Codex analisa |

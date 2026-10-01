@@ -27,7 +27,7 @@ const EMBER_COLORS = ['#ff6a00', '#ff8c1a', '#ffb347', '#ffd27a', '#dc251b'];
 
 /** Faíscas de brasa: explodem do centro da roda e sobem, em vez de confete colorido. */
 function celebrate() {
-  const base = { colors: EMBER_COLORS, shapes: ['circle' as const], disableForReducedMotion: true, zIndex: 60 };
+  const base = { colors: EMBER_COLORS, shapes: ['circle' as const], disableForReducedMotion: true, zIndex: 300 };
   confetti({ ...base, particleCount: 140, spread: 360, startVelocity: 32, gravity: 0.35, decay: 0.92, scalar: 0.55, ticks: 160, origin: { y: 0.5 } });
   window.setTimeout(() => {
     confetti({ ...base, particleCount: 90, angle: 90, spread: 55, startVelocity: 55, gravity: 0.5, scalar: 0.45, ticks: 220, origin: { x: 0.3, y: 1 } });

@@ -11,14 +11,16 @@ export const ROLETA_BACKDROP = { src: '/roleta/fundo-cupim.webp', position: '50%
 export type PrizeIdentity = { nome: string; tipo?: string | null; imagem_url?: string | null };
 
 /**
- * Fotos padrão por tipo de prêmio (Pexels, licença comercial gratuita, sem marcas):
- * garrafas por Diana, pudim por Gu Ko, brownie por Sylwester Ficek. Ainda faltam
- * dindim e entrega (preferir fotos do próprio restaurante).
+ * Fotos padrão por tipo de prêmio, de bancos com licença comercial gratuita e sem marcas:
+ * garrafas por Diana, pudim por Gu Ko, brownie por Sylwester Ficek (Pexels); cachorro
+ * entregador por @madeline_sd (Unsplash, recortado sem o baú/bolsa com escrita).
+ * Ainda falta o dindim (não há foto equivalente nos bancos; usar foto do restaurante).
  */
 const PHOTOS_BY_TYPE: Record<string, string> = {
   saideira: '/roleta/premios/saideira.webp',
   expulsadeira: '/roleta/premios/expulsadeira.webp',
   sobremesa: '/roleta/premios/sobremesa.webp',
+  frete_gratis: '/roleta/premios/entrega.webp',
 };
 
 /** Reserva pelo nome, para respostas antigas sem `tipo` (antes das migrações) e para a demonstração. */
@@ -28,6 +30,7 @@ const PHOTOS_BY_NAME: Array<[RegExp, string]> = [
   [/pudim/i, '/roleta/premios/pudim.webp'],
   [/brownie/i, '/roleta/premios/brownie.webp'],
   [/sobremesa/i, PHOTOS_BY_TYPE.sobremesa],
+  [/entrega|frete/i, PHOTOS_BY_TYPE.frete_gratis],
 ];
 
 const ALCOHOL_NOTICE = 'Beba com moderação. Proibido para menores de 18 anos.';

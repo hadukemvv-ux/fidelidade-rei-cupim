@@ -21,6 +21,12 @@ test('foto enviada pelo painel tem prioridade sobre a foto padrão', () => {
   assert.equal(prizePhoto({ nome: 'Saideira', tipo: 'saideira', imagem_url: url }), url);
 });
 
+test('entrega grátis mostra o cachorro entregador, sem aviso de bebida', () => {
+  assert.equal(prizePhoto({ nome: 'Taxa de entrega grátis', tipo: 'frete_gratis' }), '/roleta/premios/entrega.webp');
+  assert.equal(prizePhoto({ nome: 'Taxa de entrega grátis' }), '/roleta/premios/entrega.webp');
+  assert.deepEqual(prizeNotes({ nome: 'Taxa de entrega grátis', tipo: 'frete_gratis' }), []);
+});
+
 test('sem tipo (resposta antiga), usa o nome como reserva', () => {
   assert.equal(prizePhoto({ nome: 'Expulsadeira' }), '/roleta/premios/expulsadeira.webp');
   assert.equal(prizePhoto({ nome: 'Sobremesa do Rei' }), '/roleta/premios/sobremesa.webp');

@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**01/10/2026 — Claude** · `claude/foto-entrega` (sobre `claude/consolidacao`): foto do prêmio entrega grátis = golden retriever numa moto de entrega (Unsplash, licença comercial; recorte sem o baú/bolsa com escrita). Associada por `tipo` frete_gratis, nome como reserva; teste novo, 180 OK. Dindim segue sem foto (não há equivalente sem marca nos bancos; pedir foto do restaurante). Publicar junto/depois da consolidação.
+
 **01/10/2026 — Claude** · `claude/consolidacao`: main atual (7b6a79d) + `claude/premios-textos` (b7cd04e) + `codex/whatsapp-otp` (5ec320c) numa branch só; conflitos apenas em README/ROADMAP/DIARIO/COMECE_AQUI, resolvidos mantendo as duas frentes; backup registrado como adiado pelo responsável. Revisão do `5ec320c` (inspeção offline do relógio) OK. Não publicado nem aplicado.
 
 **01/10/2026 — Claude** · `claude/telas-cliente`: cadastro, login/pontos, redefinir PIN e completar cadastro com as fontes da roleta (Oswald/Inter, só nessas telas; home mantém as dela) e fundo carvão alinhado. Foto da home/cadastro/login trocada pelo cupim trinchado do responsável (arquivo renomeado para não servir cache do baião). `COMECE_AQUI` atualizado com o que espera autorização. Testado em 375 px sem vazamento; lint, tipos, 100 testes e build OK.

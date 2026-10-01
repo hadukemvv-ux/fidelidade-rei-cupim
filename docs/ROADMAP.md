@@ -24,10 +24,11 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [ ] | Parecer jurídico sobre a roleta (promoção com sorte) | Você |
 | [ ] | Aprovar prêmios, custos, pesos por faixa e validade | Você |
 | [ ] | Contratar hospedagem com uso comercial (Vercel Pro ou alternativa) | Você |
-| [~] | Backup diário com teste de restauração pronto (`referencia/BACKUP_E_MIGRACAO.md`); falta você cadastrar 3 segredos no GitHub e rodar o 1º teste | Claude prepara, Você aprova custo |
-| [ ] | Baixas reais: gravar escolha → entrega → baixa no banco, com operador e QR reais | Codex |
-| [~] | Roleta interativa no visual Brasa Premium; ensaio em `/roleta/demo`; ajustando visual com o responsável; faltam fotos reais dos prêmios e teste em celulares reais | Claude |
-| [ ] | Enviar `imagem_url` de cada prêmio na sessão da roleta (`/api/roleta-v2/sessao`) para trocar foto sem mexer em código | Codex |
+| [~] | Backup diário pronto e 3 segredos cadastrados; **pausado**: banco recusa a senha em `SUPABASE_DB_URL`. Retomar com reset da senha no navegador normal e teste na branch `claude/backup-diagnostico` | Claude guia, Você executa |
+| [~] | Baixas reais: escolha → entrega → baixa no banco, com operador e QR reais — pronto em branch, espera autorização para aplicar SQL e publicar | Codex |
+| [~] | Roleta interativa "Brasa Premium" publicada, com fotos de cerveja e sobremesa e avisos de bebida; faltam fotos próprias de dindim/entrega e teste em celulares reais | Claude |
+| [~] | Trocar foto, nome e mensagem dos prêmios pelo `/admin/roleta`; roleta por `id`/`tipo` — pronto em branch, espera autorização para aplicar SQL e publicar | Codex (API) + Claude (tela) |
+| [x] | Telas do cliente (cadastro, login/pontos, PIN) com a identidade da roleta; foto do cupim trinchado na home | Claude |
 | [x] | Arte oficial (logo) e ícones do site/favicon — foguinho aplicado; pedir versão vetorial (SVG/PDF) para uso grande | Você envia a arte, Claude aplica |
 | [ ] | Piloto Saipos de 3 cenários: venda concluída, cancelada, mesa sem venda | Você executa, Codex analisa |
 | [ ] | Testar os 4 acessos reais (garçom, caixa, gestor, superadmin) em produção | Você executa, Claude acompanha |

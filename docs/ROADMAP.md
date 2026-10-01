@@ -24,7 +24,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [ ] | Parecer jurídico sobre a roleta (promoção com sorte) | Você |
 | [ ] | Aprovar prêmios, custos, pesos por faixa e validade | Você |
 | [ ] | Contratar hospedagem com uso comercial (Vercel Pro ou alternativa) | Você |
-| [~] | Backup diário com teste de restauração pronto (`referencia/BACKUP_E_MIGRACAO.md`); falta você cadastrar 3 segredos no GitHub e rodar o 1º teste | Claude prepara, Você aprova custo |
+| [~] | Backup Supabase pausado a pedido do responsável em 01/10; configuração/diagnóstico preservados, sem restauração validada; retomar depois, sem impedir preparação local do piloto | Claude prepara, Você decide retomada |
 | [ ] | Baixas reais: gravar escolha → entrega → baixa no banco, com operador e QR reais | Codex |
 | [~] | Roleta interativa no visual Brasa Premium; ensaio em `/roleta/demo`; ajustando visual com o responsável; faltam fotos reais dos prêmios e teste em celulares reais | Claude |
 | [ ] | Enviar `imagem_url` de cada prêmio na sessão da roleta (`/api/roleta-v2/sessao`) para trocar foto sem mexer em código | Codex |
@@ -41,7 +41,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [~] | Número separado ativo; responsável escolheu avaliar QR não oficial em teste isolado; operação permanente/custos ainda a decidir | Você |
 | [~] | QR WhatsApp: controle publicado em 26a5743; pareamento e reinício/reconexão reais validados em 30/09; faltam auditoria das transições e acesso administrativo entre redes | Codex |
 | [~] | Mensagens QR: destino resolvido pelo WhatsApp e recebimento confirmado com print em 30/09 após novo ensaio autorizado; envio fechado, dois registros preservados; fila/gatilhos/OTP pendentes | Codex |
-| [~] | OTP QR: tela Claude integrada, retenção 24h corrigida e concorrência entre conexões PostgreSQL locais validada; falta revisão final do ajuste, implantação autorizada e cadastro/reset no celular | Codex |
+| [~] | OTP QR: retenção/concorrência revisadas e tela integrada; diagnóstico offline de relógio preparado sem reset da sessão, 35 testes worker; faltam revisão do utilitário, implantação autorizada e cadastro/reset no celular | Codex |
 | [ ] | Modelos WhatsApp editáveis com variáveis protegidas, fila idempotente e avisos consolidados de pontos/nível; convite por telefone e escolha autenticada de cerveja/sobremesa pelo garçom (sem baixa por mero envio) | Codex; Claude faz telas |
 | [~] | Hospedagem WhatsApp: VM gratuita, DNS Registro.br e HTTPS Caddy validados; faltam teste conectado, backup/restauração reais e monitor externo | Codex, Você acessa a conta |
 | [ ] | Verificação de conta antiga com PIN e sem telefone comprovado | Codex |

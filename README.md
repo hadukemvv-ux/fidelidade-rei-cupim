@@ -21,6 +21,15 @@ npx tsc --noEmit
 Variáveis em `.env.local` (modelo em `.env.example`). Nunca commitar `.env.local`.
 Regras de cada segredo: [docs/referencia/SEGREDOS_E_ACESSOS.md](docs/referencia/SEGREDOS_E_ACESSOS.md).
 
+### Diagnóstico offline de relógio do OTP
+
+Com worker parado, ambiente privado de sessão carregado e Node 24:
+`node services/whatsapp-qr/inspect-otp-clock.mjs --inspect --worker-stopped`.
+Não passar chaves na linha de comando. Saída 0: relógio sem regressão; 2:
+marcador/reservas no futuro; 1: inspeção indisponível. Só lê a sessão cifrada
+sob lock; não modifica o ledger nem conecta/envia WhatsApp. Procedimento e
+limites em `docs/referencia/WHATSAPP_HOSPEDAGEM_E_RECUPERACAO.md`.
+
 ### Teste isolado de conexão WhatsApp por QR (não é OTP pronto)
 
 Somente número separado, em terminal local privado, Node 24+. Não roda na Vercel.

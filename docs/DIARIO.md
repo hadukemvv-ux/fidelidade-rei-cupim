@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**01/10/2026 — Codex** · Continuação de `codex/whatsapp-otp`: inspeção offline do relógio sob lock, sem alterar sessão/ledgers, revelar dados privados ou conectar/enviar; guia de detecção/espera segura preparado.
+Não reduzir watermark isoladamente: timestamps futuros também afetam quotas; destrave antecipado manual continua pendente de revisão específica, sem reset automático.
+Responsável reafirmou pausa do backup Supabase; sem acessar sua configuração, aplicar SQL, mudar gates ou publicar; roadmap único do projeto tem versões em branches a consolidar pelo Claude.
+130 testes app + 35 worker, tipos e lint OK com dados fictícios; revisão do utilitário e implantação/piloto reais ainda pendentes.
+
 **01/10/2026 — Codex** · `codex/whatsapp-otp`: tela Claude integrada (5780ff4); ledger OTP limpa >24h sem perder quotas, sessão ou teste fixo; relógio regressivo bloqueado e falha pós-envio documentada.
 130 testes app, 32 worker, cinco cenários nativos PostgreSQL com conexões distintas/espera real por locks, tipos e lint direcionado OK; sem SQL em produção, envio, ativação ou publicação na main.
 Modelos editáveis, avisos consolidados e fluxo do garçom registrados como pendentes; sobremesas por produto/quantidade, sem sabores, e marcas de cerveja confirmadas sem inventar unidades.

@@ -142,10 +142,56 @@ OTP QR preparado em 01/10, **ainda não implantado/ativado**: o worker limpa som
 reservas OTP com mais de 24h antes de admitir novos envios. Preserva limites,
 sessão e registros do teste fixo; payload expira em 10min. Não remover registros
 manualmente para reenviar. Se o relógio retroceder, reserva bloqueada até corrigir
-o relógio; não apagar o marcador persistente para contornar essa proteção.
+o relógio e alcançar o último horário persistido; corrigir o NTP sozinho não
+reduz `otpLastReservationAt`. Não apagar o marcador para contornar a proteção.
 Se a mensagem for aceita mas falhar a finalização no banco, o código pode chegar
 inutilizável (status ainda `reservado`). Esperar 60s e pedir novo código explicitamente,
 sem retry do transporte nem edição manual do status. Não registrar o código em logs.
+
+### Relógio avançou e depois voltou — procedimento seguro
+
+Diagnóstico/preparação de 01/10; **não executado na VM real**. OTP continua fechado.
+Uma resposta 503 não prova falha de relógio: também pode ser rede, configuração
+ou quota. Conferir primeiro `date -u` e `timedatectl status` por SSH; o relógio
+deve estar sincronizado com uma fonte confiável, sem avançá-lo artificialmente.
+
+1. Suspender novas solicitações OTP no app/worker pelos gates; não reabrir
+   enquanto houver diagnóstico inconclusivo. Não alterar status de códigos no banco.
+2. Parar o processo com `sudo systemctl stop clubecupim-whatsapp` (não clicar
+   em Desconectar, que revoga a sessão). Não rodar duas instâncias na mesma pasta.
+3. Depois de implantar o utilitário revisado, inspecionar com ambiente privado,
+   sem imprimir o arquivo de configuração nem passar a chave na linha de comando:
+
+   ```sh
+   sudo systemd-run --quiet --wait --pipe --collect --unit=clubecupim-otp-clock-check \
+     --property=User=clubecupim-wa \
+     --property=EnvironmentFile=/etc/clubecupim-whatsapp.env \
+     --property=WorkingDirectory=/opt/clubecupim/services/whatsapp-qr \
+     /opt/node24/bin/node inspect-otp-clock.mjs --inspect --worker-stopped
+   ```
+
+   O utilitário usa o lock normal e só lê `session.enc`: não conecta WhatsApp,
+   não envia, não regrava credenciais e não retorna telefones, códigos ou hashes.
+   Saída 0: relógio sem regressão detectada (não significa conexão/quota OK).
+   Saída 2: horário atual anterior ao marcador ou a alguma reserva retida.
+   Saída 1: diagnóstico indisponível; preservar sessão/chave/lock e investigar.
+4. A recuperação suportada é manter o horário correto e aguardar que alcance
+   `otp_last_reservation_at` e `newest_retained_reservation_at`. As quotas
+   normais ainda valem. `conservative_resume_after` é o maior desses horários
+   +24h+1ms: sem novas reservas, nesse momento todos os registros antigos já
+   ficam fora da janela diária. Não é uma promessa de disponibilidade da rede.
+5. Repetir inspeção com worker parado. Quando o relógio estiver seguro, iniciar
+   o serviço e reconectar pelo admin à sessão salva. Reabrir o piloto somente
+   após verificar os gates/destinos aprovados; pedir código novo explicitamente,
+   nunca repetir envio de resultado incerto ou restaurar estado anterior ao envio.
+
+**Não basta diminuir o watermark:** reservas com `createdAt` futuro continuam
+participando do cooldown e das quotas. Um salto também pode ter podado reservas
+anteriores; resetá-lo às cegas enfraquece a proteção contra repetição. Destrave
+antecipado editando o arquivo criptografado não está implementado/autorizado;
+se a espera for impraticável, manter OTP fechado e revisar uma recuperação
+offline específica antes de qualquer mudança. Nunca apagar `session.enc`,
+`otpSends` ou o histórico de mensagens de teste para resolver esse problema.
 
 | Sinal | Verificação e ação |
 | --- | --- |
@@ -200,6 +246,7 @@ sem retry do transporte nem edição manual do status. Não registrar o código 
 | Aviso externo de falha | Pendente |
 | OTP de cliente / mensagem ao garçom | Pendente |
 | OTP QR: retenção e concorrência | 01/10: retenção testada além de 1.000 reservas; duas conexões nativas PostgreSQL locais validaram reserva, confirmação, consumo, tentativas e preparação concorrentes; sem acesso ao Supabase/WhatsApp de produção |
+| OTP QR: diagnóstico de relógio | 01/10: inspeção offline com dados fictícios detecta reservas futuras, preserva os bytes de sessão e os ledgers, recusa lock ocupado/chave errada; liberação após espera conservadora testada, sem destrave manual ou ensaio na VM |
 
 Referência de cotas e recolhimento: [Oracle Always Free](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm).
 O guia deve ser atualizado após cada ensaio e mudança de provedor.

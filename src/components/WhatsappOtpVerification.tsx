@@ -19,6 +19,9 @@ export default function WhatsappOtpVerification({
   const [feedback, setFeedback] = useState('');
   const [verified, setVerified] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  // 'aceito' = o WhatsApp aceitou o pedido (não prova entrega); 'indeterminado' = não deu para confirmar.
+  const [envio, setEnvio] = useState<'aceito' | 'indeterminado' | null>(null);
+  const [destino, setDestino] = useState('');
 
   useEffect(() => {
     setSolicitacaoId('');
@@ -26,6 +29,8 @@ export default function WhatsappOtpVerification({
     setFeedback('');
     setVerified(false);
     setCooldown(0);
+    setEnvio(null);
+    setDestino('');
     onVerified(false);
   }, [telefone, proposito, onVerified]);
 
@@ -35,7 +40,9 @@ export default function WhatsappOtpVerification({
     return () => window.clearInterval(timer);
   }, [cooldown]);
 
+  // Um clique = um pedido. Nunca reenviar sozinho: um pedido "sem resposta" pode ter chegado.
   async function solicitar() {
+    const repetindo = Boolean(solicitacaoId);
     setLoading(true);
     setFeedback('');
     try {
@@ -44,13 +51,18 @@ export default function WhatsappOtpVerification({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ telefone, proposito }),
       });
-      const body = await response.json();
-      if (!response.ok || !body.ok) throw new Error(body.error || 'Não foi possível enviar o código.');
+      const body = await response.json().catch(() => null);
+      if (!response.ok || !body?.ok) throw new Error(body?.error || 'Não foi possível pedir o código.');
       setSolicitacaoId(body.data.solicitacao_id);
+      setCodigo('');
+      setDestino(body.data.destino || 'seu WhatsApp');
+      setEnvio(body.data.envio === 'indeterminado' ? 'indeterminado' : 'aceito');
       setCooldown(body.data.reenviar_em_segundos || 60);
-      setFeedback(`Código enviado para ${body.data.destino}.`);
+      if (repetindo) setFeedback('Pedimos um novo código. Use só o mais recente: o anterior deixou de valer.');
     } catch (error) {
-      setFeedback(error instanceof Error ? error.message : 'Não foi possível enviar o código.');
+      // Mesmo com erro, um código pode ter saído. Segura novos pedidos por um tempo.
+      setCooldown((value) => Math.max(value, 60));
+      setFeedback(`${error instanceof Error ? error.message : 'Não foi possível pedir o código.'} Se chegar alguma mensagem, aguarde o contador antes de pedir outro código.`);
     } finally {
       setLoading(false);
     }
@@ -95,13 +107,24 @@ export default function WhatsappOtpVerification({
         <button
           type="button"
           onClick={solicitar}
-          disabled={loading || telefone.length < 10}
+          disabled={loading || telefone.length < 10 || cooldown > 0}
           className="w-full rounded-lg bg-[#25D366] px-4 py-3 font-black text-black disabled:opacity-50"
         >
-          {loading ? 'ENVIANDO...' : 'ENVIAR CÓDIGO PELO WHATSAPP'}
+          {loading ? 'PEDINDO...' : cooldown > 0 ? `AGUARDE ${cooldown}s` : 'RECEBER CÓDIGO PELO WHATSAPP'}
         </button>
       ) : (
         <>
+          {envio === 'aceito' && (
+            <p className="text-sm text-zinc-200">
+              Pedimos ao WhatsApp para enviar o código para <strong>{destino}</strong>. Pode levar alguns instantes para chegar.
+            </p>
+          )}
+          {envio === 'indeterminado' && (
+            <p className="rounded-lg border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+              Não conseguimos confirmar o envio para <strong>{destino}</strong>. Se o código chegar, use normalmente.
+              Se não chegar, aguarde o contador e peça um novo.
+            </p>
+          )}
           <label className="block text-xs font-bold uppercase tracking-widest text-[#c5a059]">
             Código recebido
           </label>
@@ -127,12 +150,13 @@ export default function WhatsappOtpVerification({
             disabled={loading || cooldown > 0}
             className="w-full text-xs text-zinc-400 underline disabled:no-underline disabled:opacity-60"
           >
-            {cooldown > 0 ? `Reenviar em ${cooldown}s` : 'Reenviar código'}
+            {cooldown > 0 ? `Pedir outro código em ${cooldown}s` : 'Não chegou? Pedir outro código'}
           </button>
+          <p className="text-xs text-zinc-400">Um código novo substitui o anterior.</p>
         </>
       )}
 
-      {feedback && <p className="text-sm text-zinc-200">{feedback}</p>}
+      {feedback && <p className="text-sm text-zinc-200" role="status" aria-live="polite">{feedback}</p>}
     </div>
   );
 }

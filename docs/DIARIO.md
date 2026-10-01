@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**01/10/2026 — Claude** · Revisão de `codex/whatsapp-otp` (260d2d5): migração compatível (status só ganha `indeterminado`), verificação/grant atômicos e anti-replay OK; ponto a corrigir: ledger OTP do worker trava em 1.000 registros sem limpeza. Tela `WhatsappOtpVerification` em `claude/otp-tela`: separa "aceito" de "indeterminado" sem prometer entrega, nunca reenvia sozinha, código novo invalida o anterior, espera 60 s após erro. Não publicado.
+
 **30/09/2026 — Codex** · `codex/whatsapp-otp`: OTP QR fechado (1–3 destinos), token separado, ledger persistente sem replay e confirmação/grant transacionais; Twilio preservado como padrão desligado.
 Migração `202609300001` preparada: falhas contam na quota; código com HMAC/10min/5 tentativas, propósito/telefone vinculados, reenvio invalida anterior e grants exclusivos de serviço.
 129 testes do app (PGlite/HTTP com socket fictício), 28 worker, tipos e lint OK; nenhuma mensagem, SQL em produção, campanha, deploy ou mudança visual nesta etapa.

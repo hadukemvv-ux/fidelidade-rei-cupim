@@ -18,3 +18,12 @@
 .photoConfirm button:disabled{opacity:.6;cursor:wait}
 .photoConfirm .photoCancel{background:none;border:1px solid #754c34;color:#bca999}
 .photoActions .photoError{color:#ff9d8f}
+
+/* Nome e mensagem de vitória */
+.textFields{display:grid;gap:13px;padding:19px 19px 0}
+.textFields label{display:block;color:#c5ae99;font-size:11px;font-weight:800}
+.textFields label small{color:#a9937f;font-weight:500}
+.textFields label > small:last-child{display:block;margin-top:4px;text-align:right}
+.textFields input,.textFields textarea{display:block;width:100%;margin-top:6px;padding:10px;border:1px solid #6a4a37;border-radius:7px;background:#120d0b;color:#fff6e7;font:inherit;font-size:13px;font-weight:600;resize:vertical}
+.textFields input{font-size:15px;font-weight:800}
+.textFields input:focus,.textFields textarea:focus{outline:2px solid #daae63}

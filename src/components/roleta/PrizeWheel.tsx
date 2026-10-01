@@ -6,7 +6,7 @@ import { prizePhoto, SHOW_PHOTOS_IN_WHEEL } from '@/lib/prizeVisuals';
 import { normalizeAngle, planStop, releaseVelocity, rotationAt, sectorAtRotation, type AngleSample, type StopPlan } from '@/lib/wheelPhysics';
 import styles from './PrizeWheel.module.css';
 
-export type WheelPrize = { nome: string; emoji: string; imagem_url?: string | null };
+export type WheelPrize = { id?: number; tipo?: string | null; nome: string; emoji: string; imagem_url?: string | null };
 type Phase = 'idle' | 'dragging' | 'spinning' | 'stopping' | 'done';
 
 const SECTORS = 6;
@@ -238,7 +238,7 @@ export default function PrizeWheel({ prizes, locked = false, onSpinStart, onFini
             return <span className={styles.sector} key={index} style={{ transform: `rotate(${angle}deg)` }}>
               <span className={styles.sectorInner}>
                 {allSame ? <Image src="/logo.png" alt="" width={36} height={36} /> : <>
-                  {SHOW_PHOTOS_IN_WHEEL && prizePhoto(prize.nome, prize.imagem_url) && <Image className={styles.photo} src={prizePhoto(prize.nome, prize.imagem_url) as string} alt="" width={96} height={96} />}
+                  {SHOW_PHOTOS_IN_WHEEL && prizePhoto(prize) && <Image className={styles.photo} src={prizePhoto(prize) as string} alt="" width={96} height={96} />}
                   <strong>{prize.nome}</strong>
                 </>}
               </span>

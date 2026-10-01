@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**01/10/2026 — Claude** · `claude/premios-textos` (sobre b190f6f): `/admin/roleta` edita nome e mensagem de vitória (nome vazio barrado, um envio por clique, painel relido em erro/timeout). Roleta associa resultado à fatia por `id` e escolhe foto/aviso de cerveja por `tipo` (nome só como reserva para respostas antigas); 4 testes novos incluindo prêmio renomeado. Revisão da migração `202610010002` OK. Não publicado nem aplicado.
+
 **01/10/2026 — Codex** · `codex/premios-textos`: integrada tela de fotos revisada `claude/upload-fotos` (4d6edda), com main atual; registrada recuperação das fotos em outro projeto Supabase.
 PUT de prêmios normaliza/valida nome e mensagem, mantém campos omitidos e grava edição/auditoria juntas via RPC `202610010002`; ator/pausa/piloto reconferidos no banco.
 SQL de entregas ainda não aplicado ganhou somente ID/tipo nos retornos públicos para não depender de nome editável; sem mudar elegibilidade, pesos ou quantidades.

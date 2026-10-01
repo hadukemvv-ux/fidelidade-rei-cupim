@@ -103,9 +103,9 @@ create trigger verificar_ativacao_entregas before update of habilitado on public
 -- A roda pública deve exibir o mesmo conjunto que o sorteio usa. O giro
 -- continua autoridade final sob lock caso o estado mude após a consulta.
 create function public.listar_premios_elegiveis_v2(p_sessao_id uuid)
-returns table(nome text, emoji text, imagem_url text)
+returns table(nome text, emoji text, imagem_url text, id bigint, tipo text)
 language sql security definer set search_path = '' as $$
-  select p.nome, p.emoji, p.imagem_url from public.premios_roleta p
+  select p.nome, p.emoji, p.imagem_url, p.id, p.tipo from public.premios_roleta p
   join public.roleta_sessoes s on s.id = p_sessao_id
   join public.roleta_configuracoes r on r.id = 1
   join public.entregas_configuracao e on e.id = 1
@@ -241,7 +241,7 @@ begin
   update public.roleta_sessoes set status = 'girada', girada_em = now() where id = v_sessao.id;
   return jsonb_build_object(
     'ok', true,
-    'premio', jsonb_build_object('nome', v_premio.nome, 'descricao_vitoria', v_premio.descricao_vitoria,
+    'premio', jsonb_build_object('id', v_premio.id, 'tipo', v_premio.tipo, 'nome', v_premio.nome, 'descricao_vitoria', v_premio.descricao_vitoria,
       'emoji', v_premio.emoji, 'imagem_url', v_premio.imagem_url, 'canal_uso', v_premio.canal_uso),
     'cupom_id', v_cupom_id, 'expira_em', v_expira_em, 'modo_teste', v_config.v2_modo_teste
   );

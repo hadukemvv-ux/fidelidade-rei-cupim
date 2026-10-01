@@ -47,18 +47,19 @@ export async function GET(request: NextRequest) {
       .eq("status", "criada");
   }
 
-  let elegiveis: { nome: string; emoji: string | null; imagem_url: string | null }[];
+  type PublicPrize = { id: number; tipo: string; nome: string; emoji: string | null; imagem_url: string | null };
+  let elegiveis: PublicPrize[];
   // A função marca a presença da migração; o gate de entregas não decide o que
   // a roda exibe. Se o cache da API ainda não a conhece, não mostrar físico.
   const { data: filteredPrizes, error: eligibleError } = await supabaseAdmin.rpc("listar_premios_elegiveis_v2", { p_sessao_id: sessao.id });
   if (!eligibleError && Array.isArray(filteredPrizes)) {
-    elegiveis = filteredPrizes as { nome: string; emoji: string | null; imagem_url: string | null }[];
+    elegiveis = filteredPrizes as PublicPrize[];
   } else if (eligibleError?.code === "PGRST202" && !deliveryLedgerEnabled(process.env)) {
     // Migração ainda não aplicada (ou cache ainda não atualizado). O piloto
     // antigo segue acessível, mas sem prometer prêmio físico inelegível.
     const { data: premios, error: premiosError } = await supabaseAdmin
       .from("premios_roleta")
-      .select("nome, emoji, tipo, pesos_nivel")
+      .select("id, nome, emoji, tipo, pesos_nivel")
       .eq("versao", 2)
       .eq("ativo", true)
       .eq("participa_roleta", true);
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Não foi possível preparar os prêmios." }, { status: 503 });
     }
     elegiveis = sorteaveis
-      .map(({ nome, emoji }) => ({ nome, emoji, imagem_url: null }));
+      .map(({ id, tipo, nome, emoji }) => ({ id, tipo, nome, emoji, imagem_url: null }));
   } else {
     return NextResponse.json({ error: "Não foi possível preparar os prêmios." }, { status: 503 });
   }
@@ -80,6 +81,6 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     nivel: sessao.nivel,
     expira_em: sessao.expira_em,
-    premios: elegiveis.map(({ nome, emoji, imagem_url }) => ({ nome, emoji, imagem_url })),
+    premios: elegiveis.map(({ id, tipo, nome, emoji, imagem_url }) => ({ id, tipo, nome, emoji, imagem_url })),
   });
 }

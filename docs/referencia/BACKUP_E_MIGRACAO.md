@@ -97,6 +97,20 @@ Use em caso de desastre ou mudança de conta/organização.
 As senhas da equipe continuam valendo, porque vão junto nos dados. Quem estava
 logado precisa entrar de novo.
 
+### Fotos de prêmios enviadas pelo painel
+
+O backup inclui o bucket público `premios` (fotos de produtos, nunca comandas).
+As URLs gravadas em `premios_roleta.imagem_url` e a validação do upload em
+`src/lib/prizeImage.ts`/SQL vinculam essas fotos ao projeto `asjoubgoccbvftyggunz`.
+Restaurar arquivos em outro projeto **não** troca as URLs nem essas validações.
+Antes de usar o painel no destino, adaptar a URL permitida no código, no CHECK
+`premios_roleta_imagem_url_segura` e em `atualizar_imagem_premio`, sem abrir para
+hosts arbitrários; reenviar as fotos pelo painel para registrar os novos vínculos
+e auditoria. Preservar backup e origem até validar foto → roleta → resultado.
+Fotos locais em `public/roleta/premios` não dependem do ref do Supabase.
+O upgrade Free → Pro no mesmo projeto não exige esse procedimento. Migração
+de fotos para outro projeto ainda não foi ensaiada; não marcá-la como validada.
+
 ## Pendências relacionadas
 
 - Registrar o histórico de migrações no Supabase (hoje não existe pelo CLI). Dono: Codex.

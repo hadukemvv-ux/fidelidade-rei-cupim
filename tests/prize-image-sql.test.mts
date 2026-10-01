@@ -84,12 +84,14 @@ test('migração de fotos: storage restrito, vínculo e auditoria atômicos, RPC
     await t.test('foto aparece na elegibilidade e no giro real sem alterar prêmio/pesos ou permitir re-roll', async () => {
       const id = '00000000-0000-4000-8000-000000000005';
       await db.query("insert into public.roleta_sessoes values ($1,'fixture-token','aberta',1,now()+interval '10 minutes',null,200,null)", [id]);
-      const prizes = await db.query<{ imagem_url: string }>('select * from public.listar_premios_elegiveis_v2($1)', [id]);
+      const prizes = await db.query<{ imagem_url: string; id: number; tipo: string }>('select * from public.listar_premios_elegiveis_v2($1)', [id]);
       assert.equal(prizes.rows[0].imagem_url, url);
+      assert.equal(Number(prizes.rows[0].id), 1); assert.equal(prizes.rows[0].tipo, 'frete_gratis');
       const args = ['fixture-token','fixture-phone',null,false,'fixture','fixture','fixture-ip',0,'fixture-code','fixture-code'];
       const query = 'select public.girar_roleta_v2($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) as result';
-      const result = (await db.query<{ result: { ok: boolean; premio: { imagem_url: string } } }>(query, args)).rows[0].result;
+      const result = (await db.query<{ result: { ok: boolean; premio: { imagem_url: string; id: number; tipo: string } } }>(query, args)).rows[0].result;
       assert.equal(result.ok, true); assert.equal(result.premio.imagem_url, url);
+      assert.equal(result.premio.id, 1); assert.equal(result.premio.tipo, 'frete_gratis');
       assert.equal((await db.query<{ result: { ok: boolean } }>(query, args)).rows[0].result.ok, false);
     });
     await t.test('RLS barra upload direto mesmo com política permissiva; RPC não acessível a clientes', async () => {

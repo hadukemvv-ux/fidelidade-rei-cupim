@@ -42,6 +42,22 @@ transação. Em erro/timeout, atualizar o painel antes de qualquer nova tentativ
 não retentar automaticamente. Fotos antigas/candidatas são preservadas, nunca
 apagadas ou sobrescritas automaticamente; limpeza exige decisão separada.
 
+### Edição de nomes e mensagens — backend preparado
+
+Antes de publicar o novo PUT, aplicar a migração revisada/autorizada
+`202610010002_edicao_premios_auditada.sql`. Sem ela, a escrita falha fechada;
+não há fallback sem auditoria. `PUT /api/admin/premios` recebe JSON `{id,nome?,
+descricao_vitoria?,...campos_operacionais_existentes}` com Bearer superadmin.
+Nome: texto não vazio até 255 caracteres; mensagem: até 500, `null`/vazia para
+limpar. Campos omitidos permanecem intactos; tipo/código/foto não são editáveis
+nesse PUT. Banco reconfirma ator/pausa/piloto e salva alteração + auditoria em
+uma transação; erro/timeout não retenta. `GET` e sucesso `{ok:true,data:{premio}}`
+mantêm o contrato. Tela de textos fica com Claude.
+O SQL de entregas `202609290001`, ainda não aplicado, agora também retorna
+`id` e `tipo` na lista pública e no giro. Claude deve usar ID para associar a
+fatia ao resultado e tipo para fotos padrão/avisos; nunca inferir regra pelo
+nome editável. Essa alteração de metadados exige nova revisão da migração.
+
 ### Teste isolado de conexão WhatsApp por QR (não é OTP pronto)
 
 Somente número separado, em terminal local privado, Node 24+. Não roda na Vercel.

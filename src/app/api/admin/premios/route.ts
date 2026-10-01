@@ -1,12 +1,9 @@
 import { NextRequest } from 'next/server';
-import { z } from 'zod';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { requireOperationalActor } from '@/lib/operationalAuth';
-import { validarDados } from '@/lib/validations';
+import { updatePrize } from '@/lib/prizeUpdate';
 import {
   successResponse,
-  errorResponse,
-  validationErrorResponse,
   getRequestId,
   logInfo,
   logError,
@@ -14,24 +11,6 @@ import {
 } from '@/lib/api-utils';
 
 export const dynamic = 'force-dynamic';
-
-const PremioUpdateSchema = z.object({
-  id: z.coerce.number().int().positive('ID do premio invalido'),
-  nome: z.string().trim().min(1).max(255).optional(),
-  descricao_vitoria: z.string().max(500).optional().nullable(),
-  emoji: z.string().max(16).optional(),
-  probabilidade: z.coerce.number().int().min(0).max(100000).optional(),
-  ativo: z.boolean().optional(),
-  valor: z.coerce.number().min(0).optional(),
-  participa_roleta: z.boolean().optional(),
-  canal_uso: z.enum(['presencial', 'delivery', 'ambos']).optional(),
-  custo_estimado: z.coerce.number().min(0).optional(),
-  expira_em_dias: z.coerce.number().int().min(1).max(90).optional(),
-  pesos_nivel: z.array(z.coerce.number().int().min(0).max(100000)).length(6).optional(),
-  descricao_operacional: z.string().max(1000).optional().nullable(),
-});
-
-type PremioUpdateInput = z.infer<typeof PremioUpdateSchema>;
 
 export async function GET(request: NextRequest) {
   const requestId = getRequestId(request);
@@ -69,101 +48,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const requestId = getRequestId(request);
-
   const actor = await requireOperationalActor(request, 'superadmin');
   if (actor instanceof Response) return actor;
-
-  try {
-    const body = await request.json();
-    if (body && Object.prototype.hasOwnProperty.call(body, 'imagem_url')) {
-      return errorResponse('Troque a foto pela operação de upload do prêmio.', 'validation_error', 400, requestId);
-    }
-    const validacao = validarDados<PremioUpdateInput>(PremioUpdateSchema, body);
-
-    if (!validacao.ok) {
-      return validationErrorResponse(validacao.error);
-    }
-
-    const { id, ...updateData } = validacao.data;
-
-    if (Object.keys(updateData).length === 0) {
-      return errorResponse('Nenhum campo valido para atualizar', 'validation_error');
-    }
-
-    const { data: atual, error: atualError } = await supabaseAdmin
-      .from('premios_roleta')
-      .select('codigo, versao, nome, ativo, canal_uso, custo_estimado, expira_em_dias, pesos_nivel, descricao_operacional')
-      .eq('id', id)
-      .maybeSingle();
-    if (atualError) return handleApiError(atualError, '/api/admin/premios', requestId);
-    if (!atual) return errorResponse('Prêmio não encontrado', 'not_found', 404, requestId);
-
-    if (Number(atual.versao) === 2 && atual.codigo !== 'piloto_interno_sem_valor_v2' && updateData.ativo === true) {
-      const { data: config, error: configError } = await supabaseAdmin
-        .from('roleta_configuracoes')
-        .select('v2_modo_teste')
-        .eq('id', 1)
-        .maybeSingle();
-      if (configError || !config) return errorResponse('Não foi possível verificar o modo da roleta.', 'server_error', 500, requestId);
-      if (config.v2_modo_teste) return errorResponse('Prêmios comerciais devem permanecer em rascunho durante o piloto.', 'validation_error', 409, requestId);
-    }
-
-    // A sátira do PlayStation é sempre visual e nunca entra no sorteio real.
-    if (/playstation/i.test(atual.nome || '') || /playstation/i.test(updateData.nome || '')) {
-      updateData.participa_roleta = false;
-    }
-
-    logInfo('/api/admin/premios', 'Atualizando premio da roleta', {
-      id,
-      campos: Object.keys(updateData),
-      superadmin_id: actor.userId,
-      requestId,
-    });
-
-    const { data, error } = await supabaseAdmin
-      .from('premios_roleta')
-      .update(updateData)
-      .eq('id', id)
-      .select('*')
-      .maybeSingle();
-
-    if (error) {
-      logError('/api/admin/premios', error as Error, { id, requestId });
-      return handleApiError(error, '/api/admin/premios', requestId);
-    }
-
-    if (!data) return errorResponse('Prêmio não encontrado', 'not_found', 404, requestId);
-
-    const { error: auditError } = await supabaseAdmin.from('administracao_eventos').insert({
-      entidade: 'configuracao',
-      entidade_id: `premio:${id}`,
-      acao: 'premio_roleta_atualizado',
-      actor_user_id: actor.userId,
-      actor_email: actor.email,
-      detalhes: {
-        premio_id: id,
-        nome: data.nome,
-        campos_alterados: Object.keys(updateData),
-        antes: atual,
-        depois: {
-          ativo: data.ativo,
-          canal_uso: data.canal_uso,
-          custo_estimado: data.custo_estimado,
-          expira_em_dias: data.expira_em_dias,
-          pesos_nivel: data.pesos_nivel,
-          descricao_operacional: data.descricao_operacional,
-          imagem_url: data.imagem_url,
-        },
-      },
-    });
-    if (auditError) logError('/api/admin/premios', auditError as Error, { id, requestId, etapa: 'auditoria' });
-
-    return successResponse({ premio: data });
-  } catch (error) {
-    logError('/api/admin/premios', error instanceof Error ? error : new Error(String(error)), {
-      requestId,
-    });
-    return handleApiError(error, '/api/admin/premios', requestId);
-  }
+  return updatePrize(request, actor, {
+    async commit({ prizeId, actorId, changes }) {
+      const { data, error } = await supabaseAdmin.rpc('atualizar_premio_roleta', {
+        p_premio_id: prizeId, p_actor_id: actorId, p_alteracoes: changes,
+      });
+      if (error || !data) throw new Error('Falha ao confirmar edição do prêmio.');
+      return data;
+    },
+  });
 }

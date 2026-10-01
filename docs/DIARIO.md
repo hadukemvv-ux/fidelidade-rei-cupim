@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**01/10/2026 — Codex** · `codex/premios-textos`: integrada tela de fotos revisada `claude/upload-fotos` (4d6edda), com main atual; registrada recuperação das fotos em outro projeto Supabase.
+PUT de prêmios normaliza/valida nome e mensagem, mantém campos omitidos e grava edição/auditoria juntas via RPC `202610010002`; ator/pausa/piloto reconferidos no banco.
+SQL de entregas ainda não aplicado ganhou somente ID/tipo nos retornos públicos para não depender de nome editável; sem mudar elegibilidade, pesos ou quantidades.
+145 testes, tipos/lint e build fictício OK; revisão Claude e campos/associação/avisos na UI pendentes; sem SQL aplicado, publicação na main ou ativação comercial/OTP.
+
 **01/10/2026 — Claude** · Tela de upload de foto em `/admin/roleta` (branch `claude/upload-fotos`, sobre `codex/premios-imagens`): foto atual em cada prêmio, prévia antes de enviar, só superadmin troca, JPG/PNG/WebP até 2 MB, um envio por clique e painel relido após sucesso, erro ou demora. Revisão da migração `202610010001` OK. Não publicado nem aplicado.
 
 **01/10/2026 — Codex** · `codex/premios-imagens`: reutilizada branch de baixas para preservar elegibilidade/re-roll; API superadmin de foto JPG/PNG/WebP até 2 MB, WebP até 1024 px/512 KB sem metadados.

@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**01/10/2026 — Claude** · `claude/consolidacao`: main atual (7b6a79d) + `claude/premios-textos` (b7cd04e) + `codex/whatsapp-otp` (5ec320c) numa branch só; conflitos apenas em README/ROADMAP/DIARIO/COMECE_AQUI, resolvidos mantendo as duas frentes; backup registrado como adiado pelo responsável. Revisão do `5ec320c` (inspeção offline do relógio) OK. Não publicado nem aplicado.
+
 **01/10/2026 — Claude** · `claude/telas-cliente`: cadastro, login/pontos, redefinir PIN e completar cadastro com as fontes da roleta (Oswald/Inter, só nessas telas; home mantém as dela) e fundo carvão alinhado. Foto da home/cadastro/login trocada pelo cupim trinchado do responsável (arquivo renomeado para não servir cache do baião). `COMECE_AQUI` atualizado com o que espera autorização. Testado em 375 px sem vazamento; lint, tipos, 100 testes e build OK.
 
 **01/10/2026 — Claude** · `claude/premios-textos` (sobre b190f6f): `/admin/roleta` edita nome e mensagem de vitória (nome vazio barrado, um envio por clique, painel relido em erro/timeout). Roleta associa resultado à fatia por `id` e escolhe foto/aviso de cerveja por `tipo` (nome só como reserva para respostas antigas); 4 testes novos incluindo prêmio renomeado. Revisão da migração `202610010002` OK. Não publicado nem aplicado.
@@ -23,10 +25,42 @@ Próximo: revisão Claude, tela upload no admin e implantação/ensaio autorizad
 
 **01/10/2026 — Claude** · Fotos dos prêmios na roleta (Pexels, licença comercial, sem marcas; autorizadas pelo responsável): saideira (1 garrafa), expulsadeira (2), pudim, brownie e sobremesa (pudim+brownie). Tela do prêmio avisa "1/2 unidades da mesma cerveja que você consumiu", "Beba com moderação. Proibido para menores de 18 anos" e "Foto ilustrativa". Faltam fotos próprias de dindim e entrega; troca de foto pelo painel depende de `imagem_url` (Codex).
 
-**29/09/2026 — Codex** · Responsável autorizou publicar conexão QR; main atual integrada preservando a roleta do Claude, 100 testes + 11 worker e tipos OK.
+**01/10/2026 — Codex** · Continuação de `codex/whatsapp-otp`: inspeção offline do relógio sob lock, sem alterar sessão/ledgers, revelar dados privados ou conectar/enviar; guia de detecção/espera segura preparado.
+Não reduzir watermark isoladamente: timestamps futuros também afetam quotas; destrave antecipado manual continua pendente de revisão específica, sem reset automático.
+Responsável reafirmou pausa do backup Supabase; sem acessar sua configuração, aplicar SQL, mudar gates ou publicar; roadmap único do projeto tem versões em branches a consolidar pelo Claude.
+130 testes app + 35 worker, tipos e lint OK com dados fictícios; revisão do utilitário e implantação/piloto reais ainda pendentes.
+
+**01/10/2026 — Codex** · `codex/whatsapp-otp`: tela Claude integrada (5780ff4); ledger OTP limpa >24h sem perder quotas, sessão ou teste fixo; relógio regressivo bloqueado e falha pós-envio documentada.
+130 testes app, 32 worker, cinco cenários nativos PostgreSQL com conexões distintas/espera real por locks, tipos e lint direcionado OK; sem SQL em produção, envio, ativação ou publicação na main.
+Modelos editáveis, avisos consolidados e fluxo do garçom registrados como pendentes; sobremesas por produto/quantidade, sem sabores, e marcas de cerveja confirmadas sem inventar unidades.
+Próximo: revisão final do ajuste, autorização de implantação e piloto cadastro/reset no celular; pontos/níveis automáticos e mensagens operacionais ainda não ligados.
+
+**01/10/2026 — Claude** · Revisão de `codex/whatsapp-otp` (260d2d5): migração compatível (status só ganha `indeterminado`), verificação/grant atômicos e anti-replay OK; ponto a corrigir: ledger OTP do worker trava em 1.000 registros sem limpeza. Tela `WhatsappOtpVerification` em `claude/otp-tela`: separa "aceito" de "indeterminado" sem prometer entrega, nunca reenvia sozinha, código novo invalida o anterior, espera 60 s após erro. Não publicado.
+
+**30/09/2026 — Codex** · `codex/whatsapp-otp`: OTP QR fechado (1–3 destinos), token separado, ledger persistente sem replay e confirmação/grant transacionais; Twilio preservado como padrão desligado.
+Migração `202609300001` preparada: falhas contam na quota; código com HMAC/10min/5 tentativas, propósito/telefone vinculados, reenvio invalida anterior e grants exclusivos de serviço.
+129 testes do app (PGlite/HTTP com socket fictício), 28 worker, tipos e lint OK; nenhuma mensagem, SQL em produção, campanha, deploy ou mudança visual nesta etapa.
+Pendentes revisão Claude, concorrência com duas conexões reais, UI para envio indeterminado e implantação/piloto celular autorizados; README traz contrato/configuração sem segredos.
+
+**30/09/2026 — Codex** · `codex/whatsapp-mensagens`: resolução do destino via `onWhatsApp`, sem alterar telefone do cadastro; recebimento real confirmado pelo responsável e print após novo ensaio autorizado.
+UUID privado fixou só uma tentativa adicional; dois registros criptografados preservados após restart/reconexão, envio fechado (503), destino e autorização temporários removidos.
+104 testes do app + 20 worker e tipos OK; falha/ambiguidade de consulta bloqueia envio, nenhum retry cego ou exclusão do registro anterior.
+Sem publicação na main, campanha ou OTP; faltam fila/gatilhos, observabilidade das entregas e acesso administrativo entre redes.
+
+**30/09/2026 — Codex** · Diagnóstico do piloto `603a5f5`: responsável confirmou não recebimento; aceitação do transporte não comprovou entrega.
+Consulta real `onWhatsApp` do único destino reconheceu uma conta e retornou JID sem nono dígito, diferente do endereço usado pelo piloto; sem registrar telefone/JID nem novo envio.
+Worker reconectado após diagnóstico; gate de envio 503, registro anterior preservado e rota pública continua não exposta.
+Pendente: resolver endereço pelo provedor, distinguir estados de envio/entrega e solicitar autorização para novo teste; não remover dígitos cegamente nem apagar reserva.
+
+**30/09/2026 — Codex** · `codex/whatsapp-mensagens`: SSH temporário /32 ajustado; um teste manual fixo aceito pelo transporte, recebimento no celular ainda pendente.
+Piloto Oracle fechado após o envio: destino temporário removido, rota interna 503 e pública 404; registro criptografado único preservado após reinício/reconexão sem novo QR.
+Modelos de verificação/cadastro/garçom em rascunho; 104 testes do app + 17 worker e tipos OK, sem campanha/OTP ou publicação na main.
+Cópia privada local para rollback na VM não equivale a backup externo/restauração; faltam acesso entre redes, auditoria e fila/gatilhos reais.
+
+**29/09/2026 — Codex** · Conexão QR publicada com autorização em 26a5743; main integrada preservando a roleta do Claude, 100 testes + 11 worker e tipos OK.
 Vercel: três variáveis de controle como Secret, exclusivamente Production; chave de sessão permanece somente na Oracle, sem envios/OTP.
 Git lê OpenSSL do `.gitconfig` do usuário e push normal da branch passou; não prova ausência de falhas futuras.
-Pareamento/reconexão reais, auditoria de transições, backup/monitor e transporte de mensagens continuam pendentes.
+Produção Ready: API sem login 401/no-store, superadmin consulta estado e gera QR; pareamento/reconexão, auditoria, backup/monitor e envios pendentes.
 
 **29/09/2026 — Codex** · DNS `whatsapp.clubecupim.com.br` salvo e confirmado; site/e-mail preservados, sem upgrade pago.
 Caddy 2.11.4 oficial instalado, admin API/access log desligados; rotas restritas, worker segue em loopback e testes de autenticação aprovados.

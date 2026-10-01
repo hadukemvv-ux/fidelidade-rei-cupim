@@ -41,6 +41,10 @@ export async function openSessionStore({ directory, keyHex, initCredentials, cod
       try { await handle.writeFile(Buffer.concat([Buffer.from([1]), nonce, cipher.getAuthTag(), encrypted])); await handle.sync(); }
       finally { await handle.close(); }
       await rename(`${file}.tmp`, file);
+      if (process.platform !== 'win32') {
+        const parent = await open(directory, 'r');
+        try { await parent.sync(); } finally { await parent.close(); }
+      }
     });
     // Key writes happen inside Baileys too; notify the controller even when the
     // library consumes the rejected promise internally.
@@ -48,6 +52,70 @@ export async function openSessionStore({ directory, keyHex, initCredentials, cod
     return queue;
   }
   return {
+    // OTP ledger is separate from the fixed-test ledger and contains no code,
+    // phone or text. Retain 24h (payloads expire in 10min); preserve the
+    // fixed-test ledger. Cleanup occurs before each valid new reservation.
+    async reserveOtpSend(id, fingerprint, phoneHash, nowMs) {
+      if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(id) ||
+        !/^[a-f0-9]{64}$/.test(fingerprint) || !/^[a-f0-9]{64}$/.test(phoneHash) || !Number.isFinite(nowMs)) throw new Error('Invalid OTP reservation');
+      document.otpSends ??= [];
+      let rows = document.otpSends;
+      if (!Array.isArray(rows) || rows.length > 1000 || rows.some(row => !row ||
+        typeof row.id !== 'string' || !/^[a-f0-9]{64}$/.test(row.fingerprint) || !/^[a-f0-9]{64}$/.test(row.phoneHash) ||
+        !Number.isFinite(row.createdAt) || !['pending', 'accepted', 'unknown'].includes(row.status))) throw new Error('Invalid OTP ledger');
+      // A backwards clock must not make previously pruned payloads valid again
+      // or shorten the quota window. Persist this watermark across restarts.
+      const lastReservation = document.otpLastReservationAt ?? Math.max(0, ...rows.map(row => row.createdAt));
+      if (!Number.isFinite(lastReservation) || nowMs < lastReservation) throw new Error('Invalid OTP clock');
+      rows = rows.filter(row => row.createdAt >= nowMs - 86_400_000);
+      document.otpSends = rows;
+      const existing = rows.find(row => row.id === id);
+      if (existing) {
+        if (existing.fingerprint !== fingerprint || existing.phoneHash !== phoneHash) throw new Error('OTP conflict');
+        return { reserved: false, status: existing.status === 'pending' ? 'unknown' : existing.status };
+      }
+      // Same hard limits on the worker even if the upstream service misbehaves.
+      const recent = rows; // Includes the exact 24h boundary, as the SQL quota does.
+      const phoneRows = recent.filter(row => row.phoneHash === phoneHash);
+      if (rows.length >= 1000 || recent.length >= 30 ||
+        phoneRows.filter(row => row.createdAt >= nowMs - 3_600_000).length >= 3 ||
+        phoneRows.some(row => row.createdAt > nowMs - 60_000)) throw new Error('OTP limit');
+      rows.push({ id, fingerprint, phoneHash, createdAt: nowMs, status: 'pending' });
+      document.otpLastReservationAt = nowMs;
+      await persist();
+      return { reserved: true };
+    },
+    async finishOtpSend(id, status) {
+      const row = document.otpSends?.find(row => row.id === id);
+      if (!row || row.status !== 'pending' || !['accepted', 'unknown'].includes(status)) throw new Error('Invalid OTP result');
+      row.status = status;
+      await persist();
+    },
+    // A tiny pilot ledger, encrypted with the session. Never store phone/text.
+    // Keep it through unlinking; a new request ID alone cannot repeat a test.
+    // An explicitly approved repeat must match the private worker configuration.
+    async reserveTestSend(id, recipientHash, approvedRequestId) {
+      if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id) || !/^[a-f0-9]{64}$/.test(recipientHash)) throw new Error('Invalid test reservation');
+      if (approvedRequestId !== undefined && approvedRequestId !== id) throw new Error('Invalid test approval');
+      document.testSends ??= [];
+      if (!Array.isArray(document.testSends) || document.testSends.length > 20 || document.testSends.some(row =>
+        !row || typeof row.id !== 'string' || !/^[a-f0-9]{64}$/.test(row.recipientHash) || !['pending', 'accepted', 'unknown'].includes(row.status))) throw new Error('Invalid test ledger');
+      const byId = document.testSends.find(row => row.id === id);
+      if (byId && byId.recipientHash !== recipientHash) throw new Error('Test request conflict');
+      const existing = byId || (approvedRequestId === undefined ? document.testSends.find(row => row.recipientHash === recipientHash) : undefined);
+      if (existing) return { reserved: false, status: existing.status === 'pending' ? 'unknown' : existing.status };
+      if (document.testSends.length >= 20) throw new Error('Test limit reached');
+      document.testSends.push({ id, recipientHash, status: 'pending', ...(approvedRequestId ? { explicitlyApproved: true } : {}) });
+      await persist();
+      return { reserved: true };
+    },
+    async finishTestSend(id, status) {
+      if (!['accepted', 'unknown'].includes(status)) throw new Error('Invalid test result');
+      const row = document.testSends?.find(row => row.id === id);
+      if (!row || row.status !== 'pending') throw new Error('Missing test reservation');
+      row.status = status;
+      await persist();
+    },
     setFailureHandler(handler) { onFailure = handler; },
     state: {
       creds: document.creds,

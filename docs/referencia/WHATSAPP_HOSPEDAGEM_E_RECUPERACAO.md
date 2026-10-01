@@ -1,6 +1,6 @@
 # WhatsApp: hospedagem, recuperação e migração
 
-Guia solicitado pelo responsável em 29/09/2026. Estado: **worker e HTTPS validados; integração Production configurada/publicação autorizada, pareamento pendente**.
+Guia solicitado pelo responsável em 29/09/2026. Atualização em 30/09: **worker/HTTPS, pareamento/reinício e recebimento real confirmados; destino resolvido pelo WhatsApp; envio fechado**.
 Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 
 ## Para o responsável
@@ -8,7 +8,7 @@ Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 - O admin deverá mostrar conexão, última verificação e ação recomendada.
 - Uma queda não significa necessidade de migração: pode ser celular desvinculado,
   serviço parado, falha de rede, credencial ou limite do provedor.
-- O painel do Claude foi integrado para publicação autorizada. Monitoramento externo
+- O painel do Claude está publicado para o superadmin. Monitoramento externo
   e avisos de limite ainda não existem; não contar com alertas automáticos hoje.
 - Custo zero depende das cotas e disponibilidade do provedor. A Oracle pode
   recolher recursos gratuitos ociosos. Não gerar carga artificial para evitar isso.
@@ -21,9 +21,9 @@ Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 | Conta Oracle / região / máquina | Conta gratuita; São Paulo (`sa-saopaulo-1`); `clubecupim-whatsapp`, Ubuntu 24.04, E2.1.Micro (1 GB), disco 46,6 GB |
 | Plano e custo autorizado | Always Free, R$ 0 dentro das cotas |
 | Endereço HTTPS do serviço | `https://whatsapp.clubecupim.com.br`; DNS e certificado válido confirmados, controle HTTPS autenticado testado |
-| Sessão e chave | Chave/token distintos criados na VM; nenhuma sessão WhatsApp real pareada nela |
+| Sessão e chave | Chave/token distintos na VM; sessão real do número dedicado criptografada, permissões privadas |
 | Backup externo privado | Pendente de configurar e testar |
-| Último pareamento persistente real | Não realizado |
+| Último pareamento persistente real | Confirmado em 29/09; reinício/reconexão sem novo QR validados em 30/09 |
 | Última restauração real | Não realizada |
 | Monitor externo / destino do alerta | Pendente de definir e configurar |
 
@@ -67,7 +67,7 @@ df -h /
 Parar de forma limpa: `sudo systemctl stop clubecupim-whatsapp`.
 Reiniciar: `sudo systemctl restart clubecupim-whatsapp`. O worker atual **não
 reconecta automaticamente**: depois do restart, consultar estado e usar Conectar
-no admin. A sessão salva deve ser reutilizada, mas isso aguarda ensaio real.
+no admin. A reutilização da sessão salva após reinício foi validada em 30/09.
 Nunca remover `session.enc`/trocar a chave para resolver um erro de lock.
 Não coletar corpo do QR nem cabeçalhos de autorização nos diagnósticos.
 
@@ -89,8 +89,10 @@ Responsável autorizou publicação e configuração: `WHATSAPP_QR_CONTROL_ENABL
 Secret somente em Production. Nenhuma chave de sessão foi enviada à Vercel;
 Preview/Development não recebem o segredo de controle. Envios/OTP não habilitados.
 
-Próximo passo: conferir implantação no site, parear número dedicado e testar
-reconexão/restauração reais.
+Publicação `26a5743` confirmada Ready na Vercel: consulta sem login recusada com
+401/no-store; superadmin consultou estado desconectado e gerou QR no domínio real.
+Pareamento/reconexão foram confirmados posteriormente; restauração externa continua
+pendente. Textos locais antigos da tela precisam de ajuste pelo Claude.
 Para mudar o proxy com admin API desligada, validar
 o arquivo com `caddy validate` e usar `sudo systemctl restart caddy`.
 Não expor a porta 8787 nem apontar produção para HTTP/IP sem certificado.
@@ -117,11 +119,79 @@ VM, preservando sessão/chave e validando o destino antes de desligar a origem.
 8. Configurar verificação externa com alerta que não dependa deste WhatsApp.
    Medir memória, disco e disponibilidade; acompanhar também notificações da Oracle.
 
-O serviço atual só conecta/desconecta. Não há envio implementado nesse worker.
-Antes do primeiro envio: implementar transporte restrito aos destinatários de
-teste aprovados, limites e tratamento de resultado incerto; depois ligar OTP.
+Em 30/09, piloto de mensagem fixa instalado no worker Oracle com destino aprovado.
+Um envio inicial foi aceito pelo transporte, mas o responsável informou não recebimento.
+Consulta real do único destinatário retornou endereço interno sem nono dígito,
+diferente do endereço montado no piloto. Correção usa somente o endereço retornado
+pelo WhatsApp para o destino autorizado, sem alterar o telefone cadastrado.
+Responsável autorizou um novo ensaio e confirmou recebimento com print depois dele.
+Um UUID privado fixou a tentativa adicional; não há liberação por novo UUID arbitrário,
+retry de rede ou reinício. Os dois registros anteriores continuam preservados.
+Modo de teste encerrado, destino e autorização temporários removidos; gate interno retorna 503,
+rota pública retorna 404. Nenhum envio automático/OTP/campanha foi habilitado.
+Os dois registros criptografados foram preservados após reinício, sem outro QR.
+Código permanece na branch de trabalho, não publicado na main da Vercel.
+Cópia de código, configuração e sessão em diretório privado de rollback na mesma VM
+não substitui backup externo nem ensaio de restauração. Não restaurar cópia anterior
+ao envio como forma de apagar sua reserva e repetir uma mensagem.
+Antes de OTP: fila persistente, limites antiabuso, reserva/expiração e revisão do fluxo.
 
 ## Como interpretar um problema
+
+OTP QR preparado em 01/10, **ainda não implantado/ativado**: o worker limpa somente
+reservas OTP com mais de 24h antes de admitir novos envios. Preserva limites,
+sessão e registros do teste fixo; payload expira em 10min. Não remover registros
+manualmente para reenviar. Se o relógio retroceder, reserva bloqueada até corrigir
+o relógio e alcançar o último horário persistido; corrigir o NTP sozinho não
+reduz `otpLastReservationAt`. Não apagar o marcador para contornar a proteção.
+Se a mensagem for aceita mas falhar a finalização no banco, o código pode chegar
+inutilizável (status ainda `reservado`). Esperar 60s e pedir novo código explicitamente,
+sem retry do transporte nem edição manual do status. Não registrar o código em logs.
+
+### Relógio avançou e depois voltou — procedimento seguro
+
+Diagnóstico/preparação de 01/10; **não executado na VM real**. OTP continua fechado.
+Uma resposta 503 não prova falha de relógio: também pode ser rede, configuração
+ou quota. Conferir primeiro `date -u` e `timedatectl status` por SSH; o relógio
+deve estar sincronizado com uma fonte confiável, sem avançá-lo artificialmente.
+
+1. Suspender novas solicitações OTP no app/worker pelos gates; não reabrir
+   enquanto houver diagnóstico inconclusivo. Não alterar status de códigos no banco.
+2. Parar o processo com `sudo systemctl stop clubecupim-whatsapp` (não clicar
+   em Desconectar, que revoga a sessão). Não rodar duas instâncias na mesma pasta.
+3. Depois de implantar o utilitário revisado, inspecionar com ambiente privado,
+   sem imprimir o arquivo de configuração nem passar a chave na linha de comando:
+
+   ```sh
+   sudo systemd-run --quiet --wait --pipe --collect --unit=clubecupim-otp-clock-check \
+     --property=User=clubecupim-wa \
+     --property=EnvironmentFile=/etc/clubecupim-whatsapp.env \
+     --property=WorkingDirectory=/opt/clubecupim/services/whatsapp-qr \
+     /opt/node24/bin/node inspect-otp-clock.mjs --inspect --worker-stopped
+   ```
+
+   O utilitário usa o lock normal e só lê `session.enc`: não conecta WhatsApp,
+   não envia, não regrava credenciais e não retorna telefones, códigos ou hashes.
+   Saída 0: relógio sem regressão detectada (não significa conexão/quota OK).
+   Saída 2: horário atual anterior ao marcador ou a alguma reserva retida.
+   Saída 1: diagnóstico indisponível; preservar sessão/chave/lock e investigar.
+4. A recuperação suportada é manter o horário correto e aguardar que alcance
+   `otp_last_reservation_at` e `newest_retained_reservation_at`. As quotas
+   normais ainda valem. `conservative_resume_after` é o maior desses horários
+   +24h+1ms: sem novas reservas, nesse momento todos os registros antigos já
+   ficam fora da janela diária. Não é uma promessa de disponibilidade da rede.
+5. Repetir inspeção com worker parado. Quando o relógio estiver seguro, iniciar
+   o serviço e reconectar pelo admin à sessão salva. Reabrir o piloto somente
+   após verificar os gates/destinos aprovados; pedir código novo explicitamente,
+   nunca repetir envio de resultado incerto ou restaurar estado anterior ao envio.
+
+**Não basta diminuir o watermark:** reservas com `createdAt` futuro continuam
+participando do cooldown e das quotas. Um salto também pode ter podado reservas
+anteriores; resetá-lo às cegas enfraquece a proteção contra repetição. Destrave
+antecipado editando o arquivo criptografado não está implementado/autorizado;
+se a espera for impraticável, manter OTP fechado e revisar uma recuperação
+offline específica antes de qualquer mudança. Nunca apagar `session.enc`,
+`otpSends` ou o histórico de mensagens de teste para resolver esse problema.
 
 | Sinal | Verificação e ação |
 | --- | --- |
@@ -160,7 +230,7 @@ teste aprovados, limites e tratamento de resultado incerto; depois ligar OTP.
 
 ## Registro dos ensaios
 
-| Ensaio | Resultado até 29/09/2026 |
+| Ensaio | Resultado até 01/10/2026 |
 | --- | --- |
 | QR temporário local | Responsável confirmou conexão; sem mensagens |
 | Sessão criptografada e reinício | Teste automatizado com dados fictícios aprovado |
@@ -169,11 +239,14 @@ teste aprovados, limites e tratamento de resultado incerto; depois ligar OTP.
 | Controle HTTPS real | 401 sem/token errado, 400 com Origin, 200 autenticado; demais rotas 404, HTTP→HTTPS 308; nenhum envio |
 | Autenticação na VM / isolamento | Sem token e token errado: 401; Origin presente: 400; autenticado: 200; somente loopback |
 | Reinício real do processo, sem pareamento | Aprovado: serviço ativo e controle autenticado após reinício limpo |
-| Reinício com número dedicado | Pendente |
+| Reinício com número dedicado | Aprovado em 30/09: sessão recuperada sem QR antes/depois dos testes manuais |
+| Mensagem fixa manual | Destino resolvido pelo WhatsApp; responsável confirmou recebimento com print após novo ensaio autorizado; envio fechado, dois registros preservados |
 | Backup/restauração real | Pendente |
 | Migração entre máquinas | Pendente |
 | Aviso externo de falha | Pendente |
 | OTP de cliente / mensagem ao garçom | Pendente |
+| OTP QR: retenção e concorrência | 01/10: retenção testada além de 1.000 reservas; duas conexões nativas PostgreSQL locais validaram reserva, confirmação, consumo, tentativas e preparação concorrentes; sem acesso ao Supabase/WhatsApp de produção |
+| OTP QR: diagnóstico de relógio | 01/10: inspeção offline com dados fictícios detecta reservas futuras, preserva os bytes de sessão e os ledgers, recusa lock ocupado/chave errada; liberação após espera conservadora testada, sem destrave manual ou ensaio na VM |
 
 Referência de cotas e recolhimento: [Oracle Always Free](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm).
 O guia deve ser atualizado após cada ensaio e mudança de provedor.

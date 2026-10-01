@@ -17,10 +17,10 @@ Push/merge em `main` = deploy automático em produção.
 | Roleta V2 | **Piloto técnico** — prêmio interno de R$ 0, sem valor comercial. Visual "Brasa Premium" (vermelho/preto/dourado, arrastar com o dedo, fotos dos prêmios); ensaio em `/roleta/demo` |
 | Comanda (2 fotos + QR) e reconciliação Saipos | Funciona no piloto; cron diário confere, não credita nada |
 | Pontos/cashback pela Saipos | **Pausado** — processador antigo não pode ser religado |
-| Conexão WhatsApp QR | Worker Oracle/HTTPS e painel superadmin `/admin/whatsapp`; número separado ativo, falta pareamento persistente real |
+| Conexão WhatsApp QR | Worker Oracle/HTTPS e painel superadmin; pareamento/reinício e recebimento de mensagem fixa confirmados; destino resolvido pelo WhatsApp, envios fechados; OTP/fila/gatilhos ainda pendentes |
 | Cadastro com WhatsApp OTP | **Desligado** na produção; envio pelo QR pronto em branch (ver abaixo) |
 | Bot e baixas de prêmios | Só simulador em memória (`/admin/baixas`); registro real pronto em branch |
-| Backup do Supabase | **Pausado**: robô pronto, banco recusa a senha em `SUPABASE_DB_URL` (ver ROADMAP) |
+| Backup do Supabase | **Adiado pelo responsável**: robô pronto, banco recusa a senha em `SUPABASE_DB_URL` (ver ROADMAP) |
 | Sorteio, roleta V1, garçons antigos | Legado pausado, a remover |
 
 **Nada está liberado comercialmente para clientes.**
@@ -32,8 +32,8 @@ Revisado pelos dois agentes, mas **não publicado e sem SQL aplicado**. Migraç�
 
 | Branch | O que traz |
 | --- | --- |
-| `codex/whatsapp-otp` | Código de verificação pelo WhatsApp (lista fechada de 1–3 telefones de teste), com a tela do Claude |
-| `codex/premios-textos` → `claude/premios-textos` | Baixas reais, troca de foto e de nome/mensagem dos prêmios pelo painel, roleta por `id`/`tipo` |
+| `claude/consolidacao` | **Branch única com as duas frentes** sobre a main atual: código de verificação pelo WhatsApp (lista fechada de 1–3 telefones de teste) e diagnóstico de relógio; baixas reais; troca de foto e de nome/mensagem dos prêmios pelo painel; roleta por `id`/`tipo` |
+| (origens) | `codex/whatsapp-otp` (5ec320c) e `claude/premios-textos` (b7cd04e), preservadas |
 
 ## Onde está cada coisa
 

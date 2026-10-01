@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**01/10/2026 — Claude** · Fotos dos prêmios na roleta (Pexels, licença comercial, sem marcas; autorizadas pelo responsável): saideira (1 garrafa), expulsadeira (2), pudim, brownie e sobremesa (pudim+brownie). Tela do prêmio avisa "1/2 unidades da mesma cerveja que você consumiu", "Beba com moderação. Proibido para menores de 18 anos" e "Foto ilustrativa". Faltam fotos próprias de dindim e entrega; troca de foto pelo painel depende de `imagem_url` (Codex).
+
 **29/09/2026 — Codex** · Responsável autorizou publicar conexão QR; main atual integrada preservando a roleta do Claude, 100 testes + 11 worker e tipos OK.
 Vercel: três variáveis de controle como Secret, exclusivamente Production; chave de sessão permanece somente na Oracle, sem envios/OTP.
 Git lê OpenSSL do `.gitconfig` do usuário e push normal da branch passou; não prova ausência de falhas futuras.

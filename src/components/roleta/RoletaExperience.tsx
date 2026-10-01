@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 import Image from 'next/image';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import styles from '@/app/roleta/v2/roleta.module.css';
-import { prizePhoto, ROLETA_BACKDROP } from '@/lib/prizeVisuals';
+import { prizeNotes, prizePhoto, ROLETA_BACKDROP } from '@/lib/prizeVisuals';
 import { bodyFont, displayFont } from './fonts';
 import PrizeWheel, { type WheelPrize } from './PrizeWheel';
 
@@ -122,6 +122,10 @@ export default function RoletaExperience({ prizes, requestSpin, demo = false }: 
         <h2>{result.premio.nome}</h2>
         {result.modo_teste ? <p className={styles.testWarning}>Teste do Clube — sem benefício para resgatar.</p> : <>
           <p>{result.premio.descricao_vitoria}</p>
+          {prizeNotes(result.premio.nome).length > 0 && <ul className={styles.prizeNotes}>
+            {prizeNotes(result.premio.nome).map((note) => <li key={note}>{note}</li>)}
+          </ul>}
+          {resultPhoto && <small className={styles.photoNote}>Foto ilustrativa.</small>}
           <div className={styles.coupon}><span>Mostre este código à equipe</span><strong>{result.cupom}</strong><small>Válido até {new Date(result.expira_em).toLocaleDateString('pt-BR')}</small></div>
         </>}
       </section>}

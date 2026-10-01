@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**01/10/2026 — Claude** · Conferência em produção com login do responsável, só leitura: `/admin/roleta` mostra foto, "Trocar foto", nome e mensagem nos 7 prêmios; modo teste visível; sem login, PUT e upload respondem 401. Corrigido (branch `claude/premio-teste-sem-foto`): prêmio interno do piloto herdava a foto do cachorro por compartilhar o tipo `frete_gratis`. 181 testes OK.
+
 **01/10/2026 — Codex** · Responsável confirmou autorização própria, ciente do backup adiado: SQL `202609290001` → `202609300001` → `202610010001` → `202610010002` aplicado com sucesso no projeto correto e permissões conferidas.
 Consolidação Claude 794e672 + foto entrega 981e2ae publicadas na main em 91616d7; Vercel Ready (`4dsRPR5YRmXUPagXkqbTY1324ZcA`); 180 testes app + 35 worker, tipos, lint e build fictício OK.
 Banco permanece em modo teste, zero prêmios comerciais ativos, entregas/comercial false; domínio real recusou OTP (503), entregas (503) e acesso admin sem login (401); campos do painel conferidos sem salvar nada.

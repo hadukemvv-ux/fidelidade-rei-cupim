@@ -8,7 +8,10 @@
 export const ROLETA_BACKDROP = { src: '/roleta/fundo-cupim.webp', position: '50% 40%', zoom: 1.45 };
 
 /** O mínimo que a tela sabe de um prêmio. `tipo` vem da API; o nome é editável e só serve de reserva. */
-export type PrizeIdentity = { nome: string; tipo?: string | null; imagem_url?: string | null };
+export type PrizeIdentity = { nome: string; tipo?: string | null; imagem_url?: string | null; codigo?: string | null };
+
+/** Prêmio interno do piloto (R$ 0). Reaproveita um tipo comercial no banco, mas não deve herdar foto padrão. */
+const PILOT_PRIZE_CODE = 'piloto_interno_sem_valor_v2';
 
 /**
  * Fotos padrão por tipo de prêmio, de bancos com licença comercial gratuita e sem marcas:
@@ -57,6 +60,7 @@ export const SHOW_PHOTOS_IN_WHEEL = false;
 
 export function prizePhoto(prize: PrizeIdentity) {
   if (prize.imagem_url) return prize.imagem_url;
+  if (prize.codigo === PILOT_PRIZE_CODE) return null;
   if (prize.tipo) return PHOTOS_BY_TYPE[prize.tipo] ?? null;
   return PHOTOS_BY_NAME.find(([pattern]) => pattern.test(prize.nome))?.[1] ?? null;
 }

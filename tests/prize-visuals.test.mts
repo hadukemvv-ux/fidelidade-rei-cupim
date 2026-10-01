@@ -27,6 +27,12 @@ test('entrega grátis mostra o cachorro entregador, sem aviso de bebida', () => 
   assert.deepEqual(prizeNotes({ nome: 'Taxa de entrega grátis', tipo: 'frete_gratis' }), []);
 });
 
+test('prêmio interno do piloto não herda foto padrão do tipo, mas aceita foto enviada', () => {
+  const piloto = { nome: 'Prêmio de teste', tipo: 'frete_gratis', codigo: 'piloto_interno_sem_valor_v2' };
+  assert.equal(prizePhoto(piloto), null);
+  assert.equal(prizePhoto({ ...piloto, imagem_url: '/roleta/premios/x.webp' }), '/roleta/premios/x.webp');
+});
+
 test('sem tipo (resposta antiga), usa o nome como reserva', () => {
   assert.equal(prizePhoto({ nome: 'Expulsadeira' }), '/roleta/premios/expulsadeira.webp');
   assert.equal(prizePhoto({ nome: 'Sobremesa do Rei' }), '/roleta/premios/sobremesa.webp');

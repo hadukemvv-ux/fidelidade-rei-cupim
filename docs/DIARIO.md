@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**01/10/2026 — Claude** · `claude/telas-cliente`: cadastro, login/pontos, redefinir PIN e completar cadastro com as fontes da roleta (Oswald/Inter, só nessas telas; home mantém as dela) e fundo carvão alinhado. Foto da home/cadastro/login trocada pelo cupim trinchado do responsável (arquivo renomeado para não servir cache do baião). `COMECE_AQUI` atualizado com o que espera autorização. Testado em 375 px sem vazamento; lint, tipos, 100 testes e build OK.
+
 **01/10/2026 — Claude** · Fotos dos prêmios na roleta (Pexels, licença comercial, sem marcas; autorizadas pelo responsável): saideira (1 garrafa), expulsadeira (2), pudim, brownie e sobremesa (pudim+brownie). Tela do prêmio avisa "1/2 unidades da mesma cerveja que você consumiu", "Beba com moderação. Proibido para menores de 18 anos" e "Foto ilustrativa". Faltam fotos próprias de dindim e entrega; troca de foto pelo painel depende de `imagem_url` (Codex).
 
 **29/09/2026 — Codex** · Responsável autorizou publicar conexão QR; main atual integrada preservando a roleta do Claude, 100 testes + 11 worker e tipos OK.

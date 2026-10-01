@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**30/09/2026 — Claude** · Backup pausado a pedido do responsável. 3 segredos cadastrados (chave Supabase dedicada `github_backup`); `SUPABASE_DB_URL` com endereço certo, mas o banco recusa a senha (painel do app não copia; última troca sem confirmação). Branch `claude/backup-diagnostico` testa o login e mascara a senha. Retomar: reset no navegador normal, 5 min, rodar a branch. Senha do banco foi trocada; Codex avisado.
+
 **29/09/2026 — Codex** · Responsável autorizou publicar conexão QR; main atual integrada preservando a roleta do Claude, 100 testes + 11 worker e tipos OK.
 Vercel: três variáveis de controle como Secret, exclusivamente Production; chave de sessão permanece somente na Oracle, sem envios/OTP.
 Git lê OpenSSL do `.gitconfig` do usuário e push normal da branch passou; não prova ausência de falhas futuras.

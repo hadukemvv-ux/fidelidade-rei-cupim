@@ -37,6 +37,22 @@ Dependência Baileys 7.0.0-rc14 fixada, audit npm sem vulnerabilidades conhecida
 Faltam conferir encerramento no celular, fila/envio/verificação OTP, transporte permanente e hospedagem; produção não foi alterada.
 Checkpoint de baixas separado: branch `codex/baixas-reais`, commit `bf1d409`, 99 testes; pedir revisão Claude e validar SQL isolado antes de aplicar.
 **29/09/2026 — Claude** · Roleta "Brasa Premium" (escolha do responsável): roda bicolor osso/grafite só com texto, seta vermelha, fontes Oswald + Inter, fundo carvão com foto e faíscas, comemoração com faíscas de brasa em vez de confete. Também: correção de setor trocado (c414c34) e Git do usuário com `http.sslBackend=openssl` para testar o erro ao publicar. Visual em iteração com o responsável.
+**29/09/2026 — Codex** · `codex/baixas-reais`: incorporada a main da roleta interativa e avaliada a segunda revisão do Claude (re-roll resolvido).
+A sessão usa sempre a elegibilidade do SQL; sem ela, falha fechado se houver físico ativo. `imagem_url` local validada na API e devolvida à roda.
+113 testes (8 SQL isolados), tipos e lint OK. Faltam concorrência PostgreSQL multissessão, painel/catálogo e campo visual no admin.
+Nada aplicado ao banco ou publicado na main; conexão WhatsApp por QR no site ainda não implementada.
+
+**29/09/2026 — Codex** · `codex/baixas-reais`: correção do bloqueante identificado pelo Claude; físico inelegível sai do sorteio antes do resultado e a roda mostra a mesma lista.
+Exceção operacional vira pendência bloqueada, sem re-roll; ativação recusa cupom físico antigo aberto sem ledger.
+Opções paginadas em lotes, pré-checagem de papel explícita e SECURITY DEFINER com busca vazia; 109 testes (8 SQL isolados), tipos/lint OK.
+Migração não aplicada; falta nova revisão Claude, concorrência em PostgreSQL multissessão, catálogo/opções reais e painel.
+Decisão pendente do responsável: quem assume entrega quando o garçom sai do turno; piloto mantém só superadmin.
+
+**29/09/2026 — Codex** · `codex/baixas-reais`: checkpoint da base/API e proposta SQL, gates desligados; 99 testes, tipos e lint dos novos arquivos aprovados.
+Faltam execução isolada do SQL (inclusive concorrência/RLS), catálogo/opções por conta, painel e revisão Claude; nada aplicado em produção.
+SPA, FAQ 59: benefício objetivo sem aleatoriedade difere de promoção com sorte; pontos sorteados não têm dispensa confirmada.
+Fonte: https://www.gov.br/fazenda/pt-br/composicao/orgaos/secretaria-de-premios-e-apostas/promocao-comercial/promocao-comercial
+Nenhuma mudança de mecânica, prêmios ou aprovação jurídica decidida.
 
 **29/09/2026 — Claude** · Roleta interativa: arrastar com o dedo, botão PARAR, parada automática em 4 s, desaceleração lenta com pinos e som, confete nas cores da marca e revelação com foto. Resultado continua 100% do servidor (a animação só decide o caminho). Demonstração sem registro em `/roleta/demo`. Física com 900 combinações testadas; fluxo testado no navegador. Faltam fotos reais e celulares reais.
 

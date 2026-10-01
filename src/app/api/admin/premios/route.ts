@@ -29,6 +29,9 @@ const PremioUpdateSchema = z.object({
   expira_em_dias: z.coerce.number().int().min(1).max(90).optional(),
   pesos_nivel: z.array(z.coerce.number().int().min(0).max(100000)).length(6).optional(),
   descricao_operacional: z.string().max(1000).optional().nullable(),
+  imagem_url: z.string().max(1024)
+    .regex(/^\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*\.(?:png|webp|jpg|jpeg)$/, 'Use o caminho local de uma foto PNG, WebP ou JPG.')
+    .nullable().optional(),
 });
 
 type PremioUpdateInput = z.infer<typeof PremioUpdateSchema>;
@@ -150,6 +153,7 @@ export async function PUT(request: NextRequest) {
           expira_em_dias: data.expira_em_dias,
           pesos_nivel: data.pesos_nivel,
           descricao_operacional: data.descricao_operacional,
+          imagem_url: data.imagem_url,
         },
       },
     });

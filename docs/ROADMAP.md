@@ -41,7 +41,8 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [~] | Número separado ativo; responsável escolheu avaliar QR não oficial em teste isolado; operação permanente/custos ainda a decidir | Você |
 | [~] | QR WhatsApp: controle publicado em 26a5743; pareamento e reinício/reconexão reais validados em 30/09; faltam auditoria das transições e acesso administrativo entre redes | Codex |
 | [~] | Mensagens QR: destino resolvido pelo WhatsApp e recebimento confirmado com print em 30/09 após novo ensaio autorizado; envio fechado, dois registros preservados; fila/gatilhos/OTP pendentes | Codex |
-| [~] | OTP QR: transporte beta, confirmação atômica e proteção contra duplicação preparados/testados isoladamente; faltam revisão Claude, concorrência real, tela de envio incerto, implantação autorizada e cadastro/reset no celular | Codex |
+| [~] | OTP QR: tela Claude integrada, retenção 24h corrigida e concorrência entre conexões PostgreSQL locais validada; falta revisão final do ajuste, implantação autorizada e cadastro/reset no celular | Codex |
+| [ ] | Modelos WhatsApp editáveis com variáveis protegidas, fila idempotente e avisos consolidados de pontos/nível; convite por telefone e escolha autenticada de cerveja/sobremesa pelo garçom (sem baixa por mero envio) | Codex; Claude faz telas |
 | [~] | Hospedagem WhatsApp: VM gratuita, DNS Registro.br e HTTPS Caddy validados; faltam teste conectado, backup/restauração reais e monitor externo | Codex, Você acessa a conta |
 | [ ] | Verificação de conta antiga com PIN e sem telefone comprovado | Codex |
 | [ ] | Nova rotina de pontuação Saipos: só contas verificadas, idempotente, com relatório | Codex |

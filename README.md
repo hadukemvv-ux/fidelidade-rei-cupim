@@ -112,6 +112,15 @@ com duas conexões PostgreSQL e obter autorização para aplicação/ativação.
 `npm test --prefix services/whatsapp-qr` usa socket fictício. Testes isolados não
 provam cadastro/reset de PIN no celular nem concorrência entre conexões reais.
 
+Para concorrência real **local**, obtenha binários PostgreSQL confiáveis e
+configure `OTP_TEST_PG_BIN` com o caminho absoluto da pasta `bin`. Execute
+`npm run test:otp:concurrency`. O script cria e encerra seu próprio banco
+temporário, usa duas conexões de serviço e uma de observação, verifica espera
+real por locks e ignora `DATABASE_URL`. Escuta somente em `127.0.0.1`, com dados
+fictícios; não acessa Supabase, WhatsApp nem bancos existentes. No sandbox Windows,
+`pg_ctl` pode falhar ao criar token restrito; nesse caso, executar o mesmo ensaio
+fora do sandbox. Nunca adaptar a autenticação trust desse banco para produção.
+
 Configuração futura (valores somente nos gerenciadores privados de segredos):
 
 - Next: `WHATSAPP_OTP_PROVIDER=qr`, `WHATSAPP_OTP_ENABLED=true`,
@@ -140,8 +149,17 @@ o código anterior do mesmo propósito; nunca retentar automaticamente um envio.
 O worker mantém ledger criptografado separado: UUID, HMAC do conteúdo/destino,
 horário e estado, sem telefone/código/texto em claro. Reserva precede `sendMessage`,
 inclusive sob chamadas simultâneas; pendência/timeout não podem ser reenviados
-após restart. Tetos do piloto: 60s, 3/telefone/hora, 30 em 24h, 1.000 registros;
-ao atingir o cap, bloquear e revisar retenção, **não apagar para repetir envio**.
+após restart. Tetos do piloto: 60s, 3/telefone/hora e 30 em 24h. Antes de reservar,
+remove apenas registros OTP com mais de 24h; a borda exata ainda conta na quota.
+Os payloads já expiraram em 10min e não podem ser repetidos após a limpeza.
+Um marcador persistente bloqueia reservas se o relógio retroceder. Credenciais,
+chaves da sessão e ledger do teste fixo não são limpos. O cap de 1.000 registros
+continua como proteção contra documento inválido, não como limite cumulativo.
+
+Se o transporte aceitar a mensagem mas `finalizar_envio_otp_qr` falhar, o site
+retorna erro e o código pode chegar sem funcionar (reserva ainda `reservado`).
+Não repetir o transporte ou marcar sucesso: aguardar 60s e solicitar um código
+novo explicitamente. O anterior será invalidado na preparação da nova reserva.
 
 Contrato adicional para Claude: solicitar retorna `envio: 'aceito' | 'indeterminado'`.
 Nenhum deles comprova entrega. Em `indeterminado`, permitir conferir o código

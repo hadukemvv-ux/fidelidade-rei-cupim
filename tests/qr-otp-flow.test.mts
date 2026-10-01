@@ -87,6 +87,15 @@ test('preparação rejeitada não envia; falha de transporte é finalizada sem l
   assert.equal(finished, true); assert.equal(calls, 1);
 });
 
+test('envio aceito seguido de falha ao finalizar não retenta nem informa sucesso', async () => {
+  let sends = 0, finalizations = 0;
+  await assert.rejects(requestQrOtp({ env, rpc: async (name) => {
+    if (name === 'preparar_otp_qr') return { error: null, data: { expira_em: payload.expires_at } };
+    finalizations++; return { data: null, error: new Error('private DB failure') };
+  }, transport: async () => { sends++; return Response.json({ status: 'accepted', duplicate: false }); } }, input));
+  assert.equal(sends, 1); assert.equal(finalizations, 1);
+});
+
 test('confirmação QR envia somente HMACs para a transação única, sem Twilio', async () => {
   let calls = 0;
   const verify = { id: input.id, phoneHash: input.phoneHash, purpose: input.purpose, code: '000123', grantHash: 'f'.repeat(64) };

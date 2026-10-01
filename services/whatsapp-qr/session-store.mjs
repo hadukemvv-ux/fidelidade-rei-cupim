@@ -53,27 +53,35 @@ export async function openSessionStore({ directory, keyHex, initCredentials, cod
   }
   return {
     // OTP ledger is separate from the fixed-test ledger and contains no code,
-    // phone or text. Fail closed at the pilot cap; no automatic deletion.
+    // phone or text. Retain 24h (payloads expire in 10min); preserve the
+    // fixed-test ledger. Cleanup occurs before each valid new reservation.
     async reserveOtpSend(id, fingerprint, phoneHash, nowMs) {
       if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(id) ||
         !/^[a-f0-9]{64}$/.test(fingerprint) || !/^[a-f0-9]{64}$/.test(phoneHash) || !Number.isFinite(nowMs)) throw new Error('Invalid OTP reservation');
       document.otpSends ??= [];
-      const rows = document.otpSends;
+      let rows = document.otpSends;
       if (!Array.isArray(rows) || rows.length > 1000 || rows.some(row => !row ||
         typeof row.id !== 'string' || !/^[a-f0-9]{64}$/.test(row.fingerprint) || !/^[a-f0-9]{64}$/.test(row.phoneHash) ||
         !Number.isFinite(row.createdAt) || !['pending', 'accepted', 'unknown'].includes(row.status))) throw new Error('Invalid OTP ledger');
+      // A backwards clock must not make previously pruned payloads valid again
+      // or shorten the quota window. Persist this watermark across restarts.
+      const lastReservation = document.otpLastReservationAt ?? Math.max(0, ...rows.map(row => row.createdAt));
+      if (!Number.isFinite(lastReservation) || nowMs < lastReservation) throw new Error('Invalid OTP clock');
+      rows = rows.filter(row => row.createdAt >= nowMs - 86_400_000);
+      document.otpSends = rows;
       const existing = rows.find(row => row.id === id);
       if (existing) {
         if (existing.fingerprint !== fingerprint || existing.phoneHash !== phoneHash) throw new Error('OTP conflict');
         return { reserved: false, status: existing.status === 'pending' ? 'unknown' : existing.status };
       }
       // Same hard limits on the worker even if the upstream service misbehaves.
-      const recent = rows.filter(row => row.createdAt > nowMs - 86_400_000);
+      const recent = rows; // Includes the exact 24h boundary, as the SQL quota does.
       const phoneRows = recent.filter(row => row.phoneHash === phoneHash);
       if (rows.length >= 1000 || recent.length >= 30 ||
-        phoneRows.filter(row => row.createdAt > nowMs - 3_600_000).length >= 3 ||
+        phoneRows.filter(row => row.createdAt >= nowMs - 3_600_000).length >= 3 ||
         phoneRows.some(row => row.createdAt > nowMs - 60_000)) throw new Error('OTP limit');
       rows.push({ id, fingerprint, phoneHash, createdAt: nowMs, status: 'pending' });
+      document.otpLastReservationAt = nowMs;
       await persist();
       return { reserved: true };
     },

@@ -138,6 +138,15 @@ Antes de OTP: fila persistente, limites antiabuso, reserva/expiração e revisã
 
 ## Como interpretar um problema
 
+OTP QR preparado em 01/10, **ainda não implantado/ativado**: o worker limpa somente
+reservas OTP com mais de 24h antes de admitir novos envios. Preserva limites,
+sessão e registros do teste fixo; payload expira em 10min. Não remover registros
+manualmente para reenviar. Se o relógio retroceder, reserva bloqueada até corrigir
+o relógio; não apagar o marcador persistente para contornar essa proteção.
+Se a mensagem for aceita mas falhar a finalização no banco, o código pode chegar
+inutilizável (status ainda `reservado`). Esperar 60s e pedir novo código explicitamente,
+sem retry do transporte nem edição manual do status. Não registrar o código em logs.
+
 | Sinal | Verificação e ação |
 | --- | --- |
 | QR expirou | Atualizar o estado e obter QR vigente |
@@ -175,7 +184,7 @@ Antes de OTP: fila persistente, limites antiabuso, reserva/expiração e revisã
 
 ## Registro dos ensaios
 
-| Ensaio | Resultado até 30/09/2026 |
+| Ensaio | Resultado até 01/10/2026 |
 | --- | --- |
 | QR temporário local | Responsável confirmou conexão; sem mensagens |
 | Sessão criptografada e reinício | Teste automatizado com dados fictícios aprovado |
@@ -190,6 +199,7 @@ Antes de OTP: fila persistente, limites antiabuso, reserva/expiração e revisã
 | Migração entre máquinas | Pendente |
 | Aviso externo de falha | Pendente |
 | OTP de cliente / mensagem ao garçom | Pendente |
+| OTP QR: retenção e concorrência | 01/10: retenção testada além de 1.000 reservas; duas conexões nativas PostgreSQL locais validaram reserva, confirmação, consumo, tentativas e preparação concorrentes; sem acesso ao Supabase/WhatsApp de produção |
 
 Referência de cotas e recolhimento: [Oracle Always Free](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm).
 O guia deve ser atualizado após cada ensaio e mudança de provedor.

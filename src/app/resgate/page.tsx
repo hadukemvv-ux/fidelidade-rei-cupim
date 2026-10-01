@@ -156,7 +156,7 @@ export default function ResgatePage() {
   if (!dadosCliente) {
     return (
       <main className={`club-login-page ${brandFontClass}`}>
-        <div className="club-login-photo"><Image src="/images/home/hero-cupim.webp" alt="Cupim assado na brasa" fill priority sizes="(max-width: 799px) 100vw, 50vw" /></div>
+        <div className="club-login-photo"><Image src="/images/home/cupim-trinchado.webp" alt="Cupim assado na brasa" fill priority sizes="(max-width: 799px) 100vw, 50vw" /></div>
         <section className="club-login-content" aria-labelledby="club-login-title">
           <Link href="/" className="club-login-brand" aria-label="Voltar ao início"><Image src="/logo.png" alt="" width={52} height={52} /><span>O Rei do Cupim</span></Link>
           <div className="club-login-copy"><p>Seu espaço no clube</p><h1 id="club-login-title">Tudo que você ganhou.<br /><em>Pronto para aproveitar.</em></h1></div>

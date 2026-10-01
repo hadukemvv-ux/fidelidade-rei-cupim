@@ -145,7 +145,7 @@ export default function CadastroPage() {
   return (
     <main className={`signup-page ${brandFontClass}`}>
       <section className="signup-promise" aria-labelledby="signup-title">
-        <Image src="/images/home/hero-cupim.webp" alt="Cupim assado na brasa" fill priority sizes="(max-width: 899px) 100vw, 48vw" />
+        <Image src="/images/home/cupim-trinchado.webp" alt="Cupim assado na brasa" fill priority sizes="(max-width: 899px) 100vw, 48vw" />
         <div className="signup-promise-shade" />
         <Link href="/" className="signup-brand" aria-label="Voltar ao início"><Image src="/logo.png" alt="" width={62} height={62} /><span>O Rei do Cupim</span></Link>
         <div className="signup-promise-copy">

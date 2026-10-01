@@ -1,6 +1,6 @@
 # Roadmap — Clube Cupim
 
-Atualizado em 29/09/2026. Uma linha por tarefa. Detalhes vão no PR e no `DIARIO.md`.
+Atualizado em 01/10/2026. Uma linha por tarefa. Detalhes vão no PR e no `DIARIO.md`.
 Investigações e decisões anteriores (Saipos, telefones, entregas, custos) estão em
 `docs/historico/ROADMAP_ATE_2026-09-28.md`.
 
@@ -25,9 +25,9 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [ ] | Aprovar prêmios, custos, pesos por faixa e validade | Você |
 | [ ] | Contratar hospedagem com uso comercial (Vercel Pro ou alternativa) | Você |
 | [~] | Backup Supabase **adiado expressamente pelo responsável** em 01/10: robô e 3 segredos prontos, banco recusa a senha em `SUPABASE_DB_URL`, sem restauração validada. Não retomar até ele pedir; caminho em `claude/backup-diagnostico` | Claude prepara, Você decide retomar |
-| [~] | Baixas reais: escolha → entrega → baixa no banco, com operador e QR reais; re-roll revisado, 113 testes (8 SQL isolados); faltam concorrência real, catálogo/opções e painel; SQL não aplicado | Codex |
-| [~] | Roleta interativa "Brasa Premium" publicada, com fotos de cerveja e sobremesa e avisos de bebida; faltam fotos próprias de dindim/entrega e teste em celulares reais | Claude |
-| [~] | Prêmios no painel: troca de foto, nome e mensagem com auditoria atômica; roleta por `id`/`tipo`; API e tela revisadas e integradas em `claude/consolidacao`; faltam SQL autorizado e ensaio | Codex API, Claude UI |
+| [~] | Baixas reais: SQL `202609290001` aplicado em 01/10 com autorização; gates de entregas/comercial desligados; faltam concorrência real, catálogo/opções e painel | Codex |
+| [~] | Roleta interativa "Brasa Premium" com fotos de cerveja, sobremesa e entrega grátis; faltam fotos próprias de dindim e teste em celulares reais | Claude |
+| [~] | Prêmios no painel: API/tela revisadas, SQL `202610010001`/`202610010002` aplicado em 01/10; publicação consolidada autorizada, falta ensaio de foto/textos no painel | Codex API, Claude UI |
 | [x] | Telas do cliente (cadastro, login/pontos, PIN) com a identidade da roleta; foto do cupim trinchado na home | Claude |
 | [x] | Arte oficial (logo) e ícones do site/favicon — foguinho aplicado; pedir versão vetorial (SVG/PDF) para uso grande | Você envia a arte, Claude aplica |
 | [ ] | Piloto Saipos de 3 cenários: venda concluída, cancelada, mesa sem venda | Você executa, Codex analisa |
@@ -42,7 +42,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [~] | Número separado ativo; responsável escolheu avaliar QR não oficial em teste isolado; operação permanente/custos ainda a decidir | Você |
 | [~] | QR WhatsApp: controle publicado em 26a5743; pareamento e reinício/reconexão reais validados em 30/09; faltam auditoria das transições e acesso administrativo entre redes | Codex |
 | [~] | Mensagens QR: destino resolvido pelo WhatsApp e recebimento confirmado com print em 30/09 após novo ensaio autorizado; envio fechado, dois registros preservados; fila/gatilhos/OTP pendentes | Codex |
-| [~] | OTP QR: retenção/concorrência revisadas e tela integrada; diagnóstico offline de relógio preparado sem reset da sessão, 35 testes worker; faltam revisão do utilitário, implantação autorizada e cadastro/reset no celular | Codex |
+| [~] | OTP QR: código/tela/diagnóstico revisados, SQL `202609300001` aplicado em 01/10; 35 testes worker; envios desligados, faltam implantação Oracle e piloto fechado cadastro/reset com autorização separada | Codex |
 | [ ] | Modelos WhatsApp editáveis com variáveis protegidas, fila idempotente e avisos consolidados de pontos/nível; convite por telefone e escolha autenticada de cerveja/sobremesa pelo garçom (sem baixa por mero envio) | Codex; Claude faz telas |
 | [~] | Hospedagem WhatsApp: VM gratuita, DNS Registro.br e HTTPS Caddy validados; faltam teste conectado, backup/restauração reais e monitor externo | Codex, Você acessa a conta |
 | [ ] | Verificação de conta antiga com PIN e sem telefone comprovado | Codex |

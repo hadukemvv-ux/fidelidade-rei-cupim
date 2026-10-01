@@ -18,22 +18,24 @@ Push/merge em `main` = deploy automático em produção.
 | Comanda (2 fotos + QR) e reconciliação Saipos | Funciona no piloto; cron diário confere, não credita nada |
 | Pontos/cashback pela Saipos | **Pausado** — processador antigo não pode ser religado |
 | Conexão WhatsApp QR | Worker Oracle/HTTPS e painel superadmin; pareamento/reinício e recebimento de mensagem fixa confirmados; destino resolvido pelo WhatsApp, envios fechados; OTP/fila/gatilhos ainda pendentes |
-| Cadastro com WhatsApp OTP | **Desligado** na produção; envio pelo QR pronto em branch (ver abaixo) |
-| Bot e baixas de prêmios | Só simulador em memória (`/admin/baixas`); registro real pronto em branch |
+| Cadastro com WhatsApp OTP | **Desligado** na produção; código revisado e SQL aplicado; implantação do transporte na Oracle e piloto fechado dependem de autorização separada |
+| Bot e baixas de prêmios | `/admin/baixas` continua simulador; estrutura/API reais preparadas e SQL aplicado, mas gates de entregas/comercial desligados |
 | Backup do Supabase | **Adiado pelo responsável**: robô pronto, banco recusa a senha em `SUPABASE_DB_URL` (ver ROADMAP) |
 | Sorteio, roleta V1, garçons antigos | Legado pausado, a remover |
 
 **Nada está liberado comercialmente para clientes.**
 
-## Pronto, esperando autorização do responsável
+## Consolidação autorizada em 01/10/2026
 
-Revisado pelos dois agentes, mas **não publicado e sem SQL aplicado**. Migrações na ordem:
+Revisado pelos dois agentes; responsável autorizou publicação e as quatro migrações, ciente do backup adiado. **SQL aplicado e conferido em produção**, nesta ordem:
 `202609290001` (entregas/elegibilidade) → `202609300001` (OTP QR) → `202610010001` (fotos) → `202610010002` (textos).
 
 | Branch | O que traz |
 | --- | --- |
-| `claude/consolidacao` | **Branch única com as duas frentes** sobre a main atual: código de verificação pelo WhatsApp (lista fechada de 1–3 telefones de teste) e diagnóstico de relógio; baixas reais; troca de foto e de nome/mensagem dos prêmios pelo painel; roleta por `id`/`tipo` |
+| `claude/consolidacao` + `claude/foto-entrega` | **Duas frentes integradas** em `codex/publicacao-consolidada` para publicação autorizada: OTP fechado e diagnóstico de relógio; estrutura de baixas reais; troca de foto e de nome/mensagem pelo painel; roleta por `id`/`tipo` e foto de entrega grátis |
 | (origens) | `codex/whatsapp-otp` (5ec320c) e `claude/premios-textos` (b7cd04e), preservadas |
+
+Conferência do banco: roleta em modo teste; zero prêmios comerciais ativos; entregas `habilitado=false` e `permitir_comercial=false`; RPCs restritas ao serviço. **Não ativar/enviar OTP nem piloto sem nova autorização**; implantação do worker não é feita pelo deploy da Vercel.
 
 ## Onde está cada coisa
 

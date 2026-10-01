@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**01/10/2026 — Codex** · Responsável confirmou autorização própria, ciente do backup adiado: SQL `202609290001` → `202609300001` → `202610010001` → `202610010002` aplicado com sucesso no projeto correto e permissões conferidas.
+Consolidação Claude 794e672 + foto entrega 981e2ae integradas em `codex/publicacao-consolidada` para publicação autorizada; 180 testes app + 35 worker, tipos, lint e build fictício OK.
+Banco permanece em modo teste, zero prêmios comerciais ativos, entregas/comercial false; sem mensagens, piloto OTP ou alteração do worker Oracle. Conferir deploy Ready após push.
+Backup continua adiado por decisão do responsável; próximo passo é autorizar implantação/piloto OTP fechado, sem liberação pública nem comercial.
+
 **01/10/2026 — Claude** · `claude/foto-entrega` (sobre `claude/consolidacao`): foto do prêmio entrega grátis = golden retriever numa moto de entrega (Unsplash, licença comercial; recorte sem o baú/bolsa com escrita). Associada por `tipo` frete_gratis, nome como reserva; teste novo, 180 OK. Dindim segue sem foto (não há equivalente sem marca nos bancos; pedir foto do restaurante). Publicar junto/depois da consolidação.
 
 **01/10/2026 — Claude** · `claude/consolidacao`: main atual (7b6a79d) + `claude/premios-textos` (b7cd04e) + `codex/whatsapp-otp` (5ec320c) numa branch só; conflitos apenas em README/ROADMAP/DIARIO/COMECE_AQUI, resolvidos mantendo as duas frentes; backup registrado como adiado pelo responsável. Revisão do `5ec320c` (inspeção offline do relógio) OK. Não publicado nem aplicado.

@@ -27,7 +27,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [~] | Backup diário com teste de restauração pronto (`referencia/BACKUP_E_MIGRACAO.md`); falta você cadastrar 3 segredos no GitHub e rodar o 1º teste | Claude prepara, Você aprova custo |
 | [~] | Baixas reais: re-roll revisado pelo Claude, migração alinhada à roleta nova, 113 testes (8 SQL isolados); faltam concorrência real, catálogo/opções e painel; SQL não aplicado | Codex |
 | [~] | Roleta interativa no visual Brasa Premium; ensaio em `/roleta/demo`; ajustando visual com o responsável; faltam fotos reais dos prêmios e teste em celulares reais | Claude |
-| [~] | `imagem_url` validada na API e enviada na sessão da roleta; falta aplicar SQL e Claude expor edição da foto no admin | Codex API, Claude UI |
+| [~] | Fotos de prêmios: upload superadmin validado/compactado, bucket público e vínculo/auditoria atômicos preparados; 135 testes/build OK; faltam revisão, SQL autorizado e tela/ensaio do Claude | Codex API, Claude UI |
 | [x] | Arte oficial (logo) e ícones do site/favicon — foguinho aplicado; pedir versão vetorial (SVG/PDF) para uso grande | Você envia a arte, Claude aplica |
 | [ ] | Piloto Saipos de 3 cenários: venda concluída, cancelada, mesa sem venda | Você executa, Codex analisa |
 | [ ] | Testar os 4 acessos reais (garçom, caixa, gestor, superadmin) em produção | Você executa, Claude acompanha |

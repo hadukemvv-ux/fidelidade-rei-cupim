@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**01/10/2026 — Codex** · `codex/premios-imagens`: reutilizada branch de baixas para preservar elegibilidade/re-roll; API superadmin de foto JPG/PNG/WebP até 2 MB, WebP até 1024 px/512 KB sem metadados.
+Migração `202610010001` preparada: bucket público exclusivo de produtos, escrita só pelo backend, vínculo com ator ativo/sem contenção e auditoria atômica; conflito de troca simultânea recusado.
+135 testes (incluindo decoder, RLS, falha de auditoria e imagem na elegibilidade/giro), tipos/lint e build fictício OK; sem arquivos reais, alteração de chances, SQL aplicado ou publicação na main.
+Próximo: revisão Claude, tela upload no admin e implantação/ensaio autorizados; imagens anteriores/candidatas preservadas, sem delete ou retry após resultado incerto.
+
 **29/09/2026 — Codex** · Responsável autorizou publicar conexão QR; main atual integrada preservando a roleta do Claude, 100 testes + 11 worker e tipos OK.
 Vercel: três variáveis de controle como Secret, exclusivamente Production; chave de sessão permanece somente na Oracle, sem envios/OTP.
 Git lê OpenSSL do `.gitconfig` do usuário e push normal da branch passou; não prova ausência de falhas futuras.

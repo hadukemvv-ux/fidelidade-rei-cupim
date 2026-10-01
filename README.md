@@ -21,6 +21,27 @@ npx tsc --noEmit
 Variáveis em `.env.local` (modelo em `.env.example`). Nunca commitar `.env.local`.
 Regras de cada segredo: [docs/referencia/SEGREDOS_E_ACESSOS.md](docs/referencia/SEGREDOS_E_ACESSOS.md).
 
+### Fotos de prêmios pelo painel — backend preparado
+
+Depende das migrações revisadas `202609290001_entregas_premios.sql` e
+`202610010001_imagens_premios.sql`, nesta ordem. Não aplicadas por esta entrega.
+Não habilitar gates comerciais/entregas como efeito de instalar fotos.
+Claude integra a tela com `POST /api/admin/premios/{id}/imagem`, Bearer operacional
+e `FormData` contendo somente `foto` (um JPG/PNG/WebP até 2 MB). Não definir
+Content-Type manualmente: o navegador monta o boundary. Apenas superadmin ativo.
+Sucesso: `{ok:true,data:{premio_id,imagem_url}}`; erros 400/413/403/404/409/503.
+`GET /api/admin/premios` já inclui `imagem_url`. O PUT genérico rejeita esse campo.
+
+O servidor decodifica/limita a 16 MP, remove metadados e gera WebP de até 1024 px
+e 512 KB em caminho novo no bucket público `premios`. Só fotos de produtos,
+sem comandas/pessoas; upload direto por anon/authenticated é bloqueado. A URL
+aparece na sessão, elegibilidade e resultado do giro; sem foto, o fallback local
+do Claude continua. Migração não altera pesos, chances ou gates.
+Vínculo da foto e auditoria são atômicos, mas Storage e banco não são uma única
+transação. Em erro/timeout, atualizar o painel antes de qualquer nova tentativa;
+não retentar automaticamente. Fotos antigas/candidatas são preservadas, nunca
+apagadas ou sobrescritas automaticamente; limpeza exige decisão separada.
+
 ### Teste isolado de conexão WhatsApp por QR (não é OTP pronto)
 
 Somente número separado, em terminal local privado, Node 24+. Não roda na Vercel.

@@ -29,9 +29,6 @@ const PremioUpdateSchema = z.object({
   expira_em_dias: z.coerce.number().int().min(1).max(90).optional(),
   pesos_nivel: z.array(z.coerce.number().int().min(0).max(100000)).length(6).optional(),
   descricao_operacional: z.string().max(1000).optional().nullable(),
-  imagem_url: z.string().max(1024)
-    .regex(/^\/[A-Za-z0-9_-]+(?:\/[A-Za-z0-9_-]+)*\.(?:png|webp|jpg|jpeg)$/, 'Use o caminho local de uma foto PNG, WebP ou JPG.')
-    .nullable().optional(),
 });
 
 type PremioUpdateInput = z.infer<typeof PremioUpdateSchema>;
@@ -79,6 +76,9 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
+    if (body && Object.prototype.hasOwnProperty.call(body, 'imagem_url')) {
+      return errorResponse('Troque a foto pela operação de upload do prêmio.', 'validation_error', 400, requestId);
+    }
     const validacao = validarDados<PremioUpdateInput>(PremioUpdateSchema, body);
 
     if (!validacao.ok) {

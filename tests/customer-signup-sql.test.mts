@@ -35,7 +35,7 @@ test('cadastro transacional com subset do schema real', async t => {
         await run();
       });
     }
-    await scenario('homônimos permitidos; telefone/email/CPF seguem únicos; RPC exclusiva do serviço',async () => {
+    await scenario('homônimos permitidos; telefone/email únicos, CPF sem unicidade artificial; RPC exclusiva do serviço',async () => {
       for(const role of ['anon','authenticated','service_role']) {
         const allowed = (await db.query<{ allowed:boolean }>(`select has_function_privilege($1,
           'public.concluir_cadastro_otp(text,text,text,text,text,date,boolean,text,integer)','execute') as allowed`,[role])).rows[0].allowed;
@@ -46,7 +46,12 @@ test('cadastro transacional com subset do schema real', async t => {
       await assert.rejects(db.query("insert into public.base_clientes_saipos(nome,telefone) values('Outra pessoa',$1)",[phone]),{code:'23505'});
       await db.exec("update public.base_clientes_saipos set email='fixture@example.invalid',cpf='00000000000' where telefone='85988887777'");
       await assert.rejects(db.exec("insert into public.base_clientes_saipos(nome,telefone,email) values('Outra','85988887779','fixture@example.invalid')"),{code:'23505'});
-      await assert.rejects(db.exec("insert into public.base_clientes_saipos(nome,telefone,cpf) values('Outra','85988887779','00000000000')"),{code:'23505'});
+      // Production has no CPF uniqueness. Preserve its actual behavior, do not
+      // accidentally claim/add a constraint that was never present.
+      await db.exec("insert into public.base_clientes_saipos(nome,telefone,cpf) values('Outra','85988887779','00000000000')");
+      const entry = (await db.query<{ cliente_id:string; valor:number }>('select cliente_id,valor from public.extrato_pontos order by id limit 1')).rows[0];
+      const customer = (await db.query<{ id:number }>('select id from public.base_clientes_saipos where telefone=$1',[phone])).rows[0];
+      assert.equal(entry.cliente_id,String(customer.id)); assert.equal(entry.valor,BONUS_CADASTRO_PONTOS);
     });
     await scenario('grant vinculado ao telefone/propósito/prazo/status, sem consumo na recusa',async () => {
       await proof();

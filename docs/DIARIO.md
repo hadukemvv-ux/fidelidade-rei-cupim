@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**02/10/2026 — Codex** · Rechecagem do cadastro após revisão Claude aprovada: SQL somente leitura confirma RPC nova ausente/`unique_nome` presente; Vercel no commit `8b63dea`; logs de 10:28–10:29 UTC−3 mostram OTP 200, cadastro 23505/500 e novas tentativas 403, sem dados pessoais copiados.
+Fixtures ajustadas ao catálogo informado pelo Claude: CPF sem unicidade, extrato com `cliente_id TEXT` sem FK e `valor integer`; a migração não cria unicidade de CPF. 198 testes/tipos/lint OK.
+Com execução local autorizada fora do sandbox restrito, cinco cenários nativos com conexões distintas/espera real por locks passaram; cluster descartável encerrado/removido, sem Supabase/WhatsApp.
+Importador do painel identifica por telefone (não nome); integração externa desconhecida continua a confirmar. Branch original enviada pelo Claude; correção de fixtures local, SQL/publicação e reteste ainda dependem do responsável.
+
 **02/10/2026 — Codex** · `codex/cadastro-atomico`: migração proposta `202610020002` remove só `unique_nome`, preserva telefone/email/CPF únicos e grava cadastro/pré-cadastro, bônus/extrato e consumo OTP juntos; sem SQL aplicado.
 API mantém piloto fechado, erros sem detalhes pessoais e contas completas protegidas; 198 testes app, tipos e lint direcionado OK, incluindo falha/rollback e adapters da rota.
 Cinco cenários de concorrência nativa preparados; execução impedida pelo sandbox Windows (`pg_ctl` token restrito 87), não contada como validação. Commit local `dd9c8fa`; push falhou com crash `git-remote-https.exe` mesmo usando OpenSSL, sem envio confirmado; tentativas interrompidas. Revisão Claude e autorização de implantação pendentes.

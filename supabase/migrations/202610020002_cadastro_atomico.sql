@@ -2,7 +2,8 @@
 begin;
 
 -- Names are not identities. Drop only the confirmed legacy single-name constraint;
--- preserve phone/email/CPF uniqueness, indexes and every existing customer row.
+-- preserve existing phone/email constraints, indexes and every customer row.
+-- Production has no CPF uniqueness; this migration does not introduce it.
 do $$
 declare v_columns text[]; v_type "char";
 begin

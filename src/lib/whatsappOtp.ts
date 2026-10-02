@@ -110,13 +110,22 @@ function getCookie(request: Request, name: string) {
   }
 }
 
-export async function consumeOtpGrant(request: Request, phone: string, purpose: OtpPurpose) {
+/** Read proof without consuming it; signup consumes it in the customer transaction. */
+export function getOtpGrantHashes(request: Request, phone: string) {
   const grant = getCookie(request, OTP_GRANT_COOKIE);
-  if (!grant) return false;
+  if (!grant) return null;
   const normalized = normalizeBrazilPhone(phone);
-  const { data, error } = await supabaseAdmin.rpc('consumir_grant_otp', {
+  return {
     p_grant_hash: privateIdentifier(`grant:${grant}`),
     p_telefone_hash: privateIdentifier(`phone:${normalized.e164}`),
+  };
+}
+
+export async function consumeOtpGrant(request: Request, phone: string, purpose: OtpPurpose) {
+  const hashes = getOtpGrantHashes(request, phone);
+  if (!hashes) return false;
+  const { data, error } = await supabaseAdmin.rpc('consumir_grant_otp', {
+    ...hashes,
     p_proposito: purpose,
   });
   if (error) throw error;

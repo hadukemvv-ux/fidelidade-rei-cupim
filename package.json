@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "eslint",
     "test:unit": "node --experimental-strip-types --test --test-isolation=none tests/*.test.mts",
-    "test:otp:concurrency": "node --test scripts/otp-concurrency.mjs"
+    "test:otp:concurrency": "node --test scripts/otp-concurrency.mjs",
+    "test:signup:concurrency": "node --experimental-strip-types --test scripts/signup-concurrency.mjs"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.15.0",

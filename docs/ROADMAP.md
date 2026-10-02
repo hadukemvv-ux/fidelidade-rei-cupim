@@ -35,6 +35,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [ ] | Testar os 4 acessos reais (garçom, caixa, gestor, superadmin) em produção | Você executa, Claude acompanha |
 | [ ] | Roteiro `referencia/TESTES_PENDENTES_PRE_LANCAMENTO.md` — itens da Fase 1 | Todos |
 | [ ] | Ligar prêmios comerciais e sair do modo teste | Você autoriza, Codex executa |
+| [ ] | Controle comercial pelo painel: API/RPC superadmin auditada para ativar prêmio e mudar teste/publicação, confirmação explícita, contenção e gate de ambiente fechado; contrato/testes com schema real antes da tela/revisão; construir sem ligar | Codex backend, Claude UI |
 
 ## Fase 2 — Pontos e cashback
 
@@ -44,7 +45,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [~] | QR WhatsApp: controle publicado em 26a5743; pareamento e reinício/reconexão reais validados em 30/09; faltam auditoria das transições e acesso administrativo entre redes | Codex |
 | [~] | Mensagens QR: mensagem fixa recebida em 30/09, envio manual fechado e dois registros preservados; OTP implantado em 01/10 somente para dois participantes autorizados; fila/gatilhos/campanhas desligados | Codex |
 | [~] | OTP QR: piloto fechado autorizado e implantado Oracle/Vercel em 01/10; código recebido e verificação 200 confirmada nos logs; cadastro falhou por `unique_nome`; falta concluir cadastro/reset e concorrência real | Codex |
-| [ ] | Cadastro: permitir homônimos sem remover unicidade do telefone; tornar consumo OTP, cadastro e bônus/extrato atômicos para falhas/concorrência não consumirem confirmação nem duplicarem crédito; tratar erros sem dados pessoais | Codex |
+| [~] | Cadastro: `codex/cadastro-atomico` prepara homônimos e OTP/cadastro/bônus/extrato em uma transação, preserva telefone/email/CPF únicos e bloqueia reassumir conta completa; 198 testes/tipos/lint OK; PostgreSQL nativo impedido pelo sandbox Windows, revisão Claude e implantação autorizada pendentes | Codex |
 | [ ] | Modelos WhatsApp editáveis com variáveis protegidas, fila idempotente e avisos consolidados de pontos/nível; convite por telefone e escolha autenticada de cerveja/sobremesa pelo garçom (sem baixa por mero envio) | Codex; Claude faz telas |
 | [~] | Hospedagem WhatsApp: VM gratuita, DNS Registro.br e HTTPS Caddy validados; faltam teste conectado, backup/restauração reais e monitor externo | Codex, Você acessa a conta |
 | [ ] | Verificação de conta antiga com PIN e sem telefone comprovado | Codex |

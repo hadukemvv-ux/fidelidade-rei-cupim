@@ -89,3 +89,44 @@ test('edição de prêmios: RPC real com permissões, validação, piloto e audi
     });
   } finally { await db.close(); }
 });
+
+// Produção não tem a coluna legada `valor` (nem garantidamente `atualizado_em`): o UPDATE fixo
+// da 202610010002 falhava em todo salvamento com `record "v_depois" has no field "valor"`.
+test('edição de prêmios na tabela real (sem valor/atualizado_em): o PUT completo do painel salva', async () => {
+  const db = new PGlite();
+  const admin = '00000000-0000-4000-8000-000000000001';
+  try {
+    await db.exec(`create role anon; create role authenticated; create role service_role;
+      create table public.premios_roleta (id bigint primary key, nome text not null, descricao_vitoria text, emoji text,
+        probabilidade integer not null default 0, tipo text not null default 'produto', ativo boolean not null default false,
+        codigo text, versao smallint default 2, participa_roleta boolean default true,
+        canal_uso text not null default 'ambos' check (canal_uso in ('presencial','delivery','ambos')),
+        custo_estimado numeric(12,2) not null default 0, expira_em_dias integer default 14,
+        pesos_nivel integer[] not null default array[1,1,1,1,1,1], descricao_operacional text, imagem_url text);
+      create table public.perfis_operacionais(user_id uuid primary key, email text, papel text, ativo boolean);
+      create table public.seguranca_configuracoes(id integer, modo_contencao boolean);
+      create table public.roleta_configuracoes(id integer, v2_modo_teste boolean);
+      create table public.administracao_eventos(entidade text, entidade_id text, acao text, actor_user_id uuid, actor_email text, detalhes jsonb);
+      insert into public.perfis_operacionais values ('${admin}','fixture@example.invalid','superadmin',true);
+      insert into public.seguranca_configuracoes values (1,false);
+      insert into public.roleta_configuracoes values (1,true);
+      insert into public.premios_roleta(id,codigo,nome,descricao_vitoria,tipo,custo_estimado,pesos_nivel)
+        values (7,'frete_v2','Taxa de entrega grátis','A próxima entrega é por nossa conta.','frete_gratis',8.5,array[2,2,2,2,2,2]);`);
+    await db.exec(await readFile(new URL('../supabase/migrations/202610010002_edicao_premios_auditada.sql', import.meta.url), 'utf8'));
+    const update = async (changes: unknown) => (await db.query<{ result: { ok: boolean; code?: string; premio: Record<string, unknown> } }>(
+      'select public.atualizar_premio_roleta($1,$2,$3::jsonb) as result', [7, admin, JSON.stringify(changes)])).rows[0].result;
+    // Mesmo corpo que /admin/roleta envia ao clicar em "Salvar alterações".
+    const painel = { nome: 'Entrega por nossa conta', descricao_vitoria: 'A próxima entrega é por nossa conta.', canal_uso: 'ambos',
+      custo_estimado: 8.5, expira_em_dias: 14, pesos_nivel: [2,2,2,2,2,2], descricao_operacional: null };
+    await assert.rejects(update(painel), /has no field "valor"/);
+    await db.exec(await readFile(new URL('../supabase/migrations/202610020001_corrige_edicao_premios.sql', import.meta.url), 'utf8'));
+    const result = await update(painel);
+    assert.equal(result.ok, true); assert.equal(result.premio.nome, 'Entrega por nossa conta');
+    assert.equal(result.premio.tipo, 'frete_gratis'); assert.equal(result.premio.ativo, false);
+    const audit = (await db.query<{ detalhes: { campos_alterados: string[] } }>('select detalhes from public.administracao_eventos')).rows;
+    assert.equal(audit.length, 1); assert.deepEqual(audit[0].detalhes.campos_alterados, ['nome']);
+    assert.equal((await update({ valor: 10 })).code, 'invalid');
+    assert.equal((await update({ nome: 'Ativa', ativo: true })).code, 'pilot');
+    assert.equal((await db.query<{ nome: string }>('select nome from public.premios_roleta where id=7')).rows[0].nome, 'Entrega por nossa conta');
+  } finally { await db.close(); }
+});

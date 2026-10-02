@@ -55,7 +55,11 @@ export async function PUT(request: NextRequest) {
       const { data, error } = await supabaseAdmin.rpc('atualizar_premio_roleta', {
         p_premio_id: prizeId, p_actor_id: actorId, p_alteracoes: changes,
       });
-      if (error || !data) throw new Error('Falha ao confirmar edição do prêmio.');
+      if (error || !data) {
+        // Só código e mensagem do banco (sem o corpo enviado), para o motivo aparecer nos logs da Vercel.
+        console.error('atualizar_premio_roleta falhou', error?.code, error?.message);
+        throw new Error('Falha ao confirmar edição do prêmio.');
+      }
       return data;
     },
   });

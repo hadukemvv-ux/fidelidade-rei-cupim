@@ -28,7 +28,7 @@ Push/merge em `main` = deploy automático em produção.
 ## Consolidação autorizada em 01/10/2026
 
 Revisado pelos dois agentes; responsável autorizou publicação e as quatro migrações, ciente do backup adiado. **SQL aplicado e conferido em produção**, nesta ordem:
-`202609290001` (entregas/elegibilidade) → `202609300001` (OTP QR) → `202610010001` (fotos) → `202610010002` (textos).
+`202609290001` (entregas/elegibilidade) → `202609300001` (OTP QR) → `202610010001` (fotos) → `202610010002` (textos) → `202610020001` (correção do salvar, aplicada pelo Claude a pedido do responsável).
 
 | Branch | O que traz |
 | --- | --- |

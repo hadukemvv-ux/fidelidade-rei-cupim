@@ -1,6 +1,6 @@
 # Roadmap — Clube Cupim
 
-Atualizado em 28/09/2026. Uma linha por tarefa. Detalhes vão no PR e no `DIARIO.md`.
+Atualizado em 01/10/2026. Uma linha por tarefa. Detalhes vão no PR e no `DIARIO.md`.
 Investigações e decisões anteriores (Saipos, telefones, entregas, custos) estão em
 `docs/historico/ROADMAP_ATE_2026-09-28.md`.
 
@@ -21,13 +21,14 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 
 | | Tarefa | Dono |
 | --- | --- | --- |
-| [ ] | Parecer jurídico sobre a roleta (promoção com sorte) | Você |
+| [~] | Parecer jurídico sobre a roleta (promoção com sorte): em 02/10 o responsável decidiu seguir sem parecer, ciente do risco; agentes não travam por isso, mas ligar o comercial continua exigindo ordem explícita dele | Você |
 | [ ] | Aprovar prêmios, custos, pesos por faixa e validade | Você |
 | [ ] | Contratar hospedagem com uso comercial (Vercel Pro ou alternativa) | Você |
-| [~] | Backup diário pronto e segredos cadastrados; **pausado**: banco recusa a senha em `SUPABASE_DB_URL`. Retomar com reset no navegador normal e teste na branch `claude/backup-diagnostico` | Claude guia, Você executa |
-| [ ] | Baixas reais: gravar escolha → entrega → baixa no banco, com operador e QR reais | Codex |
-| [~] | Roleta interativa no visual Brasa Premium; ensaio em `/roleta/demo`; ajustando visual com o responsável; faltam fotos reais dos prêmios e teste em celulares reais | Claude |
-| [ ] | Enviar `imagem_url` de cada prêmio na sessão da roleta (`/api/roleta-v2/sessao`) para trocar foto sem mexer em código | Codex |
+| [x] | Backup Supabase diário (GitHub Actions, 06:00): retomado pelo responsável em 02/10 com endereço do Session pooler; 1ª execução manual verde com restauração conferida tabela a tabela | Claude |
+| [~] | Baixas reais: SQL `202609290001` aplicado em 01/10 com autorização; gates de entregas/comercial desligados; faltam concorrência real, catálogo/opções e painel | Codex |
+| [~] | Roleta interativa "Brasa Premium" com fotos de cerveja, sobremesa e entrega grátis; faltam fotos próprias de dindim e teste em celulares reais | Claude |
+| [~] | Prêmios no painel: API/tela publicadas em 91616d7 (Ready), SQL `202610010001`/`202610010002` aplicado em 01/10; campos conferidos; salvar textos falhava (coluna `valor` inexistente), correção `202610020001` aplicada e publicada em 01/10, falta o responsável refazer o teste de salvar; botão "Ver prévia da roleta" (sem gravar nada) | Codex API, Claude UI |
+| [x] | Telas do cliente (cadastro, login/pontos, PIN) com a identidade da roleta; foto do cupim trinchado na home | Claude |
 | [x] | Arte oficial (logo) e ícones do site/favicon — foguinho aplicado; pedir versão vetorial (SVG/PDF) para uso grande | Você envia a arte, Claude aplica |
 | [ ] | Piloto Saipos de 3 cenários: venda concluída, cancelada, mesa sem venda | Você executa, Codex analisa |
 | [ ] | Testar os 4 acessos reais (garçom, caixa, gestor, superadmin) em produção | Você executa, Claude acompanha |
@@ -39,8 +40,10 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | | Tarefa | Dono |
 | --- | --- | --- |
 | [~] | Número separado ativo; responsável escolheu avaliar QR não oficial em teste isolado; operação permanente/custos ainda a decidir | Você |
-| [~] | QR WhatsApp: publicação autorizada, tela do Claude integrada e controle Oracle/HTTPS configurado só em Production; faltam pareamento persistente real e auditoria das transições; envio/OTP pendentes | Codex |
-| [ ] | Ligar OTP de cadastro e testar | Codex |
+| [~] | QR WhatsApp: controle publicado em 26a5743; pareamento e reinício/reconexão reais validados em 30/09; faltam auditoria das transições e acesso administrativo entre redes | Codex |
+| [~] | Mensagens QR: destino resolvido pelo WhatsApp e recebimento confirmado com print em 30/09 após novo ensaio autorizado; envio fechado, dois registros preservados; fila/gatilhos/OTP pendentes | Codex |
+| [~] | OTP QR: código/tela/diagnóstico revisados, SQL `202609300001` aplicado em 01/10; 35 testes worker; envios desligados, faltam implantação Oracle e piloto fechado cadastro/reset com autorização separada | Codex |
+| [ ] | Modelos WhatsApp editáveis com variáveis protegidas, fila idempotente e avisos consolidados de pontos/nível; convite por telefone e escolha autenticada de cerveja/sobremesa pelo garçom (sem baixa por mero envio) | Codex; Claude faz telas |
 | [~] | Hospedagem WhatsApp: VM gratuita, DNS Registro.br e HTTPS Caddy validados; faltam teste conectado, backup/restauração reais e monitor externo | Codex, Você acessa a conta |
 | [ ] | Verificação de conta antiga com PIN e sem telefone comprovado | Codex |
 | [ ] | Nova rotina de pontuação Saipos: só contas verificadas, idempotente, com relatório | Codex |

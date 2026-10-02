@@ -12,6 +12,10 @@ function decodeKey(value: string | undefined, label: string): Buffer {
   return key;
 }
 
+export function qrOtpCodeKey(env: Record<string, string | undefined>) {
+  return decodeKey(env.WHATSAPP_QR_OTP_CODE_KEY, 'Chave de código OTP');
+}
+
 export function qrOtpSecrets(env: Record<string, string | undefined>): QrOtpSecrets {
   const encryptionKey = decodeKey(env.WHATSAPP_QR_OTP_ENCRYPTION_KEY, 'Chave de criptografia OTP');
   const codeKey = decodeKey(env.WHATSAPP_QR_OTP_CODE_KEY, 'Chave de código OTP');

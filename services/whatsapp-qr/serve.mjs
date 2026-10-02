@@ -4,6 +4,8 @@ import { openSessionStore } from './session-store.mjs';
 import { createSessionController } from './session-controller.mjs';
 import { createControlServer } from './http-server.mjs';
 import { privateSocketOptions } from './core.mjs';
+import { createTestSender } from './test-send.mjs';
+import { createOtpSender } from './otp-send.mjs';
 
 const flags = process.argv.slice(2);
 if (flags.length !== 2 || !flags.includes('--serve') || !flags.includes('--dedicated-number')) {
@@ -39,9 +41,15 @@ if (flags.length !== 2 || !flags.includes('--serve') || !flags.includes('--dedic
       restoreKey: (type, value) => type === 'app-state-sync-key' ? proto.Message.AppStateSyncKeyData.fromObject(value) : value });
     controller = createSessionController({ store, restartRequired: DisconnectReason.restartRequired, loggedOut: DisconnectReason.loggedOut,
       makeSocket: (auth) => makeWASocket(privateSocketOptions(auth, pino({ level: 'silent' }))) });
-    server = createControlServer(controller, process.env.WHATSAPP_QR_CONTROL_TOKEN || '');
+    const testSender = createTestSender({ env: process.env, store, controller });
+    const otpSender = createOtpSender({ env: process.env, store, controller });
+    server = createControlServer(controller, process.env.WHATSAPP_QR_CONTROL_TOKEN || '', testSender, otpSender, process.env.WHATSAPP_QR_OTP_TOKEN);
     server.on('error', () => void stop(true));
-    server.listen(port, '127.0.0.1', () => process.stdout.write('Controle WhatsApp local pronto. Inicie o pareamento pelo admin. Nenhuma mensagem será enviada.\n'));
+    server.listen(port, '127.0.0.1', () => process.stdout.write(otpSender.enabled
+      ? 'Controle pronto. OTP restrito ao beta; campanhas desligadas.\n'
+      : testSender.enabled
+      ? 'Controle pronto. Somente teste manual de mensagem fixa permitido; nenhum envio automático.\n'
+      : 'Controle WhatsApp local pronto. Inicie o pareamento pelo admin. Nenhuma mensagem será enviada.\n'));
   } catch {
     process.stderr.write('Não foi possível iniciar. Confira configuração, chave e lock do serviço.\n');
     await stop(true);

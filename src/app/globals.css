@@ -27,7 +27,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 .section-intro { max-width: 34rem; margin: 1.35rem 0 0; font-size: 1rem; line-height: 1.6; }
 
 .hero { position: relative; min-height: 100svh; isolation: isolate; display: flex; flex-direction: column; background: var(--ink); }
-.hero-photo { z-index: -3; object-fit: cover; object-position: 48% 58%; transform: scale(1.015); animation: hero-reveal 1.4s cubic-bezier(.2,.75,.25,1) both; }
+.hero-photo { z-index: -3; object-fit: cover; object-position: 50% 42%; transform: scale(1.015); animation: hero-reveal 1.4s cubic-bezier(.2,.75,.25,1) both; }
 .hero-shade { position: absolute; inset: 0; z-index: -2; background: linear-gradient(180deg, rgba(15,6,3,.86) 0%, rgba(15,6,3,.18) 35%, rgba(15,6,3,.72) 72%, #130b09 100%), linear-gradient(90deg, rgba(15,6,3,.48), transparent 72%); }
 .hero-header { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.15rem; animation: rise-in .7s .15s both; }
 .brand { display: flex; align-items: center; gap: .65rem; }
@@ -735,7 +735,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 
 .club-login-page { min-height: 100svh; display: grid; background: var(--ink); }
 .club-login-photo { position: relative; min-height: 37svh; overflow: hidden; }
-.club-login-photo img { object-fit: cover; object-position: 50% 56%; }
+.club-login-photo img { object-fit: cover; object-position: 50% 42%; }
 .club-login-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(19,11,9,.12), var(--ink)); }
 .club-login-content { position: relative; z-index: 1; display: flex; flex-direction: column; padding: 1.1rem 1.2rem 3rem; background: radial-gradient(circle at 85% 20%, rgba(240,43,31,.16), transparent 27%), var(--ink); }
 .club-login-brand { position: absolute; top: -3.1rem; left: 1.2rem; display: flex; align-items: center; gap: .65rem; font-weight: 900; }
@@ -911,7 +911,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 /* Cadastro: promessa clara, poucos campos e recompensa imediata */
 .signup-page { min-height: 100svh; background: var(--ink); color: white; }
 .signup-promise { position: relative; min-height: 42svh; overflow: hidden; }
-.signup-promise > img { object-fit: cover; object-position: 50% 58%; }
+.signup-promise > img { object-fit: cover; object-position: 50% 42%; }
 .signup-promise-shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(19,11,9,.2), rgba(19,11,9,.92)); }
 .signup-brand { position: absolute; z-index: 2; top: 1rem; left: 1rem; display: flex; align-items: center; gap: .65rem; color: white; font-weight: 900; }
 .signup-brand img { width: 3rem; height: 3rem; object-fit: contain; }
@@ -991,3 +991,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
   background: #991b1b !important;
   color: #fff !important;
 }
+
+/* Telas do cliente com a identidade "Brasa Premium" (fontes da roleta). A home mantém Impact/Arial. */
+.brand-fonts { font-family: var(--font-body), Arial, Helvetica, sans-serif; }
+.brand-fonts h1, .brand-fonts h2, .brand-fonts h3 { font-family: var(--font-display), 'Arial Narrow', Arial, sans-serif; letter-spacing: .01em; }

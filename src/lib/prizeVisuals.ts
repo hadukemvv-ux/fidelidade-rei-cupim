@@ -1,27 +1,66 @@
 /**
- * Fotos da roleta num lugar só. Para trocar uma foto: colocar o arquivo em
- * public/roleta/ e ajustar aqui. Nenhum outro arquivo precisa mudar.
+ * Fotos da roleta num lugar só. Para trocar uma foto padrão: colocar o arquivo em
+ * public/roleta/ e ajustar aqui. Fotos enviadas pelo painel (imagem_url) têm prioridade.
  */
 
 /** Fundo da página: cupim trinchado na tábua (foto do responsável, 29/09/2026).
  * `position` escolhe o ponto de foco (x% y%) e `zoom` aproxima esse ponto. */
 export const ROLETA_BACKDROP = { src: '/roleta/fundo-cupim.webp', position: '50% 40%', zoom: 1.45 };
 
+/** O mínimo que a tela sabe de um prêmio. `tipo` vem da API; o nome é editável e só serve de reserva. */
+export type PrizeIdentity = { nome: string; tipo?: string | null; imagem_url?: string | null; codigo?: string | null };
+
+/** Prêmio interno do piloto (R$ 0). Reaproveita um tipo comercial no banco, mas não deve herdar foto padrão. */
+const PILOT_PRIZE_CODE = 'piloto_interno_sem_valor_v2';
+
 /**
- * Foto de cada prêmio pelo nome, enquanto a API não envia `imagem_url`.
- * Destinos previstos em public/roleta/premios/: saideira.webp, expulsadeira.webp,
- * sobremesa.webp, brownie.webp, pudim.webp, dindim.webp, entrega.webp.
+ * Fotos padrão por tipo de prêmio, de bancos com licença comercial gratuita e sem marcas:
+ * garrafas por Diana, pudim por Gu Ko, brownie por Sylwester Ficek (Pexels); cachorro
+ * entregador por @madeline_sd (Unsplash, recortado sem o baú/bolsa com escrita).
+ * Ainda falta o dindim (não há foto equivalente nos bancos; usar foto do restaurante).
  */
-const PHOTOS: Array<[RegExp, string]> = [
-  [/pudim/i, '/produtos/pudim.png'],
-  [/brownie/i, '/produtos/brownie.png'],
-  [/sobremesa/i, '/produtos/pudim.png'],
+const PHOTOS_BY_TYPE: Record<string, string> = {
+  saideira: '/roleta/premios/saideira.webp',
+  expulsadeira: '/roleta/premios/expulsadeira.webp',
+  sobremesa: '/roleta/premios/sobremesa.webp',
+  frete_gratis: '/roleta/premios/entrega.webp',
+};
+
+/** Reserva pelo nome, para respostas antigas sem `tipo` (antes das migrações) e para a demonstração. */
+const PHOTOS_BY_NAME: Array<[RegExp, string]> = [
+  [/expulsadeira/i, PHOTOS_BY_TYPE.expulsadeira],
+  [/saideira/i, PHOTOS_BY_TYPE.saideira],
+  [/pudim/i, '/roleta/premios/pudim.webp'],
+  [/brownie/i, '/roleta/premios/brownie.webp'],
+  [/sobremesa/i, PHOTOS_BY_TYPE.sobremesa],
+  [/entrega|frete/i, PHOTOS_BY_TYPE.frete_gratis],
 ];
+
+const ALCOHOL_NOTICE = 'Beba com moderação. Proibido para menores de 18 anos.';
+
+/** Avisos mostrados embaixo do prêmio ganho. Cerveja: vale a mesma que o cliente consumiu. */
+const NOTES_BY_TYPE: Record<string, string[]> = {
+  expulsadeira: ['Seu prêmio é 2 unidades da mesma cerveja que você consumiu.', ALCOHOL_NOTICE],
+  saideira: ['Seu prêmio é 1 unidade da mesma cerveja que você consumiu.', ALCOHOL_NOTICE],
+};
+
+function typeFromName(nome: string) {
+  if (/expulsadeira/i.test(nome)) return 'expulsadeira';
+  if (/saideira/i.test(nome)) return 'saideira';
+  return null;
+}
+
+export function prizeNotes(prize: PrizeIdentity) {
+  const tipo = prize.tipo || typeFromName(prize.nome);
+  return (tipo && NOTES_BY_TYPE[tipo]) || [];
+}
 
 /** Ligar quando todos os prêmios tiverem foto: a roda passa a mostrar a foto em cada fatia. */
 export const SHOW_PHOTOS_IN_WHEEL = false;
 
-export function prizePhoto(nome: string, imagemUrl?: string | null) {
-  if (imagemUrl) return imagemUrl;
-  return PHOTOS.find(([pattern]) => pattern.test(nome))?.[1] ?? null;
+export function prizePhoto(prize: PrizeIdentity) {
+  if (prize.imagem_url) return prize.imagem_url;
+  if (prize.codigo === PILOT_PRIZE_CODE) return null;
+  if (prize.tipo) return PHOTOS_BY_TYPE[prize.tipo] ?? null;
+  return PHOTOS_BY_NAME.find(([pattern]) => pattern.test(prize.nome))?.[1] ?? null;
 }

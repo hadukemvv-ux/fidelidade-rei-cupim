@@ -7,8 +7,8 @@
 - Saideira = 1 cerveja; expulsadeira = 2 cervejas. O cliente escolhe entre as
   cervejas que consumiu, independentemente do preço. Registrar marca, tamanho,
   produto e unidade exatos, não apenas o nome genérico do prêmio.
-- Sobremesa = 1 brownie, dindim gourmet ou pudim; registrar opção/sabor exato
-  se isso distinguir os itens usados na contagem da empresa.
+- Sobremesa = 1 brownie, dindim gourmet ou pudim; registrar o produto e a
+  quantidade, sem separar sabores na contagem (confirmado em 01/10).
 - Resposta do garçom identifica o item. A confirmação de entrega gera UMA
   saída auditada. Sorteio, mensagem enviada ou escolha ainda não são entrega.
 - Prêmio imediato não exige cadastro completo do cliente. Prêmio futuro
@@ -35,9 +35,10 @@
   de 73h demonstra alerta sem exclusão. Recarregar/sair descarta o ensaio.
   Não lê clientes/catálogo real, não altera cupons nem chama a Saipos.
 
-Não existe ainda conexão QR ativa/persistente, worker de envio,
-processador de respostas, vínculo de celular do operador, painel de baixas reais,
-catálogo de itens físicos nem integração com o giro. Não habilitar o webhook
+Na etapa de 28/09 ainda não existia conexão QR ativa/persistente nem worker de envio;
+o piloto posterior está descrito abaixo. Continuam pendentes processador de respostas,
+vínculo de celular do operador, painel de baixas reais, catálogo de itens físicos
+e integração com o giro. Não habilitar o webhook
 antes de aplicar/revisar a inbox e concluir o consumidor autenticado.
 
 ## Escolha de canal — ensaio aprovado em 29/09
@@ -52,11 +53,11 @@ A decisão anterior de provedor oficial foi substituída apenas para este ensaio
 isolado. Baileys é integração não oficial e sua sessão tem acesso à conta.
 Não concluir que a Saipos usa essa tecnologia sem confirmação do fornecedor.
 `services/whatsapp-qr` é um pacote independente, sem importação pelo Next,
-sem envio de mensagens, sincronização de histórico ou integração com o cadastro/OTP.
+sem sincronização de histórico ou integração com o cadastro/OTP.
 O ensaio `connect.mjs` usa somente memória; o responsável confirmou pareamento.
 Para a continuação autorizada em 29/09, `serve.mjs` prepara persistência
 criptografada fora do Git e controle autenticado via API superadmin. Ainda precisa
-de configuração, tela do Claude e ensaio real de reinício/desconexão. Contrato e
+de configuração, tela do Claude e ensaios reais naquela etapa. Contrato e
 execução estão no README; o serviço não é iniciado pelo deploy da Vercel.
 
 O primeiro ensaio aprovado será isolado/local, sem leitura/importação de
@@ -64,6 +65,34 @@ conversas, sem grupos, sem campanhas, sem clientes reais e somente destinos
 de teste autorizados. Não rodar sessão permanente em Route Handler Vercel;
 o processo precisa de máquina/serviço contínuo, credenciais privadas fora do
 Git, parada imediata e restrição de acesso ao QR.
+
+Atualização em 30/09: worker Oracle/HTTPS e painel superadmin publicados; número
+dedicado pareado e reconexão após reinício validada sem novo QR. Primeiro envio
+foi informado como não recebido; consulta confirmou endereço interno divergente.
+Resolução pelo WhatsApp corrigida, sem alterar cadastro/remover dígitos cegamente.
+Responsável autorizou outro ensaio e confirmou recebimento com print depois dele.
+UUID privado limita a tentativa adicional; os dois registros foram preservados.
+Envios desligados depois do teste, destino/autorização temporários removidos.
+Rota de envio só em loopback; código do piloto está na branch, sem publicação na main.
+Modelos em `src/lib/whatsappMessageCatalog.ts` são apenas rascunhos, sem fila/gatilho.
+Não confundir aviso ao garçom com entrega/baixa ou conexão com telefone comprovado.
+
+Solicitação em 01/10, ainda sem ativação: modelos editáveis pelo responsável,
+com código, validade, links e quantidades protegidos pelo servidor; avisos de
+verificação/cadastro, pontos creditados e níveis; convite operacional por
+WhatsApp para a equipe. Cadastro de garçom por telefone é proposta, não uma
+substituição já feita do login/permissões. Avisos promocionais continuam opt-in.
+Sugestão a aprovar: consolidar pontos e subida de nível num aviso diário após
+crédito confirmado; um aviso antes da queda real de nível, sem reset de saldos.
+A janela de nível já definida é móvel de 90 dias; frequência/antecedência de
+mensagens não estão decididas e nenhum gatilho foi ligado.
+
+Catálogo de marcas informado pelo responsável: Brahma Chopp, Brahma Duplo
+Malte, Heineken, Stella comum, Stella Pure Gold, Budweiser, Skol, Devassa,
+Spaten e Original. Ainda mapear produtos/unidades reais e cervejas consumidas;
+não assumir tamanho nem habilitar todas as marcas para qualquer comanda.
+Escolha por link deve abrir página autenticada acessível ao garçom, não depender
+de permissões do admin. Botões/listas nativos por QR continuam a validar.
 
 O núcleo de entregas independe do número, mas mudar remetente exige nova
 autenticação/sessão e revalidar permissões. Botões/listas de API oficial não

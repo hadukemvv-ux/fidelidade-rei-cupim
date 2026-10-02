@@ -4,8 +4,8 @@ import confetti from 'canvas-confetti';
 import Image from 'next/image';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import styles from '@/app/roleta/v2/roleta.module.css';
-import { prizePhoto, ROLETA_BACKDROP } from '@/lib/prizeVisuals';
-import { bodyFont, displayFont } from './fonts';
+import { prizeNotes, prizePhoto, ROLETA_BACKDROP } from '@/lib/prizeVisuals';
+import { bodyFont, displayFont } from '@/components/brandFonts';
 import PrizeWheel, { type WheelPrize } from './PrizeWheel';
 
 export type SpinResult = {
@@ -19,14 +19,15 @@ type Props = {
   prizes: WheelPrize[];
   /** Registra o giro no servidor (ou simula, na demonstração) e devolve o prêmio sorteado. */
   requestSpin: (phone: string, marketing: boolean) => Promise<SpinResult>;
-  demo?: boolean;
+  /** Etiqueta no topo quando não é giro de verdade (demonstração ou prévia do painel). */
+  demo?: boolean | string;
 };
 
 const EMBER_COLORS = ['#ff6a00', '#ff8c1a', '#ffb347', '#ffd27a', '#dc251b'];
 
 /** Faíscas de brasa: explodem do centro da roda e sobem, em vez de confete colorido. */
 function celebrate() {
-  const base = { colors: EMBER_COLORS, shapes: ['circle' as const], disableForReducedMotion: true, zIndex: 60 };
+  const base = { colors: EMBER_COLORS, shapes: ['circle' as const], disableForReducedMotion: true, zIndex: 300 };
   confetti({ ...base, particleCount: 140, spread: 360, startVelocity: 32, gravity: 0.35, decay: 0.92, scalar: 0.55, ticks: 160, origin: { y: 0.5 } });
   window.setTimeout(() => {
     confetti({ ...base, particleCount: 90, angle: 90, spread: 55, startVelocity: 55, gravity: 0.5, scalar: 0.45, ticks: 220, origin: { x: 0.3, y: 1 } });
@@ -68,7 +69,11 @@ export default function RoletaExperience({ prizes, requestSpin, demo = false }: 
     setNotice('');
     const winning = await requestSpin(phone, marketing);
     pending.current = winning;
-    const matches = sectors.flatMap((prize, index) => (prize.nome === winning.premio.nome ? [index] : []));
+    // Pelo ID quando a API envia (nome é editável e pode repetir); pelo nome só como reserva.
+    const sameId = winning.premio.id != null;
+    const matches = sectors.flatMap((prize, index) => (
+      (sameId ? prize.id === winning.premio.id : prize.nome === winning.premio.nome) ? [index] : []
+    ));
     if (matches.length) return matches[Math.floor(Math.random() * matches.length)];
     const index = Math.floor(Math.random() * sectors.length);
     setOverride({ index, prize: winning.premio });
@@ -83,7 +88,7 @@ export default function RoletaExperience({ prizes, requestSpin, demo = false }: 
     window.setTimeout(() => { setResult(winning); setStep('result'); setFlash(false); }, 650);
   }
 
-  const resultPhoto = result && !result.modo_teste ? prizePhoto(result.premio.nome, result.premio.imagem_url) : null;
+  const resultPhoto = result && !result.modo_teste ? prizePhoto(result.premio) : null;
 
   return <main className={`${styles.page} ${displayFont.variable} ${bodyFont.variable}`}>
     <div className={styles.backdrop} aria-hidden="true"><Image src={ROLETA_BACKDROP.src} alt="" fill priority sizes="100vw" style={{ objectPosition: ROLETA_BACKDROP.position, transform: `scale(${ROLETA_BACKDROP.zoom})`, transformOrigin: ROLETA_BACKDROP.position }} /></div>
@@ -93,7 +98,7 @@ export default function RoletaExperience({ prizes, requestSpin, demo = false }: 
       <header className={styles.header}>
         <Image src="/logo.png" alt="" width={30} height={30} />
         <span>O Rei do Cupim</span>
-        {demo && <em className={styles.demoPill} title="Prêmios fictícios. Nada é registrado.">Demonstração</em>}
+        {demo && <em className={styles.demoPill} title="Nada é registrado.">{typeof demo === 'string' ? demo : 'Demonstração'}</em>}
       </header>
 
       {step !== 'result' && <section className={styles.hero}>
@@ -122,6 +127,10 @@ export default function RoletaExperience({ prizes, requestSpin, demo = false }: 
         <h2>{result.premio.nome}</h2>
         {result.modo_teste ? <p className={styles.testWarning}>Teste do Clube — sem benefício para resgatar.</p> : <>
           <p>{result.premio.descricao_vitoria}</p>
+          {prizeNotes(result.premio).length > 0 && <ul className={styles.prizeNotes}>
+            {prizeNotes(result.premio).map((note) => <li key={note}>{note}</li>)}
+          </ul>}
+          {resultPhoto && <small className={styles.photoNote}>Foto ilustrativa.</small>}
           <div className={styles.coupon}><span>Mostre este código à equipe</span><strong>{result.cupom}</strong><small>Válido até {new Date(result.expira_em).toLocaleDateString('pt-BR')}</small></div>
         </>}
       </section>}

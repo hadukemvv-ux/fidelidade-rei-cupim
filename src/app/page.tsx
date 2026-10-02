@@ -40,7 +40,7 @@ export default function Home() {
   return (
     <main className="home-shell">
       <section className="hero" aria-labelledby="hero-title">
-        <Image src="/images/home/hero-cupim.webp" alt="Cupim assado na brasa servido com acompanhamento" fill priority sizes="100vw" className="hero-photo" />
+        <Image src="/images/home/cupim-trinchado.webp" alt="Cupim assado na brasa servido com acompanhamento" fill priority sizes="100vw" className="hero-photo" />
         <div className="hero-shade" />
 
         <header className="hero-header">

@@ -53,6 +53,10 @@
 .coupon strong{font:600 clamp(26px,7vw,34px)/1 var(--font-display),Arial,sans-serif;letter-spacing:.12em;overflow-wrap:anywhere}
 .coupon small{color:#efe6d880}
 .testWarning{font-size:14px}
+.prizeNotes{display:grid;gap:8px;margin:16px 0 0;padding:0;list-style:none;text-align:left}
+.prizeNotes li{padding:10px 12px;border-left:3px solid #d4a24c;border-radius:8px;background:#efe6d80f;color:#efe6d8e6;font-size:14px;line-height:1.4}
+.prizeNotes li:first-child{font-weight:700;color:var(--bone)}
+.photoNote{display:block;margin-top:10px;color:#efe6d866;font-size:11px}
 @keyframes pop{from{transform:scale(.3);opacity:0}to{transform:none;opacity:1}}
 @keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
 

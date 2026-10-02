@@ -1,6 +1,6 @@
 # WhatsApp: hospedagem, recuperação e migração
 
-Guia solicitado pelo responsável em 29/09/2026. Atualização em 30/09: **worker/HTTPS, pareamento/reinício e recebimento real confirmados; destino resolvido pelo WhatsApp; envio fechado**.
+Guia solicitado pelo responsável em 29/09/2026. Atualização em 01/10: **worker OTP revisado implantado, reconectado sem QR e piloto de dois números autorizado/ativado; cadastro/reset no celular ainda não confirmados**. Histórico abaixo preserva os gates de cada ensaio anterior.
 Escolha inicial: tentar Oracle Always Free; nenhum plano pago autorizado.
 
 ## Para o responsável
@@ -138,7 +138,7 @@ Antes de OTP: fila persistente, limites antiabuso, reserva/expiração e revisã
 
 ## Como interpretar um problema
 
-OTP QR preparado em 01/10, **ainda não implantado/ativado**: o worker limpa somente
+OTP QR implantado em 01/10, **restrito aos dois números aprovados**: o worker limpa somente
 reservas OTP com mais de 24h antes de admitir novos envios. Preserva limites,
 sessão e registros do teste fixo; payload expira em 10min. Não remover registros
 manualmente para reenviar. Se o relógio retroceder, reserva bloqueada até corrigir
@@ -150,7 +150,7 @@ sem retry do transporte nem edição manual do status. Não registrar o código 
 
 ### Relógio avançou e depois voltou — procedimento seguro
 
-Diagnóstico/preparação de 01/10; **não executado na VM real**. OTP continua fechado.
+Diagnóstico validado na VM em 01/10 durante implantação com serviço parado: relógio seguro, zero reservas OTP, sessão intacta. Piloto fechado de dois números foi ativado depois da inspeção; recuperação de relógio regressivo real não foi necessária/testada.
 Uma resposta 503 não prova falha de relógio: também pode ser rede, configuração
 ou quota. Conferir primeiro `date -u` e `timedatectl status` por SSH; o relógio
 deve estar sincronizado com uma fonte confiável, sem avançá-lo artificialmente.
@@ -244,9 +244,15 @@ offline específica antes de qualquer mudança. Nunca apagar `session.enc`,
 | Backup/restauração real | Pendente |
 | Migração entre máquinas | Pendente |
 | Aviso externo de falha | Pendente |
-| OTP de cliente / mensagem ao garçom | Pendente |
+| OTP de cliente / mensagem ao garçom | Piloto OTP de dois números ativado em 01/10; cadastro/reset completos e recebimento do código pendentes; mensagem ao garçom ainda não implementada |
 | OTP QR: retenção e concorrência | 01/10: retenção testada além de 1.000 reservas; duas conexões nativas PostgreSQL locais validaram reserva, confirmação, consumo, tentativas e preparação concorrentes; sem acesso ao Supabase/WhatsApp de produção |
-| OTP QR: diagnóstico de relógio | 01/10: inspeção offline com dados fictícios detecta reservas futuras, preserva os bytes de sessão e os ledgers, recusa lock ocupado/chave errada; liberação após espera conservadora testada, sem destrave manual ou ensaio na VM |
+| OTP QR: diagnóstico de relógio | 01/10: ensaios fictícios aprovados; inspeção real com worker parado confirmou relógio seguro e sessão intacta; recuperação após regressão real/destrave manual não testados |
+
+## Piloto OTP de 01/10 — operação atual
+
+Responsável autorizou separadamente o piloto para dois telefones; lista e chaves ficam só na configuração privada. Worker revisado instalado sem reinstalar dependências; sessão reutilizada e dois registros fixos preservados. Vercel usa a main `7bbcbc0` com oito Secrets exclusivos de Production; deploy `CuH8PsmYEBubrXowuJckFgY5tZyj` Ready.
+O Caddy agora também encaminha somente **POST `/messages/otp`**, corpo até 512 bytes, HTTPS normal e token próprio distinto do controle; não expõe `/messages/test` nem porta 8787. Sem token/token de controle no OTP: 401; token OTP não controla sessão; Origin: 400; GET OTP/outras rotas: 404; destino externo recusado sem reserva. Site real: fora da lista 403, corpo inválido 400/no-store. Código/PIN são digitados pelo participante no próprio site, nunca coletados pelo agente.
+Para suspender novas verificações: fechar `WHATSAPP_OTP_ENABLED` e `WHATSAPP_QR_OTP_ENABLED` em Production e redeploy; fechar também `WHATSAPP_QR_OTP_ENABLED` no ambiente privado da VM e reiniciar/reconectar pelo admin. Não revogar pareamento nem apagar sessão/ledgers para interromper envios. Ampliação da lista exige autorização específica. Campanhas, mensagens operacionais e prêmios comerciais continuam desligados.
 
 Referência de cotas e recolhimento: [Oracle Always Free](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm).
 O guia deve ser atualizado após cada ensaio e mudança de provedor.

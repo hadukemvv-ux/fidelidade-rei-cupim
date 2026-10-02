@@ -17,8 +17,8 @@ Push/merge em `main` = deploy automático em produção.
 | Roleta V2 | **Piloto técnico** — prêmio interno de R$ 0, sem valor comercial. Visual "Brasa Premium" (vermelho/preto/dourado, arrastar com o dedo, fotos dos prêmios); ensaio em `/roleta/demo` |
 | Comanda (2 fotos + QR) e reconciliação Saipos | Funciona no piloto; cron diário confere, não credita nada |
 | Pontos/cashback pela Saipos | **Pausado** — processador antigo não pode ser religado |
-| Conexão WhatsApp QR | Worker Oracle/HTTPS e painel superadmin; pareamento/reinício e recebimento de mensagem fixa confirmados; destino resolvido pelo WhatsApp, envios fechados; OTP/fila/gatilhos ainda pendentes |
-| Cadastro com WhatsApp OTP | **Desligado** na produção; código revisado e SQL aplicado; implantação do transporte na Oracle e piloto fechado dependem de autorização separada |
+| Conexão WhatsApp QR | Worker Oracle/HTTPS e painel superadmin; pareamento/reinício e mensagem fixa confirmados; reconectado sem QR em 01/10, dois registros fixos preservados; campanhas/fila/gatilhos ainda desligados |
+| Cadastro com WhatsApp OTP | **Piloto fechado autorizado e ativado** em 01/10 somente para dois números privados; worker Oracle implantado, Vercel Ready, demais destinos bloqueados; cadastro/reset completos nos celulares ainda pendentes |
 | Bot e baixas de prêmios | `/admin/baixas` continua simulador; estrutura/API reais preparadas e SQL aplicado, mas gates de entregas/comercial desligados |
 | Backup do Supabase | **Adiado pelo responsável**: robô pronto, banco recusa a senha em `SUPABASE_DB_URL` (ver ROADMAP) |
 | Sorteio, roleta V1, garçons antigos | Legado pausado, a remover |
@@ -35,7 +35,7 @@ Revisado pelos dois agentes; responsável autorizou publicação e as quatro mig
 | `claude/consolidacao` + `claude/foto-entrega` | **Duas frentes publicadas na main** em 91616d7, deploy Ready conferido: OTP fechado e diagnóstico de relógio; estrutura de baixas reais; troca de foto e de nome/mensagem pelo painel; roleta por `id`/`tipo` e foto de entrega grátis |
 | (origens) | `codex/whatsapp-otp` (5ec320c) e `claude/premios-textos` (b7cd04e), preservadas |
 
-Conferência do banco: roleta em modo teste; zero prêmios comerciais ativos; entregas `habilitado=false` e `permitir_comercial=false`; RPCs restritas ao serviço. **Não ativar/enviar OTP nem piloto sem nova autorização**; implantação do worker não é feita pelo deploy da Vercel.
+Conferência do banco: roleta em modo teste; zero prêmios comerciais ativos; entregas `habilitado=false` e `permitir_comercial=false`; RPCs restritas ao serviço. OTP teve autorização própria posterior: piloto de dois números ativo no deploy `CuH8PsmYEBubrXowuJckFgY5tZyj`; não ampliar destinatários, campanhas ou comercial. Implantação do worker é separada da Vercel.
 
 ## Onde está cada coisa
 

@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**01/10/2026 — Codex** · `codex/whatsapp-implantacao`: SSH /32 autorizado atualizado; worker OTP revisado instalado na Oracle, sessão preservada e número dedicado reconectado sem novo QR.
+181 testes app + 35 worker e tipos OK; inspeção real confirmou relógio seguro e sessão intacta; dois registros fixos preservados, zero reservas OTP antes do teste; isolamento loopback e tokens separados conferidos.
+Responsável autorizou piloto restrito a dois números: HTTPS e Secrets somente Production configurados; deploy 7bbcbc0 Ready (`CuH8PsmYEBubrXowuJckFgY5tZyj`); domínio real recusou destino fictício externo (403) e dados inválidos (400).
+Cadastro/reset nos celulares ainda pendentes; nenhuma mensagem disparada pelo agente, comercial/campanhas desligados e backup Supabase adiado. Leitura local temporária autorizada para importação privada já retirada.
+
 **01/10/2026 — Claude** · Conferência em produção com login do responsável, só leitura: `/admin/roleta` mostra foto, "Trocar foto", nome e mensagem nos 7 prêmios; modo teste visível; sem login, PUT e upload respondem 401. Corrigido (branch `claude/premio-teste-sem-foto`): prêmio interno do piloto herdava a foto do cachorro por compartilhar o tipo `frete_gratis`. 181 testes OK.
 
 **01/10/2026 — Codex** · Responsável confirmou autorização própria, ciente do backup adiado: SQL `202609290001` → `202609300001` → `202610010001` → `202610010002` aplicado com sucesso no projeto correto e permissões conferidas.

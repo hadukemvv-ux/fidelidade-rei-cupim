@@ -56,7 +56,10 @@ jobs:
           mkdir -p out/db
           supabase db dump --db-url "$SUPABASE_DB_URL" -f out/db/roles.sql --role-only
           supabase db dump --db-url "$SUPABASE_DB_URL" -f out/db/schema.sql
-          supabase db dump --db-url "$SUPABASE_DB_URL" -f out/db/data.sql --use-copy --data-only
+          # Tabelas internas de vetores da Supabase (recurso não usado, vazias): o banco de teste
+          # recusa recriá-las (permission denied for table buckets_vectors).
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f out/db/data.sql --use-copy --data-only \
+            -x storage.buckets_vectors -x storage.vector_indexes
           psql "$SUPABASE_DB_URL" -tAc "show server_version_num" > out/db/server_version.txt
           ls -la out/db
 

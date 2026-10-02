@@ -7,7 +7,7 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 **02/10/2026 — Codex** · `codex/cadastro-atomico`: migração proposta `202610020002` remove só `unique_nome`, preserva telefone/email/CPF únicos e grava cadastro/pré-cadastro, bônus/extrato e consumo OTP juntos; sem SQL aplicado.
 API mantém piloto fechado, erros sem detalhes pessoais e contas completas protegidas; 198 testes app, tipos e lint direcionado OK, incluindo falha/rollback e adapters da rota.
-Cinco cenários de concorrência nativa preparados; execução impedida pelo sandbox Windows (`pg_ctl` token restrito 87), não contada como validação. Revisão Claude e autorização de implantação pendentes.
+Cinco cenários de concorrência nativa preparados; execução impedida pelo sandbox Windows (`pg_ctl` token restrito 87), não contada como validação. Commit local `dd9c8fa`; push falhou com crash `git-remote-https.exe` mesmo usando OpenSSL, sem envio confirmado; tentativas interrompidas. Revisão Claude e autorização de implantação pendentes.
 Pedido de controle comercial pelo painel registrado no roadmap; nada ativado/publicado, nenhum envio, alteração na Oracle ou retomada do backup.
 
 **02/10/2026 — Codex** · `codex/revisao-schema`: revisão de beda421 aprovada; SELECT do catálogo em 01/10 confirmou função instalada igual à `202610020001`, anon/authenticated sem EXECUTE e serviço com acesso.

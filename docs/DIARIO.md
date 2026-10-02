@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**02/10/2026 — Codex** · `codex/revisao-schema`: revisão de beda421 aprovada; SELECT do catálogo em 01/10 confirmou função instalada igual à `202610020001`, anon/authenticated sem EXECUTE e serviço com acesso.
+Ampliados testes da função nova (permissões, contenção, auditoria/rollback e timestamp opcional) e fixture com os campos reais; 184 testes app e tipos OK. Caracterizações locais reproduzem defeitos ainda pendentes, não são aceite de produção.
+Encontrado `usar_resgate_legado` com UPDATE de `concluido_em` ausente. Logs do piloto: OTP verificado com sucesso, cadastro recusado por `unique_nome`; consumo da confirmação ocorre antes da gravação/bônus e exige revisão transacional.
+Roadmap/estado alinhados ao piloto fechado já autorizado; sem nova migração, envio, alteração de dados, publicação na main ou retomada do backup nesta revisão.
+
 **01/10/2026 — Claude (no lugar do Codex, a pedido do responsável: limite semanal do Codex esgotado)** · Salvar prêmio em `/admin/roleta` falhava sempre (503). Log do Postgres: `record "v_depois" has no field "valor"` — a tabela real não tem a coluna legada `valor` e o UPDATE fixo da `202610010002` a citava (fixture de teste tinha). `claude/corrige-salvar-premio`: migração `202610020001` reescreve só o UPDATE (SET dinâmico das chaves validadas; `atualizado_em` só se existir; chave inexistente → invalid), mesmas regras/permissões/auditoria; teste com tabela no formato real reproduz o erro e a correção; rota passa a logar código/mensagem do RPC. Autorizado pelo responsável: SQL aplicado no projeto correto (função conferida, anon sem acesso) e publicado na main (beda421); prêmios conferidos sem mudança. **Codex: revisar.**
 
 **01/10/2026 — Claude** · `claude/previa-roleta`: botão "Ver prévia da roleta" em `/admin/roleta` abre a mesma tela do cliente com os prêmios do painel (inclusive o que ainda não foi salvo), na faixa escolhida. Modos "Como está agora" (só ativos; resultado de simulação no modo teste) e "Catálogo completo" (rascunhos com peso). Sorteio só no navegador pelos pesos; sem sessão, QR, cupom ou gravação. Correção da foto do prêmio de teste publicada (7bbcbc0).

@@ -30,6 +30,9 @@ test('edição de prêmios: RPC real com permissões, validação, piloto e audi
           (3,'fixture_special','PlayStation especial','Visual','produto',false,null);
     `);
     await db.exec(await readFile(new URL('../supabase/migrations/202610010002_edicao_premios_auditada.sql', import.meta.url), 'utf8'));
+    // Exercise the replacement too, including the optional updated_at branch,
+    // permissions, containment and atomic rollback when auditing fails.
+    await db.exec(await readFile(new URL('../supabase/migrations/202610020001_corrige_edicao_premios.sql', import.meta.url), 'utf8'));
     const update = async (changes: unknown, actor = admin, id = 1) => (await db.query<{ result: { ok: boolean; code?: string; premio: Record<string, unknown> } }>(
       'select public.atualizar_premio_roleta($1,$2,$3::jsonb) as result', [id, actor, JSON.stringify(changes)])).rows[0].result;
     const prize = async () => (await db.query<{ premio: Record<string, unknown> }>('select to_jsonb(p) as premio from public.premios_roleta p where id=1')).rows[0].premio;
@@ -97,11 +100,13 @@ test('edição de prêmios na tabela real (sem valor/atualizado_em): o PUT compl
   const admin = '00000000-0000-4000-8000-000000000001';
   try {
     await db.exec(`create role anon; create role authenticated; create role service_role;
-      create table public.premios_roleta (id bigint primary key, nome text not null, descricao_vitoria text, emoji text,
-        probabilidade integer not null default 0, tipo text not null default 'produto', ativo boolean not null default false,
-        codigo text, versao smallint default 2, participa_roleta boolean default true,
+      create table public.premios_roleta (id bigint primary key, nome text not null, descricao_vitoria text, emoji text not null,
+        cor text not null, valor_pontos integer default 0, created_at timestamptz default timezone('utc', now()),
+        probabilidade integer default 10, tipo text default 'nada', ativo boolean default true,
+        codigo text, versao smallint not null default 1, participa_roleta boolean not null default true,
         canal_uso text not null default 'ambos' check (canal_uso in ('presencial','delivery','ambos')),
-        custo_estimado numeric(12,2) not null default 0, expira_em_dias integer default 14,
+        custo_estimado numeric not null default 0, expira_em_dias integer not null default 14,
+        dias_semana_validos smallint[] not null default array[1,2,3,4,5]::smallint[],
         pesos_nivel integer[] not null default array[1,1,1,1,1,1], descricao_operacional text, imagem_url text);
       create table public.perfis_operacionais(user_id uuid primary key, email text, papel text, ativo boolean);
       create table public.seguranca_configuracoes(id integer, modo_contencao boolean);
@@ -110,8 +115,8 @@ test('edição de prêmios na tabela real (sem valor/atualizado_em): o PUT compl
       insert into public.perfis_operacionais values ('${admin}','fixture@example.invalid','superadmin',true);
       insert into public.seguranca_configuracoes values (1,false);
       insert into public.roleta_configuracoes values (1,true);
-      insert into public.premios_roleta(id,codigo,nome,descricao_vitoria,tipo,custo_estimado,pesos_nivel)
-        values (7,'frete_v2','Taxa de entrega grátis','A próxima entrega é por nossa conta.','frete_gratis',8.5,array[2,2,2,2,2,2]);`);
+      insert into public.premios_roleta(id,codigo,nome,descricao_vitoria,emoji,cor,tipo,custo_estimado,pesos_nivel,versao,ativo)
+        values (7,'frete_v2','Taxa de entrega grátis','A próxima entrega é por nossa conta.','x','#000000','frete_gratis',8.5,array[2,2,2,2,2,2],2,false);`);
     await db.exec(await readFile(new URL('../supabase/migrations/202610010002_edicao_premios_auditada.sql', import.meta.url), 'utf8'));
     const update = async (changes: unknown) => (await db.query<{ result: { ok: boolean; code?: string; premio: Record<string, unknown> } }>(
       'select public.atualizar_premio_roleta($1,$2,$3::jsonb) as result', [7, admin, JSON.stringify(changes)])).rows[0].result;
@@ -123,6 +128,9 @@ test('edição de prêmios na tabela real (sem valor/atualizado_em): o PUT compl
     const result = await update(painel);
     assert.equal(result.ok, true); assert.equal(result.premio.nome, 'Entrega por nossa conta');
     assert.equal(result.premio.tipo, 'frete_gratis'); assert.equal(result.premio.ativo, false);
+    assert.equal(result.premio.cor, '#000000'); assert.equal(result.premio.valor_pontos, 0);
+    assert.deepEqual(result.premio.dias_semana_validos, [1,2,3,4,5]);
+    assert.equal('valor' in result.premio, false); assert.equal('atualizado_em' in result.premio, false);
     const audit = (await db.query<{ detalhes: { campos_alterados: string[] } }>('select detalhes from public.administracao_eventos')).rows;
     assert.equal(audit.length, 1); assert.deepEqual(audit[0].detalhes.campos_alterados, ['nome']);
     assert.equal((await update({ valor: 10 })).code, 'invalid');

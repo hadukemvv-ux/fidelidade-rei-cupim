@@ -18,7 +18,7 @@ Push/merge em `main` = deploy automático em produção.
 | Comanda (2 fotos + QR) e reconciliação Saipos | Funciona no piloto; cron diário confere, não credita nada |
 | Pontos/cashback pela Saipos | **Pausado** — processador antigo não pode ser religado |
 | Conexão WhatsApp QR | Worker Oracle/HTTPS e painel superadmin; pareamento/reinício e recebimento de mensagem fixa confirmados; envio manual fechado, OTP liberado apenas ao piloto autorizado; fila/gatilhos/campanhas desligados |
-| Cadastro com WhatsApp OTP | **Piloto fechado de dois participantes**; correção transacional revisada pelo Claude e autorizada em 03/10, SQL `202610020002` aplicado/conferido; código de cadastro e consumo OTP na mesma transação nesta entrega; falta reteste real do cadastro. Reset de PIN com OTP confirmado pelo responsável |
+| Cadastro com WhatsApp OTP | **Piloto fechado de dois participantes**; correção revisada pelo Claude e autorizada em 03/10, SQL `202610020002` aplicado/conferido e código publicado em `b1e3356` (Ready); cadastro e consumo OTP na mesma transação; falta reteste real com código novo. Reset de PIN com OTP confirmado pelo responsável |
 | Bot e baixas de prêmios | `/admin/baixas` continua simulador; estrutura/API reais preparadas e SQL aplicado, mas gates de entregas/comercial desligados |
 | Backup do Supabase | **Funcionando**: diário às 06:00 no GitHub Actions, criptografado, 30 dias, com teste de restauração automático |
 | Sorteio, roleta V1, garçons antigos | Legado pausado, a remover |

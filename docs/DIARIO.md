@@ -7,7 +7,7 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 **03/10/2026 — Codex** · Responsável autorizou SQL/publicação do cadastro; `origin/main` 0e18373 integrado, preservando backup/restauração e registros Claude/Codex; critério jurídico alinhado à decisão registrada, sem ativação comercial.
 Migração `202610020002` aplicada/conferida no projeto correto: RPC presente, `unique_nome` removida, anon/authenticated sem EXECUTE e serviço autorizado; contagem de clientes preservada, modo teste/entregas mantidos.
-198 testes app, tipos e lint global OK após integração; build OK com configuração fictícia local (sem segredos); cinco cenários nativos concorrentes já aprovados em 02/10. Publicação autorizada; conferir Ready após push e pedir código novo no reteste real.
+198 testes app, tipos/lint e build fictício local OK; cinco cenários nativos já aprovados em 02/10. Publicado `b1e3356`, Vercel Ready (`DygXFXQ3ojgpsYfEkSZXvuBK2AK1`) no domínio do Clube; home/cadastro/reset HTTP 200. Falta reteste real com código novo.
 Piloto continua só para os dois participantes, sem campanhas/prêmios comerciais; importador do painel usa telefone, importadores fora do repo não confirmados.
 
 **02/10/2026 — Codex** · Rechecagem do cadastro após revisão Claude aprovada: SQL somente leitura confirma RPC nova ausente/`unique_nome` presente; Vercel no commit `8b63dea`; logs de 10:28–10:29 UTC−3 mostram OTP 200, cadastro 23505/500 e novas tentativas 403, sem dados pessoais copiados.

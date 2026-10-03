@@ -5,6 +5,11 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**03/10/2026 — Codex** · Responsável autorizou SQL/publicação do cadastro; `origin/main` 0e18373 integrado, preservando backup/restauração e registros Claude/Codex; critério jurídico alinhado à decisão registrada, sem ativação comercial.
+Migração `202610020002` aplicada/conferida no projeto correto: RPC presente, `unique_nome` removida, anon/authenticated sem EXECUTE e serviço autorizado; contagem de clientes preservada, modo teste/entregas mantidos.
+198 testes app, tipos e lint global OK após integração; cinco cenários nativos concorrentes já aprovados em 02/10. Publicação desta entrega autorizada; conferir Ready após push e pedir código novo no reteste real.
+Piloto continua só para os dois participantes, sem campanhas/prêmios comerciais; importador do painel usa telefone, importadores fora do repo não confirmados.
+
 **02/10/2026 — Codex** · Rechecagem do cadastro após revisão Claude aprovada: SQL somente leitura confirma RPC nova ausente/`unique_nome` presente; Vercel no commit `8b63dea`; logs de 10:28–10:29 UTC−3 mostram OTP 200, cadastro 23505/500 e novas tentativas 403, sem dados pessoais copiados.
 Fixtures ajustadas ao catálogo informado pelo Claude: CPF sem unicidade, extrato com `cliente_id TEXT` sem FK e `valor integer`; a migração não cria unicidade de CPF. 198 testes/tipos/lint OK.
 Com execução local autorizada fora do sandbox restrito, cinco cenários nativos com conexões distintas/espera real por locks passaram; cluster descartável encerrado/removido, sem Supabase/WhatsApp.

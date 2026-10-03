@@ -1,6 +1,6 @@
 # Comece aqui — Clube Cupim em uma página
 
-Atualizado em 02/10/2026. Só muda quando o estado geral do projeto muda.
+Atualizado em 03/10/2026. Só muda quando o estado geral do projeto muda.
 
 ## O que é
 
@@ -18,7 +18,7 @@ Push/merge em `main` = deploy automático em produção.
 | Comanda (2 fotos + QR) e reconciliação Saipos | Funciona no piloto; cron diário confere, não credita nada |
 | Pontos/cashback pela Saipos | **Pausado** — processador antigo não pode ser religado |
 | Conexão WhatsApp QR | Worker Oracle/HTTPS e painel superadmin; pareamento/reinício e recebimento de mensagem fixa confirmados; envio manual fechado, OTP liberado apenas ao piloto autorizado; fila/gatilhos/campanhas desligados |
-| Cadastro com WhatsApp OTP | **Piloto fechado de dois participantes**, autorizado/implantado em 01/10; recebimento e verificação comprovados; conclusão do cadastro bloqueada por unicidade indevida do nome e revisão transacional pendente |
+| Cadastro com WhatsApp OTP | **Piloto fechado de dois participantes**; correção transacional revisada pelo Claude e autorizada em 03/10, SQL `202610020002` aplicado/conferido; código de cadastro e consumo OTP na mesma transação nesta entrega; falta reteste real do cadastro. Reset de PIN com OTP confirmado pelo responsável |
 | Bot e baixas de prêmios | `/admin/baixas` continua simulador; estrutura/API reais preparadas e SQL aplicado, mas gates de entregas/comercial desligados |
 | Backup do Supabase | **Funcionando**: diário às 06:00 no GitHub Actions, criptografado, 30 dias, com teste de restauração automático |
 | Sorteio, roleta V1, garçons antigos | Legado pausado, a remover |
@@ -28,7 +28,7 @@ Push/merge em `main` = deploy automático em produção.
 ## Consolidação autorizada em 01/10/2026
 
 Revisado pelos dois agentes; responsável autorizou publicação e as quatro migrações, ciente do backup adiado. **SQL aplicado e conferido em produção**, nesta ordem:
-`202609290001` (entregas/elegibilidade) → `202609300001` (OTP QR) → `202610010001` (fotos) → `202610010002` (textos) → `202610020001` (correção do salvar, aplicada pelo Claude a pedido do responsável).
+`202609290001` (entregas/elegibilidade) → `202609300001` (OTP QR) → `202610010001` (fotos) → `202610010002` (textos) → `202610020001` (correção do salvar, aplicada pelo Claude a pedido do responsável). Em 03/10, aplicada/conferida separadamente a `202610020002` (cadastro atômico), com autorização explícita e sem ampliar o piloto.
 
 | Branch | O que traz |
 | --- | --- |

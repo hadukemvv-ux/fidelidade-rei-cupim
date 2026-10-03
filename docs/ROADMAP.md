@@ -1,6 +1,6 @@
 # Roadmap — Clube Cupim
 
-Atualizado em 02/10/2026. Uma linha por tarefa. Detalhes vão no PR e no `DIARIO.md`.
+Atualizado em 03/10/2026. Uma linha por tarefa. Detalhes vão no PR e no `DIARIO.md`.
 Investigações e decisões anteriores (Saipos, telefones, entregas, custos) estão em
 `docs/historico/ROADMAP_ATE_2026-09-28.md`.
 
@@ -44,8 +44,8 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 | [~] | Número separado ativo; responsável escolheu avaliar QR não oficial em teste isolado; operação permanente/custos ainda a decidir | Você |
 | [~] | QR WhatsApp: controle publicado em 26a5743; pareamento e reinício/reconexão reais validados em 30/09; faltam auditoria das transições e acesso administrativo entre redes | Codex |
 | [~] | Mensagens QR: mensagem fixa recebida em 30/09, envio manual fechado e dois registros preservados; OTP implantado em 01/10 somente para dois participantes autorizados; fila/gatilhos/campanhas desligados | Codex |
-| [~] | OTP QR: piloto fechado autorizado e implantado Oracle/Vercel em 01/10; código recebido e verificação 200 confirmada nos logs; cadastro falhou por `unique_nome`; falta concluir cadastro/reset e concorrência real | Codex |
-| [~] | Cadastro: branch enviada pelo Claude e revisão aprovada; fixtures corrigidas (CPF não único, extrato TEXT/integer sem FK); 198 testes/tipos/lint e 5 cenários nativos concorrentes OK; produção ainda em `8b63dea`, `unique_nome` presente e RPC nova ausente em 02/10; falta autorização de SQL/publicação e reteste do piloto | Codex |
+| [~] | OTP QR: piloto fechado Oracle/Vercel para dois participantes; código/verificação comprovados, reset de PIN confirmado pelo responsável; concorrência nativa do cadastro aprovada; falta reteste do cadastro após esta correção, sem ampliar envios | Codex |
+| [~] | Cadastro: revisão Claude aprovada, main atual integrada; SQL `202610020002` aplicado/conferido em 03/10 com autorização, RPC só do servidor e nomes repetidos permitidos; 198 testes/tipos/lint e 5 cenários nativos OK; publicação autorizada desta entrega, falta reteste real do piloto | Codex |
 | [ ] | Modelos WhatsApp editáveis com variáveis protegidas, fila idempotente e avisos consolidados de pontos/nível; convite por telefone e escolha autenticada de cerveja/sobremesa pelo garçom (sem baixa por mero envio) | Codex; Claude faz telas |
 | [~] | Hospedagem WhatsApp: VM gratuita, DNS Registro.br e HTTPS Caddy validados; faltam teste conectado, backup/restauração reais e monitor externo | Codex, Você acessa a conta |
 | [ ] | Verificação de conta antiga com PIN e sem telefone comprovado | Codex |

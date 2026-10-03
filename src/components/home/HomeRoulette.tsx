@@ -18,7 +18,7 @@ export default function HomeRoulette() {
   const [landed, setLanded] = useState<string | null>(null);
   const [notice, setNotice] = useState('');
 
-  return <div className="home-roulette">
+  return <div className="home-roulette" data-reveal="zoom">
     <div className="home-roulette-wheel">
       <PrizeWheel key={round} prizes={PRIZES}
         onSpinStart={async () => { setLanded(null); setNotice(''); return Math.floor(Math.random() * PRIZES.length); }}

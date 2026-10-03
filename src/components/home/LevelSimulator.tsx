@@ -29,7 +29,7 @@ export default function LevelSimulator() {
   const points = calcularPontosEarned(monthly, windowSpend);
 
   return <>
-    <div className="simulator">
+    <div className="simulator" data-reveal="up">
       <label htmlFor="simulator-range">Quanto você costuma gastar por mês no Rei do Cupim?</label>
       <output htmlFor="simulator-range" className="simulator-value">{money(monthly)}<small>por mês</small></output>
       <div className="simulator-track">
@@ -46,7 +46,7 @@ export default function LevelSimulator() {
       <p className="simulator-hint" aria-hidden="true">← arraste para simular →</p>
     </div>
 
-    <div className="level-tabs" role="tablist" aria-label="Níveis do programa">
+    <div className="level-tabs" data-reveal="up" role="tablist" aria-label="Níveis do programa">
       {levels.map((item) => (
         <button key={item.nivel} type="button" role="tab" aria-selected={level.nivel === item.nivel} aria-controls="level-panel"
           onClick={() => setMonthly(Math.max(monthlyFor(item.min), item.min === 0 ? 20 : 0))}>
@@ -55,7 +55,7 @@ export default function LevelSimulator() {
       ))}
     </div>
 
-    <div className="level-panel" id="level-panel" role="tabpanel" aria-live="polite">
+    <div className="level-panel" data-reveal="up" id="level-panel" role="tabpanel" aria-live="polite">
       <div className="level-overview">
         <p>Seu nível</p>
         <h3 key={level.nivel} className="level-pop">{levelNames[level.nivel]}</h3>

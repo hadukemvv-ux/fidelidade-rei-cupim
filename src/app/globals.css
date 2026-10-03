@@ -763,6 +763,14 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
   .login-short { display: inline; }
 }
 
+/* Aparecer ao rolar: o elemento entra uma vez quando chega na tela (useScrollReveal marca .is-visible). */
+[data-reveal] { opacity: 0; transition: opacity .8s ease var(--reveal-delay, 0ms), translate .8s cubic-bezier(.2,.7,.2,1) var(--reveal-delay, 0ms), scale .8s cubic-bezier(.2,.7,.2,1) var(--reveal-delay, 0ms); }
+[data-reveal="up"] { translate: 0 2.2rem; }
+[data-reveal="left"] { translate: -3rem 0; }
+[data-reveal="right"] { translate: 3rem 0; }
+[data-reveal="zoom"] { scale: .9; }
+[data-reveal].is-visible { opacity: 1; translate: none; scale: none; }
+@media (prefers-reduced-motion: reduce) { [data-reveal] { opacity: 1; translate: none; scale: none; } }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

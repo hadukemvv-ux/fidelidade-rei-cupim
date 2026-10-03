@@ -67,7 +67,7 @@ export default function DishCarousel({ dishes }: { dishes: Dish[] }) {
     goTo(nearest());
   }
 
-  return <div className="dish-carousel">
+  return <div className="dish-carousel" data-reveal="right">
     <div ref={rail} className={`dish-rail${dragging ? ' is-dragging' : ''}`} role="group" aria-roledescription="carrossel" aria-label="Pratos da casa"
       tabIndex={0} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerLeave={endDrag} onPointerCancel={endDrag}
       onKeyDown={(event) => { if (event.key === 'ArrowRight') { event.preventDefault(); goTo(active + 1); } if (event.key === 'ArrowLeft') { event.preventDefault(); goTo(active - 1); } }}>

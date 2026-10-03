@@ -5,6 +5,7 @@ import Link from 'next/link';
 import DishCarousel from '@/components/home/DishCarousel';
 import HomeRoulette from '@/components/home/HomeRoulette';
 import LevelSimulator from '@/components/home/LevelSimulator';
+import { useScrollReveal } from '@/components/home/useScrollReveal';
 import { MENSAGEM_BENEFICIOS_CLUBE } from '@/lib/fidelidade-rules';
 
 const dishes = [
@@ -16,8 +17,10 @@ const dishes = [
 ];
 
 export default function Home() {
+  useScrollReveal();
   return (
     <main className="home-shell">
+      <noscript><style>{`[data-reveal]{opacity:1;translate:none;scale:none}`}</style></noscript>
       <section className="hero" aria-labelledby="hero-title">
         <Image src="/images/home/cupim-trinchado.webp" alt="Cupim assado na brasa servido com acompanhamento" fill priority sizes="100vw" className="hero-photo" />
         <div className="hero-shade" />
@@ -61,24 +64,24 @@ export default function Home() {
       </div>
 
       <section id="como-funciona" className="how-section section-pad">
-        <div className="section-heading dark-heading">
+        <div className="section-heading dark-heading" data-reveal="left">
           <p className="kicker">Feito para quem sempre volta</p>
           <h2>Quanto mais sabor,<br /><em>mais benefícios.</em></h2>
           <p className="section-intro">Sem cartão para carregar. Suas compras constroem seu nível e deixam a próxima recompensa mais perto.</p>
         </div>
 
         <ol className="steps">
-          <li><span>01</span><div><h3>Entre para o clube</h3><p>Faça seu cadastro gratuito em poucos instantes.</p></div></li>
-          <li><span>02</span><div><h3>Compre e acumule</h3><p>Suas compras elegíveis viram pontos e cashback.</p></div></li>
-          <li><span>03</span><div><h3>Aproveite</h3><p>Troque seus pontos por benefícios e acompanhe as novidades do Clube.</p></div></li>
+          <li data-reveal="up"><span>01</span><div><h3>Entre para o clube</h3><p>Faça seu cadastro gratuito em poucos instantes.</p></div></li>
+          <li data-reveal="up" style={{ '--reveal-delay': '120ms' } as React.CSSProperties}><span>02</span><div><h3>Compre e acumule</h3><p>Suas compras elegíveis viram pontos e cashback.</p></div></li>
+          <li data-reveal="up" style={{ '--reveal-delay': '240ms' } as React.CSSProperties}><span>03</span><div><h3>Aproveite</h3><p>Troque seus pontos por benefícios e acompanhe as novidades do Clube.</p></div></li>
         </ol>
       </section>
 
       <section className="video-section section-pad" aria-labelledby="video-title">
-        <div className="video-copy">
+        <div className="video-copy" data-reveal="left">
           <h2 id="video-title">O ponto certo.<br /><em>Bem diante dos olhos.</em></h2>
         </div>
-        <div className="video-frame">
+        <div className="video-frame" data-reveal="right">
           <video autoPlay muted loop playsInline preload="metadata" poster="/video/corte-na-brasa-poster.jpg" aria-label="Cupim sendo cortado na chapa">
             <source src="/video/corte-na-brasa.webm" type="video/webm" />
             <source src="/video/corte-na-brasa.mp4" type="video/mp4" />
@@ -88,7 +91,7 @@ export default function Home() {
       </section>
 
       <section className="levels-section section-pad" aria-labelledby="levels-title">
-        <div className="section-heading light-heading">
+        <div className="section-heading light-heading" data-reveal="right">
           <h2 id="levels-title">Sua fidelidade<br /><em>vale mais.</em></h2>
         </div>
 
@@ -96,7 +99,7 @@ export default function Home() {
       </section>
 
       <section className="food-section section-pad" aria-labelledby="food-title">
-        <div className="food-heading">
+        <div className="food-heading" data-reveal="left">
           <p className="kicker">Direto da nossa cozinha</p>
           <h2 id="food-title">Tem recompensa.<br /><em>Tem comida de verdade.</em></h2>
         </div>
@@ -104,14 +107,14 @@ export default function Home() {
       </section>
 
       <section className="roulette-section section-pad" aria-labelledby="roulette-title">
-        <div className="section-heading light-heading">
+        <div className="section-heading light-heading" data-reveal="up">
           <h2 id="roulette-title">Roleta do Rei.<br /><em>Gire e sinta o gostinho.</em></h2>
         </div>
         <HomeRoulette />
       </section>
 
       <section className="channels-section section-pad" aria-labelledby="channels-title">
-        <div className="channels-heading">
+        <div className="channels-heading" data-reveal="left">
           <div>
             <p className="kicker">Onde encontrar o Rei</p>
             <h2 id="channels-title">Escolha seu caminho.<br /><em>A gente cuida da fome.</em></h2>
@@ -122,7 +125,7 @@ export default function Home() {
         </div>
 
         <div className="channel-grid">
-          <a className="channel-card instagram" href="https://www.instagram.com/oreidocupim_/" target="_blank" rel="noopener noreferrer">
+          <a data-reveal="up" className="channel-card instagram" href="https://www.instagram.com/oreidocupim_/" target="_blank" rel="noopener noreferrer">
             <span className="channel-mark" aria-hidden="true">
               <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.4" cy="6.7" r="1" className="fill"/></svg>
             </span>
@@ -130,7 +133,7 @@ export default function Home() {
             <i aria-hidden="true">↗</i>
           </a>
 
-          <a className="channel-card maps" href="https://maps.app.goo.gl/YArFsTEErt8N1PiL6" target="_blank" rel="noopener noreferrer">
+          <a data-reveal="up" style={{ '--reveal-delay': '90ms' } as React.CSSProperties} className="channel-card maps" href="https://maps.app.goo.gl/YArFsTEErt8N1PiL6" target="_blank" rel="noopener noreferrer">
             <span className="channel-mark" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M12 22s7-6.1 7-13A7 7 0 0 0 5 9c0 6.9 7 13 7 13Z"/><circle cx="12" cy="9" r="2.5"/></svg>
             </span>
@@ -138,20 +141,20 @@ export default function Home() {
             <i aria-hidden="true">↗</i>
           </a>
 
-          <a className="channel-card ifood" href="https://www.ifood.com.br/delivery/fortaleza-ce/churrascaria-o-rei-do-cupim-henrique-jorge/d4fc2476-227b-4fe1-87be-85a88bf5fee4?utm_medium=share" target="_blank" rel="noopener noreferrer">
+          <a data-reveal="up" style={{ '--reveal-delay': '180ms' } as React.CSSProperties} className="channel-card ifood" href="https://www.ifood.com.br/delivery/fortaleza-ce/churrascaria-o-rei-do-cupim-henrique-jorge/d4fc2476-227b-4fe1-87be-85a88bf5fee4?utm_medium=share" target="_blank" rel="noopener noreferrer">
             <span className="channel-mark wordmark" aria-hidden="true">iFood</span>
             <div><small>Delivery</small><strong>Peça no iFood</strong><span>Conferir cupons no app</span></div>
             <i aria-hidden="true">↗</i>
           </a>
 
-          <a className="channel-card food99" href="https://oia.99app.com/dlp9/RQpH0q" target="_blank" rel="noopener noreferrer">
+          <a data-reveal="up" style={{ '--reveal-delay': '270ms' } as React.CSSProperties} className="channel-card food99" href="https://oia.99app.com/dlp9/RQpH0q" target="_blank" rel="noopener noreferrer">
             <span className="channel-mark wordmark" aria-hidden="true">99</span>
             <div><small>Delivery</small><strong>Peça no 99Food</strong><span>Conferir cupons no app</span></div>
             <i aria-hidden="true">↗</i>
           </a>
         </div>
 
-        <div className="coupon-note">
+        <div className="coupon-note" data-reveal="up">
           <span>Códigos de desconto</span>
           <p>Quando tivermos um código oficial ativo, ele aparecerá aqui e no Instagram — sem cupom vencido e sem pegadinha.</p>
         </div>
@@ -160,7 +163,7 @@ export default function Home() {
       <section className="final-cta">
         <Image src="/images/home/espetinhos.webp" alt="Espetinhos gourmet assados" fill sizes="100vw" />
         <div className="final-shade" />
-        <div className="final-content">
+        <div className="final-content" data-reveal="up">
           <Image className="final-logo" src="/brand/logo-vertical.png" alt="O Rei do Cupim" width={148} height={154} />
           <p className="kicker">A brasa já está acesa</p>
           <h2>Seu próximo pedido<br /><em>já pode valer pontos.</em></h2>

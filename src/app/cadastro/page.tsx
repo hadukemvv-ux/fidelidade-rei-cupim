@@ -7,6 +7,17 @@ import { useMemo, useState, useEffect } from 'react';
 import WhatsappOtpVerification from '@/components/WhatsappOtpVerification';
 import { brandFontClass } from '@/components/brandFonts';
 
+/** "DD/MM/AAAA" completo e real (não futuro) vira "AAAA-MM-DD"; qualquer outra coisa vira ''. */
+function birthdayToIso(text: string) {
+  const digits = text.replace(/\D/g, '');
+  if (digits.length !== 8) return '';
+  const day = Number(digits.slice(0, 2)), month = Number(digits.slice(2, 4)), year = Number(digits.slice(4));
+  const date = new Date(Date.UTC(year, month - 1, day));
+  const real = date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+  if (!real || year < 1900 || date.getTime() > Date.now()) return '';
+  return `${digits.slice(4)}-${digits.slice(2, 4)}-${digits.slice(0, 2)}`;
+}
+
 function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
 }
@@ -29,6 +40,9 @@ export default function CadastroPage() {
   const [confirmPin, setConfirmPin] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
   const [aceitaAniversario, setAceitaAniversario] = useState(false);
+  // A data é digitada (DD/MM/AAAA): o calendário do celular é lento para anos antigos.
+  const [nascimentoTexto, setNascimentoTexto] = useState('');
+  const nascimentoInvalido = onlyDigits(nascimentoTexto).length === 8 && !dataNascimento;
   const [whatsappVerificado, setWhatsappVerificado] = useState(false);
 
   // CONTROLE
@@ -61,6 +75,15 @@ export default function CadastroPage() {
   // ===========================================================
   // 2) SUBMIT DO FORMULÁRIO
   // ===========================================================
+  function changeBirthday(value: string) {
+    const digits = onlyDigits(value).slice(0, 8);
+    setNascimentoTexto([digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)].filter(Boolean).join('/'));
+    const iso = birthdayToIso(digits);
+    setDataNascimento(iso);
+    // Informar a data é o pedido da surpresa: a autorização acompanha, e a pessoa ainda pode desmarcar.
+    setAceitaAniversario(Boolean(iso));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFeedback(null);
@@ -77,8 +100,8 @@ export default function CadastroPage() {
     if (!pinsMatch)
       return setFeedback({ type: 'error', text: 'Os PINs não coincidem.' });
 
-    if (dataNascimento && !aceitaAniversario)
-      return setFeedback({ type: 'error', text: 'Para receber a surpresa, autorize as mensagens de aniversário — ou deixe a data em branco.' });
+    if (nascimentoTexto && !dataNascimento)
+      return setFeedback({ type: 'error', text: 'Confira a data de nascimento (DD/MM/AAAA) ou deixe em branco.' });
 
     if (!whatsappVerificado)
       return setFeedback({ type: 'error', text: 'Confirme o código enviado ao seu WhatsApp.' });
@@ -94,7 +117,8 @@ export default function CadastroPage() {
           nome: nome.trim(),
           telefone: telefoneDigits,
           pin: pinDigits,
-          data_nascimento: dataNascimento || null,
+          // Sem autorização não há motivo para guardar a data.
+          data_nascimento: (aceitaAniversario && dataNascimento) || null,
           aceita_whatsapp_aniversario: Boolean(dataNascimento && aceitaAniversario),
         }),
       });
@@ -173,7 +197,7 @@ export default function CadastroPage() {
             <details className="signup-birthday">
               <summary><span>🎁</span><div><strong>Quer uma surpresa no aniversário?</strong><small>Opcional</small></div><b aria-hidden="true">+</b></summary>
               <div className="signup-birthday-content">
-                <div className="signup-field"><label htmlFor="signup-birthday">Data de nascimento</label><input id="signup-birthday" type="date" value={dataNascimento} max={new Date().toISOString().slice(0, 10)} onChange={(event) => { setDataNascimento(event.target.value); if (!event.target.value) setAceitaAniversario(false); }} /></div>
+                <div className="signup-field"><label htmlFor="signup-birthday">Data de nascimento</label><input id="signup-birthday" value={nascimentoTexto} onChange={(event) => changeBirthday(event.target.value)} inputMode="numeric" autoComplete="bday" placeholder="DD/MM/AAAA" maxLength={10} aria-invalid={nascimentoInvalido || undefined} />{nascimentoInvalido && <small className="signup-field-error">Confira a data: dia, mês e ano com 4 dígitos.</small>}</div>
                 <label className="signup-consent"><input type="checkbox" checked={aceitaAniversario} disabled={!dataNascimento} onChange={(event) => setAceitaAniversario(event.target.checked)} /><span>Aceito receber pelo WhatsApp uma surpresa uma semana antes e um lembrete no dia do meu aniversário. Posso cancelar quando quiser.</span></label>
               </div>
             </details>

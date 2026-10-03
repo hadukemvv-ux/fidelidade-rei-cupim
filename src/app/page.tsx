@@ -5,8 +5,9 @@ import Link from 'next/link';
 import DishCarousel from '@/components/home/DishCarousel';
 import HomeRoulette from '@/components/home/HomeRoulette';
 import LevelSimulator from '@/components/home/LevelSimulator';
+import StickyJoin from '@/components/home/StickyJoin';
 import { useScrollReveal } from '@/components/home/useScrollReveal';
-import { MENSAGEM_BENEFICIOS_CLUBE } from '@/lib/fidelidade-rules';
+import { BONUS_CADASTRO_PONTOS, CUSTO_ENTREGA_GRATIS_PONTOS, MENSAGEM_BENEFICIOS_CLUBE } from '@/lib/fidelidade-rules';
 
 const dishes = [
   { src: '/images/home/cupim-trinchado.webp', name: 'Cupim do Rei', tag: 'O clássico', position: '50% 45%' },
@@ -14,6 +15,13 @@ const dishes = [
   { src: '/images/home/feijao-verde.webp', name: 'Feijão Verde do Rei', tag: 'Da casa', position: '58% 42%' },
   { src: '/images/home/caranguejada.webp', name: 'Caranguejada do Rei', tag: 'Especial', position: '52% 36%' },
   { src: '/images/home/burgers.webp', name: 'Burgers do Rei', tag: 'Favorito', position: '50% 48%' },
+];
+
+// Notas públicas informadas pelo responsável em 03/10/2026 (prints do Google Maps, iFood e 99Food).
+const ratings = [
+  { name: 'Google', score: '4,8', detail: '460 avaliações', href: 'https://maps.app.goo.gl/YArFsTEErt8N1PiL6' },
+  { name: 'iFood', score: '4,9', detail: 'Super Restaurante', href: 'https://www.ifood.com.br/delivery/fortaleza-ce/churrascaria-o-rei-do-cupim-henrique-jorge/d4fc2476-227b-4fe1-87be-85a88bf5fee4' },
+  { name: '99Food', score: '4,7', detail: 'Delivery', href: 'https://oia.99app.com/dlp9/RQpH0q' },
 ];
 
 export default function Home() {
@@ -53,7 +61,7 @@ export default function Home() {
             <Link href="/cadastro" className="button button-primary">Entrar para o clube <span aria-hidden="true">→</span></Link>
             <Link href="/resgate" className="button button-ghost">Consultar meus pontos</Link>
           </div>
-          <div className="hero-proof"><strong>Cadastro grátis</strong><span>Você pontua desde a primeira compra</span></div>
+          <div className="hero-proof"><strong>Ganhe {BONUS_CADASTRO_PONTOS} pontos ao entrar</strong><span>Cadastro grátis{BONUS_CADASTRO_PONTOS >= CUSTO_ENTREGA_GRATIS_PONTOS ? ' · já vale uma taxa de entrega' : ''}</span></div>
         </div>
 
         <a className="scroll-cue" href="#como-funciona" aria-label="Ver como funciona"><span>Descubra o clube</span><i aria-hidden="true">↓</i></a>
@@ -62,6 +70,23 @@ export default function Home() {
       <div className="benefit-ribbon" aria-label="Benefícios do clube">
         <div><span>Pontos</span><i>•</i><span>Cashback</span><i>•</i><span>Benefícios</span><i>•</i><span>Recompensas</span></div>
       </div>
+
+      <section className="proof-strip" aria-label="Avaliações do restaurante">
+        {ratings.map((rating, index) => (
+          <a key={rating.name} href={rating.href} target="_blank" rel="noopener noreferrer" data-reveal="up" style={{ '--reveal-delay': `${index * 110}ms` } as React.CSSProperties}>
+            <strong><span aria-hidden="true">★</span> {rating.score}</strong>
+            <span>{rating.name}</span>
+            <small>{rating.detail}</small>
+          </a>
+        ))}
+      </section>
+
+      <section className="roulette-section section-pad" aria-labelledby="roulette-title">
+        <div className="section-heading light-heading" data-reveal="up">
+          <h2 id="roulette-title">Roleta do Rei.<br /><em>Gire e sinta o gostinho.</em></h2>
+        </div>
+        <HomeRoulette />
+      </section>
 
       <section id="como-funciona" className="how-section section-pad">
         <div className="section-heading dark-heading" data-reveal="left">
@@ -104,13 +129,6 @@ export default function Home() {
           <h2 id="food-title">Tem recompensa.<br /><em>Tem comida de verdade.</em></h2>
         </div>
         <DishCarousel dishes={dishes} />
-      </section>
-
-      <section className="roulette-section section-pad" aria-labelledby="roulette-title">
-        <div className="section-heading light-heading" data-reveal="up">
-          <h2 id="roulette-title">Roleta do Rei.<br /><em>Gire e sinta o gostinho.</em></h2>
-        </div>
-        <HomeRoulette />
       </section>
 
       <section className="channels-section section-pad" aria-labelledby="channels-title">
@@ -183,6 +201,7 @@ export default function Home() {
           <Link href="/admin">Área administrativa</Link>
         </nav>
       </footer>
+      <StickyJoin />
     </main>
   );
 }

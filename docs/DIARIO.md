@@ -5,7 +5,9 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
-**03/10/2026 — Claude** · `claude/landing-interativa`, a pedido do responsável (landing mais interativa; textos, fotos e proposta preservados): simulador "quanto você gasta por mês?" na seção de níveis (barra de arrastar comanda nível, pontos e cashback; números vêm só de `fidelidade-rules`, pontos e cashback mostrados separados) e pratos em carrossel de arrastar (toque, mouse e setas; cupim incluído como 1º prato). Testado em 298 px e 1280 px sem vazamento. Não publicado.
+**03/10/2026 — Claude** · `claude/landing-gamificada`, a pedido do responsável: selo e barra fixa "Ganhe 200 pontos ao entrar" (valor de `BONUS_CADASTRO_PONTOS`), roleta de demonstração logo após o topo com modal de resultado, notas públicas informadas por ele (Google 4,8/460, iFood 4,9 Super Restaurante, 99Food 4,7 — conferir de tempos em tempos), trilha de níveis com chama que cresce e pontos "contando". Sem mudança de regra. Atenção: o cadastro público ainda depende do piloto OTP; a landing convida mais forte ao cadastro.
+
+**03/10/2026 — Claude** · `claude/landing-interativa` (publicado em fe25adb), a pedido do responsável (landing mais interativa; textos, fotos e proposta preservados): simulador "quanto você gasta por mês?" na seção de níveis (barra de arrastar comanda nível, pontos e cashback; números vêm só de `fidelidade-rules`, pontos e cashback mostrados separados) e pratos em carrossel de arrastar (toque, mouse e setas; cupim incluído como 1º prato). Testado em 298 px e 1280 px sem vazamento. Não publicado.
 
 **03/10/2026 — Codex** · Responsável autorizou SQL/publicação do cadastro; `origin/main` 0e18373 integrado, preservando backup/restauração e registros Claude/Codex; critério jurídico alinhado à decisão registrada, sem ativação comercial.
 Migração `202610020002` aplicada/conferida no projeto correto: RPC presente, `unique_nome` removida, anon/authenticated sem EXECUTE e serviço autorizado; contagem de clientes preservada, modo teste/entregas mantidos.

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import PrizeWheel from '@/components/roleta/PrizeWheel';
+import { BONUS_CADASTRO_PONTOS } from '@/lib/fidelidade-rules';
 import { prizePhoto } from '@/lib/prizeVisuals';
 
 // Só demonstração na página inicial: nada vai ao servidor, nenhum cupom é gerado.
@@ -62,6 +63,7 @@ export default function HomeRoulette() {
         <p className="prize-modal-kicker">Você ganhou</p>
         <h3 id="prize-modal-title">{landed.nome}</h3>
         <p className="prize-modal-copy">{landed.frase}</p>
+        <p className="prize-modal-bonus">Entre para o clube e comece com <b>{BONUS_CADASTRO_PONTOS} pontos</b>.</p>
         <div className="prize-modal-actions">
           <Link href="/cadastro" className="button button-primary">Entrar para o clube <span aria-hidden="true">→</span></Link>
           <button type="button" className="prize-modal-again" onClick={() => dialog.current?.close()}>Girar de novo</button>

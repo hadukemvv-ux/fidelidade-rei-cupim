@@ -100,7 +100,7 @@ export default function WhatsappOtpVerification({
   return (
     <div className="otp-panel space-y-3 rounded-xl border border-[#c5a059]/30 bg-black/20 p-4">
       <p className="text-sm text-zinc-200">
-        Enviaremos um código apenas agora para confirmar que este WhatsApp é seu. Os próximos acessos serão com seu PIN, sem mensagem.
+        Confirmamos seu WhatsApp só desta vez. Depois, é só o PIN.
       </p>
 
       {!solicitacaoId ? (

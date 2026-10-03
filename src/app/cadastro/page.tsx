@@ -149,11 +149,9 @@ export default function CadastroPage() {
         <div className="signup-promise-shade" />
         <Link href="/" className="signup-brand" aria-label="Voltar ao início"><Image src="/logo.png" alt="" width={62} height={62} /><span>O Rei do Cupim</span></Link>
         <div className="signup-promise-copy">
-          <span>Boas-vindas do Rei</span>
           <h1 id="signup-title">Cadastre-se hoje.<br /><em>A primeira entrega é por nossa conta.</em></h1>
-          <p>Você começa com 200 pontos — o valor exato para resgatar a taxa de entrega no primeiro pedido direto.</p>
+          <p>Você começa com 200 pontos.</p>
           <div className="signup-benefits" aria-label="Benefícios do clube">
-            <div><strong>200</strong><span>pontos na entrada</span></div>
             <div><strong>+</strong><span>pontos e cashback</span></div>
             <div><strong>🎁</strong><span>surpresa no aniversário</span></div>
           </div>
@@ -161,9 +159,8 @@ export default function CadastroPage() {
       </section>
 
       <section className="signup-form-side" aria-label="Cadastro no clube">
-        <div className="signup-mobile-offer"><strong>Entrega grátis de boas-vindas</strong><span>Ganhe 200 pontos ao concluir.</span></div>
         <div className="signup-form-wrap">
-          <div className="signup-form-heading"><span>Leva cerca de 1 minuto</span><h2>Entre para o clube.</h2><p>Só precisamos do essencial. Seu WhatsApp será confirmado uma única vez e os próximos acessos serão feitos com o PIN.</p></div>
+          <div className="signup-form-heading"><span>Leva 1 minuto</span><h2>Entre para o clube.</h2></div>
           <p className="signup-have-account">Já tem cadastro? <Link href="/resgate">Entrar na minha conta&nbsp;→</Link></p>
           {feedback && <div className={`signup-feedback ${feedback.type}`} role="status">{feedback.text}</div>}
           <form onSubmit={handleSubmit} className="signup-form">
@@ -174,17 +171,16 @@ export default function CadastroPage() {
               <div className="signup-field"><label htmlFor="signup-pin-confirm">Repita o PIN</label><input id="signup-pin-confirm" value={confirmPin} onChange={(event) => setConfirmPin(onlyDigits(event.target.value).slice(0, 4))} inputMode="numeric" autoComplete="new-password" type="password" maxLength={4} placeholder="4 dígitos" /></div>
             </div>
             <details className="signup-birthday">
-              <summary><span>🎁</span><div><strong>Quer uma surpresa no aniversário?</strong><small>Opcional — não interfere nos seus 200 pontos.</small></div><b aria-hidden="true">+</b></summary>
+              <summary><span>🎁</span><div><strong>Quer uma surpresa no aniversário?</strong><small>Opcional</small></div><b aria-hidden="true">+</b></summary>
               <div className="signup-birthday-content">
                 <div className="signup-field"><label htmlFor="signup-birthday">Data de nascimento</label><input id="signup-birthday" type="date" value={dataNascimento} max={new Date().toISOString().slice(0, 10)} onChange={(event) => { setDataNascimento(event.target.value); if (!event.target.value) setAceitaAniversario(false); }} /></div>
                 <label className="signup-consent"><input type="checkbox" checked={aceitaAniversario} disabled={!dataNascimento} onChange={(event) => setAceitaAniversario(event.target.checked)} /><span>Aceito receber pelo WhatsApp uma surpresa uma semana antes e um lembrete no dia do meu aniversário. Posso cancelar quando quiser.</span></label>
-                <p>Sem propaganda toda hora. Essa autorização vale apenas para a campanha de aniversário.</p>
               </div>
             </details>
             <WhatsappOtpVerification telefone={telefoneDigits} proposito="cadastro" onVerified={setWhatsappVerificado} />
             <button type="submit" disabled={loading || !whatsappVerificado} className="signup-submit"><span>{loading ? 'Criando seu clube...' : 'Quero meus 200 pontos'}</span><b aria-hidden="true">→</b></button>
-            <p className="signup-rule">A entrega grátis vale para pedidos diretos, conforme disponibilidade e área atendida, e pode ser resgatada uma vez a cada 14 dias.</p>
-            <div className="signup-links"><Link href="/">Voltar ao início</Link><Link href="/privacidade">Privacidade</Link><Link href="/resgate">Já sou cliente →</Link></div>
+            <p className="signup-rule">Entrega grátis em pedidos diretos, conforme a área atendida. Um resgate a cada 14 dias.</p>
+            <div className="signup-links"><Link href="/">Voltar ao início</Link><Link href="/privacidade">Privacidade</Link></div>
           </form>
         </div>
       </section>

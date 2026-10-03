@@ -22,10 +22,10 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 
 | | Tarefa | Dono |
 | --- | --- | --- |
-| [ ] | Parecer jurídico sobre a roleta (promoção com sorte) | Você |
+| [~] | Parecer jurídico sobre a roleta (promoção com sorte): em 02/10 o responsável decidiu seguir sem parecer, ciente do risco; agentes não travam por isso, mas ligar o comercial continua exigindo ordem explícita dele | Você |
 | [ ] | Aprovar prêmios, custos, pesos por faixa e validade | Você |
 | [ ] | Contratar hospedagem com uso comercial (Vercel Pro ou alternativa) | Você |
-| [~] | Backup Supabase **adiado expressamente pelo responsável** em 01/10: robô e 3 segredos prontos, banco recusa a senha em `SUPABASE_DB_URL`, sem restauração validada. Não retomar até ele pedir; caminho em `claude/backup-diagnostico` | Claude prepara, Você decide retomar |
+| [x] | Backup Supabase diário (GitHub Actions, 06:00): retomado pelo responsável em 02/10 com endereço do Session pooler; 1ª execução manual verde com restauração conferida tabela a tabela | Claude |
 | [~] | Baixas reais: SQL `202609290001` aplicado em 01/10 com autorização; gates de entregas/comercial desligados; faltam concorrência real, catálogo/opções e painel | Codex |
 | [~] | Roleta interativa "Brasa Premium" com fotos de cerveja, sobremesa e entrega grátis; faltam fotos próprias de dindim e teste em celulares reais | Claude |
 | [~] | Prêmios no painel: correção `202610020001` aplicada/publicada pelo Claude em 01/10, revisada pelo Codex contra catálogo real e permissões; testes ampliados para a função nova e ambos os formatos de tabela; falta refazer o teste de salvar no painel | Codex API, Claude UI |
@@ -63,7 +63,7 @@ Meta: primeiro uso real. Prêmio imediato não exige cadastro completo, então *
 
 ## Critério para abrir ao público (Fase 1)
 
-- Parecer jurídico favorável e prêmios/custos aprovados.
+- Decisão jurídica registrada pelo responsável (em 02/10 optou por seguir sem parecer, ciente do risco); prêmios/custos e ativação comercial ainda exigem aprovação explícita.
 - Hospedagem comercial contratada e backup do Supabase testado.
 - Fluxo QR → giro → prêmio → entrega/baixa → auditoria testado de ponta a ponta.
 - Acessos individuais de equipe configurados e testados.

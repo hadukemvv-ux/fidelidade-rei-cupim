@@ -20,7 +20,7 @@ Push/merge em `main` = deploy automático em produção.
 | Conexão WhatsApp QR | Worker Oracle/HTTPS e painel superadmin; pareamento/reinício e recebimento de mensagem fixa confirmados; envio manual fechado, OTP liberado apenas ao piloto autorizado; fila/gatilhos/campanhas desligados |
 | Cadastro com WhatsApp OTP | **Piloto fechado de dois participantes**, autorizado/implantado em 01/10; recebimento e verificação comprovados; conclusão do cadastro bloqueada por unicidade indevida do nome e revisão transacional pendente |
 | Bot e baixas de prêmios | `/admin/baixas` continua simulador; estrutura/API reais preparadas e SQL aplicado, mas gates de entregas/comercial desligados |
-| Backup do Supabase | **Adiado pelo responsável**: robô pronto, banco recusa a senha em `SUPABASE_DB_URL` (ver ROADMAP) |
+| Backup do Supabase | **Funcionando**: diário às 06:00 no GitHub Actions, criptografado, 30 dias, com teste de restauração automático |
 | Sorteio, roleta V1, garçons antigos | Legado pausado, a remover |
 
 **Nada está liberado comercialmente para clientes.**

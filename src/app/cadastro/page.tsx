@@ -164,6 +164,7 @@ export default function CadastroPage() {
         <div className="signup-mobile-offer"><strong>Entrega grátis de boas-vindas</strong><span>Ganhe 200 pontos ao concluir.</span></div>
         <div className="signup-form-wrap">
           <div className="signup-form-heading"><span>Leva cerca de 1 minuto</span><h2>Entre para o clube.</h2><p>Só precisamos do essencial. Seu WhatsApp será confirmado uma única vez e os próximos acessos serão feitos com o PIN.</p></div>
+          <p className="signup-have-account">Já tem cadastro? <Link href="/resgate">Entrar na minha conta&nbsp;→</Link></p>
           {feedback && <div className={`signup-feedback ${feedback.type}`} role="status">{feedback.text}</div>}
           <form onSubmit={handleSubmit} className="signup-form">
             <div className="signup-field"><label htmlFor="signup-name">Seu nome</label><input id="signup-name" value={nome} onChange={(event) => setNome(event.target.value)} autoComplete="name" placeholder="Como podemos chamar você?" /></div>

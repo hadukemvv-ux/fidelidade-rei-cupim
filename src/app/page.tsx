@@ -59,7 +59,6 @@ export default function Home() {
           <p className="hero-copy">{MENSAGEM_BENEFICIOS_CLUBE}</p>
           <div className="hero-actions">
             <Link href="/cadastro" className="button button-primary">Entrar para o clube <span aria-hidden="true">→</span></Link>
-            <Link href="/resgate" className="button button-ghost">Consultar meus pontos</Link>
           </div>
           <div className="hero-proof"><strong>Ganhe {BONUS_CADASTRO_PONTOS} pontos ao entrar</strong><span>Cadastro grátis{BONUS_CADASTRO_PONTOS >= CUSTO_ENTREGA_GRATIS_PONTOS ? ' · já vale uma taxa de entrega' : ''}</span></div>
         </div>

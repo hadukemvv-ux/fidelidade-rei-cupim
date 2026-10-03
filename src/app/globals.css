@@ -168,9 +168,19 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--gold); outline-
 .simulator-marks { position: absolute; inset: 50% 1.1rem auto; height: 0; pointer-events: none; }
 .simulator-marks i { position: absolute; top: -.75rem; width: 2px; height: 1.5rem; background: rgba(255,255,255,.4); }
 .simulator-hint { margin: .5rem 0 0; color: rgba(255,255,255,.5); font-size: .7rem; font-weight: 900; letter-spacing: .16em; text-align: center; text-transform: uppercase; }
-.simulator-next { margin: 1rem 0 0; color: rgba(255,255,255,.75); font-size: .92rem; line-height: 1.45; }
-.simulator-next b { color: var(--gold); }
 .level-pop { animation: level-pop .45s cubic-bezier(.2,1.4,.4,1); }
+
+/* Roleta de demonstração na página inicial. */
+.roulette-section { position: relative; background: radial-gradient(circle at 50% 62%, rgba(240,43,31,.28), transparent 46%), var(--ink); text-align: center; }
+.roulette-section .section-heading { max-width: none; margin-inline: auto; }
+.roulette-section .section-heading h2 { max-width: none; margin-inline: auto; text-align: center; }
+.home-roulette { display: grid; justify-items: center; gap: 1.2rem; margin-top: 2rem; }
+.home-roulette-result { display: grid; justify-items: center; gap: .5rem; min-height: 7.5rem; }
+.home-roulette-result p { margin: 0; color: rgba(255,255,255,.7); font-size: .95rem; }
+.home-roulette-result strong { color: var(--gold); font-family: var(--font-display); font-size: clamp(2rem, 9vw, 3.4rem); line-height: 1; text-transform: uppercase; animation: level-pop .45s cubic-bezier(.2,1.4,.4,1); }
+.home-roulette-result button { margin-top: .3rem; padding: .7rem 1.2rem; border: 1px solid rgba(255,255,255,.3); border-radius: 999px; background: transparent; color: var(--white); font-weight: 800; cursor: pointer; }
+.home-roulette-result button:hover { border-color: var(--white); background: rgba(255,255,255,.1); }
+.home-roulette-result small { color: rgba(255,255,255,.45); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
 @keyframes level-pop { from { transform: scale(.82); opacity: .2; } }
 
 .channels-section { background: var(--cream); color: var(--ink); border-top: 1px solid rgba(19,11,9,.14); }

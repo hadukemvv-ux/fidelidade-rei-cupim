@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import {
-  calcularCashbackValue, calcularPontosEarned, calcularProgressaoNivel, getAllNivelThresholds,
+  calcularPontosEarned, calcularProgressaoNivel, getAllNivelThresholds,
   getResumoBeneficiosNivel, JANELA_NIVEL_DIAS, PONTOS_POR_REAL_EM_PRODUTOS, type NivelFidelidade,
 } from '@/lib/fidelidade-rules';
 
@@ -27,13 +27,10 @@ export default function LevelSimulator() {
   const level = levels.find((item) => item.nivel === progress.nivel) ?? levels[0];
   const benefit = getResumoBeneficiosNivel(level.nivel);
   const points = calcularPontosEarned(monthly, windowSpend);
-  const cashback = calcularCashbackValue(monthly, windowSpend);
-  const next = levels.find((item) => item.nivel === progress.proximoNivel);
-  const missingMonthly = next ? monthlyFor(next.min) - monthly : 0;
 
   return <>
     <div className="simulator">
-      <label htmlFor="simulator-range">Quanto você costuma gastar por mês no Rei?</label>
+      <label htmlFor="simulator-range">Quanto você costuma gastar por mês no Rei do Cupim?</label>
       <output htmlFor="simulator-range" className="simulator-value">{money(monthly)}<small>por mês</small></output>
       <div className="simulator-track">
         <input id="simulator-range" type="range" min={0} max={MAX_MONTHLY} step={STEP} value={monthly}
@@ -62,33 +59,22 @@ export default function LevelSimulator() {
       <div className="level-overview">
         <p>Seu nível</p>
         <h3 key={level.nivel} className="level-pop">{levelNames[level.nivel]}</h3>
-        <span>{level.min === 0 ? 'Começa no cadastro' : `A partir de ${money(level.min)} em compras`}</span>
-        <p className="simulator-next">{next
-          ? <>Com mais <b>{money(missingMonthly)}</b> por mês você chega ao nível <b>{levelNames[next.nivel]}</b>.</>
-          : <>Você está no topo: <b>nível máximo</b> do Clube.</>}</p>
       </div>
       <div className="level-metrics">
         <article>
-          <strong>{benefitNumber(points)}</strong>
+          <strong>{points.toLocaleString('pt-BR')}</strong>
           <span>pontos por mês</span>
-          <b>{money(points / PONTOS_POR_REAL_EM_PRODUTOS, 2)} em produtos · {benefit.pontosPorReal} {benefit.pontosPorReal === 1 ? 'ponto' : 'pontos'} por real</b>
         </article>
         <article>
-          <strong>{money(cashback, 2)}</strong>
-          <span>cashback por mês</span>
-          <b>{percent(benefit.percentualCashback)} em desconto</b>
+          <strong>{percent(benefit.percentualCashback)}</strong>
+          <span>cashback</span>
         </article>
         <article className="total-benefit">
           <strong>{percent(benefit.percentualTotalReferencia)}</strong>
           <span>valor equivalente em benefícios</span>
         </article>
       </div>
-      <p className="points-note">{PONTOS_POR_REAL_EM_PRODUTOS} pontos = R$ 1 em produtos. Pontos (produtos) e cashback (descontos) são saldos separados; o total equivalente soma os dois, não é todo cashback.</p>
-      <p className="points-note">Simulação com compras elegíveis de {money(monthly)} por mês mantidas por {MONTHS_IN_WINDOW} meses: seu nível considera os últimos {JANELA_NIVEL_DIAS} dias e cada compra vale pelo nível anterior a ela.</p>
+      <p className="points-note">{PONTOS_POR_REAL_EM_PRODUTOS} pontos = R$ 1 em produtos. Simulação com compras elegíveis dos últimos {JANELA_NIVEL_DIAS} dias.</p>
     </div>
   </>;
-}
-
-function benefitNumber(value: number) {
-  return value.toLocaleString('pt-BR');
 }

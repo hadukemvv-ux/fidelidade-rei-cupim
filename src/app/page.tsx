@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import DishCarousel from '@/components/home/DishCarousel';
+import HomeRoulette from '@/components/home/HomeRoulette';
 import LevelSimulator from '@/components/home/LevelSimulator';
 import { MENSAGEM_BENEFICIOS_CLUBE } from '@/lib/fidelidade-rules';
 
@@ -75,24 +76,20 @@ export default function Home() {
 
       <section className="video-section section-pad" aria-labelledby="video-title">
         <div className="video-copy">
-          <p className="kicker">Ao vivo da nossa brasa</p>
           <h2 id="video-title">O ponto certo.<br /><em>Bem diante dos olhos.</em></h2>
-          <p>Cupim na chapa, cortado na hora. É daqui que começa o sabor que também vira recompensa.</p>
         </div>
         <div className="video-frame">
           <video autoPlay muted loop playsInline preload="metadata" poster="/video/corte-na-brasa-poster.jpg" aria-label="Cupim sendo cortado na chapa">
             <source src="/video/corte-na-brasa.webm" type="video/webm" />
             <source src="/video/corte-na-brasa.mp4" type="video/mp4" />
           </video>
-          <div className="video-stamp" aria-hidden="true"><span>Na brasa</span><strong>DO JEITO DO REI</strong></div>
+          <div className="video-stamp" aria-hidden="true"><span>Cupim na brasa</span><strong>DO JEITO DO REI</strong></div>
         </div>
       </section>
 
       <section className="levels-section section-pad" aria-labelledby="levels-title">
         <div className="section-heading light-heading">
-          <p className="kicker">Quatro níveis de vantagens</p>
           <h2 id="levels-title">Sua fidelidade<br /><em>vale mais.</em></h2>
-          <p className="section-intro">Seu nível considera suas compras dos últimos 90 dias.</p>
         </div>
 
         <LevelSimulator />
@@ -104,6 +101,13 @@ export default function Home() {
           <h2 id="food-title">Tem recompensa.<br /><em>Tem comida de verdade.</em></h2>
         </div>
         <DishCarousel dishes={dishes} />
+      </section>
+
+      <section className="roulette-section section-pad" aria-labelledby="roulette-title">
+        <div className="section-heading light-heading">
+          <h2 id="roulette-title">Roleta do Rei.<br /><em>Gire e sinta o gostinho.</em></h2>
+        </div>
+        <HomeRoulette />
       </section>
 
       <section className="channels-section section-pad" aria-labelledby="channels-title">

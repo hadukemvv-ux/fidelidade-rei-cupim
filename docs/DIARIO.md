@@ -5,6 +5,8 @@ o que ficou pendente. Detalhe técnico vai no PR, não aqui.
 
 ---
 
+**03/10/2026 — Claude** · `claude/landing-interativa`, a pedido do responsável (landing mais interativa; textos, fotos e proposta preservados): simulador "quanto você gasta por mês?" na seção de níveis (barra de arrastar comanda nível, pontos e cashback; números vêm só de `fidelidade-rules`, pontos e cashback mostrados separados) e pratos em carrossel de arrastar (toque, mouse e setas; cupim incluído como 1º prato). Testado em 298 px e 1280 px sem vazamento. Não publicado.
+
 **03/10/2026 — Codex** · Responsável autorizou SQL/publicação do cadastro; `origin/main` 0e18373 integrado, preservando backup/restauração e registros Claude/Codex; critério jurídico alinhado à decisão registrada, sem ativação comercial.
 Migração `202610020002` aplicada/conferida no projeto correto: RPC presente, `unique_nome` removida, anon/authenticated sem EXECUTE e serviço autorizado; contagem de clientes preservada, modo teste/entregas mantidos.
 198 testes app, tipos/lint e build fictício local OK; cinco cenários nativos já aprovados em 02/10. Publicado `b1e3356`, Vercel Ready (`DygXFXQ3ojgpsYfEkSZXvuBK2AK1`) no domínio do Clube; home/cadastro/reset HTTP 200. Falta reteste real com código novo.

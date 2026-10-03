@@ -2,41 +2,19 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
-import { getAllNivelThresholds, getResumoBeneficiosNivel, MENSAGEM_BENEFICIOS_CLUBE, PONTOS_POR_REAL_EM_PRODUTOS, type NivelFidelidade } from '@/lib/fidelidade-rules';
-
-const levels = getAllNivelThresholds();
-const levelNames: Record<NivelFidelidade, string> = {
-  BRONZE: 'Brasa',
-  PRATA: 'Chama',
-  OURO: 'Nobre',
-  REI: 'Majestade',
-};
+import DishCarousel from '@/components/home/DishCarousel';
+import LevelSimulator from '@/components/home/LevelSimulator';
+import { MENSAGEM_BENEFICIOS_CLUBE } from '@/lib/fidelidade-rules';
 
 const dishes = [
-  { src: '/images/home/espetinhos.webp', name: 'Espetinhos Gourmet', tag: 'Da brasa' },
-  { src: '/images/home/feijao-verde.webp', name: 'Feijão Verde do Rei', tag: 'Da casa' },
-  { src: '/images/home/caranguejada.webp', name: 'Caranguejada do Rei', tag: 'Especial' },
-  { src: '/images/home/burgers.webp', name: 'Burgers do Rei', tag: 'Favorito' },
+  { src: '/images/home/cupim-trinchado.webp', name: 'Cupim do Rei', tag: 'O clássico', position: '50% 45%' },
+  { src: '/images/home/espetinhos.webp', name: 'Espetinhos Gourmet', tag: 'Da brasa', position: '50% 65%' },
+  { src: '/images/home/feijao-verde.webp', name: 'Feijão Verde do Rei', tag: 'Da casa', position: '58% 42%' },
+  { src: '/images/home/caranguejada.webp', name: 'Caranguejada do Rei', tag: 'Especial', position: '52% 36%' },
+  { src: '/images/home/burgers.webp', name: 'Burgers do Rei', tag: 'Favorito', position: '50% 48%' },
 ];
 
-function money(value: number) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 });
-}
-
-function cashbackMoney(value: number) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
-function benefitPercent(value: number) {
-  return `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
-}
-
 export default function Home() {
-  const [selectedLevel, setSelectedLevel] = useState<NivelFidelidade>('BRONZE');
-  const level = levels.find((item) => item.nivel === selectedLevel) ?? levels[0];
-  const benefit = getResumoBeneficiosNivel(level.nivel);
-
   return (
     <main className="home-shell">
       <section className="hero" aria-labelledby="hero-title">
@@ -117,38 +95,7 @@ export default function Home() {
           <p className="section-intro">Seu nível considera suas compras dos últimos 90 dias.</p>
         </div>
 
-        <div className="level-tabs" role="tablist" aria-label="Níveis do programa">
-          {levels.map((item) => (
-            <button key={item.nivel} type="button" role="tab" aria-selected={selectedLevel === item.nivel} aria-controls="level-panel" onClick={() => setSelectedLevel(item.nivel)}>
-              <strong>{levelNames[item.nivel]}</strong>
-            </button>
-          ))}
-        </div>
-
-        <div className="level-panel" id="level-panel" role="tabpanel">
-          <div className="level-overview">
-            <p>Seu nível</p>
-            <h3>{levelNames[level.nivel]}</h3>
-            <span>{level.min === 0 ? 'Começa no cadastro' : `A partir de ${money(level.min)} em compras`}</span>
-          </div>
-          <div className="level-metrics">
-            <article>
-              <strong>{benefitPercent(benefit.percentualProdutos)}</strong>
-              <span>em produtos via pontos</span>
-              <b>{benefit.pontosPorReal} {benefit.pontosPorReal === 1 ? 'ponto' : 'pontos'} por real</b>
-            </article>
-            <article>
-              <strong>{benefitPercent(benefit.percentualCashback)}</strong>
-              <span>cashback em desconto</span>
-            </article>
-            <article className="total-benefit">
-              <strong>{benefitPercent(benefit.percentualTotalReferencia)}</strong>
-              <span>valor equivalente em benefícios</span>
-            </article>
-          </div>
-          <p className="points-note">{PONTOS_POR_REAL_EM_PRODUTOS} pontos = R$ 1 em produtos. O total soma pontos e cashback; não é todo cashback.</p>
-          <p className="points-note">Exemplo no nível {levelNames[level.nivel]}: uma compra elegível de {money(benefit.exemplo.valorCompra)} gera {benefit.exemplo.pontos} pontos + {cashbackMoney(benefit.exemplo.cashback)} de cashback. Vale o nível anterior à compra.</p>
-        </div>
+        <LevelSimulator />
       </section>
 
       <section className="food-section section-pad" aria-labelledby="food-title">
@@ -156,14 +103,7 @@ export default function Home() {
           <p className="kicker">Direto da nossa cozinha</p>
           <h2 id="food-title">Tem recompensa.<br /><em>Tem comida de verdade.</em></h2>
         </div>
-        <div className="food-grid">
-          {dishes.map((dish, index) => (
-            <article className={`dish-card dish-${index + 1}`} key={dish.name}>
-              <Image src={dish.src} alt={dish.name} fill sizes="(max-width: 699px) 88vw, 45vw" />
-              <div><span>{dish.tag}</span><h3>{dish.name}</h3></div>
-            </article>
-          ))}
-        </div>
+        <DishCarousel dishes={dishes} />
       </section>
 
       <section className="channels-section section-pad" aria-labelledby="channels-title">
